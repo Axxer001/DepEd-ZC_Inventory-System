@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+<!-- cd C:\Users\Admin\DepEd-ZC_Inventory\DepEd-ZC_Inventory-System-main -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | DepEd Zamboanga City</title>
