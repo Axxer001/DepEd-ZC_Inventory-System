@@ -67,7 +67,7 @@
 
             <div class="bg-slate-50/80 px-10 py-4 border-t border-slate-100 text-center">
                 <p class="text-[9px] text-slate-400 font-bold tracking-widest uppercase">
-                   Division of Zamboanga City • Inventory 1.0
+                   Region IX Division of Zamboanga City • Inventory
                 </p>
             </div>
         </div>
