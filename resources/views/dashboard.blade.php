@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 
-PUSH CHECK Zzzzzz-->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard | DepEd Zamboanga City</title>
@@ -12,10 +10,6 @@ PUSH CHECK Zzzzzz-->
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Smooth transition for sidebar */
-        #sidebar { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        #sidebarOverlay { transition: opacity 0.3s ease; }
 
         /* Custom scrollbar for the entry section */
         .custom-scroll::-webkit-scrollbar { height: 4px; }
@@ -24,90 +18,7 @@ PUSH CHECK Zzzzzz-->
 </head>
 <body class="bg-slate-50 min-h-screen flex animate-fade-in text-slate-800 overflow-x-hidden">
 
-    <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/40 z-40 hidden backdrop-blur-sm"></div>
-
-    <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col h-screen overflow-y-auto shadow-2xl lg:shadow-sm -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 ease-in-out">
-        <div class="p-8 text-center relative">
-            <button onclick="toggleSidebar()" class="lg:hidden absolute right-4 top-4 p-2 text-slate-400 hover:text-[#c00000] transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-
-            <div class="flex items-center justify-center gap-3 mb-2">
-                <img src="{{ asset('images/deped_logo.png') }}" class="h-10 w-auto">
-                <h1 class="text-xl font-extrabold tracking-tight italic">DepEd ZC</h1>
-            </div>
-            <p class="text-[9px] text-slate-400 font-bold tracking-[0.2em] uppercase">Asset Management</p>
-        </div>
-
-        <nav class="flex-grow px-4 space-y-6">
-            <div class="space-y-1">
-                <a href="#" class="flex items-center gap-4 px-6 py-4 bg-red-50 text-[#c00000] rounded-2xl font-bold border border-red-100 transition-all">
-                    <span>📊</span> Dashboard
-                </a>
-            </div>
-        
-            <div class="pt-4 border-t border-slate-100">
-                <p class="px-6 mb-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Configuration</p>
-                <div class="space-y-1 px-2">
-                    <a href="{{ route('inventory.setup') }}" class="flex items-center gap-4 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-[#c00000] rounded-xl font-semibold transition-all group">
-                        <span class="p-2 bg-slate-100 rounded-lg group-hover:bg-red-50 transition-colors">⚙️</span>
-                        <span class="text-sm">Inventory Setup</span>
-                    </a>
-                </div>
-            </div>
-
-            <div>
-                <p class="px-6 mb-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-blue-600">Legislative District 1</p>
-                <div class="space-y-1 px-2">
-                    <a href="#" class="flex items-center justify-between px-4 py-3 text-slate-500 hover:bg-slate-50 rounded-xl font-semibold transition-all group">
-                        <span class="text-sm">📍 Quadrant 1.1</span>
-                        <span class="text-[10px] bg-slate-100 px-2 py-1 rounded-lg group-hover:bg-white transition-colors font-bold text-blue-600">3 Dist.</span>
-                    </a>
-                    <a href="#" class="flex items-center justify-between px-4 py-3 text-slate-500 hover:bg-slate-50 rounded-xl font-semibold transition-all group">
-                        <span class="text-sm">📍 Quadrant 1.2</span>
-                        <span class="text-[10px] bg-slate-100 px-2 py-1 rounded-lg group-hover:bg-white transition-colors font-bold text-blue-600">2 Dist.</span>
-                    </a>
-                </div>
-            </div>
-
-            <div>
-                <p class="px-6 mb-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-emerald-600">Legislative District 2</p>
-                <div class="space-y-1 px-2">
-                    <a href="#" class="flex items-center justify-between px-4 py-3 text-slate-500 hover:bg-slate-50 rounded-xl font-semibold transition-all group">
-                        <span class="text-sm">📍 Quadrant 2.1</span>
-                        <span class="text-[10px] bg-slate-100 px-2 py-1 rounded-lg group-hover:bg-white transition-colors font-bold text-emerald-600">3 Dist.</span>
-                    </a>
-                    <a href="#" class="flex items-center justify-between px-4 py-3 text-slate-500 hover:bg-slate-50 rounded-xl font-semibold transition-all group">
-                        <span class="text-sm">📍 Quadrant 2.2</span>
-                        <span class="text-[10px] bg-slate-100 px-2 py-1 rounded-lg group-hover:bg-white transition-colors font-bold text-emerald-600">4 Dist.</span>
-                    </a>
-                </div>
-            </div>
-        </nav>
-
-        <div class="p-6 border-t border-slate-100">
-            <div class="bg-slate-50 p-4 rounded-3xl flex items-center justify-between border border-slate-100">
-                <div class="flex items-center gap-3 min-w-0">
-                    <div class="h-10 w-10 bg-[#c00000] rounded-2xl flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-red-100 italic">A</div>
-                    <div class="overflow-hidden leading-tight">
-                        <p class="text-xs font-bold truncate text-slate-800">{{ auth()->user()->email }}</p>
-                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none">Admin</p>
-                    </div>
-                </div>
-                
-                <form action="{{ route('logout') }}" method="POST" class="ml-2">
-                    @csrf
-                    <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
-                        </svg>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </aside>
+    @include('partials.sidebar')
 
     <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto">
         
@@ -185,7 +96,7 @@ PUSH CHECK Zzzzzz-->
                         </div>
                     </div>
 
-                    <form action="#" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <form action="#" method="POST" class="grid grid-cols-1 md:grid-cols-5 gap-6">
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assigned School</label>
                             <select class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all">
@@ -196,7 +107,7 @@ PUSH CHECK Zzzzzz-->
                         </div>
 
                         <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Asset Category</label>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category</label>
                             <select class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all">
                                 <option>DCP Package</option>
                                 <option>Classroom Furniture</option>
@@ -205,13 +116,26 @@ PUSH CHECK Zzzzzz-->
                         </div>
 
                         <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sub-Item / Model</label>
-                            <input type="text" placeholder="e.g. Dell Latitude" class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-red-50">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item</label>
+                            <select class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all">
+                                <option>Laptop</option>
+                                <option>Desktop</option>
+                                <option>Printer</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sub-Item</label>
+                            <select class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all">
+                                <option>Dell Latitude</option>
+                                <option>HP ProBook</option>
+                                <option>Acer TravelMate</option>
+                            </select>
                         </div>
 
                         <div class="flex items-end gap-3">
                             <div class="space-y-2 flex-grow">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Qty</label>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity</label>
                                 <input type="number" value="1" min="1" class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none text-center">
                             </div>
                             <button type="submit" class="p-4 bg-[#c00000] text-white rounded-2xl font-bold hover:bg-red-700 shadow-lg shadow-red-200 transition-all hover:-translate-y-1 active:scale-95">
@@ -269,7 +193,7 @@ PUSH CHECK Zzzzzz-->
                         </div>
                     </div>
                     <div class="bg-slate-50 p-5 rounded-3xl border border-slate-100 shadow-inner group-hover:bg-emerald-50/30 transition-colors">
-                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1 text-slate-400">Total Quadrant Assets</p>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">Total Quadrant Assets</p>
                         <p class="text-2xl font-extrabold text-slate-800 tracking-tighter leading-none">0</p>
                     </div>
                 </div>
@@ -283,7 +207,7 @@ PUSH CHECK Zzzzzz-->
                         </div>
                     </div>
                     <div class="bg-slate-50 p-5 rounded-3xl border border-slate-100 shadow-inner group-hover:bg-emerald-50/30 transition-colors">
-                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1 text-slate-400">Total Quadrant Assets</p>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">Total Quadrant Assets</p>
                         <p class="text-2xl font-extrabold text-slate-800 tracking-tighter leading-none">0</p>
                     </div>
                 </div>
@@ -291,28 +215,5 @@ PUSH CHECK Zzzzzz-->
         </main>
     </div>
 
-    <script>
-        const sidebar = document.getElementById('sidebar');
-        const overlay = document.getElementById('sidebarOverlay');
-
-        function toggleSidebar() {
-            const isHidden = sidebar.classList.contains('-translate-x-full');
-            
-            if (isHidden) {
-                sidebar.classList.remove('-translate-x-full');
-                overlay.classList.remove('hidden');
-                setTimeout(() => overlay.style.opacity = "1", 10);
-                document.body.classList.add('overflow-hidden');
-            } else {
-                sidebar.classList.add('-translate-x-full');
-                overlay.style.opacity = "0";
-                setTimeout(() => {
-                    overlay.classList.add('hidden');
-                }, 300);
-                document.body.classList.remove('overflow-hidden');
-            }
-        }
-    </script>
-
 </body>
-</html> 
+</html>
