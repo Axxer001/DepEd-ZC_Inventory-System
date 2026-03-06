@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\DashboardController;
-
+//dahamn
 //push check!
 // Login Page
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
