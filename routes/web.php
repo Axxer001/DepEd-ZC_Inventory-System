@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\DashboardController;
 
+//push check!
 // Login Page
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
 
