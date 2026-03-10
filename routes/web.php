@@ -4,8 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\DashboardController;
-//dahamn
-//push check!
+use App\Http\Controllers\InventorySetupController;
 // Login Page
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
 
@@ -42,6 +41,9 @@ Route::middleware('auth')->group(function () {
         $quadrants = \Illuminate\Support\Facades\DB::table('quadrants')->get();
         return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants'));
     })->name('inventory.setup');
+    
+    // Process form submissions from Setup
+    Route::post('/inventory-setup/school', [InventorySetupController::class, 'storeSchool'])->name('inventory.setup.school');
 });
 
 // Redirect /login GET to root

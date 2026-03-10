@@ -16,6 +16,18 @@
             to { opacity: 1; transform: translateY(0) scale(1); } 
         }
 
+        /* Toast Animation */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        .toast-enter { animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .toast-exit { animation: slideOutRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
         .custom-scroll::-webkit-scrollbar { width: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
@@ -33,7 +45,36 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex text-slate-800 overflow-x-hidden">
+<body class="bg-slate-50 min-h-screen flex text-slate-800 overflow-x-hidden relative">
+
+    <!-- Toast Notification Container -->
+    @if(session('success'))
+        <div id="successToast" class="fixed top-8 right-8 z-[100] bg-emerald-50 border border-emerald-200 text-emerald-700 px-6 py-4 rounded-2xl shadow-xl flex items-center gap-3 toast-enter">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-emerald-500">
+                <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
+            </svg>
+            <div class="flex flex-col">
+                <span class="font-bold text-sm tracking-tight">Success</span>
+                <span class="text-xs font-semibold opacity-90">{{ session('success') }}</span>
+            </div>
+            <button onclick="closeToast()" class="ml-4 text-emerald-400 hover:text-emerald-700 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+        </div>
+
+        <script>
+            function closeToast() {
+                const toast = document.getElementById('successToast');
+                if(toast) {
+                    toast.classList.remove('toast-enter');
+                    toast.classList.add('toast-exit');
+                    setTimeout(() => toast.remove(), 400);
+                }
+            }
+            // Auto close after 4 seconds
+            setTimeout(closeToast, 4000);
+        </script>
+    @endif
 
     @include('partials.sidebar')
 
@@ -105,6 +146,22 @@
             </div>
 
             <div id="step3" class="step-content">
+                @if($errors->any())
+                    <div class="max-w-2xl mx-auto mb-6 bg-red-50 text-red-600 p-6 font-bold rounded-3xl shadow-sm border border-red-100 flex items-start gap-4 animate-in fade-in slide-in-from-top-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-red-500 shrink-0">
+                            <path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" />
+                        </svg>
+                        <div>
+                            <h4 class="text-sm font-black tracking-tight mb-1">Please fix the following errors:</h4>
+                            <ul class="list-disc list-inside text-xs font-semibold opacity-90 space-y-1">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                @endif
+
                 <div class="max-w-2xl mx-auto bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-50 relative overflow-hidden">
                     <div id="formContent"></div>
                 </div>
@@ -112,6 +169,9 @@
 
         </main>
     </div>
+
+    <!-- Sweet Alert 2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         let history = [1];
@@ -175,20 +235,25 @@
             let html = `<h4 class="text-2xl font-black text-slate-800 mb-8 uppercase tracking-tight italic">${modeText} ${currentModule}</h4>`;
 
             if (currentModule === 'school') {
-                html += `<div class="space-y-6">
+                html += `<form id="schoolForm" action="{{ route('inventory.setup.school') }}" method="POST" class="space-y-6">
+                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
                             <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select District</label>
-                                <select class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold focus:ring-2 focus:ring-red-100 transition-all">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select District <span class="text-red-500">*</span></label>
+                                <select name="district_id" id="schoolDistrict" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold focus:ring-2 focus:ring-red-100 transition-all cursor-pointer" required>
                                     <option value="">Select the assigned District</option>
-                                    ${Object.keys(districtMap).map(d => `<option value="${d}">${d}</option>`).join('')}
+                                    ${rawDistricts.map(d => `<option value="${d.id}">${d.name}</option>`).join('')}
                                 </select>
                             </div>
                             <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">School Name</label>
-                                <input type="text" placeholder="e.g. Ayala National High School" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">School ID (6-Digits) <span class="text-red-500">*</span></label>
+                                <input type="text" name="school_id" id="schoolId" placeholder="e.g. 123456" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold transition-all" required maxlength="6" pattern="[0-9]{6}">
                             </div>
-                            <button class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all active:scale-95">${modeText} School Record</button>
-                        </div>`;
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">School Name <span class="text-red-500">*</span></label>
+                                <input type="text" name="name" id="schoolName" placeholder="e.g. Ayala National High School" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold transition-all" required>
+                            </div>
+                            <button type="button" onclick="confirmSchoolSubmit()" class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">${modeText} School Record</button>
+                        </form>`;
             } else if (currentModule === 'district') {
                 html += `<div class="space-y-6">
                             <div class="grid grid-cols-2 gap-4">
@@ -261,6 +326,31 @@
             `;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
+        }
+        function confirmSchoolSubmit() {
+            const form = document.getElementById('schoolForm');
+            if (form.checkValidity()) {
+                Swal.fire({
+                    title: "Add New School",
+                    text: "Are you sure you want to add this school to the system?",
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonColor: "#c00000",
+                    cancelButtonColor: "#94a3b8",
+                    confirmButtonText: "Yes, add it!",
+                    customClass: {
+                        popup: "rounded-[2rem]",
+                        confirmButton: "rounded-xl font-bold px-6",
+                        cancelButton: "rounded-xl font-bold px-6"
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            } else {
+                form.reportValidity(); // This will trigger the HTML5 required tooltips if empty
+            }
         }
     </script>
 </body>
