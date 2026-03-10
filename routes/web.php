@@ -4,8 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\InventorySetupController;
-use App\Http\Controllers\LogsController;
+//dahamn
+//push check!
 // Login Page
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
 
@@ -42,17 +42,13 @@ Route::middleware('auth')->group(function () {
         $quadrants = \Illuminate\Support\Facades\DB::table('quadrants')->get();
         return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants'));
     })->name('inventory.setup');
-    
-    // Process form submissions from Setup
-    Route::post('/inventory-setup/school', [InventorySetupController::class, 'storeSchool'])->name('inventory.setup.school');
-    // System Logs
-    Route::get('/admin/logs', [LogsController::class, 'index'])->name('admin.logs');
 });
 
 // Redirect /login GET to root
 Route::get('/login', function() {
     return redirect('/');
 });
+
 
 Route::get('/admin/schools', function () {
     return view('admin.schools');
@@ -61,3 +57,25 @@ Route::get('/admin/schools', function () {
 Route::get('/admin/logs', function () {
     return view('admin.logs');
 })->name('admin.logs');
+
+
+Route::get('/admin/quadrant-1-1', function () {
+    return view('admin.quadrants.q1-1');
+})->name('quadrant.1.1');
+
+
+Route::get('/admin/quadrant-1-2', function () {
+    return view('admin.quadrants.q1-2');
+})->name('quadrant.1.2');
+
+
+
+
+Route::get('/admin/quadrant-2-1', function () {
+    return view('admin.quadrants.q2-1');
+})->name('quadrant.2.1');
+
+
+Route::get('/admin/quadrant-2-2', function () {
+    return view('admin.quadrants.q2-2');
+})->name('quadrant.2.2');
