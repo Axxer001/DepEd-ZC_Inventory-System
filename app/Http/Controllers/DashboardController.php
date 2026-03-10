@@ -8,7 +8,8 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $schools = \Illuminate\Support\Facades\DB::table('schools')->orderBy('name')->get();
         // Dito natin kukunin ang data sa susunod (Total Items, etc.)
-        return view('dashboard');
+        return view('dashboard', compact('schools'));
     }
 }
