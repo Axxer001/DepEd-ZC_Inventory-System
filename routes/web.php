@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\InventorySetupController;
 
 // --- Public Routes ---
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
@@ -35,6 +36,9 @@ Route::middleware('auth')->group(function () {
         $quadrants = DB::table('quadrants')->get();
         return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants'));
     })->name('inventory.setup');
+
+    // Process form submissions from Setup
+    Route::post('/inventory-setup/school', [InventorySetupController::class, 'storeSchool'])->name('inventory.setup.school');
 
     Route::get('/admin/schools', function () {
         return view('admin.schools');
