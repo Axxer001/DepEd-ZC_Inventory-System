@@ -92,19 +92,24 @@
                             <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Directly assign assets to schools</p>
                         </div>
                         
-                        <div class="relative w-full md:w-72 group">
-                            <input type="text" placeholder="Search school..." class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-red-50 transition-all font-semibold">
-                            <span class="absolute left-4 top-3.5 text-slate-300 group-focus-within:text-[#c00000] transition-colors">🔍</span>
+                        <div class="relative w-full md:w-72 group" id="searchContainer">
+                            <input type="text" id="schoolSearch" placeholder="Search school..." autocomplete="off" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-red-50 transition-all font-semibold relative z-20">
+                            <span class="absolute left-4 top-3.5 text-slate-300 group-focus-within:text-[#c00000] transition-colors z-20">🔍</span>
+                            
+                            <!-- Search Autocomplete Results -->
+                            <ul id="searchResults" class="absolute z-30 w-full bg-white border border-slate-100 rounded-2xl shadow-xl mt-2 max-h-60 overflow-y-auto hidden custom-scroll">
+                            </ul>
                         </div>
                     </div>
 
                     <form action="#" method="POST" class="grid grid-cols-1 md:grid-cols-5 gap-6">
-                        <div class="space-y-2">
+                        <div class="space-y-2 relative">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assigned School</label>
-                            <select class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all">
-                                <option>Ayala NHS</option>
-                                <option>ZC Central School</option>
-                                <option>Tetuan CS</option>
+                            <select id="schoolSelect" class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all relative z-10">
+                                <option value="">Select a School</option>
+                                @foreach($schools as $school)
+                                    <option value="{{ $school->id }}">{{ $school->name }}</option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -217,5 +222,76 @@
         </main>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('schoolSearch');
+            const searchResults = document.getElementById('searchResults');
+            const schoolSelect = document.getElementById('schoolSelect');
+            
+            if (!searchInput || !schoolSelect || !searchResults) return;
+
+            // Generate an array of objects from the select options
+            const schools = Array.from(schoolSelect.options)
+                .filter(opt => opt.value !== "")
+                .map(opt => ({
+                    id: opt.value,
+                    name: opt.textContent
+                }));
+
+            // Handle typing in the search bar
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                searchResults.innerHTML = '';
+                
+                if (query.length === 0) {
+                    searchResults.classList.add('hidden');
+                    return;
+                }
+
+                // Filter schools based on query
+                const filtered = schools.filter(school => school.name.toLowerCase().includes(query));
+                
+                if (filtered.length > 0) {
+                    filtered.forEach(school => {
+                        const li = document.createElement('li');
+                        li.className = 'px-4 py-3 hover:bg-red-50 cursor-pointer text-sm font-semibold text-slate-800 transition-colors border-b border-slate-50 last:border-0';
+                        li.textContent = school.name;
+                        
+                        // Handle clicking a search result
+                        li.addEventListener('click', function() {
+                            searchInput.value = school.name; // Set text into the input
+                            schoolSelect.value = school.id; // Select the matching option in the dropdown
+                            searchResults.classList.add('hidden'); // Hide the dropdown
+                        });
+                        
+                        searchResults.appendChild(li);
+                    });
+                } else {
+                    const li = document.createElement('li');
+                    li.className = 'px-4 py-3 text-sm font-semibold text-slate-400 italic pointer-events-none';
+                    li.textContent = 'No matching schools found';
+                    searchResults.appendChild(li);
+                }
+                
+                searchResults.classList.remove('hidden');
+            });
+
+            // Close the search dropdown if user clicks outside of it
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.classList.add('hidden');
+                }
+            });
+
+            // If the user manually chooses a school from the standard <select>, populate the search box
+            schoolSelect.addEventListener('change', function() {
+                if (this.value === "") {
+                    searchInput.value = "";
+                } else {
+                    searchInput.value = this.options[this.selectedIndex].text;
+                }
+            });
+        });
+    </script>
 </body>
 </html>
