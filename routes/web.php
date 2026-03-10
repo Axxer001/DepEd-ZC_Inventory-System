@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventorySetupController;
+use App\Http\Controllers\LogsController;
 // Login Page
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
 
@@ -44,6 +45,8 @@ Route::middleware('auth')->group(function () {
     
     // Process form submissions from Setup
     Route::post('/inventory-setup/school', [InventorySetupController::class, 'storeSchool'])->name('inventory.setup.school');
+    // System Logs
+    Route::get('/admin/logs', [LogsController::class, 'index'])->name('admin.logs');
 });
 
 // Redirect /login GET to root
@@ -51,11 +54,6 @@ Route::get('/login', function() {
     return redirect('/');
 });
 
-
 Route::get('/admin/schools', function () {
     return view('admin.schools');
 })->name('admin.schools');
-
-Route::get('/admin/logs', function () {
-    return view('admin.logs');
-})->name('admin.logs');

@@ -132,6 +132,16 @@ class RegistrationController extends Controller
             // Remove from pending
             $pending->delete();
 
+            // Log action
+            \Illuminate\Support\Facades\DB::table('system_logs')->insert([
+                'user' => 'System',
+                'activity' => "Rejected registration for: {$email}",
+                'module' => 'Accounts',
+                'action_type' => 'Others',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+
             // Send rejection email to user
             Mail::to($email)->send(new RegistrationRejected($email));
 
@@ -148,6 +158,16 @@ class RegistrationController extends Controller
                 ['email' => $email],
                 ['blocked_at' => now()]
             );
+
+            // Log action
+            \Illuminate\Support\Facades\DB::table('system_logs')->insert([
+                'user' => 'System',
+                'activity' => "Blocked email from registering: {$email}",
+                'module' => 'Accounts',
+                'action_type' => 'Others',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
 
             // Remove from pending
             $pending->delete();
