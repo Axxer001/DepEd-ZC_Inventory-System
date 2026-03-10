@@ -27,6 +27,16 @@ class AuthController extends Controller
 
         if ($user) {
             Auth::login($user);
+            
+            \Illuminate\Support\Facades\DB::table('system_logs')->insert([
+                'user' => $user->name,
+                'activity' => 'User logged in',
+                'module' => 'Authentication',
+                'action_type' => 'Others',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+            
             return redirect('/dashboard');
         }
 
@@ -46,6 +56,18 @@ class AuthController extends Controller
     // Handle logout
     public function logout(Request $request)
     {
+        $user = Auth::user();
+        if ($user) {
+            \Illuminate\Support\Facades\DB::table('system_logs')->insert([
+                'user' => $user->name,
+                'activity' => 'User logged out',
+                'module' => 'Authentication',
+                'action_type' => 'Others',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+        }
+        
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

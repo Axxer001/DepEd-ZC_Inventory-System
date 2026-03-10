@@ -42,14 +42,15 @@
                         <h3 class="font-extrabold text-slate-800 tracking-tight text-lg">Activity History</h3>
                     </div>
                     
-                    <div class="flex gap-2">
-                        <select class="px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-red-50 transition-all cursor-pointer">
-                            <option>All Actions</option>
-                            <option>Create</option>
-                            <option>Update</option>
-                            <option>Delete</option>
+                    <form method="GET" action="{{ route('admin.logs') }}" class="flex gap-2" id="filterForm">
+                        <select name="action" onchange="document.getElementById('filterForm').submit()" class="px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs font-bold focus:outline-none focus:ring-4 focus:ring-red-50 transition-all cursor-pointer">
+                            <option value="All Actions" {{ $action == 'All Actions' ? 'selected' : '' }}>All Actions</option>
+                            <option value="Create" {{ $action == 'Create' ? 'selected' : '' }}>Create</option>
+                            <option value="Update" {{ $action == 'Update' ? 'selected' : '' }}>Update</option>
+                            <option value="Delete" {{ $action == 'Delete' ? 'selected' : '' }}>Delete</option>
+                            <option value="Others" {{ $action == 'Others' ? 'selected' : '' }}>Others</option>
                         </select>
-                    </div>
+                    </form>
                 </div>
 
                 <div class="overflow-x-auto overflow-y-auto custom-scrollbar" style="max-height: 600px;">
@@ -63,75 +64,42 @@
                             </tr>
                         </thead>
                         <tbody id="logTableBody" class="divide-y divide-slate-50">
-                            </tbody>
+                            @forelse($logs as $log)
+                            <tr class="hover:bg-slate-50/80 transition-all cursor-default group">
+                                <td class="px-8 py-3 w-1/4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase border border-slate-200">
+                                            {{ substr($log->user ?? 'S', 0, 2) }}
+                                        </div>
+                                        <span class="font-extrabold text-slate-700 text-xs">{{ $log->user ?? 'System' }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-3 w-1/3">
+                                    <span class="text-xs font-bold text-slate-600">{{ $log->activity }}</span>
+                                </td>
+                                <td class="px-8 py-3 w-1/6">
+                                     <span class="px-2.5 py-1 {{ $log->action_type == 'Delete' ? 'bg-red-50 text-red-500 border-red-100' : ($log->action_type == 'Create' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-100 text-slate-500 border-slate-200') }} rounded-lg text-[9px] font-black uppercase tracking-widest border">{{ $log->module ?? $log->action_type }}</span>
+                                </td>
+                                <td class="px-8 py-3 text-right w-1/4">
+                                    <span class="text-[10px] font-bold text-slate-400 italic">{{ \Carbon\Carbon::parse($log->created_at)->format('Y-m-d H:i:s') }}</span>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="4" class="px-8 py-10 text-center text-sm font-bold text-slate-400 italic">No system logs found for this filter.</td>
+                            </tr>
+                            @endforelse
+                        </tbody>
                     </table>
                 </div>
 
                 <div class="p-8 bg-slate-50/30 flex items-center justify-between border-t border-slate-50">
-                    <p id="paginationInfo" class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-xs">Page 1 of 5</p>
-                    <div class="flex items-center gap-3">
-                        <button onclick="prevPage()" id="prevBtn" class="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-800 disabled:opacity-30">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                            </svg>
-                        </button>
-                        <button onclick="nextPage()" id="nextBtn" class="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-slate-800 disabled:opacity-30">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                            </svg>
-                        </button>
+                    <div class="w-full">
+                        {{ $logs->links() }}
                     </div>
                 </div>
             </section>
         </main>
     </div>
-
-    <script>
-        let currentPage = 1;
-        const itemsPerPage = 20;
-        const totalItems = 100;
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-        const actions = ["Added new asset", "Updated school info", "Deleted record", "Assigned DCP Package"];
-        const modules = ["Inventory", "Schools", "Settings"];
-
-        function renderTable() {
-            const tbody = document.getElementById('logTableBody');
-            tbody.innerHTML = '';
-            
-            for(let i = 0; i < itemsPerPage; i++) {
-                const currentIdx = ((currentPage - 1) * itemsPerPage) + i + 1;
-                if (currentIdx > totalItems) break;
-
-                const row = `
-                    <tr class="hover:bg-slate-50/80 transition-all cursor-default group">
-                        <td class="px-8 py-3">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 uppercase border border-slate-200">AD</div>
-                                <span class="font-extrabold text-slate-700 text-xs">Admin_User</span>
-                            </div>
-                        </td>
-                        <td class="px-8 py-3">
-                            <span class="text-xs font-bold text-slate-600">${actions[Math.floor(Math.random() * actions.length)]}</span>
-                        </td>
-                        <td class="px-8 py-3">
-                             <span class="px-2.5 py-1 bg-slate-100 text-slate-500 rounded-lg text-[9px] font-black uppercase tracking-widest border border-slate-200">${modules[Math.floor(Math.random() * modules.length)]}</span>
-                        </td>
-                        <td class="px-8 py-3 text-right">
-                            <span class="text-[10px] font-bold text-slate-400 italic">2026-03-10 14:30:22</span>
-                        </td>
-                    </tr>
-                `;
-                tbody.insertAdjacentHTML('beforeend', row);
-            }
-            document.getElementById('paginationInfo').innerText = `Page ${currentPage} of ${totalPages}`;
-            document.getElementById('prevBtn').disabled = currentPage === 1;
-            document.getElementById('nextBtn').disabled = currentPage === totalPages;
-        }
-
-        function nextPage() { if (currentPage < totalPages) { currentPage++; renderTable(); } }
-        function prevPage() { if (currentPage > 1) { currentPage--; renderTable(); } }
-        renderTable();
-    </script>
 </body>
 </html>
