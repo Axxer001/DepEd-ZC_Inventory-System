@@ -120,13 +120,13 @@
 
         const mainCategories = ["School Furniture", "Electronics", "Electric Connections", "WIFI/Internet"];
         
-        const districtMap = {
-            "District 1": { ld: "1", quad: "1.1" }, "District 2": { ld: "1", quad: "1.1" },
-            "District 3": { ld: "1", quad: "1.1" }, "District 4": { ld: "1", quad: "1.2" },
-            "District 5": { ld: "1", quad: "1.2" }, "District 6": { ld: "2", quad: "2.1" },
-            "District 7": { ld: "2", quad: "2.1" }, "District 8": { ld: "2", quad: "2.1" },
-            "District 9": { ld: "2", quad: "2.2" }, "District 10": { ld: "2", quad: "2.2" }
-        };
+        const rawDistricts = @json($districts);
+        const rawLds = @json($legislativeDistricts);
+        const rawQuadrants = @json($quadrants);
+        const districtMap = {};
+        rawDistricts.forEach(d => {
+            districtMap[d.name] = { ld: d.legislative_district_id, quad: d.quadrant_name.replace('Quadrant ', '') };
+        });
 
         function nextStep(step, value) {
             if (step === 2) {
@@ -162,8 +162,10 @@
             const ld = document.getElementById('dist_ld').value;
             const quadSelect = document.getElementById('dist_quad');
             quadSelect.innerHTML = '<option value="">Select Quadrant</option>';
-            if (ld === "1") quadSelect.innerHTML += '<option value="1.1">1.1</option><option value="1.2">1.2</option>';
-            else if (ld === "2") quadSelect.innerHTML += '<option value="2.1">2.1</option><option value="2.2">2.2</option>';
+            if (ld) {
+                const filtered = rawQuadrants.filter(q => q.legislative_district_id == ld);
+                quadSelect.innerHTML += filtered.map(q => `<option value="${q.id}">${q.name}</option>`).join('');
+            }
         }
 
         function renderForm() {
@@ -193,7 +195,8 @@
                                 <div class="space-y-2">
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Legislative District</label>
                                     <select id="dist_ld" onchange="filterQuadrants()" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold">
-                                        <option value="">Select LD</option><option value="1">LD 1</option><option value="2">LD 2</option>
+                                        <option value="">Select LD</option>
+                                        ${rawLds.map(ld => `<option value="${ld.id}">${ld.name}</option>`).join('')}
                                     </select>
                                 </div>
                                 <div class="space-y-2">

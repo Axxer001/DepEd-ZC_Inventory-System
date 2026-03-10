@@ -34,7 +34,13 @@ Route::post('/otp/verify', [RegistrationController::class, 'verifyOtp'])->name('
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/inventory-setup', function () {
-        return view('inventory-setup');
+        $districts = \Illuminate\Support\Facades\DB::table('districts')
+            ->join('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
+            ->select('districts.id', 'districts.name', 'quadrants.legislative_district_id', 'quadrants.name as quadrant_name')
+            ->get();
+        $legislativeDistricts = \Illuminate\Support\Facades\DB::table('legislative_districts')->get();
+        $quadrants = \Illuminate\Support\Facades\DB::table('quadrants')->get();
+        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants'));
     })->name('inventory.setup');
 });
 
