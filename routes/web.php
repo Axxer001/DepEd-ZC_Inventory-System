@@ -57,3 +57,25 @@ Route::get('/admin/schools', function () {
 Route::get('/admin/logs', function () {
     return view('admin.logs');
 })->name('admin.logs');
+
+
+Route::get('/admin/quadrant-1-1', function () {
+    return view('admin.quadrants.q1-1');
+})->name('quadrant.1.1');
+
+
+Route::get('/admin/quadrant-1-2', function () {
+    return view('admin.quadrants.q1-2');
+})->name('quadrant.1.2');
+
+
+
+
+Route::get('/admin/quadrant-2-1', function () {
+    return view('admin.quadrants.q2-1');
+})->name('quadrant.2.1');
+
+
+Route::get('/admin/quadrant-2-2', function () {
+    return view('admin.quadrants.q2-2');
+})->name('quadrant.2.2');
