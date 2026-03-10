@@ -44,6 +44,22 @@
             @endif
         </div>
 
+        {{-- Schools Registry --}}
+<div class="relative group/navitem mt-2">
+    @if(request()->routeIs('admin.schools'))
+        <a href="{{ route('admin.schools') }}" class="flex items-center gap-4 px-4 py-3 bg-red-50 text-[#c00000] rounded-2xl font-bold border border-red-100 transition-all" title="Schools">
+            <span class="shrink-0 text-lg transition-transform duration-300 group-hover/navitem:scale-110">🏫</span>
+            <span class="sidebar-label hidden whitespace-nowrap text-sm">Schools</span>
+        </a>
+        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#c00000] rounded-r-full"></div>
+    @else
+        <a href="{{ route('admin.schools') }}" class="flex items-center gap-4 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-[#c00000] rounded-2xl font-bold transition-all" title="Schools">
+            <span class="shrink-0 text-lg transition-transform duration-300 group-hover/navitem:scale-110">🏫</span>
+            <span class="sidebar-label hidden whitespace-nowrap text-sm">Schools</span>
+        </a>
+    @endif
+</div>
+
         {{-- Configuration --}}
         <div class="pt-3 border-t border-slate-100 relative group/navitem">
             <p class="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest sidebar-label hidden whitespace-nowrap">Configuration</p>

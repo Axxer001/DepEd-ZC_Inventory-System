@@ -48,3 +48,8 @@ Route::middleware('auth')->group(function () {
 Route::get('/login', function() {
     return redirect('/');
 });
+
+
+Route::get('/admin/schools', function () {
+    return view('admin.schools');
+})->name('admin.schools');
