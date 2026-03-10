@@ -53,3 +53,7 @@ Route::get('/login', function() {
 Route::get('/admin/schools', function () {
     return view('admin.schools');
 })->name('admin.schools');
+
+Route::get('/admin/logs', function () {
+    return view('admin.logs');
+})->name('admin.logs');

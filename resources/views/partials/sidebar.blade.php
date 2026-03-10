@@ -77,6 +77,25 @@
             @endif
         </div>
 
+
+        {{-- System Activity --}}
+<div class="pt-3 border-t border-slate-100 relative group/navitem">
+    <p class="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest sidebar-label hidden whitespace-nowrap">Activity</p>
+    
+    @if(request()->routeIs('admin.logs'))
+        <a href="{{ route('admin.logs') }}" class="flex items-center gap-4 px-4 py-3 bg-red-50 text-[#c00000] rounded-xl font-bold border border-red-100 transition-all" title="System Logs">
+            <span class="shrink-0 text-lg transition-transform duration-300 group-hover/navitem:scale-110">📜</span>
+            <span class="sidebar-label hidden whitespace-nowrap text-sm">System Logs</span>
+        </a>
+        <div class="absolute left-0 bottom-3 w-1 h-8 bg-[#c00000] rounded-r-full"></div>
+    @else
+        <a href="{{ route('admin.logs') }}" class="flex items-center gap-4 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-[#c00000] rounded-xl font-semibold transition-all group" title="System Logs">
+            <span class="shrink-0 text-lg transition-transform duration-300 group-hover/navitem:scale-110">📜</span>
+            <span class="sidebar-label hidden whitespace-nowrap text-sm">System Logs</span>
+        </a>
+    @endif
+</div>
+
         {{-- LD 1 --}}
         <div class="pt-3 border-t border-slate-100">
             <p class="px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-blue-600 sidebar-label hidden whitespace-nowrap">Legislative District 1</p>
