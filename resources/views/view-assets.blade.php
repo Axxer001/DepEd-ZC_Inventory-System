@@ -5,155 +5,230 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asset Explorer | DepEd ZC</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
         .category-btn:hover { transform: translateY(-5px); }
+        [x-cloak] { display: none !important; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex text-slate-800">
+<body class="bg-slate-50 min-h-screen flex text-slate-800" x-data="assetExplorer()">
 
     @include('partials.sidebar')
 
     <main class="flex-grow p-6 lg:p-10 h-screen overflow-y-auto">
         <header class="mb-10">
             <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Asset Explorer</h2>
-            <p class="text-slate-500 text-sm mt-1 font-medium italic">Filter and browse inventory by school and category</p>
+            <p class="text-slate-500 text-sm mt-1 font-medium italic">Select a category and item to see distribution across all schools</p>
         </header>
 
         <section class="mb-8">
-            <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100">
-                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Primary Filter: Select School</label>
-                <select id="schoolFilter" class="w-full md:w-1/3 px-6 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-lg font-bold focus:outline-none focus:ring-4 focus:ring-blue-50 transition-all cursor-pointer">
-                    <option value="">-- Choose a School --</option>
-                    @foreach($schools as $school)
-                        <option value="{{ $school->id }}">{{ $school->name }}</option>
-                    @endforeach
-                </select>
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+                Step 1: Select Category
+                <span class="h-[1px] flex-grow bg-slate-200"></span>
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <template x-for="(data, catName) in inventory" :key="catName">
+                    <button @click="selectCategory(catName)" 
+                        :class="selectedCategory === catName ? 'border-blue-500 bg-blue-50 ring-4 ring-blue-500/10' : 'bg-white border-slate-100'"
+                        class="category-btn group p-8 rounded-[2rem] border shadow-lg shadow-slate-200/50 transition-all duration-300 text-left">
+                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-xl" x-text="data.icon"></div>
+                        <h4 class="font-extrabold text-slate-800 text-lg leading-tight" x-text="catName"></h4>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase mt-1" x-text="selectedCategory === catName ? 'Selected' : 'Click to view items'"></p>
+                    </button>
+                </template>
             </div>
         </section>
 
-        <section id="categorySection" class="mb-10 hidden">
-            <h3 class="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-                Available Categories for this School
-                <span class="h-[1px] flex-grow bg-slate-200"></span>
-            </h3>
-            <div id="categoryContainer" class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                </div>
+        <section class="mb-10" x-show="selectedCategory" x-transition x-cloak>
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4 ml-1">Step 2: Choose Specific Item</h3>
+            <div class="flex flex-wrap gap-3">
+                <template x-for="itemName in Object.keys(inventory[selectedCategory]?.items || {})" :key="itemName">
+                    <button @click="selectItem(itemName)"
+                        :class="selectedItem === itemName ? 'bg-slate-900 text-white shadow-lg' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-400'"
+                        class="px-6 py-3 rounded-2xl border font-bold text-sm transition-all" 
+                        x-text="itemName">
+                    </button>
+                </template>
+            </div>
         </section>
 
-        <section id="itemsSection" class="hidden">
-            <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-50 overflow-hidden">
-                <div class="p-8 border-b border-slate-50 bg-slate-50/30">
-                    <h3 id="selectedCategoryTitle" class="text-xl font-extrabold text-slate-800 italic">Items List</h3>
-                </div>
-                <div id="itemsTableContainer" class="p-0">
+        <section id="resultsSection" x-show="selectedItem" x-transition x-cloak>
+            <div class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 overflow-hidden">
+                
+                <div class="p-8 border-b border-slate-50 bg-slate-50/30 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <h3 class="text-xl font-extrabold text-slate-800 italic" x-text="`${selectedItem} - Model Inventory` "></h3>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Division Wide Summary</p>
                     </div>
+                    
+                    <div class="flex items-center gap-6">
+                        <div class="text-right hidden md:block">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Overall Items Total</p>
+                            <p class="text-2xl font-black text-blue-600" x-text="calculateOverallTotal()"></p>
+                        </div>
+
+                        <div class="relative w-full md:w-80">
+                            <input type="text" x-model="searchQuery" placeholder="Filter models..." 
+                                class="w-full pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-50 transition-all shadow-sm">
+                            <span class="absolute left-5 top-4.5 opacity-20">🔍</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-0">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Model / Specification (Sub-Item)</th>
+                                <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Schools Have</th>
+                                <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Total Quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <template x-for="(modelData, modelName) in filteredModels" :key="modelName">
+                                <tbody class="border-b border-slate-100" x-data="{ expanded: false }">
+                                    <tr class="hover:bg-slate-50/50 transition-colors cursor-pointer" @click="expanded = !expanded">
+                                        <td class="px-8 py-6">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-2 h-2 rounded-full bg-blue-500" :class="expanded ? 'animate-pulse' : ''"></div>
+                                                <p class="font-bold text-slate-800 text-base" x-text="modelName"></p>
+                                            </div>
+                                        </td>
+                                        <td class="px-8 py-6 text-center">
+                                            <button class="px-4 py-2 bg-blue-50 text-blue-700 rounded-xl font-black text-xs hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                                                <span x-text="modelData.length"></span> Schools
+                                            </button>
+                                        </td>
+                                        <td class="px-8 py-6 text-center">
+                                            <span class="inline-block px-4 py-1 bg-slate-100 rounded-lg font-black text-slate-700 text-lg" x-text="sumModelQty(modelData)"></span>
+                                        </td>
+                                    </tr>
+
+                                    <tr x-show="expanded" x-transition x-cloak class="bg-slate-50/30">
+                                        <td colspan="3" class="px-8 py-6">
+                                            <div class="bg-white rounded-3xl border border-slate-100 shadow-inner overflow-hidden">
+                                                <table class="w-full">
+                                                    <thead class="bg-slate-50/50">
+                                                        <tr class="text-[9px] font-black text-slate-400 uppercase">
+                                                            <th class="px-6 py-3">Recipient School</th>
+                                                            <th class="px-6 py-3 text-center">Quantity</th>
+                                                            <th class="px-6 py-3 text-right">Status</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="divide-y divide-slate-50">
+                                                        <template x-for="school in modelData" :key="school.name">
+                                                            <tr class="text-sm">
+                                                                <td class="px-6 py-3 font-bold text-slate-700" x-text="school.name"></td>
+                                                                <td class="px-6 py-3 text-center font-black text-blue-600" x-text="school.qty"></td>
+                                                                <td class="px-6 py-3 text-right">
+                                                                    <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md" x-text="school.status"></span>
+                                                                </td>
+                                                            </tr>
+                                                        </template>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </main>
 
-   <script>
-    const schoolFilter = document.getElementById('schoolFilter');
-    const categorySection = document.getElementById('categorySection');
-    const categoryContainer = document.getElementById('categoryContainer');
-    const itemsSection = document.getElementById('itemsSection');
+    <script>
+        function assetExplorer() {
+            return {
+                selectedCategory: null,
+                selectedItem: null,
+                searchQuery: '',
+                
+                // RESTRUCTURED DATA: Model -> List of Schools
+                inventory: {
+                    "ICT Equipment": {
+                        icon: "💻",
+                        items: {
+                            "Laptop": {
+                                "Dell Latitude 3420": [
+                                    { name: "Zamboanga Central School", qty: 25, status: "Serviceable" },
+                                    { name: "Tetuan Central School", qty: 20, status: "Serviceable" }
+                                ],
+                                "HP ProBook 440": [
+                                    { name: "Ayala National HS", qty: 15, status: "Serviceable" },
+                                    { name: "Don Pablo Lorenzo", qty: 15, status: "Serviceable" }
+                                ]
+                            },
+                            "Projector": {
+                                "Epson EB-X06": [
+                                    { name: "Zamboanga Central School", qty: 5, status: "Serviceable" },
+                                    { name: "Sta. Maria CS", qty: 5, status: "Serviceable" }
+                                ]
+                            }
+                        }
+                    },
+                    "Furniture": {
+                        icon: "🪑",
+                        items: {
+                            "Armchair": {
+                                "Plastic/Steel Hybrid": [
+                                    { name: "Zamboanga Central School", qty: 300, status: "Serviceable" },
+                                    { name: "Tetuan Central School", qty: 200, status: "Serviceable" }
+                                ]
+                            }
+                        }
+                    }
+                },
 
-    // TEMPORARY MOCK DATA
-    // This simulates what your database will eventually return
-    const mockData = {
-        "1": { // School ID 1
-            name: "Zamboanga Central School",
-            categories: ["DCP Package", "Furniture"],
-            items: {
-                "DCP Package": [
-                    { name: "Laptop", model: "Dell Latitude 3420", sn: "SN-ZC-001", qty: 15, status: "SERVICEABLE" },
-                    { name: "Projector", model: "Epson EB-X06", sn: "SN-ZC-002", qty: 2, status: "SERVICEABLE" }
-                ],
-                "Furniture": [
-                    { name: "Armchair", model: "Plastic/Steel", sn: "N/A", qty: 45, status: "GOOD CONDITION" }
-                ]
-            }
-        },
-        "2": { // School ID 2
-            name: "Tetuan Central School",
-            categories: ["Science Kit", "DCP Package"],
-            items: {
-                "Science Kit": [
-                    { name: "Microscope", model: "Compound Digital", sn: "SK-TET-01", qty: 5, status: "SERVICEABLE" }
-                ],
-                "DCP Package": [
-                    { name: "Tablet", model: "Huawei MatePad", sn: "T-992-ZC", qty: 30, status: "SERVICEABLE" }
-                ]
+                selectCategory(cat) {
+                    this.selectedCategory = cat;
+                    this.selectedItem = null;
+                    this.searchQuery = '';
+                },
+
+                selectItem(item) {
+                    this.selectedItem = item;
+                    this.searchQuery = '';
+                    setTimeout(() => {
+                        document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+                    }, 100);
+                },
+
+                sumModelQty(modelData) {
+                    return modelData.reduce((sum, school) => sum + school.qty, 0);
+                },
+
+                calculateOverallTotal() {
+                    if (!this.selectedItem) return 0;
+                    let models = this.inventory[this.selectedCategory].items[this.selectedItem];
+                    let total = 0;
+                    Object.values(models).forEach(schoolList => {
+                        total += schoolList.reduce((sum, s) => sum + s.qty, 0);
+                    });
+                    return total;
+                },
+
+                get filteredModels() {
+                    if (!this.selectedCategory || !this.selectedItem) return {};
+                    let models = this.inventory[this.selectedCategory].items[this.selectedItem];
+                    
+                    if (this.searchQuery.trim() !== '') {
+                        let filtered = {};
+                        Object.keys(models).forEach(key => {
+                            if (key.toLowerCase().includes(this.searchQuery.toLowerCase())) {
+                                filtered[key] = models[key];
+                            }
+                        });
+                        return filtered;
+                    }
+                    return models;
+                }
             }
         }
-    };
-
-    // 1. Handle School Selection
-    schoolFilter.addEventListener('change', function() {
-        const schoolId = this.value;
-        categoryContainer.innerHTML = '';
-        itemsSection.classList.add('hidden');
-
-        if (schoolId && mockData[schoolId]) {
-            categorySection.classList.remove('hidden');
-            
-            // Get categories specific to this school
-            const categories = mockData[schoolId].categories;
-            
-            categoryContainer.innerHTML = categories.map(cat => `
-                <button onclick="loadItems('${schoolId}', '${cat}')" class="category-btn group bg-white p-8 rounded-[2rem] border border-slate-100 shadow-lg shadow-slate-200/50 hover:border-blue-400 hover:bg-blue-50 transition-all duration-300 text-left">
-                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform text-xl">📦</div>
-                    <h4 class="font-extrabold text-slate-800 text-lg leading-tight">${cat}</h4>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase mt-1">Click to view items</p>
-                </button>
-            `).join('');
-        } else {
-            categorySection.classList.add('hidden');
-        }
-    });
-
-    // 2. Handle Category Click (Load Items)
-    function loadItems(schoolId, categoryName) {
-        itemsSection.classList.remove('hidden');
-        document.getElementById('selectedCategoryTitle').textContent = categoryName + " - " + mockData[schoolId].name;
-        
-        const items = mockData[schoolId].items[categoryName] || [];
-        const container = document.getElementById('itemsTableContainer');
-        
-        container.innerHTML = `
-            <table class="w-full text-left">
-                <thead class="bg-slate-50">
-                    <tr>
-                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase">Item/Sub-Item</th>
-                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase">Serial No.</th>
-                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase text-center">Qty</th>
-                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase">Status</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50">
-                    ${items.map(item => `
-                        <tr class="hover:bg-slate-50/50 transition-colors">
-                            <td class="px-8 py-5">
-                                <p class="font-bold text-slate-800 text-sm">${item.name}</p>
-                                <p class="text-[10px] text-slate-400 font-medium uppercase">${item.model}</p>
-                            </td>
-                            <td class="px-8 py-5 text-sm font-mono text-slate-500">${item.sn}</td>
-                            <td class="px-8 py-5 text-center font-bold">${item.qty}</td>
-                            <td class="px-8 py-5">
-                                <span class="px-3 py-1 ${item.status === 'SERVICEABLE' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'} rounded-full text-[10px] font-bold lowercase first-letter:uppercase">
-                                    ${item.status}
-                                </span>
-                            </td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        `;
-        
-        // Auto-scroll to table for better UX
-        itemsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-</script>
+    </script>
 </body>
 </html>
