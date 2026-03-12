@@ -37,11 +37,15 @@ Route::middleware('auth')->group(function () {
             ->get();
         $legislativeDistricts = DB::table('legislative_districts')->get();
         $quadrants = DB::table('quadrants')->get();
-        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants'));
+        $categories = DB::table('categories')->orderBy('name')->get();
+        $items = DB::table('items')->select('id', 'name', 'category_id')->orderBy('name')->get();
+        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items'));
     })->name('inventory.setup');
 
     // Process form submissions from Setup
     Route::post('/inventory-setup/school', [InventorySetupController::class, 'storeSchool'])->name('inventory.setup.school');
+    Route::post('/inventory-setup/category', [InventorySetupController::class, 'storeCategory'])->name('inventory.setup.category');
+    Route::post('/inventory-setup/item', [InventorySetupController::class, 'storeItem'])->name('inventory.setup.item');
 
     Route::get('/admin/schools', function (Request $request) {
         $search = $request->query('search');
