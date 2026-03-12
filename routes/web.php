@@ -40,9 +40,37 @@ Route::middleware('auth')->group(function () {
     // Process form submissions from Setup
     Route::post('/inventory-setup/school', [InventorySetupController::class, 'storeSchool'])->name('inventory.setup.school');
 
-    Route::get('/admin/schools', function () {
-        return view('admin.schools');
+    Route::get('/admin/schools', function (Request $request) {
+        $search = $request->query('search');
+        
+        $query = DB::table('schools')
+            ->join('districts', 'schools.district_id', '=', 'districts.id')
+            ->select('schools.id', 'schools.school_id', 'schools.name', 'districts.name as district_name');
+
+        if (!empty($search)) {
+            $query->where(function($q) use ($search) {
+                $q->where('schools.school_id', 'LIKE', '%' . $search . '%')
+                  ->orWhere('schools.name', 'LIKE', '%' . $search . '%');
+            });
+        }
+
+        $schools = $query->orderBy('schools.name')->paginate(20);
+        
+        // Fetch all schools for the autocomplete dropdown search
+        $allSchools = DB::table('schools')->select('id', 'school_id', 'name')->orderBy('name')->get();
+
+        return view('admin.schools', compact('schools', 'search', 'allSchools'));
     })->name('admin.schools');
+
+    // Route to delete a school from the registry
+    Route::delete('/admin/schools/{id}', function ($id) {
+        try {
+            DB::table('schools')->where('id', $id)->delete();
+            return redirect()->route('admin.schools')->with('success', 'School successfully deleted from the system.');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.schools')->with('error', 'Failed to delete school. It may have existing dependencies.');
+        }
+    })->name('admin.schools.destroy');
 
     // --- SYSTEM LOGS ROUTE (ONE VERSION ONLY) ---
     Route::get('/admin/logs', function (Request $request) {
@@ -80,9 +108,24 @@ Route::middleware('auth')->group(function () {
         return view('admin.logs', compact('action', 'logs'));
     })->name('admin.logs');
 
-    // Quadrants
-    Route::get('/admin/quadrant-1-1', function () { return view('admin.quadrants.q1-1'); })->name('quadrant.1.1');
-    Route::get('/admin/quadrant-1-2', function () { return view('admin.quadrants.q1-2'); })->name('quadrant.1.2');
-    Route::get('/admin/quadrant-2-1', function () { return view('admin.quadrants.q2-1'); })->name('quadrant.2.1');
-    Route::get('/admin/quadrant-2-2', function () { return view('admin.quadrants.q2-2'); })->name('quadrant.2.2');
+    // Quadrants — fetch districts & schools from database
+    $quadrantHandler = function ($quadrantId, $view) {
+        return function () use ($quadrantId, $view) {
+            $districts = DB::table('districts')->where('quadrant_id', $quadrantId)->orderBy('name')->get();
+            $schools = DB::table('schools')->whereIn('district_id', $districts->pluck('id'))->orderBy('name')->get();
+            $schoolsByDistrict = [];
+            foreach ($districts as $district) {
+                $schoolsByDistrict[$district->id] = $schools->where('district_id', $district->id)->pluck('name')->values()->toArray();
+            }
+            $allSchools = $schools->map(function ($s) {
+                return ['name' => $s->name, 'school_id' => $s->school_id, 'district_id' => $s->district_id];
+            })->values()->toArray();
+            return view($view, compact('districts', 'schoolsByDistrict', 'allSchools'));
+        };
+    };
+
+    Route::get('/admin/quadrant-1-1', $quadrantHandler(1, 'admin.quadrants.q1-1'))->name('quadrant.1.1');
+    Route::get('/admin/quadrant-1-2', $quadrantHandler(2, 'admin.quadrants.q1-2'))->name('quadrant.1.2');
+    Route::get('/admin/quadrant-2-1', $quadrantHandler(3, 'admin.quadrants.q2-1'))->name('quadrant.2.1');
+    Route::get('/admin/quadrant-2-2', $quadrantHandler(4, 'admin.quadrants.q2-2'))->name('quadrant.2.2');
 });

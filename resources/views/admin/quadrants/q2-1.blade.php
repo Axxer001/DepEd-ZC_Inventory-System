@@ -35,8 +35,9 @@
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select District</label>
                     <select id="districtSelect" onchange="updateSchools()" class="w-full px-5 py-4 bg-white border border-slate-200 rounded-[1.5rem] text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-50 cursor-pointer shadow-sm transition-all">
                         <option value="">-- Choose District --</option>
-                        <option value="ayala">Ayala District</option>
-                        <option value="labuan">Labuan District</option>
+                        @foreach($districts as $district)
+                            <option value="{{ $district->id }}">{{ $district->name }}</option>
+                        @endforeach
                     </select>
                 </div>
 
@@ -45,6 +46,15 @@
                     <select id="schoolSelect" onchange="showItems()" disabled class="w-full px-5 py-4 bg-white border border-slate-200 rounded-[1.5rem] text-sm font-bold focus:outline-none focus:ring-4 focus:ring-blue-50 cursor-pointer shadow-sm transition-all disabled:opacity-50 disabled:bg-slate-100">
                         <option value="">-- Select District First --</option>
                     </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Search School</label>
+                    <div class="relative" id="searchContainer">
+                        <input type="text" id="searchInput" placeholder="Search school ID or name..." autocomplete="off" class="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-[1.5rem] text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-blue-50 shadow-sm transition-all">
+                        <span class="absolute left-5 top-[1.1rem] opacity-30">🔍</span>
+                        <ul id="searchResults" class="absolute z-30 w-full bg-white border border-slate-100 rounded-2xl shadow-xl mt-2 max-h-60 overflow-y-auto hidden custom-scrollbar"></ul>
+                    </div>
                 </div>
             </div>
 
@@ -84,37 +94,19 @@
     </div>
 
     <script>
-        // Fake Data Structure
-        const data = {
-            "ayala": {
-                "Ayala NHS": [
-                    { name: "Chair", sub: "Plastic (Monoblock)", cat: "School Furniture", qty: 150 },
-                    { name: "Smart TV", sub: "65-inch Crystal UHD", cat: "DCP Package", qty: 2 },
-                    { name: "Laptop", sub: "Dell Latitude 3420", cat: "DCP Package", qty: 45 }
-                ],
-                "Ayala Central School": [
-                    { name: "Table", sub: "Wooden Teachers Table", cat: "School Furniture", qty: 12 },
-                    { name: "Projector", sub: "Epson EB-X06", cat: "DCP Package", qty: 5 }
-                ]
-            },
-            "labuan": {
-                "Labuan NHS": [
-                    { name: "Armchair", sub: "Wood with Metal Frame", cat: "School Furniture", qty: 200 },
-                    { name: "Desktop", sub: "HP ProDesk 400", cat: "DCP Package", qty: 30 }
-                ]
-            }
-        };
+        const schoolsByDistrict = @json($schoolsByDistrict);
+        const allSchools = @json($allSchools);
 
         function updateSchools() {
-            const district = document.getElementById('districtSelect').value;
+            const districtId = document.getElementById('districtSelect').value;
             const schoolSelect = document.getElementById('schoolSelect');
             
             schoolSelect.innerHTML = '<option value="">-- Choose School --</option>';
             document.getElementById('tableContainer').classList.add('hidden');
 
-            if (district && data[district]) {
+            if (districtId && schoolsByDistrict[districtId]) {
                 schoolSelect.disabled = false;
-                Object.keys(data[district]).forEach(school => {
+                schoolsByDistrict[districtId].forEach(school => {
                     schoolSelect.innerHTML += `<option value="${school}">${school}</option>`;
                 });
             } else {
@@ -123,7 +115,6 @@
         }
 
         function showItems() {
-            const district = document.getElementById('districtSelect').value;
             const school = document.getElementById('schoolSelect').value;
             const tbody = document.getElementById('itemsTableBody');
             const container = document.getElementById('tableContainer');
@@ -131,27 +122,67 @@
             if (school) {
                 document.getElementById('displaySchoolName').innerText = school;
                 tbody.innerHTML = '';
-                
-                data[district][school].forEach(item => {
-                    tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50/80 transition-all cursor-default group">
-                            <td class="px-8 py-4 font-extrabold text-slate-800 text-sm uppercase">${item.name}</td>
-                            <td class="px-8 py-4 text-xs font-semibold text-slate-500 italic">${item.sub}</td>
-                            <td class="px-8 py-4">
-                                <span class="bg-blue-50 text-blue-600 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter border border-blue-100">${item.cat}</span>
-                            </td>
-                            <td class="px-8 py-4 text-center">
-                                <span class="text-lg font-black text-slate-800">${item.qty}</span>
-                            </td>
-                        </tr>
-                    `;
-                });
-
                 container.classList.remove('hidden');
             } else {
                 container.classList.add('hidden');
             }
         }
+
+        function selectSchoolFromSearch(districtId, schoolName) {
+            const districtSelect = document.getElementById('districtSelect');
+            districtSelect.value = districtId;
+            updateSchools();
+
+            const schoolSelect = document.getElementById('schoolSelect');
+            schoolSelect.value = schoolName;
+            showItems();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const searchResults = document.getElementById('searchResults');
+
+            searchInput.addEventListener('input', function() {
+                const query = this.value.toLowerCase().trim();
+                searchResults.innerHTML = '';
+
+                if (query.length === 0) {
+                    searchResults.classList.add('hidden');
+                    return;
+                }
+
+                const filtered = allSchools.filter(s => {
+                    return s.name.toLowerCase().includes(query) || (s.school_id && s.school_id.toString().includes(query));
+                });
+
+                if (filtered.length > 0) {
+                    filtered.forEach(school => {
+                        const li = document.createElement('li');
+                        li.className = 'px-4 py-3 hover:bg-blue-50 cursor-pointer text-sm font-semibold text-slate-800 transition-colors border-b border-slate-50 last:border-0';
+                        li.textContent = `${school.school_id} - ${school.name}`;
+                        li.addEventListener('click', function() {
+                            searchInput.value = school.name;
+                            searchResults.classList.add('hidden');
+                            selectSchoolFromSearch(school.district_id, school.name);
+                        });
+                        searchResults.appendChild(li);
+                    });
+                } else {
+                    const li = document.createElement('li');
+                    li.className = 'px-4 py-3 text-sm font-semibold text-slate-400 italic pointer-events-none';
+                    li.textContent = 'No matching schools found';
+                    searchResults.appendChild(li);
+                }
+
+                searchResults.classList.remove('hidden');
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                    searchResults.classList.add('hidden');
+                }
+            });
+        });
     </script>
 </body>
 </html>
