@@ -155,6 +155,65 @@
                 </div>
             </section>
 
+
+            <section class="mb-12">
+    <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-50 overflow-hidden">
+        <div class="p-8 border-b border-slate-50 flex justify-between items-center">
+            <div>
+                <h3 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+                    <span class="bg-blue-100 text-blue-600 p-2 rounded-xl text-sm italic">Latest</span>
+                    Recently Added Items
+                </h3>
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Review the most recent inventory updates</p>
+            </div>
+            <a href="#" class="text-[#c00000] text-xs font-bold uppercase tracking-widest hover:underline">View All Assets </a>
+        </div>
+        
+        <div class="overflow-x-auto custom-scroll">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50">
+                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">School</th>
+                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Category</th>
+                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item / Model</th>
+                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Qty</th>
+                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Added By</th>
+                        <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    <tr class="hover:bg-slate-50/50 transition-colors group">
+                        <td class="px-8 py-5">
+                            <p class="font-bold text-slate-800 text-sm">Zamboanga Central School</p>
+                            <p class="text-[10px] text-slate-400 font-medium italic">District I</p>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold uppercase">DCP Package</span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <p class="font-bold text-slate-700 text-sm leading-tight">Laptop</p>
+                            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">Dell Latitude 3420</p>
+                        </td>
+                        <td class="px-8 py-5 text-center">
+                            <span class="font-black text-slate-800">15</span>
+                        </td>
+                        <td class="px-8 py-5">
+                            <div class="flex items-center gap-2">
+                                <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">A</div>
+                                <p class="text-sm font-bold text-slate-600">Admin_Juan</p>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5 text-sm text-slate-500 font-medium">
+                            {{ now()->format('M d, Y') }}
+                        </td>
+                    </tr>
+                    
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
             <div class="flex items-center justify-between mb-8 px-2">
                 <h3 class="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
                     <span class="w-2 h-8 bg-blue-600 rounded-full"></span>
