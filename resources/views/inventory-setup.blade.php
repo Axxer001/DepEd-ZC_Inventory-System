@@ -16,7 +16,6 @@
             to { opacity: 1; transform: translateY(0) scale(1); } 
         }
 
-        /* Toast Animation */
         @keyframes slideInRight {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
