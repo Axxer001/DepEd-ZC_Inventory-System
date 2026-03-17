@@ -62,8 +62,9 @@
                     
                     <form method="GET" action="{{ route('admin.schools') }}" class="relative w-full md:w-96 group" id="searchContainer">
                         <input type="text" id="searchInput" name="search" value="{{ $search ?? '' }}" placeholder="Search ID or school name..." autocomplete="off" class="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-red-50 transition-all relative z-20">
-                        <span class="absolute left-5 top-4.5 opacity-30 z-20">🔍</span>
-                        <ul id="searchResults" class="absolute z-30 w-full bg-white border border-slate-100 rounded-2xl shadow-2xl mt-2 max-h-60 overflow-y-auto hidden custom-scrollbar"></ul>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 absolute left-4 top-3.5 text-slate-300 group-focus-within:text-[#c00000] transition-colors z-20">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+</svg>                        <ul id="searchResults" class="absolute z-30 w-full bg-white border border-slate-100 rounded-2xl shadow-2xl mt-2 max-h-60 overflow-y-auto hidden custom-scrollbar"></ul>
                     </form>
                 </div>
 

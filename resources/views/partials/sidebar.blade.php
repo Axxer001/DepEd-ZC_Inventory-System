@@ -32,14 +32,17 @@
         <div class="relative group/navitem">
             @if(request()->routeIs('dashboard'))
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-4 px-4 py-3 bg-red-50 text-[#c00000] rounded-2xl font-bold border border-red-100 transition-all" title="Dashboard">
-                    <span class="shrink-0 text-lg transition-transform duration-300 group-hover/navitem:scale-110">📊</span>
+                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:scale-110">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+</svg>
                     <span class="sidebar-label hidden whitespace-nowrap text-sm">Dashboard</span>
                 </a>
                 <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#c00000] rounded-r-full"></div>
             @else
                 <a href="{{ route('dashboard') }}" class="flex items-center gap-4 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-[#c00000] rounded-2xl font-bold transition-all" title="Dashboard">
-                    <span class="shrink-0 text-lg transition-transform duration-300 group-hover/navitem:scale-110">📊</span>
-                    <span class="sidebar-label hidden whitespace-nowrap text-sm">Dashboard</span>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:scale-110">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+</svg>                    <span class="sidebar-label hidden whitespace-nowrap text-sm">Dashboard</span>
                 </a>
             @endif
         </div>
@@ -48,13 +51,17 @@
 <div class="relative group/navitem mt-2">
     @if(request()->routeIs('admin.schools'))
         <a href="{{ route('admin.schools') }}" class="flex items-center gap-4 px-4 py-3 bg-red-50 text-[#c00000] rounded-2xl font-bold border border-red-100 transition-all" title="Schools">
-            <span class="shrink-0 text-lg transition-transform duration-300 group-hover/navitem:scale-110">🏫</span>
-            <span class="sidebar-label hidden whitespace-nowrap text-sm">Schools</span>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A4.833 4.833 0 0012 9a4.833 4.833 0 00-7.5 1.332V21m15 0h-15" />
+</svg>         
+  <span class="sidebar-label hidden whitespace-nowrap text-sm">Schools</span>
         </a>
         <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#c00000] rounded-r-full"></div>
     @else
         <a href="{{ route('admin.schools') }}" class="flex items-center gap-4 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-[#c00000] rounded-2xl font-bold transition-all" title="Schools">
-            <span class="shrink-0 text-lg transition-transform duration-300 group-hover/navitem:scale-110">🏫</span>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A4.833 4.833 0 0012 9a4.833 4.833 0 00-7.5 1.332V21m15 0h-15" />
+</svg> 
             <span class="sidebar-label hidden whitespace-nowrap text-sm">Schools</span>
         </a>
     @endif
@@ -64,14 +71,16 @@
     <div class="relative group/navitem mt-2">
         @if(request()->routeIs('assets.view'))
             <a href="{{ route('assets.view') }}" class="flex items-center gap-4 px-4 py-3 bg-red-50 text-[#c00000] rounded-2xl font-bold border border-red-100 transition-all" title="View Assets">
-                <span class="shrink-0 text-lg transition-transform duration-300 group-hover/navitem:scale-110">📦</span>
-                <span class="sidebar-label hidden whitespace-nowrap text-sm">View Assets</span>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:scale-110">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+</svg>                <span class="sidebar-label hidden whitespace-nowrap text-sm">View Assets</span>
             </a>
             <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#c00000] rounded-r-full"></div>
         @else
             <a href="{{ route('assets.view') }}" class="flex items-center gap-4 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-[#c00000] rounded-2xl font-bold transition-all" title="View Assets">
-                <span class="shrink-0 text-lg transition-transform duration-300 group-hover/navitem:scale-110">📦</span>
-                <span class="sidebar-label hidden whitespace-nowrap text-sm">View Assets</span>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:scale-110">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
+</svg>                <span class="sidebar-label hidden whitespace-nowrap text-sm">View Assets</span>
             </a>
         @endif
     </div>
@@ -81,13 +90,19 @@
             <p class="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest sidebar-label hidden whitespace-nowrap">Configuration</p>
             @if(request()->routeIs('inventory.setup'))
                 <a href="{{ route('inventory.setup') }}" class="flex items-center gap-4 px-4 py-3 bg-red-50 text-[#c00000] rounded-xl font-bold border border-red-100 transition-all" title="Inventory Setup">
-                    <span class="shrink-0 text-lg transition-transform duration-300 group-hover/navitem:rotate-45">⚙️</span>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:rotate-90">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+</svg>
                     <span class="sidebar-label hidden whitespace-nowrap text-sm">Inventory Setup</span>
                 </a>
                 <div class="absolute left-0 bottom-3 w-1 h-8 bg-[#c00000] rounded-r-full"></div>
             @else
                 <a href="{{ route('inventory.setup') }}" class="flex items-center gap-4 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-[#c00000] rounded-xl font-semibold transition-all group" title="Inventory Setup">
-                    <span class="shrink-0 text-lg transition-transform duration-300 group-hover/navitem:rotate-45">⚙️</span>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:rotate-90">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+</svg>
                     <span class="sidebar-label hidden whitespace-nowrap text-sm">Inventory Setup</span>
                 </a>
             @endif
@@ -100,13 +115,17 @@
     
     @if(request()->routeIs('admin.logs'))
         <a href="{{ route('admin.logs') }}" class="flex items-center gap-4 px-4 py-3 bg-red-50 text-[#c00000] rounded-xl font-bold border border-red-100 transition-all" title="System Logs">
-            <span class="shrink-0 text-lg transition-transform duration-300 group-hover/navitem:scale-110">📜</span>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:scale-110">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+</svg>
             <span class="sidebar-label hidden whitespace-nowrap text-sm">System Logs</span>
         </a>
         <div class="absolute left-0 bottom-3 w-1 h-8 bg-[#c00000] rounded-r-full"></div>
     @else
         <a href="{{ route('admin.logs') }}" class="flex items-center gap-4 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-[#c00000] rounded-xl font-semibold transition-all group" title="System Logs">
-            <span class="shrink-0 text-lg transition-transform duration-300 group-hover/navitem:scale-110">📜</span>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:scale-110">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+</svg>
             <span class="sidebar-label hidden whitespace-nowrap text-sm">System Logs</span>
         </a>
     @endif
@@ -126,7 +145,10 @@
                   ? 'bg-blue-50 text-blue-600 border border-blue-100' 
                   : 'text-slate-500 hover:bg-blue-50 hover:text-blue-600 border border-transparent' }}" 
                title="Quadrant 1.1">
-                <span class="shrink-0 text-lg transition-transform duration-300 group-hover/subitem:-translate-y-1">📍</span>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 shrink-0 transition-transform duration-300 group-hover/subitem:-translate-y-1">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+</svg>
                 <span class="sidebar-label hidden whitespace-nowrap text-sm flex-grow">Quadrant 1.1</span>
                 <span class="sidebar-label hidden text-[10px] px-2 py-1 rounded-lg font-bold transition-colors
                       {{ request()->routeIs('quadrant.1.1') ? 'bg-white text-blue-600 shadow-sm' : 'bg-slate-100 text-blue-600' }}">
@@ -146,8 +168,10 @@
                   ? 'bg-blue-50 text-blue-600 border border-blue-100' 
                   : 'text-slate-500 hover:bg-blue-50 hover:text-blue-600 border border-transparent' }}" 
                title="Quadrant 1.2">
-                <span class="shrink-0 text-lg transition-transform duration-300 group-hover/subitem:-translate-y-1">📍</span>
-                <span class="sidebar-label hidden whitespace-nowrap text-sm flex-grow">Quadrant 1.2</span>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 shrink-0 transition-transform duration-300 group-hover/subitem:-translate-y-1">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+</svg>                <span class="sidebar-label hidden whitespace-nowrap text-sm flex-grow">Quadrant 1.2</span>
                 <span class="sidebar-label hidden text-[10px] px-2 py-1 rounded-lg font-bold transition-colors
                       {{ request()->routeIs('quadrant.1.2') ? 'bg-white text-blue-600 shadow-sm' : 'bg-slate-100 text-blue-600' }}">
                     2 Dist.
@@ -173,7 +197,10 @@
                   ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
                   : 'text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 border border-transparent' }}" 
                title="Quadrant 2.1">
-                <span class="shrink-0 text-lg transition-transform duration-300 group-hover/subitem:-translate-y-1">📍</span>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 shrink-0 transition-transform duration-300 group-hover/subitem:-translate-y-1">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+</svg>
                 <span class="sidebar-label hidden whitespace-nowrap text-sm flex-grow">Quadrant 2.1</span>
                 <span class="sidebar-label hidden text-[10px] px-2 py-1 rounded-lg font-bold transition-colors
                       {{ request()->routeIs('quadrant.2.1') ? 'bg-white text-emerald-600 shadow-sm' : 'bg-slate-100 text-emerald-600' }}">
@@ -193,7 +220,10 @@
                   ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
                   : 'text-slate-500 hover:bg-emerald-50 hover:text-emerald-600 border border-transparent' }}" 
                title="Quadrant 2.2">
-                <span class="shrink-0 text-lg transition-transform duration-300 group-hover/subitem:-translate-y-1">📍</span>
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 shrink-0 transition-transform duration-300 group-hover/subitem:-translate-y-1">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+</svg>
                 <span class="sidebar-label hidden whitespace-nowrap text-sm flex-grow">Quadrant 2.2</span>
                 <span class="sidebar-label hidden text-[10px] px-2 py-1 rounded-lg font-bold transition-colors
                       {{ request()->routeIs('quadrant.2.2') ? 'bg-white text-emerald-600 shadow-sm' : 'bg-slate-100 text-emerald-600' }}">

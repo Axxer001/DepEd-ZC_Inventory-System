@@ -51,7 +51,11 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
                 <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default">
                     <div class="flex justify-between items-start mb-4">
-                        <div class="p-4 bg-blue-50 text-blue-500 rounded-2xl text-2xl group-hover:scale-110 transition-transform">🏢</div>
+<div class="p-4 bg-blue-50 text-blue-500 rounded-2xl group-hover:scale-110 transition-transform">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6.75h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75H21m-3.75 3.75H21" />
+    </svg>
+</div>
                         <span class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Division Wide</span>
                     </div>
                     <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total System Assets</h3>
@@ -60,8 +64,11 @@
 
                 <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default">
                     <div class="flex justify-between items-start mb-4">
-                        <div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl text-2xl group-hover:scale-110 transition-transform">✅</div>
-                        <span class="bg-emerald-100 text-emerald-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Serviceable</span>
+<div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21a3.745 3.745 0 01-3.129-1.593 3.745 3.745 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.745 3.745 0 013.296-1.043A3.745 3.745 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.745 3.745 0 013.296 1.043 3.745 3.745 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+    </svg>
+</div>                        <span class="bg-emerald-100 text-emerald-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Serviceable</span>
                     </div>
                     <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Good Condition</h3>
                     <p class="text-5xl font-extrabold text-emerald-600 tracking-tighter leading-none">0</p>
@@ -69,8 +76,11 @@
 
                 <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default">
                     <div class="flex justify-between items-start mb-4">
-                        <div class="p-4 bg-orange-50 text-orange-500 rounded-2xl text-2xl group-hover:scale-110 transition-transform">⚠️</div>
-                        <span class="bg-orange-100 text-orange-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Unserviceable</span>
+<div class="p-4 bg-orange-50 text-orange-500 rounded-2xl group-hover:scale-110 transition-transform">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+    </svg>
+</div>                        <span class="bg-orange-100 text-orange-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Unserviceable</span>
                     </div>
                     <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Pasira / Damaged</h3>
                     <p class="text-5xl font-extrabold text-orange-500 tracking-tighter leading-none">0</p>
@@ -94,8 +104,9 @@
                         
                         <div class="relative w-full md:w-72 group" id="searchContainer">
                             <input type="text" id="schoolSearch" placeholder="Search school..." autocomplete="off" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-red-50 transition-all font-semibold relative z-20">
-                            <span class="absolute left-4 top-3.5 text-slate-300 group-focus-within:text-[#c00000] transition-colors z-20">🔍</span>
-                            
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 absolute left-4 top-3.5 text-slate-300 group-focus-within:text-[#c00000] transition-colors z-20">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+</svg>                            
                             <!-- Search Autocomplete Results -->
                             <ul id="searchResults" class="absolute z-30 w-full bg-white border border-slate-100 rounded-2xl shadow-xl mt-2 max-h-60 overflow-y-auto hidden custom-scroll">
                             </ul>
