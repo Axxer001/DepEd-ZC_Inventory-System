@@ -160,7 +160,7 @@ class InventorySetupController extends Controller
             }
         }
 
-        // Process sub-items
+        // Process new sub-items
         $subItems = $request->input('sub_items', []);
         $subItems = array_filter(array_map('trim', $subItems)); // Remove empty entries
 
@@ -186,6 +186,19 @@ class InventorySetupController extends Controller
 
             $messages[] = "Sub-item '{$subItemName}' added";
         }
+
+        // Process existing sub-items
+        $existingSubItemIds = $request->input('existing_sub_item_ids', []);
+        $existingSubItemsData = [];
+        if (!empty($existingSubItemIds)) {
+            $existingSubItemsRecords = DB::table('sub_items')->whereIn('id', $existingSubItemIds)->get();
+            foreach ($existingSubItemsRecords as $es) {
+                $existingSubItemsData[$es->id] = $es->name;
+            }
+        }
+        
+        // Combine all sub-items (new + existing) that need ownership assignment
+        $allSubItemsToAssign = $createdSubItemsData + $existingSubItemsData;
 
         // Process ownership assignments
         if (!empty($schoolIds) && $quantity > 0) {
@@ -213,8 +226,8 @@ class InventorySetupController extends Controller
                     'updated_at' => now(),
                 ]);
 
-                // Record ownership for each sub-item
-                foreach ($createdSubItemsData as $subItemId => $subItemName) {
+                // Record ownership for each sub-item (newly created AND selected existing)
+                foreach ($allSubItemsToAssign as $subItemId => $subItemName) {
                     DB::table('ownerships')->insert([
                         'school_id' => $schoolId,
                         'item_id' => $itemId,
