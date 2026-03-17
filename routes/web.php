@@ -29,6 +29,7 @@ Route::get('/login', function() { return redirect('/'); });
 Route::middleware('auth')->group(function () {
     
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/dashboard/quick-asset', [DashboardController::class, 'storeQuickAsset'])->name('inventory.dashboard.store');
     
     Route::get('/inventory-setup', function () {
         $districts = DB::table('districts')
@@ -39,7 +40,8 @@ Route::middleware('auth')->group(function () {
         $quadrants = DB::table('quadrants')->get();
         $categories = DB::table('categories')->orderBy('name')->get();
         $items = DB::table('items')->select('id', 'name', 'category_id')->orderBy('name')->get();
-        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items'));
+        $allSchools = DB::table('schools')->select('id', 'school_id', 'name')->orderBy('name')->get();
+        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'allSchools'));
     })->name('inventory.setup');
 
     // Process form submissions from Setup
@@ -88,18 +90,13 @@ Route::middleware('auth')->group(function () {
 
         // 2. Filter logic
         if ($action !== 'All Actions') {
-            switch ($action) {
-                case 'Authentications':
-                    $query->where(function($q) {
-                        $q->whereIn('table_name', ['users', 'sessions'])
-                          ->orWhere('activity', 'LIKE', '%login%')
-                          ->orWhere('activity', 'LIKE', '%logout%');
-                    });
-                    break;
-                case 'Schools': $query->where('table_name', 'schools'); break;
-                case 'Items': $query->whereIn('table_name', ['items', 'inventory']); break;
-                case 'Districts': $query->whereIn('table_name', ['districts', 'quadrants']); break;
-                default: $query->where('activity', 'LIKE', '%' . $action . '%'); break;
+            // Filter by action_type (Create, Update, Delete)
+            $actionTypes = ['Create', 'Update', 'Delete', 'Others'];
+            if (in_array($action, $actionTypes)) {
+                $query->where('action_type', $action);
+            } else {
+                // Filter by module name
+                $query->where('module', $action);
             }
         }
 

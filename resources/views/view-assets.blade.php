@@ -176,60 +176,7 @@
                 selectedItem: null,
                 searchQuery: '',
                 
-                inventory: {
-                    "ICT Equipment": {
-                        icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" /></svg>`,
-                        items: {
-                            "Laptop": {
-                                "Dell Latitude 3420": [
-                                    { name: "Zamboanga Central School", qty: 25, status: "Serviceable" },
-                                    { name: "Tetuan Central School", qty: 20, status: "Serviceable" }
-                                ],
-                                "HP ProBook 440": [
-                                    { name: "Ayala National HS", qty: 15, status: "Serviceable" },
-                                    { name: "Don Pablo Lorenzo", qty: 15, status: "Serviceable" }
-                                ]
-                            },
-                            "Projector": {
-                                "Epson EB-X06": [
-                                    { name: "Zamboanga Central School", qty: 5, status: "Serviceable" },
-                                    { name: "Sta. Maria CS", qty: 5, status: "Serviceable" }
-                                ]
-                            }
-                        }
-                    },
-                    "Furniture": {
-                        icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>`,
-                        items: {
-                            "Armchair": {
-                                "Plastic/Steel Hybrid": [
-                                    { name: "Zamboanga Central School", qty: 300, status: "Serviceable" },
-                                    { name: "Tetuan Central School", qty: 200, status: "Serviceable" }
-                                ]
-                            }
-                        }
-                    },
-                    "Science Kits": {
-                        icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v1.244c0 .892-.506 1.707-1.3 2.11L3.571 9.094c-.803.414-1.321 1.24-1.321 2.138v5.127c0 .937.545 1.79 1.403 2.179l5.42 2.454a2.25 2.25 0 001.754 0l5.42-2.454c.858-.389 1.403-1.242 1.403-2.179v-5.127c0-.898-.518-1.724-1.321-2.138L11.3 6.458a2.25 2.25 0 01-1.3-2.11V3.104c0-.422.355-.758.75-.758h.5c.395 0 .75.336.75.758v1.244c0 .892.506 1.707 1.3 2.11l4.879 2.54c.803.414 1.321 1.24 1.321 2.138v5.127c0 .937-.545 1.79-1.403 2.179l-5.42 2.454a2.25 2.25 0 01-1.754 0l-5.42-2.454c-.858-.389-1.403-1.242-1.403-2.179v-5.127c0-.898.518-1.724 1.321-2.138l4.879-2.54a2.25 2.25 0 001.3-2.11V3.104c0-.422-.355-.758-.75-.758h-.5c-.395 0-.75.336-.75.758z" /></svg>`,
-                        items: {
-                            "Microscope": {
-                                "Digital Compound": [
-                                    { name: "Sta. Maria National HS", qty: 10, status: "Serviceable" }
-                                ]
-                            }
-                        }
-                    },
-                    "Sports Equip.": {
-                        icon: `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" /></svg>`,
-                        items: {
-                            "Volleyball": {
-                                "Mikasa MVA200": [
-                                    { name: "Ayala Central School", qty: 50, status: "Serviceable" }
-                                ]
-                            }
-                        }
-                    }
-                },
+                inventory: @json($inventory),
 
                 selectCategory(cat) {
                     this.selectedCategory = cat;

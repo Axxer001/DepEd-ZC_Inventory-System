@@ -45,9 +45,18 @@
                     <form method="GET" action="{{ route('admin.logs') }}" class="flex gap-2" id="filterForm">
                         <select name="action" onchange="document.getElementById('filterForm').submit()" class="px-6 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-slate-100 transition-all cursor-pointer shadow-sm">
                             <option value="All Actions" {{ $action == 'All Actions' ? 'selected' : '' }}>All Actions</option>
-                            <option value="Create" {{ $action == 'Create' ? 'selected' : '' }}>Create</option>
-                            <option value="Update" {{ $action == 'Update' ? 'selected' : '' }}>Update</option>
-                            <option value="Delete" {{ $action == 'Delete' ? 'selected' : '' }}>Delete</option>
+                            <optgroup label="By Action Type">
+                                <option value="Create" {{ $action == 'Create' ? 'selected' : '' }}>Create</option>
+                                <option value="Update" {{ $action == 'Update' ? 'selected' : '' }}>Update</option>
+                                <option value="Delete" {{ $action == 'Delete' ? 'selected' : '' }}>Delete</option>
+                            </optgroup>
+                            <optgroup label="By Module">
+                                <option value="Authentication" {{ $action == 'Authentication' ? 'selected' : '' }}>Authentication</option>
+                                <option value="Schools" {{ $action == 'Schools' ? 'selected' : '' }}>Schools</option>
+                                <option value="Items" {{ $action == 'Items' ? 'selected' : '' }}>Items</option>
+                                <option value="Categories" {{ $action == 'Categories' ? 'selected' : '' }}>Categories</option>
+                                <option value="Accounts" {{ $action == 'Accounts' ? 'selected' : '' }}>Accounts</option>
+                            </optgroup>
                         </select>
                     </form>
                 </div>

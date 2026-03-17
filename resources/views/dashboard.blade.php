@@ -59,7 +59,7 @@
                         <span class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Division Wide</span>
                     </div>
                     <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total System Assets</h3>
-                    <p class="text-5xl font-extrabold text-slate-800 tracking-tighter leading-none">0</p>
+                    <p class="text-5xl font-extrabold text-slate-800 tracking-tighter leading-none">{{ number_format($totalAssets) }}</p>
                 </div>
 
                 <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default">
@@ -71,7 +71,7 @@
 </div>                        <span class="bg-emerald-100 text-emerald-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Serviceable</span>
                     </div>
                     <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Good Condition</h3>
-                    <p class="text-5xl font-extrabold text-emerald-600 tracking-tighter leading-none">0</p>
+                    <p class="text-5xl font-extrabold text-emerald-600 tracking-tighter leading-none">{{ number_format($serviceableCount) }}</p>
                 </div>
 
                 <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default">
@@ -83,7 +83,7 @@
 </div>                        <span class="bg-orange-100 text-orange-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Unserviceable</span>
                     </div>
                     <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Pasira / Damaged</h3>
-                    <p class="text-5xl font-extrabold text-orange-500 tracking-tighter leading-none">0</p>
+                    <p class="text-5xl font-extrabold text-orange-500 tracking-tighter leading-none">{{ number_format($unserviceableCount) }}</p>
                 </div>
             </div>
 
@@ -113,10 +113,11 @@
                         </div>
                     </div>
 
-                    <form action="#" method="POST" class="grid grid-cols-1 md:grid-cols-5 gap-6">
+                    <form action="{{ route('inventory.dashboard.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-5 gap-6">
+                        @csrf
                         <div class="space-y-2 relative">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assigned School</label>
-                            <select id="schoolSelect" class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all relative z-10">
+                            <select name="school_id" id="schoolSelect" required class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all relative z-10">
                                 <option value="">Select a School</option>
                                 @foreach($schools as $school)
                                     <option value="{{ $school->id }}">{{ $school->name }}</option>
@@ -126,38 +127,41 @@
 
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category</label>
-                            <select class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all">
-                                <option>DCP Package</option>
-                                <option>Classroom Furniture</option>
-                                <option>Science Kit</option>
+                            <select name="category_id" id="categorySelect" required class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all">
+                                <option value="">Select Category</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                @endforeach
                             </select>
                         </div>
 
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item</label>
-                            <select class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all">
-                                <option>Laptop</option>
-                                <option>Desktop</option>
-                                <option>Printer</option>
+                            <select name="item_id" id="itemSelect" required disabled class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all disabled:opacity-50">
+                                <option value="">Select Item</option>
+                                @foreach($items as $item)
+                                    <option value="{{ $item->id }}" data-category="{{ $item->category_id }}">{{ $item->name }}</option>
+                                @endforeach
                             </select>
                         </div>
 
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sub-Item</label>
-                            <select class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all">
-                                <option>Dell Latitude</option>
-                                <option>HP ProBook</option>
-                                <option>Acer TravelMate</option>
+                            <select name="sub_item_id" id="subItemSelect" disabled class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all disabled:opacity-50">
+                                <option value="">Select Sub-Item</option>
+                                @foreach($subItems as $sub)
+                                    <option value="{{ $sub->id }}" data-item="{{ $sub->item_id }}">{{ $sub->name }}</option>
+                                @endforeach
                             </select>
                         </div>
 
                         <div class="flex items-end gap-3">
                             <div class="space-y-2 flex-grow">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity</label>
-                                <input type="number" value="1" min="1" class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none text-center">
+                                <input type="number" name="quantity" id="quantityInput" value="1" min="1" required class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none text-center">
                             </div>
-                            <button type="submit" class="p-4 bg-[#c00000] text-white rounded-2xl font-bold hover:bg-red-700 shadow-lg shadow-red-200 transition-all hover:-translate-y-1 active:scale-95">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-7 h-7">
+                            <button type="submit" class="p-4 bg-[#c00000] text-white rounded-2xl font-bold hover:bg-red-700 shadow-lg shadow-red-200 transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-6 h-6">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                                 </svg>
                             </button>
@@ -192,33 +196,43 @@
                         <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
+                    @forelse($recentOwnerships as $item)
                     <tr class="hover:bg-slate-50/50 transition-colors group">
                         <td class="px-8 py-5">
-                            <p class="font-bold text-slate-800 text-sm">Zamboanga Central School</p>
-                            <p class="text-[10px] text-slate-400 font-medium italic">District I</p>
+                            <p class="font-bold text-slate-800 text-sm">{{ $item->school_name }}</p>
+                            <p class="text-[10px] text-slate-400 font-medium italic">{{ $item->district_name }}</p>
                         </td>
                         <td class="px-8 py-5">
-                            <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold uppercase">DCP Package</span>
+                            <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold uppercase">{{ $item->category_name }}</span>
                         </td>
                         <td class="px-8 py-5">
-                            <p class="font-bold text-slate-700 text-sm leading-tight">Laptop</p>
-                            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">Dell Latitude 3420</p>
+                            <p class="font-bold text-slate-700 text-sm leading-tight">{{ $item->item_name }}</p>
+                            @if($item->sub_item_name)
+                                <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tighter">{{ $item->sub_item_name }}</p>
+                            @endif
                         </td>
                         <td class="px-8 py-5 text-center">
-                            <span class="font-black text-slate-800">15</span>
+                            <span class="font-black text-slate-800">{{ $item->quantity }}</span>
                         </td>
                         <td class="px-8 py-5">
                             <div class="flex items-center gap-2">
-                                <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">A</div>
-                                <p class="text-sm font-bold text-slate-600">Admin_Juan</p>
+                                <div class="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                                    {{ strtoupper(substr($item->added_by ?? 'Sys', 0, 1)) }}
+                                </div>
+                                <p class="text-sm font-bold text-slate-600">{{ $item->added_by ?? 'System' }}</p>
                             </div>
                         </td>
                         <td class="px-8 py-5 text-sm text-slate-500 font-medium">
-                            {{ now()->format('M d, Y') }}
+                            {{ \Carbon\Carbon::parse($item->created_at)->timezone('Asia/Manila')->format('M d, Y') }}
                         </td>
                     </tr>
-                    
+                    @empty
+                    <tr>
+                        <td colspan="6" class="px-8 py-10 text-center text-slate-500 text-sm font-medium">
+                            No recently added items found.
+                        </td>
+                    </tr>
+                    @endforelse
                     </tbody>
             </table>
         </div>
@@ -243,7 +257,7 @@
                     </div>
                     <div class="bg-slate-50 p-5 rounded-3xl border border-slate-100 shadow-inner group-hover:bg-blue-50/30 transition-colors">
                         <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">Total Quadrant Assets</p>
-                        <p class="text-2xl font-extrabold text-slate-800 tracking-tighter leading-none">0</p>
+                        <p class="text-2xl font-extrabold text-slate-800 tracking-tighter leading-none">{{ number_format($quadrantTotals[1] ?? 0) }}</p>
                     </div>
                 </div>
 
@@ -257,7 +271,7 @@
                     </div>
                     <div class="bg-slate-50 p-5 rounded-3xl border border-slate-100 shadow-inner group-hover:bg-blue-50/30 transition-colors">
                         <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">Total Quadrant Assets</p>
-                        <p class="text-2xl font-extrabold text-slate-800 tracking-tighter leading-none">0</p>
+                        <p class="text-2xl font-extrabold text-slate-800 tracking-tighter leading-none">{{ number_format($quadrantTotals[2] ?? 0) }}</p>
                     </div>
                 </div>
 
@@ -271,7 +285,7 @@
                     </div>
                     <div class="bg-slate-50 p-5 rounded-3xl border border-slate-100 shadow-inner group-hover:bg-emerald-50/30 transition-colors">
                         <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">Total Quadrant Assets</p>
-                        <p class="text-2xl font-extrabold text-slate-800 tracking-tighter leading-none">0</p>
+                        <p class="text-2xl font-extrabold text-slate-800 tracking-tighter leading-none">{{ number_format($quadrantTotals[3] ?? 0) }}</p>
                     </div>
                 </div>
 
@@ -285,7 +299,7 @@
                     </div>
                     <div class="bg-slate-50 p-5 rounded-3xl border border-slate-100 shadow-inner group-hover:bg-emerald-50/30 transition-colors">
                         <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-1">Total Quadrant Assets</p>
-                        <p class="text-2xl font-extrabold text-slate-800 tracking-tighter leading-none">0</p>
+                        <p class="text-2xl font-extrabold text-slate-800 tracking-tighter leading-none">{{ number_format($quadrantTotals[4] ?? 0) }}</p>
                     </div>
                 </div>
             </div>
@@ -359,6 +373,53 @@
                     searchInput.value = "";
                 } else {
                     searchInput.value = this.options[this.selectedIndex].text;
+                }
+            });
+
+            // Cascading Dropdowns Logic
+            const categorySelect = document.getElementById('categorySelect');
+            const itemSelect = document.getElementById('itemSelect');
+            const subItemSelect = document.getElementById('subItemSelect');
+            
+            // Store original options
+            const allItems = Array.from(itemSelect.querySelectorAll('option[data-category]'));
+            const allSubItems = Array.from(subItemSelect.querySelectorAll('option[data-item]'));
+
+            // Function to reset and disable a select
+            function resetDropdown(selectElement, defaultText) {
+                selectElement.innerHTML = `<option value="">${defaultText}</option>`;
+                selectElement.disabled = true;
+            }
+
+            // Category Change
+            categorySelect.addEventListener('change', function() {
+                const catId = this.value;
+                resetDropdown(itemSelect, 'Select Item');
+                resetDropdown(subItemSelect, 'Select Sub-Item');
+
+                if (catId) {
+                    const filteredItems = allItems.filter(opt => opt.getAttribute('data-category') === catId);
+                    if (filteredItems.length > 0) {
+                        filteredItems.forEach(opt => itemSelect.appendChild(opt.cloneNode(true)));
+                        itemSelect.disabled = false;
+                    }
+                }
+            });
+
+            // Item Change
+            itemSelect.addEventListener('change', function() {
+                const itemId = this.value;
+                resetDropdown(subItemSelect, 'Select Sub-Item');
+
+                if (itemId) {
+                    const filteredSubItems = allSubItems.filter(opt => opt.getAttribute('data-item') === itemId);
+                    if (filteredSubItems.length > 0) {
+                        filteredSubItems.forEach(opt => subItemSelect.appendChild(opt.cloneNode(true)));
+                        subItemSelect.disabled = false;
+                    } else {
+                        // Keep disabled if no sub-items exist for this item
+                        subItemSelect.innerHTML = `<option value="">No sub-items</option>`;
+                    }
                 }
             });
         });

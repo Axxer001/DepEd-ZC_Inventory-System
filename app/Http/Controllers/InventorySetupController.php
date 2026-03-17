@@ -29,40 +29,97 @@ class InventorySetupController extends Controller
     public function storeCategory(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name',
+            'name' => 'required|string|max:255',
         ]);
 
-        DB::table('categories')->insert([
-            'name' => $request->name,
-            'created_at' => now(),
-        ]);
-
-        // Log the action to system_logs
         $userName = auth()->user() ? auth()->user()->name : 'System';
-        DB::table('system_logs')->insert([
-            'user' => $userName,
-            'activity' => "Added new category: {$request->name}",
-            'module' => 'Categories',
-            'action_type' => 'Create',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $existingCategoryId = $request->existing_category_id;
+        $categoryName = trim($request->name);
 
-        return back()->with('success', "Category '{$request->name}' has been added successfully.");
+        if ($existingCategoryId) {
+            // Verify existing
+            $existingCategory = DB::table('categories')->where('id', $existingCategoryId)->first();
+            if (!$existingCategory) {
+                return back()->withErrors(['name' => 'The selected category does not exist.']);
+            }
+            return back()->with('success', "Category '{$existingCategory->name}' already exists — no changes made.");
+        } else {
+            // Check for duplicate case-insensitively
+            $duplicate = DB::table('categories')
+                ->whereRaw('LOWER(name) = ?', [strtolower($categoryName)])
+                ->first();
+
+            if ($duplicate) {
+                return back()->withErrors(['name' => "The category '{$categoryName}' already exists in the system. Please use the dropdown to select it instead."])->withInput();
+            } else {
+                DB::table('categories')->insert([
+                    'name' => $categoryName,
+                    'created_at' => now(),
+                ]);
+
+                DB::table('system_logs')->insert([
+                    'user' => $userName,
+                    'activity' => "Added new category: {$categoryName}",
+                    'module' => 'Categories',
+                    'action_type' => 'Create',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                return back()->with('success', "Category '{$categoryName}' has been added successfully.");
+            }
+        }
     }
 
     public function storeItem(Request $request)
     {
         $request->validate([
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'nullable|exists:categories,id',
+            'category_name' => 'nullable|string|max:255',
             'item_name' => 'required|string|max:255',
+            'school_ids' => 'nullable|array',
+            'school_ids.*' => 'exists:schools,id',
+            'quantity' => 'nullable|numeric|min:1|required_with:school_ids',
         ]);
 
         $userName = auth()->user() ? auth()->user()->name : 'System';
         $existingItemId = $request->existing_item_id;
         $itemName = trim($request->item_name);
+        
         $categoryId = $request->category_id;
+        $categoryName = trim($request->category_name);
+        $schoolIds = $request->input('school_ids', []);
+        $quantity = $request->input('quantity', 0);
         $messages = [];
+
+        if (!$categoryId) {
+            if (!$categoryName) {
+                return back()->withErrors(['category_name' => 'Please select a Main Category or type a new one.'])->withInput();
+            }
+
+            // Check if user typed an existing category name
+            $existingCat = DB::table('categories')
+                ->whereRaw('LOWER(name) = ?', [strtolower($categoryName)])
+                ->first();
+
+            if ($existingCat) {
+                $categoryId = $existingCat->id;
+            } else {
+                $categoryId = DB::table('categories')->insertGetId([
+                    'name' => $categoryName,
+                    'created_at' => now(),
+                ]);
+
+                DB::table('system_logs')->insert([
+                    'user' => $userName,
+                    'activity' => "Added new category: {$categoryName}",
+                    'module' => 'Categories',
+                    'action_type' => 'Create',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
 
         // Determine item ID: use existing or create new
         if ($existingItemId) {
@@ -84,7 +141,6 @@ class InventorySetupController extends Controller
                 // Insert new item
                 $itemId = DB::table('items')->insertGetId([
                     'name' => $itemName,
-                    'quantity' => 0,
                     'category_id' => $categoryId,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -108,14 +164,15 @@ class InventorySetupController extends Controller
         $subItems = $request->input('sub_items', []);
         $subItems = array_filter(array_map('trim', $subItems)); // Remove empty entries
 
+        $createdSubItemsData = [];
         foreach ($subItems as $subItemName) {
-            DB::table('sub_items')->insert([
+            $subItemId = DB::table('sub_items')->insertGetId([
                 'name' => $subItemName,
-                'quantity' => 0,
                 'item_id' => $itemId,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+            $createdSubItemsData[$subItemId] = $subItemName;
 
             // Log each sub-item separately
             DB::table('system_logs')->insert([
@@ -128,6 +185,57 @@ class InventorySetupController extends Controller
             ]);
 
             $messages[] = "Sub-item '{$subItemName}' added";
+        }
+
+        // Process ownership assignments
+        if (!empty($schoolIds) && $quantity > 0) {
+            $schoolsInfo = DB::table('schools')->whereIn('id', $schoolIds)->get()->keyBy('id');
+            foreach ($schoolIds as $schoolId) {
+                $schoolName = $schoolsInfo->has($schoolId) ? $schoolsInfo[$schoolId]->name : 'Unknown School';
+
+                // Record ownership for the main item
+                DB::table('ownerships')->insert([
+                    'school_id' => $schoolId,
+                    'item_id' => $itemId,
+                    'sub_item_id' => null,
+                    'quantity' => $quantity,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                // Log main item assignment
+                DB::table('system_logs')->insert([
+                    'user' => $userName,
+                    'activity' => "Assigned {$quantity} unit(s) of item '{$itemName}' to school '{$schoolName}'",
+                    'module' => 'Items',
+                    'action_type' => 'Create',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                // Record ownership for each sub-item
+                foreach ($createdSubItemsData as $subItemId => $subItemName) {
+                    DB::table('ownerships')->insert([
+                        'school_id' => $schoolId,
+                        'item_id' => $itemId,
+                        'sub_item_id' => $subItemId,
+                        'quantity' => $quantity,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    // Log sub-item assignment
+                    DB::table('system_logs')->insert([
+                        'user' => $userName,
+                        'activity' => "Assigned {$quantity} unit(s) of sub-item '{$subItemName}' to school '{$schoolName}'",
+                        'module' => 'Items',
+                        'action_type' => 'Create',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+            $messages[] = "Assigned {$quantity} unit(s) to " . count($schoolIds) . " school(s)";
         }
 
         if (empty($messages)) {

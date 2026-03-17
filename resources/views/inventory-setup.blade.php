@@ -203,11 +203,19 @@
         let currentMode = '';
         let currentModule = '';
 
-        const mainCategories = ["School Furniture", "Electronics", "Electric Connections", "WIFI/Internet"];
+        const rawCategories = {{ Js::from($categories) }};
+        const rawItems = {{ Js::from($items) }};
         
         const rawDistricts = @json($districts);
         const rawLds = @json($legislativeDistricts);
         const rawQuadrants = @json($quadrants);
+        const allSchoolsList = @json($allSchools);
+        const districtMap = {};
+        rawDistricts.forEach(d => {
+            districtMap[d.name] = { ld: d.legislative_district_id, quad: d.quadrant_name.replace('Quadrant ', '') };
+        });
+
+        let selectedSchoolsArray = [];
 
         function nextStep(step, value) {
             if (step === 2) {
@@ -299,25 +307,83 @@
                             <button class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl active:scale-95">${modeText} District</button>
                         </div>`;
             } else if (currentModule === 'category') {
-                html += `<div class="space-y-6">
+                html += `<form id="categoryForm" action="{{ route('inventory.setup.category') }}" method="POST" class="space-y-6">
+                            @csrf
+                            <input type="hidden" name="existing_category_id" id="existingCategoryId" value="">
                             <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category Name</label>
-                                <input type="text" placeholder="e.g. Electronics" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold transition-all">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category Name <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <div class="flex">
+                                        <input type="text" name="name" id="categoryName" placeholder="e.g. Electronics" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-l-2xl outline-none font-semibold transition-all" required oninput="checkCategoryDuplicate()">
+                                        <button type="button" onclick="toggleCategoryDropdown()" id="categoryDropdownBtn" class="px-4 bg-slate-50 border border-l-0 border-slate-100 rounded-r-2xl text-slate-400 hover:text-[#c00000] hover:bg-red-50 transition-all" title="Select existing category">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                                        </button>
+                                    </div>
+                                    <div id="categoryDropdownList" class="hidden absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll">
+                                        <div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest">Select existing category</div>
+                                    </div>
+                                </div>
+                                <p id="categoryExistingHint" class="hidden text-xs font-semibold text-emerald-600 ml-1">✓ Using existing category — no duplicate will be created.</p>
+                                <p id="categoryNewHint" class="hidden text-xs font-semibold text-blue-600 ml-1">✦ Creating new category.</p>
+                                <p id="categoryDuplicateWarning" class="hidden text-xs font-semibold text-red-600 ml-1">⚠ This category already exists in the system. Please use the dropdown to select it instead.</p>
                             </div>
-                            <button class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl active:scale-95">${modeText} Category</button>
-                        </div>`;
+                            <button type="button" onclick="confirmCategorySubmit()" class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">${modeText} Category</button>
+                        </form>`;
             } else if (currentModule === 'item') {
-                html += `<div class="space-y-6">
+                html += `<form id="itemForm" action="{{ route('inventory.setup.item') }}" method="POST" class="space-y-6">
+                            @csrf
+                            <input type="hidden" name="existing_item_id" id="existingItemId" value="">
+                            <div id="hiddenSchoolInputsContainer"></div>
+                            
                             <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category</label>
-                                <select class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold cursor-pointer">
-                                    <option value="">Select Category</option>
-                                    ${mainCategories.map(c => `<option value="${c}">${c}</option>`).join('')}
-                                </select>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select School(s) <span class="text-xs text-slate-300 normal-case font-medium">(Optional)</span></label>
+                                <div class="relative">
+                                    <div class="flex">
+                                        <input type="text" id="schoolSearch" placeholder="Type to search school..." class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-l-2xl outline-none font-semibold transition-all" autocomplete="off" oninput="filterSchools()">
+                                        <button type="button" onclick="toggleSchoolDropdown()" id="schoolDropdownBtn" class="px-4 bg-slate-50 border border-l-0 border-slate-100 rounded-r-2xl text-slate-400 hover:text-[#c00000] hover:bg-red-50 transition-all" title="Select school">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                                        </button>
+                                    </div>
+                                    <div id="schoolDropdownList" class="hidden absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll">
+                                        <!-- Javascript populates this -->
+                                    </div>
+                                </div>
+                                <div id="selectedSchoolsContainer" class="flex flex-wrap gap-2 mt-2 ml-1"></div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <div class="flex">
+                                        <input type="hidden" name="category_id" id="itemCategoryId" value="">
+                                        <input type="text" name="category_name" id="itemCategoryName" placeholder="e.g. Electronics" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-l-2xl outline-none font-semibold transition-all" required autocomplete="off" oninput="filterItemCategory()">
+                                        <button type="button" onclick="toggleItemCategoryDropdown()" id="itemCategoryDropdownBtn" class="px-4 bg-slate-50 border border-l-0 border-slate-100 rounded-r-2xl text-slate-400 hover:text-[#c00000] hover:bg-red-50 transition-all" title="Select existing category">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                                        </button>
+                                    </div>
+                                    <div id="itemCategoryDropdownList" class="hidden absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll">
+                                        <!-- Javascript populates this -->
+                                    </div>
+                                </div>
+                                <p id="itemCategoryExistingHint" class="hidden text-xs font-semibold text-emerald-600 ml-1">✓ Using existing category.</p>
+                                <p id="itemCategoryNewHint" class="hidden text-xs font-semibold text-blue-600 ml-1">✦ Creating new category.</p>
                             </div>
                             <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item Name</label>
-                                <input type="text" placeholder="e.g. Smart TV" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item Name <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <div class="flex">
+                                        <input type="text" name="item_name" id="itemName" placeholder="e.g. Smart TV" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-l-2xl outline-none font-semibold transition-all" required oninput="checkItemDuplicate()">
+                                        <button type="button" onclick="toggleItemDropdown()" id="itemDropdownBtn" class="px-4 bg-slate-50 border border-l-0 border-slate-100 rounded-r-2xl text-slate-400 hover:text-[#c00000] hover:bg-red-50 transition-all" title="Select existing item">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                                        </button>
+                                    </div>
+                                    <div id="itemDropdownList" class="hidden absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll">
+                                        <div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest">Select existing item</div>
+                                    </div>
+                                </div>
+                                <p id="itemExistingHint" class="hidden text-xs font-semibold text-emerald-600 ml-1">✓ Using existing item — no duplicate will be created.</p>
+                                <p id="itemNewHint" class="hidden text-xs font-semibold text-blue-600 ml-1">✦ Creating new item.</p>
+                                <p id="itemDuplicateWarning" class="hidden text-xs font-semibold text-red-600 ml-1">⚠ This item already exists in the system. Please use the dropdown to select it instead.</p>
                             </div>
                             <div class="space-y-3">
                                 <div class="flex justify-between items-center ml-1">
@@ -331,10 +397,19 @@
                                     </div>
                                 </div>
                             </div>
-                            <button class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl active:scale-95">${modeText} Item</button>
-                        </div>`;
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity <span class="text-xs text-slate-400 font-medium normal-case">(If assigning to school)</span></label>
+                                <input type="number" name="quantity" id="itemQuantity" min="1" step="any" placeholder="e.g. 10" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold transition-all disabled:opacity-50 disabled:bg-slate-100 disabled:cursor-not-allowed" disabled title="Select a school first to enable quantity">
+                            </div>
+                            <button type="button" onclick="confirmItemSubmit()" class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">${modeText} Item</button>
+                        </form>`;
             }
             container.innerHTML = html;
+            if (currentModule === 'item') {
+                selectedSchoolsArray = [];
+                renderSelectedSchools();
+                rebuildSchoolDropdown();
+            }
         }
 
         function addSubItemField() {
@@ -374,6 +449,490 @@
                 form.reportValidity();
             }
         }
+
+        let categoryDuplicateBlocked = false;
+
+        function rebuildCategoryDropdown() {
+            const dropdown = document.getElementById('categoryDropdownList');
+            let html = '<div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest">Select existing category</div>';
+            if (rawCategories.length === 0) {
+                html += '<div class="px-4 py-3 text-sm text-slate-400 italic">No existing categories</div>';
+            } else {
+                rawCategories.forEach(c => {
+                    html += `<div onclick="selectExistingCategory(${c.id}, '${c.name.replace(/'/g, "\\'")}')"
+                                 class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors">${c.name}</div>`;
+                });
+            }
+            html += `<div onclick="clearCategorySelection()" class="px-4 py-3 text-xs font-bold text-slate-400 hover:bg-slate-50 cursor-pointer border-t border-slate-100 transition-colors">✕ Clear selection (type new category)</div>`;
+            dropdown.innerHTML = html;
+        }
+
+        function toggleCategoryDropdown() {
+            const dropdown = document.getElementById('categoryDropdownList');
+            rebuildCategoryDropdown();
+            dropdown.classList.toggle('hidden');
+        }
+
+        function selectExistingCategory(id, name) {
+            document.getElementById('existingCategoryId').value = id;
+            document.getElementById('categoryName').value = name;
+            document.getElementById('categoryName').readOnly = true;
+            document.getElementById('categoryName').classList.add('bg-emerald-50', 'border-emerald-200');
+            document.getElementById('categoryName').classList.remove('bg-blue-50', 'border-blue-400');
+            document.getElementById('categoryExistingHint').classList.remove('hidden');
+            const newHint = document.getElementById('categoryNewHint');
+            if(newHint) newHint.classList.add('hidden');
+            document.getElementById('categoryDropdownList').classList.add('hidden');
+            checkCategoryDuplicate();
+        }
+
+        function clearCategorySelection() {
+            document.getElementById('existingCategoryId').value = '';
+            document.getElementById('categoryName').value = '';
+            document.getElementById('categoryName').readOnly = false;
+            document.getElementById('categoryName').classList.remove('bg-emerald-50', 'border-emerald-200', 'bg-blue-50', 'border-blue-400');
+            document.getElementById('categoryExistingHint').classList.add('hidden');
+            const newHint = document.getElementById('categoryNewHint');
+            if(newHint) newHint.classList.add('hidden');
+            document.getElementById('categoryDropdownList').classList.add('hidden');
+            document.getElementById('categoryName').focus();
+            checkCategoryDuplicate();
+        }
+
+        function checkCategoryDuplicate() {
+            const input = document.getElementById('categoryName');
+            const warning = document.getElementById('categoryDuplicateWarning');
+            const newHint = document.getElementById('categoryNewHint');
+            const existingId = document.getElementById('existingCategoryId').value;
+            const name = input.value.trim().toLowerCase();
+
+            if (existingId) {
+                warning.classList.add('hidden');
+                if(newHint) newHint.classList.add('hidden');
+                categoryDuplicateBlocked = false;
+                input.classList.remove('border-red-400', 'bg-red-50', 'border-blue-400', 'bg-blue-50');
+                return;
+            }
+
+            if (name && rawCategories.some(c => c.name.toLowerCase() === name)) {
+                warning.classList.remove('hidden');
+                if(newHint) newHint.classList.add('hidden');
+                categoryDuplicateBlocked = true;
+                input.classList.add('border-red-400', 'bg-red-50');
+                input.classList.remove('border-blue-400', 'bg-blue-50');
+            } else if (name) {
+                warning.classList.add('hidden');
+                if(newHint) newHint.classList.remove('hidden');
+                categoryDuplicateBlocked = false;
+                input.classList.remove('border-red-400', 'bg-red-50');
+                input.classList.add('border-blue-400', 'bg-blue-50');
+            } else {
+                warning.classList.add('hidden');
+                if(newHint) newHint.classList.add('hidden');
+                categoryDuplicateBlocked = false;
+                input.classList.remove('border-red-400', 'bg-red-50', 'border-blue-400', 'bg-blue-50');
+            }
+        }
+
+        function confirmCategorySubmit() {
+            const form = document.getElementById('categoryForm');
+            if (form.checkValidity()) {
+                const categoryName = document.getElementById('categoryName').value.trim();
+                const existingId = document.getElementById('existingCategoryId').value;
+
+                if (categoryDuplicateBlocked && !existingId) {
+                    Swal.fire({ title: 'Duplicate Category', text: `"${categoryName}" already exists in the system. Use the dropdown (▼) to select the existing category.`, icon: 'error', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                    return;
+                }
+
+                const msg = existingId 
+                    ? `Use existing category "${categoryName}"?` 
+                    : `Are you sure you want to add "${categoryName}" as a new category?`;
+
+                Swal.fire({
+                    title: existingId ? "Confirm Category Selection" : "Add New Category",
+                    text: msg,
+                    icon: "question",
+                    showCancelButton: true,
+                    confirmButtonColor: "#c00000",
+                    cancelButtonColor: "#94a3b8",
+                    confirmButtonText: existingId ? "Yes, use it!" : "Yes, add it!",
+                    customClass: {
+                        popup: "rounded-[2rem]",
+                        confirmButton: "rounded-xl font-bold px-6",
+                        cancelButton: "rounded-xl font-bold px-6"
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+            } else {
+                form.reportValidity();
+            }
+        }
+
+        function rebuildItemCategoryDropdown() {
+            const dropdown = document.getElementById('itemCategoryDropdownList');
+            const query = document.getElementById('itemCategoryName').value.toLowerCase();
+            
+            const filtered = rawCategories.filter(c => c.name.toLowerCase().includes(query));
+
+            let html = '<div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50 w-full mb-1">Select existing category</div>';
+            
+            if (filtered.length === 0) {
+                html += '<div class="px-4 py-3 text-sm text-slate-400 italic">No matching categories</div>';
+            } else {
+                filtered.forEach(c => {
+                    html += `<div onclick="selectItemCategory(${c.id}, '${c.name.replace(/'/g, "\\'")}')"
+                                 class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer transition-colors border-b border-slate-50 last:border-0 truncate">${c.name}</div>`;
+                });
+            }
+            html += `<div onclick="clearItemCategorySelection()" class="px-4 py-3 text-xs font-bold text-slate-400 hover:bg-slate-50 cursor-pointer border-t border-slate-100 transition-colors">✕ Clear selection (type new category)</div>`;
+            dropdown.innerHTML = html;
+        }
+
+        function filterItemCategory() {
+            rebuildItemCategoryDropdown();
+            document.getElementById('itemCategoryDropdownList').classList.remove('hidden');
+            
+            const input = document.getElementById('itemCategoryName');
+            const existingId = document.getElementById('itemCategoryId').value;
+            const name = input.value.trim().toLowerCase();
+            
+            if (existingId) {
+                 document.getElementById('itemCategoryId').value = '';
+                 input.classList.remove('bg-emerald-50', 'border-emerald-200');
+            }
+
+            const exactMatch = rawCategories.find(c => c.name.toLowerCase() === name);
+            if (name && exactMatch) {
+               document.getElementById('itemCategoryExistingHint').classList.remove('hidden');
+               document.getElementById('itemCategoryNewHint').classList.add('hidden');
+               input.classList.remove('border-blue-400', 'bg-blue-50');
+            } else if (name && !exactMatch){
+               document.getElementById('itemCategoryExistingHint').classList.add('hidden');
+               document.getElementById('itemCategoryNewHint').classList.remove('hidden');
+               input.classList.add('border-blue-400', 'bg-blue-50');
+            } else {
+               document.getElementById('itemCategoryExistingHint').classList.add('hidden');
+               document.getElementById('itemCategoryNewHint').classList.add('hidden');
+               input.classList.remove('border-blue-400', 'bg-blue-50');
+            }
+            
+            onCategoryChange(); 
+        }
+
+        function toggleItemCategoryDropdown() {
+            const dropdown = document.getElementById('itemCategoryDropdownList');
+            rebuildItemCategoryDropdown();
+            dropdown.classList.toggle('hidden');
+        }
+
+        function selectItemCategory(id, name) {
+            document.getElementById('itemCategoryId').value = id;
+            document.getElementById('itemCategoryName').value = name;
+            
+            const input = document.getElementById('itemCategoryName');
+            input.classList.add('bg-emerald-50', 'border-emerald-200');
+            input.classList.remove('bg-blue-50', 'border-blue-400');
+            
+            document.getElementById('itemCategoryExistingHint').classList.remove('hidden');
+            document.getElementById('itemCategoryNewHint').classList.add('hidden');
+            document.getElementById('itemCategoryDropdownList').classList.add('hidden');
+            
+            onCategoryChange();
+        }
+
+        function clearItemCategorySelection() {
+            document.getElementById('itemCategoryId').value = '';
+            document.getElementById('itemCategoryName').value = '';
+            
+            const input = document.getElementById('itemCategoryName');
+            input.classList.remove('bg-emerald-50', 'border-emerald-200', 'bg-blue-50', 'border-blue-400');
+            
+            document.getElementById('itemCategoryExistingHint').classList.add('hidden');
+            document.getElementById('itemCategoryNewHint').classList.add('hidden');
+            document.getElementById('itemCategoryDropdownList').classList.add('hidden');
+            document.getElementById('itemCategoryName').focus();
+            
+            onCategoryChange();
+        }
+
+        function onCategoryChange() {
+            const catId = document.getElementById('itemCategoryId').value;
+            const dropdown = document.getElementById('itemDropdownList');
+            // Reset item selection
+            document.getElementById('existingItemId').value = '';
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemName').readOnly = false;
+            document.getElementById('itemName').classList.remove('bg-emerald-50', 'border-emerald-200', 'bg-blue-50', 'border-blue-400');
+            document.getElementById('itemExistingHint').classList.add('hidden');
+            const newHint = document.getElementById('itemNewHint');
+            if(newHint) newHint.classList.add('hidden');
+            const warning = document.getElementById('itemDuplicateWarning');
+            if(warning) warning.classList.add('hidden');
+            // Rebuild dropdown items filtered by category
+            rebuildItemDropdown(catId);
+        }
+
+        function rebuildItemDropdown(catId) {
+            const dropdown = document.getElementById('itemDropdownList');
+            const filtered = catId ? rawItems.filter(i => i.category_id == catId) : [];
+            let html = '<div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest">Select existing item</div>';
+            if (filtered.length === 0) {
+                html += '<div class="px-4 py-3 text-sm text-slate-400 italic">No existing items in this category</div>';
+            } else {
+                filtered.forEach(i => {
+                    html += `<div onclick="selectExistingItem(${i.id}, '${i.name.replace(/'/g, "\\'")}')"
+                                 class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors">${i.name}</div>`;
+                });
+            }
+            html += `<div onclick="clearItemSelection()" class="px-4 py-3 text-xs font-bold text-slate-400 hover:bg-slate-50 cursor-pointer border-t border-slate-100 transition-colors">✕ Clear selection (type new item)</div>`;
+            dropdown.innerHTML = html;
+        }
+
+        function toggleItemDropdown() {
+            const catId = document.getElementById('itemCategoryId').value;
+            const catName = document.getElementById('itemCategoryName').value.trim();
+            if (!catId && !catName) {
+                Swal.fire({ title: 'Category Required', text: 'Please choose or type a category before selecting an item.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                return;
+            }
+            const dropdown = document.getElementById('itemDropdownList');
+            rebuildItemDropdown(catId);
+            dropdown.classList.toggle('hidden');
+        }
+
+        function selectExistingItem(id, name) {
+            document.getElementById('existingItemId').value = id;
+            document.getElementById('itemName').value = name;
+            document.getElementById('itemName').readOnly = true;
+            document.getElementById('itemName').classList.add('bg-emerald-50', 'border-emerald-200');
+            document.getElementById('itemName').classList.remove('bg-blue-50', 'border-blue-400');
+            document.getElementById('itemExistingHint').classList.remove('hidden');
+            const newHint = document.getElementById('itemNewHint');
+            if(newHint) newHint.classList.add('hidden');
+            document.getElementById('itemDropdownList').classList.add('hidden');
+        }
+
+        function clearItemSelection() {
+            document.getElementById('existingItemId').value = '';
+            document.getElementById('itemName').value = '';
+            document.getElementById('itemName').readOnly = false;
+            document.getElementById('itemName').classList.remove('bg-emerald-50', 'border-emerald-200', 'bg-blue-50', 'border-blue-400');
+            document.getElementById('itemExistingHint').classList.add('hidden');
+            const newHint = document.getElementById('itemNewHint');
+            if(newHint) newHint.classList.add('hidden');
+            const warning = document.getElementById('itemDuplicateWarning');
+            if(warning) warning.classList.add('hidden');
+            document.getElementById('itemDropdownList').classList.add('hidden');
+            document.getElementById('itemName').focus();
+        }
+
+        let itemDuplicateBlocked = false;
+
+        function checkItemDuplicate() {
+            const input = document.getElementById('itemName');
+            const warning = document.getElementById('itemDuplicateWarning');
+            const newHint = document.getElementById('itemNewHint');
+            const existingId = document.getElementById('existingItemId').value;
+            const name = input.value.trim().toLowerCase();
+
+            // Skip check if user selected an existing item from dropdown
+            if (existingId) {
+                warning.classList.add('hidden');
+                if(newHint) newHint.classList.add('hidden');
+                itemDuplicateBlocked = false;
+                input.classList.remove('border-red-400', 'bg-red-50', 'border-blue-400', 'bg-blue-50');
+                return;
+            }
+
+            if (name && rawItems.some(i => i.name.toLowerCase() === name)) {
+                warning.classList.remove('hidden');
+                if(newHint) newHint.classList.add('hidden');
+                itemDuplicateBlocked = true;
+                input.classList.add('border-red-400', 'bg-red-50');
+                input.classList.remove('border-blue-400', 'bg-blue-50');
+            } else if (name) {
+                warning.classList.add('hidden');
+                if(newHint) newHint.classList.remove('hidden');
+                itemDuplicateBlocked = false;
+                input.classList.remove('border-red-400', 'bg-red-50');
+                input.classList.add('border-blue-400', 'bg-blue-50');
+            } else {
+                warning.classList.add('hidden');
+                if(newHint) newHint.classList.add('hidden');
+                itemDuplicateBlocked = false;
+                input.classList.remove('border-red-400', 'bg-red-50', 'border-blue-400', 'bg-blue-50');
+            }
+        }
+
+        function confirmItemSubmit() {
+            const form = document.getElementById('itemForm');
+            const itemName = document.getElementById('itemName').value.trim();
+            const categoryId = document.getElementById('itemCategoryId').value;
+            const categoryName = document.getElementById('itemCategoryName').value.trim();
+            const existingId = document.getElementById('existingItemId').value;
+
+            if (!categoryId && !categoryName) {
+                Swal.fire({ title: 'Category Required', text: 'Please select or type a main category.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                return;
+            }
+            if (!itemName) {
+                Swal.fire({ title: 'Item Name Required', text: 'Please enter an item name or select an existing one.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                return;
+            }
+            // Block if duplicate detected and user is NOT selecting an existing item
+            if (itemDuplicateBlocked && !existingId) {
+                Swal.fire({ title: 'Duplicate Item', text: `"${itemName}" already exists in the system. Use the dropdown (▼) to select the existing item if you want to add sub-items to it.`, icon: 'error', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                return;
+            }
+
+            const quantityStr = document.getElementById('itemQuantity').value;
+            const quantity = parseFloat(quantityStr);
+
+            if (selectedSchoolsArray.length > 0 && (!quantityStr || quantity <= 0)) {
+                Swal.fire({ title: 'Invalid Quantity', text: 'Please enter a valid quantity (greater than 0) when assigning items to schools.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                return;
+            }
+
+            // Populate hidden inputs for schools
+            const hiddenContainer = document.getElementById('hiddenSchoolInputsContainer');
+            hiddenContainer.innerHTML = selectedSchoolsArray.map(id => `<input type="hidden" name="school_ids[]" value="${id}">`).join('');
+
+            // Gather sub-items for display
+            const subInputs = document.querySelectorAll('#subItemContainer input[name="sub_items[]"]');
+            const subNames = Array.from(subInputs).map(i => i.value.trim()).filter(v => v);
+
+            let msg = existingId
+                ? `Use existing item "${itemName}"`
+                : `Add new item "${itemName}"`;
+            if (subNames.length > 0) {
+                msg += ` with ${subNames.length} specification(s)`;
+            }
+            if (selectedSchoolsArray.length > 0) {
+                msg += ` and assign quantity of ${quantity} to ${selectedSchoolsArray.length} school(s)`;
+            }
+            msg += '?';
+
+            Swal.fire({
+                title: 'Confirm Registration',
+                text: msg,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#c00000',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Yes, register it!',
+                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        }
+
+        // School Selection Logic
+        function toggleSchoolDropdown() {
+            const dropdown = document.getElementById('schoolDropdownList');
+            rebuildSchoolDropdown();
+            dropdown.classList.toggle('hidden');
+        }
+
+        function filterSchools() {
+            rebuildSchoolDropdown();
+            document.getElementById('schoolDropdownList').classList.remove('hidden');
+        }
+
+        function rebuildSchoolDropdown() {
+            const dropdown = document.getElementById('schoolDropdownList');
+            const query = document.getElementById('schoolSearch').value.toLowerCase();
+            
+            const filtered = allSchoolsList.filter(s => 
+                !selectedSchoolsArray.includes(s.id) && 
+                (s.name.toLowerCase().includes(query) || (s.school_id && s.school_id.toString().includes(query)))
+            ).slice(0, 50); // limit to 50 results for performance
+
+            let html = '<div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50 w-full mb-1">Select school</div>';
+            
+            if (filtered.length === 0) {
+                html += '<div class="px-4 py-3 text-sm text-slate-400 italic">No matches found</div>';
+            } else {
+                html += filtered.map(s => `
+                    <div onclick="selectSchool(${s.id}, '${s.name.replace(/'/g, "\\'")}')"
+                         class="px-4 py-3 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer transition-colors border-b border-slate-50 last:border-0 truncate">
+                        ${s.school_id ? s.school_id + ' - ' : ''}${s.name}
+                    </div>
+                `).join('');
+            }
+            dropdown.innerHTML = html;
+        }
+
+        function selectSchool(id, name) {
+            if (!selectedSchoolsArray.includes(id)) {
+                selectedSchoolsArray.push(id);
+                renderSelectedSchools();
+            }
+            document.getElementById('schoolSearch').value = '';
+            document.getElementById('schoolDropdownList').classList.add('hidden');
+            document.getElementById('itemQuantity').required = true;
+            document.getElementById('itemQuantity').disabled = false;
+        }
+
+        function removeSchool(id) {
+            selectedSchoolsArray = selectedSchoolsArray.filter(s => s !== id);
+            renderSelectedSchools();
+            if (selectedSchoolsArray.length === 0) {
+                document.getElementById('itemQuantity').required = false;
+                document.getElementById('itemQuantity').disabled = true;
+                document.getElementById('itemQuantity').value = '';
+            }
+        }
+
+        function renderSelectedSchools() {
+            const container = document.getElementById('selectedSchoolsContainer');
+            if (selectedSchoolsArray.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            container.innerHTML = selectedSchoolsArray.map(id => {
+                const school = allSchoolsList.find(s => s.id === id);
+                return `
+                    <div class="px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-xl flex items-center gap-2 border border-emerald-100 shadow-sm animate-in fade-in zoom-in duration-200">
+                        <span class="truncate max-w-[200px]" title="${school.name}">${school.name}</span>
+                        <button type="button" onclick="removeSchool(${id})" class="text-emerald-400 hover:text-emerald-800 focus:outline-none ml-1 font-bold shrink-0">✕</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            const itemDropdown = document.getElementById('itemDropdownList');
+            const itemBtn = document.getElementById('itemDropdownBtn');
+            if (itemDropdown && itemBtn && !itemDropdown.contains(e.target) && !itemBtn.contains(e.target) && e.target.id !== 'itemName') {
+                itemDropdown.classList.add('hidden');
+            }
+
+            const schoolDropdown = document.getElementById('schoolDropdownList');
+            const schoolBtn = document.getElementById('schoolDropdownBtn');
+            const schoolSearch = document.getElementById('schoolSearch');
+            if (schoolDropdown && schoolBtn && !schoolDropdown.contains(e.target) && !schoolBtn.contains(e.target) && e.target !== schoolSearch) {
+                schoolDropdown.classList.add('hidden');
+            }
+
+            const categoryDropdown = document.getElementById('categoryDropdownList');
+            const categoryBtn = document.getElementById('categoryDropdownBtn');
+            if (categoryDropdown && categoryBtn && !categoryDropdown.contains(e.target) && !categoryBtn.contains(e.target) && e.target.id !== 'categoryName') {
+                categoryDropdown.classList.add('hidden');
+            }
+            const itemCategoryDropdown = document.getElementById('itemCategoryDropdownList');
+            const itemCategoryBtn = document.getElementById('itemCategoryDropdownBtn');
+            const itemCategoryName = document.getElementById('itemCategoryName');
+            if (itemCategoryDropdown && itemCategoryBtn && !itemCategoryDropdown.contains(e.target) && !itemCategoryBtn.contains(e.target) && e.target !== itemCategoryName) {
+                itemCategoryDropdown.classList.add('hidden');
+            }
+        });
     </script>
 </body>
 </html>
