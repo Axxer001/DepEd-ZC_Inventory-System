@@ -199,26 +199,15 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        let stepHistory = [1];
+        let history = [1];
         let currentMode = '';
         let currentModule = '';
 
-        const rawCategories = {{ Js::from($categories) }};
-        const rawItems = {{ Js::from($items) }};
+        const mainCategories = ["School Furniture", "Electronics", "Electric Connections", "WIFI/Internet"];
         
-<<<<<<< HEAD
         const rawDistricts = @json($districts);
         const rawLds = @json($legislativeDistricts);
         const rawQuadrants = @json($quadrants);
-=======
-        const rawDistricts = {{ Js::from($districts) }};
-        const rawLds = {{ Js::from($legislativeDistricts) }};
-        const rawQuadrants = {{ Js::from($quadrants) }};
-        const districtMap = {};
-        rawDistricts.forEach(d => {
-            districtMap[d.name] = { ld: d.legislative_district_id, quad: d.quadrant_name.replace('Quadrant ', '') };
-        });
->>>>>>> f2aaa546900485130db9a3682139afada578a9e0
 
         function nextStep(step, value) {
             if (step === 2) {
@@ -231,14 +220,14 @@
             }
             document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
             document.getElementById('step' + step).classList.add('active');
-            stepHistory.push(step);
+            history.push(step);
             updateBackButton();
         }
 
         function goBack() {
-            if (stepHistory.length > 1) {
-                stepHistory.pop();
-                const prevStep = stepHistory[stepHistory.length - 1];
+            if (history.length > 1) {
+                history.pop();
+                const prevStep = history[history.length - 1];
                 document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
                 document.getElementById('step' + prevStep).classList.add('active');
                 updateBackButton();
@@ -247,7 +236,7 @@
 
         function updateBackButton() {
             const btn = document.getElementById('backBtn');
-            btn.classList.toggle('hidden', stepHistory[stepHistory.length - 1] === 1);
+            btn.classList.toggle('hidden', history[history.length - 1] === 1);
         }
 
         function filterQuadrants() {
@@ -310,52 +299,25 @@
                             <button class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl active:scale-95">${modeText} District</button>
                         </div>`;
             } else if (currentModule === 'category') {
-                html += `<form id="categoryForm" action="{{ route('inventory.setup.category') }}" method="POST" class="space-y-6">
-                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                html += `<div class="space-y-6">
                             <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category Name <span class="text-red-500">*</span></label>
-                                <input type="text" name="name" id="categoryName" placeholder="e.g. Electronics" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold transition-all" required>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category Name</label>
+                                <input type="text" placeholder="e.g. Electronics" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold transition-all">
                             </div>
-<<<<<<< HEAD
                             <button class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl active:scale-95">${modeText} Category</button>
                         </div>`;
-=======
-                            <button type="button" onclick="confirmCategorySubmit()" class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">${modeText} Category Settings</button>
-                        </form>`;
->>>>>>> f2aaa546900485130db9a3682139afada578a9e0
             } else if (currentModule === 'item') {
-                html += `<form id="itemForm" action="{{ route('inventory.setup.item') }}" method="POST" class="space-y-6">
-                            <input type="hidden" name="_token" value="{{ csrf_token() }}">
-                            <input type="hidden" name="existing_item_id" id="existingItemId" value="">
+                html += `<div class="space-y-6">
                             <div class="space-y-2">
-<<<<<<< HEAD
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category</label>
                                 <select class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold cursor-pointer">
                                     <option value="">Select Category</option>
                                     ${mainCategories.map(c => `<option value="${c}">${c}</option>`).join('')}
-=======
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Main Category <span class="text-red-500">*</span></label>
-                                <select name="category_id" id="itemCategory" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold cursor-pointer focus:ring-2 focus:ring-red-100 transition-all" required onchange="onCategoryChange()">
-                                    <option value="">-- Choose Category --</option>
-                                    ${rawCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
->>>>>>> f2aaa546900485130db9a3682139afada578a9e0
                                 </select>
                             </div>
                             <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item Name <span class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <div class="flex">
-                                        <input type="text" name="item_name" id="itemName" placeholder="e.g. Smart TV" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-l-2xl outline-none font-semibold transition-all" required oninput="checkItemDuplicate()">
-                                        <button type="button" onclick="toggleItemDropdown()" id="itemDropdownBtn" class="px-4 bg-slate-50 border border-l-0 border-slate-100 rounded-r-2xl text-slate-400 hover:text-[#c00000] hover:bg-red-50 transition-all" title="Select existing item">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                                        </button>
-                                    </div>
-                                    <div id="itemDropdownList" class="hidden absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll">
-                                        <div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest">Select existing item</div>
-                                    </div>
-                                </div>
-                                <p id="itemExistingHint" class="hidden text-xs font-semibold text-emerald-600 ml-1">✓ Using existing item — no duplicate will be created.</p>
-                                <p id="itemDuplicateWarning" class="hidden text-xs font-semibold text-red-600 ml-1">⚠ This item already exists in the system. Please use the dropdown to select it instead.</p>
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item Name</label>
+                                <input type="text" placeholder="e.g. Smart TV" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold">
                             </div>
                             <div class="space-y-3">
                                 <div class="flex justify-between items-center ml-1">
@@ -369,13 +331,8 @@
                                     </div>
                                 </div>
                             </div>
-<<<<<<< HEAD
                             <button class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl active:scale-95">${modeText} Item</button>
                         </div>`;
-=======
-                            <button type="button" onclick="confirmItemSubmit()" class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">${modeText} Item Details</button>
-                        </form>`;
->>>>>>> f2aaa546900485130db9a3682139afada578a9e0
             }
             container.innerHTML = html;
         }
@@ -417,177 +374,6 @@
                 form.reportValidity();
             }
         }
-
-        function confirmCategorySubmit() {
-            const form = document.getElementById('categoryForm');
-            if (form.checkValidity()) {
-                const name = document.getElementById('categoryName').value;
-                Swal.fire({
-                    title: "Add New Category",
-                    text: `Are you sure you want to add "${name}" as a new category?`,
-                    icon: "question",
-                    showCancelButton: true,
-                    confirmButtonColor: "#c00000",
-                    cancelButtonColor: "#94a3b8",
-                    confirmButtonText: "Yes, add it!",
-                    customClass: {
-                        popup: "rounded-[2rem]",
-                        confirmButton: "rounded-xl font-bold px-6",
-                        cancelButton: "rounded-xl font-bold px-6"
-                    }
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        form.submit();
-                    }
-                });
-            } else {
-                form.reportValidity();
-            }
-        }
-
-        function onCategoryChange() {
-            const catId = document.getElementById('itemCategory').value;
-            const dropdown = document.getElementById('itemDropdownList');
-            // Reset item selection
-            document.getElementById('existingItemId').value = '';
-            document.getElementById('itemName').value = '';
-            document.getElementById('itemName').readOnly = false;
-            document.getElementById('itemName').classList.remove('bg-emerald-50', 'border-emerald-200');
-            document.getElementById('itemExistingHint').classList.add('hidden');
-            // Rebuild dropdown items filtered by category
-            rebuildItemDropdown(catId);
-        }
-
-        function rebuildItemDropdown(catId) {
-            const dropdown = document.getElementById('itemDropdownList');
-            const filtered = catId ? rawItems.filter(i => i.category_id == catId) : rawItems;
-            let html = '<div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest">Select existing item</div>';
-            if (filtered.length === 0) {
-                html += '<div class="px-4 py-3 text-sm text-slate-400 italic">No existing items in this category</div>';
-            } else {
-                filtered.forEach(i => {
-                    html += `<div onclick="selectExistingItem(${i.id}, '${i.name.replace(/'/g, "\\'")}')"
-                                 class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors">${i.name}</div>`;
-                });
-            }
-            html += `<div onclick="clearItemSelection()" class="px-4 py-3 text-xs font-bold text-slate-400 hover:bg-slate-50 cursor-pointer border-t border-slate-100 transition-colors">✕ Clear selection (type new item)</div>`;
-            dropdown.innerHTML = html;
-        }
-
-        function toggleItemDropdown() {
-            const catId = document.getElementById('itemCategory').value;
-            if (!catId) {
-                Swal.fire({ title: 'Select a Category First', text: 'Please choose a category before selecting an item.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-            const dropdown = document.getElementById('itemDropdownList');
-            rebuildItemDropdown(catId);
-            dropdown.classList.toggle('hidden');
-        }
-
-        function selectExistingItem(id, name) {
-            document.getElementById('existingItemId').value = id;
-            document.getElementById('itemName').value = name;
-            document.getElementById('itemName').readOnly = true;
-            document.getElementById('itemName').classList.add('bg-emerald-50', 'border-emerald-200');
-            document.getElementById('itemExistingHint').classList.remove('hidden');
-            document.getElementById('itemDropdownList').classList.add('hidden');
-        }
-
-        function clearItemSelection() {
-            document.getElementById('existingItemId').value = '';
-            document.getElementById('itemName').value = '';
-            document.getElementById('itemName').readOnly = false;
-            document.getElementById('itemName').classList.remove('bg-emerald-50', 'border-emerald-200');
-            document.getElementById('itemExistingHint').classList.add('hidden');
-            document.getElementById('itemDropdownList').classList.add('hidden');
-            document.getElementById('itemName').focus();
-        }
-
-        let itemDuplicateBlocked = false;
-
-        function checkItemDuplicate() {
-            const input = document.getElementById('itemName');
-            const warning = document.getElementById('itemDuplicateWarning');
-            const existingId = document.getElementById('existingItemId').value;
-            const name = input.value.trim().toLowerCase();
-
-            // Skip check if user selected an existing item from dropdown
-            if (existingId) {
-                warning.classList.add('hidden');
-                itemDuplicateBlocked = false;
-                input.classList.remove('border-red-400', 'bg-red-50');
-                return;
-            }
-
-            if (name && rawItems.some(i => i.name.toLowerCase() === name)) {
-                warning.classList.remove('hidden');
-                itemDuplicateBlocked = true;
-                input.classList.add('border-red-400', 'bg-red-50');
-            } else {
-                warning.classList.add('hidden');
-                itemDuplicateBlocked = false;
-                input.classList.remove('border-red-400', 'bg-red-50');
-            }
-        }
-
-        function confirmItemSubmit() {
-            const form = document.getElementById('itemForm');
-            const itemName = document.getElementById('itemName').value.trim();
-            const categoryId = document.getElementById('itemCategory').value;
-            const existingId = document.getElementById('existingItemId').value;
-
-            if (!categoryId) {
-                Swal.fire({ title: 'Category Required', text: 'Please select a main category.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-            if (!itemName) {
-                Swal.fire({ title: 'Item Name Required', text: 'Please enter an item name or select an existing one.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-            // Block if duplicate detected and user is NOT selecting an existing item
-            if (itemDuplicateBlocked && !existingId) {
-                Swal.fire({ title: 'Duplicate Item', text: `"${itemName}" already exists in the system. Use the dropdown (▼) to select the existing item if you want to add sub-items to it.`, icon: 'error', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-
-            // Gather sub-items for display
-            const subInputs = document.querySelectorAll('#subItemContainer input[name="sub_items[]"]');
-            const subNames = Array.from(subInputs).map(i => i.value.trim()).filter(v => v);
-
-
-            let msg = existingId
-                ? `Use existing item "${itemName}"`
-                : `Add new item "${itemName}"`;
-            if (subNames.length > 0) {
-                msg += ` with ${subNames.length} sub-item(s): ${subNames.join(', ')}`;
-            }
-            msg += '?';
-
-            Swal.fire({
-                title: 'Confirm Item',
-                text: msg,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#c00000',
-                cancelButtonColor: '#94a3b8',
-                confirmButtonText: 'Yes, add it!',
-                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.submit();
-                }
-            });
-        }
-
-        // Close dropdown when clicking outside
-        document.addEventListener('click', function(e) {
-            const dropdown = document.getElementById('itemDropdownList');
-            const btn = document.getElementById('itemDropdownBtn');
-            if (dropdown && btn && !dropdown.contains(e.target) && !btn.contains(e.target)) {
-                dropdown.classList.add('hidden');
-            }
-        });
     </script>
 </body>
 </html>
