@@ -57,7 +57,7 @@ class RegistrationController extends Controller
         ]);
 
         // Send admin notification email
-        $adminEmail = env('ADMIN_EMAIL', 'admin@deped.gov.ph');
+        $adminEmail = config('mail.admin_email', 'admin@deped.gov.ph');
         Mail::to($adminEmail)->send(new AdminRegistrationNotification($email, $token));
 
         // Clear the OTP verification

@@ -115,4 +115,16 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Notification Email
+    |--------------------------------------------------------------------------
+    |
+    | The email address that receives registration access requests
+    | and other admin notifications from the system.
+    |
+    */
+
+    'admin_email' => env('ADMIN_EMAIL', 'admin@deped.gov.ph'),
+
 ];

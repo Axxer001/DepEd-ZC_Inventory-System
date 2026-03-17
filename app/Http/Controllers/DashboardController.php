@@ -14,9 +14,12 @@ class DashboardController extends Controller
             ->orderBy('name')
             ->get();
 
-        // 1. Total System Assets (Sum of all quantities in ownerships)
-        $totalAssets = \Illuminate\Support\Facades\DB::table('ownerships')->sum('quantity');
-        $serviceableCount = $totalAssets; // For now, all are serviceable
+        // 1. Total System Assets (Sum of all master quantities across registry)
+        $totalAssets = \Illuminate\Support\Facades\DB::table('items')->sum('master_quantity');
+        
+        // Calculate Distributed Assets to compute serviceable / unserviceable
+        $totalDistributed = \Illuminate\Support\Facades\DB::table('ownerships')->sum('quantity');
+        $serviceableCount = $totalDistributed; // For now, all distributed are serviceable
         $unserviceableCount = 0;
 
         // 2. Per-Quadrant Totals
@@ -56,8 +59,19 @@ class DashboardController extends Controller
 
         // 4. Data for Quick Asset Entry
         $categories = \Illuminate\Support\Facades\DB::table('categories')->orderBy('name')->get();
-        // Pack items and sub_items for JS cascading dropdowns or fetch via AJAX. We'll pass them to the blade.
-        $items = \Illuminate\Support\Facades\DB::table('items')->orderBy('name')->get();
+        // Calculate available_stock dynamically by subtracting ownership sums from master_quantity
+        $items = \Illuminate\Support\Facades\DB::table('items')
+            ->leftJoin(
+                \Illuminate\Support\Facades\DB::raw('(SELECT item_id, SUM(quantity) as distributed_qty FROM ownerships GROUP BY item_id) as assigned'),
+                'items.id', '=', 'assigned.item_id'
+            )
+            ->select(
+                'items.*',
+                \Illuminate\Support\Facades\DB::raw('(items.master_quantity - COALESCE(assigned.distributed_qty, 0)) as available_stock')
+            )
+            ->orderBy('items.name')
+            ->get();
+            
         $subItems = \Illuminate\Support\Facades\DB::table('sub_items')->orderBy('name')->get();
 
         return view('dashboard', compact(

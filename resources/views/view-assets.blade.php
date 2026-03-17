@@ -45,10 +45,7 @@
                         </div>
                         
                         <h4 class="font-extrabold text-slate-800 text-lg leading-tight" x-text="catName"></h4>
-                        <p class="text-[10px] font-bold uppercase mt-1" 
-                           :class="selectedCategory === catName ? 'text-[#c00000]' : 'text-slate-400'"
-                           x-text="selectedCategory === catName ? 'Active Selection' : 'View Items'">
-                        </p>
+                        <p class="text-[10px] font-bold text-slate-500 mt-1 uppercase" x-text="`Total Assets: ${data.total_assets}`"></p>
                     </button>
                 </template>
             </div>
@@ -83,11 +80,15 @@
                     
                     <div class="flex items-center gap-6">
                         <div class="text-right hidden md:block border-r border-slate-200 pr-6">
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Quantity</p>
-                            <p class="text-2xl font-black text-[#c00000]" x-text="calculateOverallTotal()"></p>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Master Quantity</p>
+                            <p class="text-2xl font-black text-slate-800" x-text="inventory[selectedCategory]?.items[selectedItem]?.master_quantity || 0"></p>
+                        </div>
+                        <div class="text-right hidden md:block border-r border-slate-200 pr-6">
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Distributed Assets</p>
+                            <p class="text-2xl font-black text-[#c00000]" x-text="inventory[selectedCategory]?.items[selectedItem]?.distributed_assets || 0"></p>
                         </div>
 
-                        <div class="relative w-full md:w-80 group">
+                        <div class="relative w-full md:w-64 group">
                             <input type="text" x-model="searchQuery" placeholder="Search model or spec..." 
                                 class="w-full pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-red-50 transition-all shadow-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#c00000] transition-colors">
@@ -122,7 +123,7 @@
                                         </td>
                                         <td class="px-8 py-6 text-center">
                                             <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase">
-                                                <span x-text="modelData.length"></span> Recipient Schools
+                                                <span x-text="modelData.length || 0"></span> Recipient Schools
                                             </span>
                                         </td>
                                         <td class="px-8 py-6 text-center">
@@ -143,17 +144,24 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody class="divide-y divide-slate-50">
-                                                        <template x-for="school in modelData" :key="school.name">
-                                                            <tr class="text-sm hover:bg-slate-50/30 transition-colors">
-                                                                <td class="px-6 py-3 font-bold text-slate-700" x-text="school.name"></td>
-                                                                <td class="px-6 py-3 text-center font-black text-slate-900" x-text="school.qty"></td>
-                                                                <td class="px-6 py-3 text-right">
-                                                                    <span class="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
-                                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                                                        <span x-text="school.status"></span>
-                                                                    </span>
-                                                                </td>
+                                                        <template x-if="!modelData || modelData.length === 0">
+                                                            <tr>
+                                                                <td colspan="3" class="px-6 py-4 text-center text-sm font-bold text-slate-400 italic">No assets distributed yet.</td>
                                                             </tr>
+                                                        </template>
+                                                        <template x-if="modelData && modelData.length > 0">
+                                                            <template x-for="school in modelData" :key="school.name">
+                                                                <tr class="text-sm hover:bg-slate-50/30 transition-colors">
+                                                                    <td class="px-6 py-3 font-bold text-slate-700" x-text="school.name"></td>
+                                                                    <td class="px-6 py-3 text-center font-black text-slate-900" x-text="school.qty"></td>
+                                                                    <td class="px-6 py-3 text-right">
+                                                                        <span class="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
+                                                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                                            <span x-text="school.status"></span>
+                                                                        </span>
+                                                                    </td>
+                                                                </tr>
+                                                            </template>
                                                         </template>
                                                     </tbody>
                                                 </table>
@@ -193,22 +201,14 @@
                 },
 
                 sumModelQty(modelData) {
+                    if (!modelData || modelData.length === 0) return 0;
                     return modelData.reduce((sum, school) => sum + school.qty, 0);
-                },
-
-                calculateOverallTotal() {
-                    if (!this.selectedItem) return 0;
-                    let models = this.inventory[this.selectedCategory].items[this.selectedItem];
-                    let total = 0;
-                    Object.values(models).forEach(schoolList => {
-                        total += schoolList.reduce((sum, s) => sum + s.qty, 0);
-                    });
-                    return total;
                 },
 
                 get filteredModels() {
                     if (!this.selectedCategory || !this.selectedItem) return {};
-                    let models = this.inventory[this.selectedCategory].items[this.selectedItem];
+                    // The new JSON structure places sub-items under inventory[cat].items[item].sub_items
+                    let models = this.inventory[this.selectedCategory].items[this.selectedItem].sub_items || {};
                     
                     if (this.searchQuery.trim() !== '') {
                         let filtered = {};

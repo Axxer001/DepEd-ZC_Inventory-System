@@ -55,6 +55,7 @@
                                 <option value="Schools" {{ $action == 'Schools' ? 'selected' : '' }}>Schools</option>
                                 <option value="Items" {{ $action == 'Items' ? 'selected' : '' }}>Items</option>
                                 <option value="Categories" {{ $action == 'Categories' ? 'selected' : '' }}>Categories</option>
+                                <option value="Distribution" {{ $action == 'Distribution' ? 'selected' : '' }}>Distribution</option>
                                 <option value="Accounts" {{ $action == 'Accounts' ? 'selected' : '' }}>Accounts</option>
                             </optgroup>
                         </select>

@@ -135,12 +135,12 @@
                             </select>
                         </div>
 
-                        <div class="space-y-2">
+                        <div class="space-y-2 flex-grow">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item</label>
-                            <select name="item_id" id="itemSelect" required disabled class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all disabled:opacity-50">
+                            <select id="itemSelect" name="item_id" disabled class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all disabled:opacity-50">
                                 <option value="">Select Item</option>
                                 @foreach($items as $item)
-                                    <option value="{{ $item->id }}" data-category="{{ $item->category_id }}">{{ $item->name }}</option>
+                                    <option value="{{ $item->id }}" data-category="{{ $item->category_id }}" data-avail="{{ $item->available_stock }}">{{ $item->name }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -380,6 +380,7 @@
             const categorySelect = document.getElementById('categorySelect');
             const itemSelect = document.getElementById('itemSelect');
             const subItemSelect = document.getElementById('subItemSelect');
+            const assetEntryForm = document.querySelector('form[action="{{ route('inventory.dashboard.store') }}"]');
             
             // Store original options
             const allItems = Array.from(itemSelect.querySelectorAll('option[data-category]'));
@@ -400,7 +401,12 @@
                 if (catId) {
                     const filteredItems = allItems.filter(opt => opt.getAttribute('data-category') === catId);
                     if (filteredItems.length > 0) {
-                        filteredItems.forEach(opt => itemSelect.appendChild(opt.cloneNode(true)));
+                        filteredItems.forEach(opt => {
+                            const clone = opt.cloneNode(true);
+                            const avail = clone.getAttribute('data-avail');
+                            clone.textContent = `${clone.textContent} (Avail: ${avail})`;
+                            itemSelect.appendChild(clone);
+                        });
                         itemSelect.disabled = false;
                     }
                 }
@@ -422,6 +428,51 @@
                     }
                 }
             });
+
+            // Form Validation before submission
+            if(assetEntryForm) {
+                assetEntryForm.addEventListener('submit', function(e) {
+                    const school = document.getElementById('schoolSelect').value;
+                    const cat = document.getElementById('categorySelect').value;
+                    const itm = document.getElementById('itemSelect').value;
+                    const subItm = document.getElementById('subItemSelect').value;
+                    const subItmOpts = document.getElementById('subItemSelect').options.length;
+                    const qty = document.getElementById('quantityInput').value;
+
+                    // Check dropdowns
+                    if (!school || !cat || !itm) {
+                        e.preventDefault();
+                        alert("Please ensure a School, Category, and Item are all selected.");
+                        return;
+                    }
+
+                    // Strict check for sub_items (if the item has them, one must be chosen)
+                    if (subItmOpts > 1 && !subItm) {
+                        e.preventDefault();
+                        alert("Please select a specific Sub-Item for this asset type.");
+                        return;
+                    }
+
+                    // Check numerical quantity validity
+                    const qtyNum = parseFloat(qty);
+                    if (!Number.isInteger(qtyNum) || qtyNum <= 0) {
+                        e.preventDefault();
+                        alert("Quantity must be a valid whole number greater than 0.");
+                        return;
+                    }
+
+                    // Check against available stock
+                    const selectedItemOption = document.querySelector(`#itemSelect option[value="${itm}"]`);
+                    if (selectedItemOption) {
+                        const available = parseFloat(selectedItemOption.getAttribute('data-avail'));
+                        if (qtyNum > available) {
+                            e.preventDefault();
+                            alert(`You cannot assign more assets than what is available in master stock. Available stock: ${available}`);
+                            return;
+                        }
+                    }
+                });
+            }
         });
     </script>
 </body>

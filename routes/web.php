@@ -39,7 +39,11 @@ Route::middleware('auth')->group(function () {
         $legislativeDistricts = DB::table('legislative_districts')->get();
         $quadrants = DB::table('quadrants')->get();
         $categories = DB::table('categories')->orderBy('name')->get();
-        $items = DB::table('items')->select('id', 'name', 'category_id')->orderBy('name')->get();
+        $items = DB::table('items')
+            ->leftJoin(DB::raw('(SELECT item_id, COALESCE(SUM(quantity), 0) as distributed_quantity FROM ownerships GROUP BY item_id) as dist'), 'items.id', '=', 'dist.item_id')
+            ->select('items.id', 'items.name', 'items.category_id', 'items.master_quantity', DB::raw('COALESCE(dist.distributed_quantity, 0) as distributed_quantity'))
+            ->orderBy('items.name')
+            ->get();
         $subItems = DB::table('sub_items')->select('id', 'name', 'item_id')->orderBy('name')->get();
         $allSchools = DB::table('schools')->select('id', 'school_id', 'name')->orderBy('name')->get();
         return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'subItems', 'allSchools'));
@@ -49,13 +53,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/inventory-setup/school', [InventorySetupController::class, 'storeSchool'])->name('inventory.setup.school');
     Route::post('/inventory-setup/category', [InventorySetupController::class, 'storeCategory'])->name('inventory.setup.category');
     Route::post('/inventory-setup/item', [InventorySetupController::class, 'storeItem'])->name('inventory.setup.item');
+    Route::post('/inventory-setup/distribution', [InventorySetupController::class, 'storeDistribution'])->name('inventory.setup.distribution');
 
     Route::get('/admin/schools', function (Request $request) {
         $search = $request->query('search');
+        $districtFilter = $request->query('districts');
+        $quadrantFilter = $request->query('quadrants');
         
         $query = DB::table('schools')
             ->join('districts', 'schools.district_id', '=', 'districts.id')
-            ->select('schools.id', 'schools.school_id', 'schools.name', 'districts.name as district_name');
+            ->join('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
+            ->select('schools.id', 'schools.school_id', 'schools.name', 'districts.name as district_name', 'quadrants.name as quadrant_name');
 
         if (!empty($search)) {
             $query->where(function($q) use ($search) {
@@ -64,12 +72,36 @@ Route::middleware('auth')->group(function () {
             });
         }
 
+        if (!empty($districtFilter)) {
+            $districtsArray = explode(',', $districtFilter);
+            if (count($districtsArray) > 0) {
+                $query->whereIn('districts.name', $districtsArray);
+            }
+        }
+
+        if (!empty($quadrantFilter)) {
+            $quadrantsArray = explode(',', $quadrantFilter);
+            if (count($quadrantsArray) > 0) {
+                $query->whereIn('quadrants.name', $quadrantsArray);
+            }
+        }
+
         $schools = $query->orderBy('schools.name')->paginate(20);
         
         // Fetch all schools for the autocomplete dropdown search
         $allSchools = DB::table('schools')->select('id', 'school_id', 'name')->orderBy('name')->get();
+        
+        // Fetch arrays for the filter UI
+        $allDistricts = DB::table('districts')->select('name')->orderBy('name')->pluck('name')->toArray();
+        $allQuadrants = DB::table('quadrants')->select('name')->orderBy('name')->pluck('name')->toArray();
+        
+        // Fetch mapping of district to quadrant for dynamic UI disabling
+        $districtQuadrantMapping = DB::table('districts')
+            ->join('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
+            ->select('districts.name as district', 'quadrants.name as quadrant')
+            ->get();
 
-        return view('admin.schools', compact('schools', 'search', 'allSchools'));
+        return view('admin.schools', compact('schools', 'search', 'allSchools', 'allDistricts', 'allQuadrants', 'districtQuadrantMapping'));
     })->name('admin.schools');
 
     // Route to delete a school from the registry
