@@ -40,8 +40,9 @@ Route::middleware('auth')->group(function () {
         $quadrants = DB::table('quadrants')->get();
         $categories = DB::table('categories')->orderBy('name')->get();
         $items = DB::table('items')->select('id', 'name', 'category_id')->orderBy('name')->get();
+        $subItems = DB::table('sub_items')->select('id', 'name', 'item_id')->orderBy('name')->get();
         $allSchools = DB::table('schools')->select('id', 'school_id', 'name')->orderBy('name')->get();
-        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'allSchools'));
+        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'subItems', 'allSchools'));
     })->name('inventory.setup');
 
     // Process form submissions from Setup

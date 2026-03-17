@@ -205,6 +205,7 @@
 
         const rawCategories = {{ Js::from($categories) }};
         const rawItems = {{ Js::from($items) }};
+        const rawSubItems = {{ Js::from($subItems) }};
         
         const rawDistricts = @json($districts);
         const rawLds = @json($legislativeDistricts);
@@ -216,6 +217,7 @@
         });
 
         let selectedSchoolsArray = [];
+        let selectedSubItemsArray = [];
 
         function nextStep(step, value) {
             if (step === 2) {
@@ -385,11 +387,29 @@
                                 <p id="itemNewHint" class="hidden text-xs font-semibold text-blue-600 ml-1">✦ Creating new item.</p>
                                 <p id="itemDuplicateWarning" class="hidden text-xs font-semibold text-red-600 ml-1">⚠ This item already exists in the system. Please use the dropdown to select it instead.</p>
                             </div>
-                            <div class="space-y-3">
-                                <div class="flex justify-between items-center ml-1">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Specifications / Sub-Items</label>
-                                    <button type="button" onclick="addSubItemField()" class="text-[10px] font-bold bg-red-50 text-[#c00000] px-3 py-1 rounded-lg hover:bg-[#c00000] hover:text-white transition-all">+ Add Spec</button>
+
+                            <div class="space-y-4 pt-4 border-t border-slate-100">
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Existing Sub-Item(s) <span class="text-xs text-slate-300 normal-case font-medium">(Optional)</span></label>
+                                    <div class="relative">
+                                        <div class="flex">
+                                            <input type="text" id="subItemSearch" placeholder="Type to search existing sub-items..." class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-l-2xl outline-none font-semibold transition-all" autocomplete="off" oninput="filterSubItems()">
+                                            <button type="button" onclick="toggleSubItemDropdown()" id="subItemDropdownBtn" class="px-4 bg-slate-50 border border-l-0 border-slate-100 rounded-r-2xl text-slate-400 hover:text-[#c00000] hover:bg-red-50 transition-all" title="Select existing sub-item">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+                                            </button>
+                                        </div>
+                                        <div id="subItemDropdownList" class="hidden absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll">
+                                            <!-- Javascript populates this -->
+                                        </div>
+                                    </div>
+                                    <div id="selectedSubItemsContainer" class="flex flex-wrap gap-2 mt-2 ml-1"></div>
                                 </div>
+
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center ml-1">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Or create New Specifications / Sub-Items</label>
+                                        <button type="button" onclick="addSubItemField()" class="text-[10px] font-bold bg-red-50 text-[#c00000] px-3 py-1 rounded-lg hover:bg-[#c00000] hover:text-white transition-all">+ Add Spec</button>
+                                    </div>
                                 <div id="subItemContainer" class="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scroll">
                                     <div class="flex gap-2 group">
                                         <input type="text" name="sub_items[]" placeholder="e.g. RAM 8GB" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm">
@@ -407,8 +427,11 @@
             container.innerHTML = html;
             if (currentModule === 'item') {
                 selectedSchoolsArray = [];
+                selectedSubItemsArray = [];
                 renderSelectedSchools();
                 rebuildSchoolDropdown();
+                renderSelectedSubItems();
+                rebuildSubItemDropdown();
             }
         }
 
@@ -797,9 +820,11 @@
                 return;
             }
 
-            // Populate hidden inputs for schools
+            // Populate hidden inputs for schools and existing sub-items
             const hiddenContainer = document.getElementById('hiddenSchoolInputsContainer');
-            hiddenContainer.innerHTML = selectedSchoolsArray.map(id => `<input type="hidden" name="school_ids[]" value="${id}">`).join('');
+            let hiddenHtml = selectedSchoolsArray.map(id => `<input type="hidden" name="school_ids[]" value="${id}">`).join('');
+            hiddenHtml += selectedSubItemsArray.map(id => `<input type="hidden" name="existing_sub_item_ids[]" value="${id}">`).join('');
+            hiddenContainer.innerHTML = hiddenHtml;
 
             // Gather sub-items for display
             const subInputs = document.querySelectorAll('#subItemContainer input[name="sub_items[]"]');
@@ -808,8 +833,9 @@
             let msg = existingId
                 ? `Use existing item "${itemName}"`
                 : `Add new item "${itemName}"`;
-            if (subNames.length > 0) {
-                msg += ` with ${subNames.length} specification(s)`;
+            let totalSubItems = subNames.length + selectedSubItemsArray.length;
+            if (totalSubItems > 0) {
+                msg += ` with ${totalSubItems} specification(s)`;
             }
             if (selectedSchoolsArray.length > 0) {
                 msg += ` and assign quantity of ${quantity} to ${selectedSchoolsArray.length} school(s)`;
@@ -906,6 +932,95 @@
             }).join('');
         }
 
+        // Sub-Item Selection Logic
+        function toggleSubItemDropdown() {
+            const dropdown = document.getElementById('subItemDropdownList');
+            rebuildSubItemDropdown();
+            dropdown.classList.toggle('hidden');
+        }
+
+        function filterSubItems() {
+            rebuildSubItemDropdown();
+            document.getElementById('subItemDropdownList').classList.remove('hidden');
+        }
+
+        function rebuildSubItemDropdown() {
+            const dropdown = document.getElementById('subItemDropdownList');
+            const query = document.getElementById('subItemSearch').value.toLowerCase();
+            const itemId = document.getElementById('existingItemId').value;
+            
+            // Only show sub-items that belong to the currently selected item (if one is selected via dropdown)
+            let possibleSubItems = rawSubItems;
+            if (itemId) {
+                possibleSubItems = rawSubItems.filter(s => s.item_id == itemId);
+            }
+
+            const filtered = possibleSubItems.filter(s => 
+                !selectedSubItemsArray.includes(s.id) && 
+                s.name.toLowerCase().includes(query)
+            ).slice(0, 50);
+
+            let html = '<div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50 w-full mb-1">Select existing sub-item</div>';
+            
+            if (filtered.length === 0) {
+                html += '<div class="px-4 py-3 text-sm text-slate-400 italic">No matches found</div>';
+            } else {
+                html += filtered.map(s => {
+                    // Include parent item name if an item isn't explicitly selected
+                    const parentItemName = itemId ? '' : ` <span class="text-[10px] text-slate-400 font-medium ml-1">in ${rawItems.find(i=>i.id == s.item_id)?.name || 'Unknown'}</span>`;
+                    return `
+                    <div onclick="selectSubItem(${s.id}, '${s.name.replace(/'/g, "\\'")}')"
+                         class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer transition-colors border-b border-slate-50 last:border-0 truncate flex justify-between items-center">
+                        <span>${s.name} ${parentItemName}</span>
+                        <div class="text-[10px] bg-slate-100 text-slate-400 px-2 py-0.5 rounded-md leading-none self-center">Spec</div>
+                    </div>
+                `}).join('');
+            }
+            dropdown.innerHTML = html;
+        }
+
+        function selectSubItem(id, name) {
+            if (!selectedSubItemsArray.includes(id)) {
+                selectedSubItemsArray.push(id);
+                renderSelectedSubItems();
+            }
+            document.getElementById('subItemSearch').value = '';
+            document.getElementById('subItemDropdownList').classList.add('hidden');
+            
+            // Selecting an existing sub-item forces the parent item to be selected too
+            const sub = rawSubItems.find(s => s.id == id);
+            const parentItem = rawItems.find(i => i.id == sub.item_id);
+            if(sub && parentItem && !document.getElementById('existingItemId').value) {
+                 selectExistingItem(parentItem.id, parentItem.name);
+                 
+                 // Also select the category
+                 const parentCat = rawCategories.find(c => c.id == parentItem.category_id);
+                 if (parentCat) selectItemCategory(parentCat.id, parentCat.name);
+            }
+        }
+
+        function removeSubItem(id) {
+            selectedSubItemsArray = selectedSubItemsArray.filter(s => s !== id);
+            renderSelectedSubItems();
+        }
+
+        function renderSelectedSubItems() {
+            const container = document.getElementById('selectedSubItemsContainer');
+            if (selectedSubItemsArray.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            container.innerHTML = selectedSubItemsArray.map(id => {
+                const sub = rawSubItems.find(s => s.id === id);
+                return `
+                    <div class="px-3 py-1.5 bg-blue-50 text-blue-700 text-xs font-bold rounded-xl flex items-center gap-2 border border-blue-100 shadow-sm animate-in fade-in zoom-in duration-200">
+                        <span class="truncate max-w-[200px]" title="${sub.name}">${sub.name}</span>
+                        <button type="button" onclick="removeSubItem(${id})" class="text-blue-400 hover:text-blue-800 focus:outline-none ml-1 font-bold shrink-0">✕</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
         // Close dropdowns when clicking outside
         document.addEventListener('click', function(e) {
             const itemDropdown = document.getElementById('itemDropdownList');
@@ -931,6 +1046,13 @@
             const itemCategoryName = document.getElementById('itemCategoryName');
             if (itemCategoryDropdown && itemCategoryBtn && !itemCategoryDropdown.contains(e.target) && !itemCategoryBtn.contains(e.target) && e.target !== itemCategoryName) {
                 itemCategoryDropdown.classList.add('hidden');
+            }
+
+            const subItemDropdown = document.getElementById('subItemDropdownList');
+            const subItemBtn = document.getElementById('subItemDropdownBtn');
+            const subItemSearch = document.getElementById('subItemSearch');
+            if (subItemDropdown && subItemBtn && !subItemDropdown.contains(e.target) && !subItemBtn.contains(e.target) && e.target !== subItemSearch) {
+                subItemDropdown.classList.add('hidden');
             }
         });
     </script>
