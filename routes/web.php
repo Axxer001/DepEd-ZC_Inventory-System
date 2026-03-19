@@ -173,9 +173,7 @@ Route::get('/view-all-assets', [AssetController::class, 'viewAll'])->name('asset
 Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('assets.history');
 
 // Route para sa Explorer
-Route::get('/asset-explorer', function () {
-    return view('assets.asset-explorer');
-})->name('assets.explorer');
+Route::get('/asset-explorer', [AssetController::class, 'explorer'])->name('assets.explorer');
 
 
 
