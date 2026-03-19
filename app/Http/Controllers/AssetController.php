@@ -115,5 +115,20 @@ class AssetController extends Controller
         $categories = $mockCategories[$schoolId] ?? ['General Inventory'];
 
         return response()->json($categories);
+
+
+        
     }
+
+    public function viewAll()
+    {
+        // Dahil ang dummy data ay nasa mismong blade file mo (gamit ang @php),
+        // kailangan lang natin i-return yung view.
+        return view('assets.view-all');
+    }
+
+    public function history() {
+    return view('assets.asset-history'); 
+}
+
 }

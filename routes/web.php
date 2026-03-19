@@ -129,6 +129,24 @@ Route::middleware('auth')->group(function () {
         };
     };
 
+    // Route para sa main selection (yung 2 big buttons)
+Route::get('/view-assets', function () {
+    return view('assets.view-assets'); // folder.filename
+})->name('assets.view');
+
+// Route para sa Master List
+Route::get('/view-all-assets', [AssetController::class, 'viewAll'])->name('assets.view_all');
+
+// Sa routes/web.php mo
+Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('assets.history');
+
+// Route para sa Explorer
+Route::get('/asset-explorer', function () {
+    return view('assets.asset-explorer');
+})->name('assets.explorer');
+
+
+
     Route::get('/admin/quadrant-1-1', $quadrantHandler(1, 'admin.quadrants.q1-1'))->name('quadrant.1.1');
     Route::get('/admin/quadrant-1-2', $quadrantHandler(2, 'admin.quadrants.q1-2'))->name('quadrant.1.2');
     Route::get('/admin/quadrant-2-1', $quadrantHandler(3, 'admin.quadrants.q2-1'))->name('quadrant.2.1');
