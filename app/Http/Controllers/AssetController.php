@@ -16,14 +16,8 @@ class AssetController extends Controller
     {
         $inventory = [];
 
-        // Define icons
-        $icons = [
-            'ICT Equipment' => '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" /></svg>',
-            'Furniture' => '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967A8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987A8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966A8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987A8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" /></svg>',
-            'Science Kits' => '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v1.244c0 .892-.506 1.707-1.3 2.11L3.571 9.094c-.803.414-1.321 1.24-1.321 2.138v5.127c0 .937.545 1.79 1.403 2.179l5.42 2.454a2.25 2.25 0 001.754 0l5.42-2.454c.858-.389 1.403-1.242 1.403-2.179v-5.127c0-.898-.518-1.724-1.321-2.138L11.3 6.458a2.25 2.25 0 01-1.3-2.11V3.104c0-.422.355-.758.75-.758h.5c.395 0 .75.336.75.758v1.244c0 .892.506 1.707 1.3 2.11l4.879 2.54c.803.414 1.321 1.24 1.321 2.138v5.127c0 .937-.545 1.79-1.403 2.179l-5.42 2.454a2.25 2.25 0 01-1.754 0l-5.42-2.454c-.858-.389-1.403-1.242-1.403-2.179v-5.127c0-.898.518-1.724 1.321-2.138l4.879-2.54a2.25 2.25 0 001.3-2.11V3.104c0-.422-.355-.758-.75-.758h-.5c-.395 0-.75.336-.75.758z" /></svg>',
-            'Sports Equip.' => '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252A8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983A8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" /></svg>',
-            'default' => '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>'
-        ];
+        // Universal icon for all categories
+        $defaultIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>';
 
         // 1. Fetch ALL categories and calculate total master quantity across items
         $allCategories = \Illuminate\Support\Facades\DB::table('categories')
@@ -34,7 +28,7 @@ class AssetController extends Controller
             
         foreach ($allCategories as $cat) {
             $inventory[$cat->name] = [
-                'icon' => $icons[$cat->name] ?? $icons['default'],
+                'icon' => $defaultIcon,
                 'total_assets' => (int) $cat->total_assets,
                 'items' => [] 
             ];
@@ -47,6 +41,12 @@ class AssetController extends Controller
             ->select('items.id', 'items.name as item_name', 'categories.name as category_name', 'items.master_quantity', \Illuminate\Support\Facades\DB::raw('COALESCE(dist.distributed_quantity, 0) as distributed_quantity'))
             ->get();
             
+        // 2b. Fetch sub-item available quantities grouped by item for "in_warehouse" calculation
+        $subItemStocks = \Illuminate\Support\Facades\DB::table('sub_items')
+            ->select('item_id', \Illuminate\Support\Facades\DB::raw('SUM(quantity) as available_qty'))
+            ->groupBy('item_id')
+            ->pluck('available_qty', 'item_id');
+
         foreach ($allItems as $item) {
             $catName = $item->category_name;
             $itemName = $item->item_name;
@@ -55,6 +55,7 @@ class AssetController extends Controller
                 $inventory[$catName]['items'][$itemName] = [
                     'master_quantity' => (int) $item->master_quantity,
                     'distributed_assets' => (int) $item->distributed_quantity,
+                    'in_warehouse' => (int) ($subItemStocks[$item->id] ?? 0),
                     'sub_items' => []
                 ];
             }
@@ -144,9 +145,85 @@ class AssetController extends Controller
 
     public function viewAll()
     {
-        // Dahil ang dummy data ay nasa mismong blade file mo (gamit ang @php),
-        // kailangan lang natin i-return yung view.
-        return view('assets.view-all');
+        // 1. Fetch all categories and quadrants for filter dropdowns
+        $categories = \Illuminate\Support\Facades\DB::table('categories')->orderBy('name')->pluck('name');
+        $quadrants = \Illuminate\Support\Facades\DB::table('quadrants')->orderBy('name')->get(['id', 'name']);
+
+        // 2. Fetch all items with category info
+        $allItems = \Illuminate\Support\Facades\DB::table('items')
+            ->join('categories', 'items.category_id', '=', 'categories.id')
+            ->select('items.id', 'items.name', 'items.master_quantity', 'categories.name as category')
+            ->orderBy('items.name')
+            ->get();
+
+        // 3. Fetch all sub-items grouped by item
+        $allSubItems = \Illuminate\Support\Facades\DB::table('sub_items')
+            ->select('id', 'name', 'item_id', 'quantity')
+            ->orderBy('name')
+            ->get()
+            ->groupBy('item_id');
+
+        // 4. Fetch all ownership records with school, district, quadrant info
+        $allOwnerships = \Illuminate\Support\Facades\DB::table('ownerships')
+            ->join('schools', 'ownerships.school_id', '=', 'schools.id')
+            ->join('districts', 'schools.district_id', '=', 'districts.id')
+            ->join('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
+            ->leftJoin('sub_items', 'ownerships.sub_item_id', '=', 'sub_items.id')
+            ->select(
+                'ownerships.item_id',
+                'schools.name as school_name',
+                'districts.name as district_name',
+                'quadrants.name as quadrant_name',
+                'sub_items.name as sub_item_name',
+                'ownerships.quantity'
+            )
+            ->get()
+            ->groupBy('item_id');
+
+        // 5. Build the inventory array for the frontend
+        $inventory = [];
+        foreach ($allItems as $item) {
+            $specs = [];
+            if (isset($allSubItems[$item->id])) {
+                foreach ($allSubItems[$item->id] as $sub) {
+                    $specs[] = ['name' => $sub->name, 'qty' => (int) $sub->quantity];
+                }
+            }
+
+            // Build distribution: aggregate by school
+            $distribution = [];
+            if (isset($allOwnerships[$item->id])) {
+                $schoolAgg = [];
+                foreach ($allOwnerships[$item->id] as $own) {
+                    $schoolKey = $own->school_name;
+                    if (!isset($schoolAgg[$schoolKey])) {
+                        $schoolAgg[$schoolKey] = [
+                            'school' => $own->school_name,
+                            'district' => $own->district_name,
+                            'quadrant' => $own->quadrant_name,
+                            'qty' => 0,
+                        ];
+                    }
+                    $schoolAgg[$schoolKey]['qty'] += (int) $own->quantity;
+                }
+                $distribution = array_values($schoolAgg);
+            }
+
+            $inventory[] = [
+                'id' => $item->id,
+                'name' => $item->name,
+                'category' => $item->category,
+                'master_quantity' => (int) $item->master_quantity,
+                'specs' => $specs,
+                'distribution' => $distribution,
+            ];
+        }
+
+        return view('assets.view-all', [
+            'inventoryJson' => json_encode($inventory),
+            'categoriesJson' => json_encode($categories->values()),
+            'quadrantsJson' => json_encode($quadrants->pluck('name')->values()),
+        ]);
     }
 
     public function explorer()
@@ -156,7 +233,41 @@ class AssetController extends Controller
     }
 
     public function history() {
-    return view('assets.asset-history'); 
-}
+        $records = \Illuminate\Support\Facades\DB::table('ownerships')
+            ->join('items', 'ownerships.item_id', '=', 'items.id')
+            ->join('categories', 'items.category_id', '=', 'categories.id')
+            ->leftJoin('sub_items', 'ownerships.sub_item_id', '=', 'sub_items.id')
+            ->join('schools', 'ownerships.school_id', '=', 'schools.id')
+            ->join('districts', 'schools.district_id', '=', 'districts.id')
+            ->select(
+                'ownerships.id',
+                'items.name as item_name',
+                'sub_items.name as sub_item_name',
+                'categories.name as category',
+                'schools.name as school',
+                'districts.name as district',
+                'ownerships.quantity as qty',
+                'ownerships.created_at as distributed_at'
+            )
+            ->orderByDesc('ownerships.created_at')
+            ->get();
+
+        $items = $records->map(function ($r) {
+            return [
+                'id' => $r->id,
+                'item_name' => $r->item_name,
+                'sub_item_name' => $r->sub_item_name ?? 'General',
+                'category' => $r->category,
+                'school' => $r->school,
+                'district' => $r->district,
+                'qty' => (int) $r->qty,
+                'distributed_at' => $r->distributed_at,
+            ];
+        });
+
+        return view('assets.asset-history', [
+            'recordsJson' => json_encode($items->values()),
+        ]);
+    }
 
 }

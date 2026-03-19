@@ -306,11 +306,8 @@ class InventorySetupController extends Controller
                         'updated_at' => now(),
                     ]);
 
-                    // Decrement sub-item
+                    // Decrement sub-item available stock (master_quantity stays unchanged)
                     DB::table('sub_items')->where('id', $subId)->decrement('quantity', $qty);
-
-                    // Decrement master item
-                    DB::table('items')->where('id', $itemId)->decrement('master_quantity', $qty);
 
                     // Log activity
                     DB::table('system_logs')->insert([

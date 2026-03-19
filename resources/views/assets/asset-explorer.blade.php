@@ -15,6 +15,7 @@
         /* Custom scrollbar */
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .back-btn-hover:hover { transform: translateX(-5px); border-color: #c00000; color: #c00000; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex text-slate-800" x-data="assetExplorer()">
@@ -23,7 +24,12 @@
 
     <main class="flex-grow p-6 lg:p-10 h-screen overflow-y-auto custom-scroll">
         <header class="mb-10">
-            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Asset Explorer</h2>
+            <a href="{{ route('assets.view') }}" class="back-btn-hover inline-flex items-center gap-2 px-4 py-2 mb-4 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-500 transition-all w-fit shadow-sm" style="transition: all 0.3s;">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
+                </svg>
+                Back to View Selection
+            </a>            <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Asset Explorer</h2>
             <p class="text-slate-500 text-sm mt-1 font-medium italic">Select a category and item to see distribution across all schools</p>
         </header>
 
@@ -87,6 +93,10 @@
                             <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Distributed Assets</p>
                             <p class="text-2xl font-black text-[#c00000]" x-text="inventory[selectedCategory]?.items[selectedItem]?.distributed_assets || 0"></p>
                         </div>
+                        <div class="text-right hidden md:block border-r border-slate-200 pr-6">
+                            <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest">In Warehouse</p>
+                            <p class="text-2xl font-black text-emerald-600" x-text="inventory[selectedCategory]?.items[selectedItem]?.in_warehouse || 0"></p>
+                        </div>
 
                         <div class="relative w-full md:w-64 group">
                             <input type="text" x-model="searchQuery" placeholder="Search model or spec..." 
@@ -103,8 +113,8 @@
                         <thead class="bg-slate-50/80">
                             <tr>
                                 <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Model / Specification</th>
-                                <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">School Count</th>
-                                <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Total Qty</th>
+                                <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center w-[180px]">Distributed</th>
+                                <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center w-[180px]">Recipient Schools</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -122,52 +132,44 @@
                                             </div>
                                         </td>
                                         <td class="px-8 py-6 text-center">
-                                            <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase">
-                                                <span x-text="modelData.length || 0"></span> Recipient Schools
-                                            </span>
+                                            <span class="font-black text-slate-800 text-lg" x-text="sumModelQty(modelData)"></span>
                                         </td>
                                         <td class="px-8 py-6 text-center">
-                                            <span class="font-black text-slate-800 text-lg" x-text="sumModelQty(modelData)"></span>
+                                            <span class="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-[10px] font-black uppercase">
+                                                <span x-text="modelData.length || 0"></span> Schools
+                                            </span>
                                         </td>
                                     </tr>
 
-                                    {{-- Expanded School List --}}
-                                    <tr x-show="expanded" x-transition x-cloak class="bg-slate-50/30">
-                                        <td colspan="3" class="px-8 py-6">
-                                            <div class="bg-white rounded-3xl border border-slate-200 shadow-inner overflow-hidden">
-                                                <table class="w-full">
-                                                    <thead class="bg-slate-50/50 border-b border-slate-100">
-                                                        <tr class="text-[9px] font-black text-slate-400 uppercase">
-                                                            <th class="px-6 py-3 text-left">School Name</th>
-                                                            <th class="px-6 py-3 text-center">Quantity</th>
-                                                            <th class="px-6 py-3 text-right">Unit Status</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody class="divide-y divide-slate-50">
-                                                        <template x-if="!modelData || modelData.length === 0">
-                                                            <tr>
-                                                                <td colspan="3" class="px-6 py-4 text-center text-sm font-bold text-slate-400 italic">No assets distributed yet.</td>
-                                                            </tr>
-                                                        </template>
-                                                        <template x-if="modelData && modelData.length > 0">
-                                                            <template x-for="school in modelData" :key="school.name">
-                                                                <tr class="text-sm hover:bg-slate-50/30 transition-colors">
-                                                                    <td class="px-6 py-3 font-bold text-slate-700" x-text="school.name"></td>
-                                                                    <td class="px-6 py-3 text-center font-black text-slate-900" x-text="school.qty"></td>
-                                                                    <td class="px-6 py-3 text-right">
-                                                                        <span class="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
-                                                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                                                            <span x-text="school.status"></span>
-                                                                        </span>
-                                                                    </td>
-                                                                </tr>
-                                                            </template>
-                                                        </template>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                    {{-- Expanded School Rows - aligned with parent columns --}}
+                                    <template x-if="expanded && (!modelData || modelData.length === 0)">
+                                        <tr class="bg-slate-50/30">
+                                            <td colspan="3" class="px-8 py-4 text-center text-sm font-bold text-slate-400 italic">No assets distributed yet.</td>
+                                        </tr>
+                                    </template>
+                                    <template x-if="expanded && modelData && modelData.length > 0">
+                                        <template x-for="school in modelData" :key="school.name">
+                                            <tr class="bg-slate-50/30 hover:bg-slate-100/50 transition-colors border-b border-slate-100/50">
+                                                <td class="pl-20 pr-8 py-3">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-5 h-5 bg-red-50 rounded-md flex items-center justify-center text-[#c00000] shrink-0">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
+                                                        </div>
+                                                        <span class="font-bold text-slate-700 text-sm" x-text="school.name"></span>
+                                                    </div>
+                                                </td>
+                                                <td class="px-8 py-3 text-center">
+                                                    <span class="font-black text-slate-800 text-sm" x-text="school.qty"></span>
+                                                </td>
+                                                <td class="px-8 py-3 text-center">
+                                                    <span class="inline-flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                                        <span x-text="school.status"></span>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </template>
                                 </tbody>
                             </template>
                         </tbody>

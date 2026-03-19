@@ -59,15 +59,16 @@ class DashboardController extends Controller
 
         // 4. Data for Quick Asset Entry
         $categories = \Illuminate\Support\Facades\DB::table('categories')->orderBy('name')->get();
-        // Calculate available_stock dynamically by subtracting ownership sums from master_quantity
+        // Calculate available_stock as the sum of remaining sub-item quantities
+        // (sub_items.quantity already reflects deductions from distributions)
         $items = \Illuminate\Support\Facades\DB::table('items')
             ->leftJoin(
-                \Illuminate\Support\Facades\DB::raw('(SELECT item_id, SUM(quantity) as distributed_qty FROM ownerships GROUP BY item_id) as assigned'),
-                'items.id', '=', 'assigned.item_id'
+                \Illuminate\Support\Facades\DB::raw('(SELECT item_id, SUM(quantity) as remaining_qty FROM sub_items GROUP BY item_id) as subs'),
+                'items.id', '=', 'subs.item_id'
             )
             ->select(
                 'items.*',
-                \Illuminate\Support\Facades\DB::raw('(items.master_quantity - COALESCE(assigned.distributed_qty, 0)) as available_stock')
+                \Illuminate\Support\Facades\DB::raw('COALESCE(subs.remaining_qty, 0) as available_stock')
             )
             ->orderBy('items.name')
             ->get();

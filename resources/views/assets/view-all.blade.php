@@ -16,7 +16,6 @@
         [x-cloak] { display: none !important; }
         .table-row-transition { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .back-btn-hover:hover { transform: translateX(-5px); color: #c00000; border-color: #c00000; }
-        /* School Card - Compact Mode */
         .school-card { 
             transition: all 0.2s ease; 
             border: 1px solid #f1f5f9; 
@@ -25,6 +24,10 @@
             background: #fff;
         }
         .school-card:hover { border-color: #c00000; background: #fffcfc; transform: translateY(-1px); }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex animate-fade-in text-slate-800 overflow-x-hidden" x-data="assetInventory()">
@@ -36,7 +39,7 @@
             {{-- Header --}}
             <header class="flex flex-col md:flex-row md:justify-between md:items-start mb-6 gap-4">
                 <div class="flex flex-col gap-3">
-                    <a href="{{ route('assets.view') }}" class="back-btn-hover inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-black text-slate-500 transition-all w-fit shadow-sm uppercase tracking-wider">
+                    <a href="{{ route('assets.view') }}" class="back-btn-hover no-print inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-[10px] font-black text-slate-500 transition-all w-fit shadow-sm uppercase tracking-wider">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3 h-3"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
                         Back to View Selection
                     </a>
@@ -45,7 +48,7 @@
                         <p class="text-slate-400 text-[11px] mt-1 font-bold italic uppercase tracking-widest">Warehouse & school distribution summary</p>
                     </div>
                 </div>
-                <button onclick="window.print()" class="group bg-white text-slate-600 border border-slate-200 px-5 py-3 rounded-xl font-bold hover:bg-slate-50 transition-all flex items-center gap-3 shadow-sm active:scale-95 text-[11px] uppercase tracking-widest">
+                <button onclick="window.print()" class="no-print group bg-white text-slate-600 border border-slate-200 px-5 py-3 rounded-xl font-bold hover:bg-slate-50 transition-all flex items-center gap-3 shadow-sm active:scale-95 text-[11px] uppercase tracking-widest">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 text-slate-400 group-hover:text-[#c00000] transition-colors"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231a1.125 1.125 0 01-1.117-1.227L6.34 18m11.318-4.171a42.41 42.41 0 014.232.748 1.125 1.125 0 01.815 1.39l-1.077 4.195a1.125 1.125 0 01-1.392.815l-1.332-.342M17.66 18l-1.332-.342m-11.318-4.171a42.41 42.41 0 00-4.232.748 1.125 1.125 0 00-.815 1.39l1.077 4.195a1.125 1.125 0 001.392.815l1.332-.342M6.34 18l1.332-.342m0 0V5.25A2.25 2.25 0 019 3h6a2.25 2.25 0 012.25 2.25v12.75m-11.25 0h11.25" /></svg>
                     Print Summary
                 </button>
@@ -63,36 +66,57 @@
                 </div>
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 border-l-4 border-l-emerald-600">
                     <p class="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1">In Warehouse</p>
-                    <h3 class="text-2xl font-black text-slate-800" x-text="totals().remaining"></h3>
+                    <h3 class="text-2xl font-black text-slate-800" x-text="totals().available"></h3>
                 </div>
             </div>
 
             {{-- Filter Bar --}}
-            <section class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-wrap gap-4">
+            <section class="no-print bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-6 flex flex-wrap gap-4">
                 <div class="flex-grow grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {{-- Category Filter --}}
                     <select x-model="filters.category" class="w-full p-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-bold uppercase outline-none focus:ring-2 focus:ring-red-100 transition-all">
                         <option value="all">Categories: ALL</option>
-                        <option value="Furniture">Furniture</option>
-                        <option value="ICT Equipment">ICT Equipment</option>
+                        <template x-for="cat in categories" :key="cat">
+                            <option :value="cat" x-text="cat"></option>
+                        </template>
                     </select>
+
+                    {{-- Quadrant Filter --}}
                     <select x-model="filters.quadrant" class="w-full p-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-bold uppercase outline-none focus:ring-2 focus:ring-red-100 transition-all">
                         <option value="all">Quadrants: ALL</option>
-                        <option value="Q1">Quadrant 1</option>
-                        <option value="Q2">Quadrant 2</option>
+                        <template x-for="q in quadrants" :key="q">
+                            <option :value="q" x-text="q"></option>
+                        </template>
                     </select>
+
+                    {{-- Sort Filter --}}
                     <select x-model="filters.sort" class="w-full p-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-bold uppercase outline-none text-[#c00000]">
                         <option value="none">Sort: Default</option>
                         <option value="high">High Qty first</option>
                         <option value="low">Low Qty first</option>
+                        <option value="name_asc">Name A→Z</option>
+                        <option value="name_desc">Name Z→A</option>
                     </select>
+
+                    {{-- Search --}}
                     <div class="relative">
-                        <input type="text" x-model="filters.search" placeholder="Search item/school..." class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-bold outline-none">
+                        <input type="text" x-model="filters.search" placeholder="Search item/school..." class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-bold outline-none focus:ring-2 focus:ring-red-100 transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3 h-3 absolute left-3 top-1/2 -translate-y-1/2 text-slate-300"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
                     </div>
                 </div>
             </section>
 
-            {{-- Compact Inventory Table --}}
+            {{-- Results count --}}
+            <div class="flex items-center justify-between mb-3 px-1">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    Showing <span class="text-slate-700" x-text="filteredInventory().length"></span> of <span class="text-slate-700" x-text="inventory.length"></span> assets
+                </p>
+                <template x-if="filters.category !== 'all' || filters.quadrant !== 'all' || filters.search">
+                    <button @click="filters.category='all'; filters.quadrant='all'; filters.sort='none'; filters.search=''" class="text-[10px] font-black text-red-500 uppercase tracking-wider hover:underline">✕ Clear Filters</button>
+                </template>
+            </div>
+
+            {{-- Inventory Table --}}
             <section class="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-separate border-spacing-0">
@@ -125,12 +149,15 @@
                                                     <span class="text-[9px] font-black text-slate-800" x-text="spec.qty"></span>
                                                 </div>
                                             </template>
+                                            <template x-if="asset.specs.length === 0">
+                                                <span class="text-[8px] font-bold text-slate-300 italic">No specs</span>
+                                            </template>
                                         </div>
                                     </td>
                                     {{-- Compact School Cards Grid --}}
                                     <td class="px-5 py-4 min-w-[350px]">
                                         <div class="grid grid-cols-2 gap-2">
-                                            <template x-for="dist in asset.distribution" :key="dist.school">
+                                            <template x-for="dist in getFilteredDistribution(asset)" :key="dist.school">
                                                 <div class="school-card flex items-center gap-2">
                                                     <div class="w-6 h-6 bg-red-50 rounded-lg flex items-center justify-center text-[#c00000]">
                                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
@@ -142,12 +169,25 @@
                                                     <span class="ml-auto text-[10px] font-black text-[#c00000]" x-text="dist.qty"></span>
                                                 </div>
                                             </template>
+                                            <template x-if="getFilteredDistribution(asset).length === 0">
+                                                <span class="text-[8px] font-bold text-slate-300 italic col-span-2">No deployments</span>
+                                            </template>
                                         </div>
                                     </td>
                                     {{-- Numbers --}}
-                                    <td class="px-5 py-4 text-center font-black text-[13px] text-slate-900" x-text="calculateMaster(asset)"></td>
+                                    <td class="px-5 py-4 text-center font-black text-[13px] text-slate-900" x-text="asset.master_quantity"></td>
                                     <td class="px-5 py-4 text-center bg-blue-50/10 font-black text-[13px] text-blue-600" x-text="calculateDistributed(asset)"></td>
-                                    <td class="px-5 py-4 text-center bg-emerald-50/10 font-black text-[13px] text-emerald-600" x-text="calculateRemaining(asset)"></td>
+                                    <td class="px-5 py-4 text-center bg-emerald-50/10 font-black text-[13px] text-emerald-600" x-text="calculateAvailableStock(asset)"></td>
+                                </tr>
+                            </template>
+
+                            {{-- Empty State --}}
+                            <template x-if="filteredInventory().length === 0">
+                                <tr>
+                                    <td colspan="6" class="px-8 py-16 text-center">
+                                        <p class="text-slate-400 font-bold text-sm">No assets match your filters</p>
+                                        <p class="text-slate-300 text-xs mt-1">Try adjusting the category, quadrant, or search query</p>
+                                    </td>
                                 </tr>
                             </template>
                         </tbody>
@@ -160,59 +200,64 @@
     <script>
         function assetInventory() {
             return {
-                filters: { category: 'all', quadrant: 'all', district: 'all', sort: 'none', search: '' },
-                inventory: [
-                    { 
-                        id: 1, name: 'Armchairs', category: 'Furniture',
-                        specs: [{ name: 'Plastic', qty: 300 }, { name: 'Wood', qty: 100 }],
-                        distribution: [
-                            { school: 'Ayala NHS', district: 'Ayala', quadrant: 'Q1', qty: 150 },
-                            { school: 'Baliwasan CS', district: 'Baliwasan', quadrant: 'Q1', qty: 100 }
-                        ]
-                    },
-                    { 
-                        id: 2, name: 'Laptops', category: 'ICT Equipment',
-                        specs: [{ name: 'Core i5', qty: 50 }, { name: 'Core i3', qty: 25 }],
-                        distribution: [
-                            { school: 'Putik Elementary', district: 'Putik', quadrant: 'Q2', qty: 40 }
-                        ]
-                    },
-                    { 
-                        id: 3, name: 'Smart TV', category: 'ICT Equipment',
-                        specs: [{ name: '55" 4K', qty: 20 }],
-                        distribution: [
-                            { school: 'Vitali National HS', district: 'Vitali', quadrant: 'Q2', qty: 5 }
-                        ]
-                    }
-                ],
+                filters: { category: 'all', quadrant: 'all', sort: 'none', search: '' },
 
-                calculateMaster(a) { return a.specs.reduce((s, x) => s + x.qty, 0); },
+                // Dynamic data from the backend
+                inventory: {!! $inventoryJson !!},
+                categories: {!! $categoriesJson !!},
+                quadrants: {!! $quadrantsJson !!},
+
                 calculateDistributed(a) { return a.distribution.reduce((s, x) => s + x.qty, 0); },
-                calculateRemaining(a) { return this.calculateMaster(a) - this.calculateDistributed(a); },
+                calculateAvailableStock(a) { return a.specs.reduce((s, sp) => s + sp.qty, 0); },
+
                 totals() {
-                    let m = 0, d = 0;
-                    this.inventory.forEach(a => { m += this.calculateMaster(a); d += this.calculateDistributed(a); });
-                    return { master: m, distributed: d, remaining: m - d };
-                },
-                uniqueDistricts() {
-                    let dists = [];
-                    this.inventory.forEach(a => a.distribution.forEach(d => dists.push(d.district)));
-                    return [...new Set(dists)].sort();
-                },
-                filteredInventory() {
-                    let filtered = this.inventory.filter(asset => {
-                        const catMatch = this.filters.category === 'all' || asset.category === this.filters.category;
-                        const locMatch = asset.distribution.some(d => {
-                            const qMatch = this.filters.quadrant === 'all' || d.quadrant === this.filters.quadrant;
-                            const dMatch = this.filters.district === 'all' || d.district === this.filters.district;
-                            return qMatch && dMatch;
-                        });
-                        const s = this.filters.search.toLowerCase();
-                        const searchMatch = asset.name.toLowerCase().includes(s) || asset.distribution.some(d => d.school.toLowerCase().includes(s));
-                        return catMatch && locMatch && searchMatch;
+                    const filtered = this.filteredInventory();
+                    let m = 0, d = 0, avail = 0;
+                    filtered.forEach(a => { 
+                        m += a.master_quantity; 
+                        d += this.calculateDistributed(a);
+                        avail += a.specs.reduce((s, sp) => s + sp.qty, 0);
                     });
-                    if (this.filters.sort === 'high') filtered.sort((a, b) => this.calculateMaster(b) - this.calculateMaster(a));
-                    if (this.filters.sort === 'low') filtered.sort((a, b) => this.calculateMaster(a) - this.calculateMaster(b));
+                    return { master: m, distributed: d, available: avail };
+                },
+
+                getFilteredDistribution(asset) {
+                    if (this.filters.quadrant === 'all') return asset.distribution;
+                    return asset.distribution.filter(d => d.quadrant === this.filters.quadrant);
+                },
+
+                filteredInventory() {
+                    const s = this.filters.search.toLowerCase().trim();
+
+                    let filtered = this.inventory.filter(asset => {
+                        // Category filter
+                        if (this.filters.category !== 'all' && asset.category !== this.filters.category) return false;
+
+                        // Quadrant filter: asset must have at least one distribution in the selected quadrant
+                        // OR we show all assets even without distribution if quadrant is 'all'
+                        if (this.filters.quadrant !== 'all') {
+                            const hasQuadrant = asset.distribution.some(d => d.quadrant === this.filters.quadrant);
+                            if (!hasQuadrant) return false;
+                        }
+
+                        // Search filter: match item name, category, spec names, or school names
+                        if (s) {
+                            const nameMatch = asset.name.toLowerCase().includes(s);
+                            const catMatch = asset.category.toLowerCase().includes(s);
+                            const specMatch = asset.specs.some(sp => sp.name.toLowerCase().includes(s));
+                            const schoolMatch = asset.distribution.some(d => d.school.toLowerCase().includes(s));
+                            if (!nameMatch && !catMatch && !specMatch && !schoolMatch) return false;
+                        }
+
+                        return true;
+                    });
+
+                    // Sorting
+                    if (this.filters.sort === 'high') filtered.sort((a, b) => b.master_quantity - a.master_quantity);
+                    else if (this.filters.sort === 'low') filtered.sort((a, b) => a.master_quantity - b.master_quantity);
+                    else if (this.filters.sort === 'name_asc') filtered.sort((a, b) => a.name.localeCompare(b.name));
+                    else if (this.filters.sort === 'name_desc') filtered.sort((a, b) => b.name.localeCompare(a.name));
+
                     return filtered;
                 }
             }

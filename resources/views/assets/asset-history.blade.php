@@ -114,8 +114,8 @@
                     <table class="w-full text-left border-separate border-spacing-0">
                         <thead>
                             <tr class="bg-slate-50/50">
-                                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Asset & Category</th>
-                                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Specifications</th>
+                                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Asset Distributed</th>
+                                <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Category</th>
                                 <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Deployment</th>
                                 <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">District</th>
                                 <th class="px-8 py-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 text-center">Qty</th>
@@ -127,12 +127,12 @@
                                 <tr class="group hover:bg-slate-50/80 transition-all table-row-transition">
                                     <td class="px-8 py-6">
                                         <div class="flex flex-col">
-                                            <span class="font-extrabold text-slate-800 group-hover:text-[#c00000] uppercase text-[13px] leading-tight transition-colors" x-text="item.name"></span>
-                                            <span class="text-[9px] font-black text-blue-500 uppercase mt-1 tracking-widest" x-text="item.category"></span>
+                                            <span class="font-extrabold text-slate-800 group-hover:text-[#c00000] uppercase text-[13px] leading-tight transition-colors" x-text="item.sub_item_name"></span>
+                                            <span class="text-[9px] font-black text-blue-500 uppercase mt-1 tracking-widest" x-text="item.item_name"></span>
                                         </div>
                                     </td>
                                     <td class="px-8 py-6">
-                                        <span class="text-xs font-bold text-slate-500 italic bg-slate-100/50 px-3 py-1.5 rounded-lg border border-slate-100" x-text="item.specs"></span>
+                                        <span class="text-xs font-bold text-slate-500 italic bg-slate-100/50 px-3 py-1.5 rounded-lg border border-slate-100" x-text="item.category"></span>
                                     </td>
                                     <td class="px-8 py-6">
                                         <div class="flex items-center gap-3">
@@ -185,13 +185,7 @@
                 searchQuery: '',
                 selectedYear: 'all',
                 selectedMonth: 'all',
-                // Dummy Data in-sync with your specific columns
-                items: [
-                    { id: 1, name: 'Dell Latitude 3420', category: 'ICT Equipment', school: 'Ayala National HS', district: 'Ayala', qty: 5, distributed_at: '2026-03-10', specs: 'Core i5, 8GB RAM' },
-                    { id: 2, name: 'Epson L3210 Printer', category: 'ICT Equipment', school: 'Baliwasan Central', district: 'Baliwasan', qty: 2, distributed_at: '2025-11-20', specs: 'EcoTank, Colored' },
-                    { id: 3, name: 'Armchair - Plastic', category: 'Furniture', school: 'Putik Elementary', district: 'Putik', qty: 50, distributed_at: '2026-01-15', specs: 'Standard Adult Size' },
-                    { id: 4, name: 'Samsung Smart TV', category: 'ICT Equipment', school: 'Vitali National HS', district: 'Vitali', qty: 3, distributed_at: '2024-06-05', specs: '55" 4K Crystal UHD' }
-                ],
+                items: {!! $recordsJson !!},
 
                 getUniqueYears() {
                     const years = this.items.map(i => new Date(i.distributed_at).getFullYear());
@@ -216,7 +210,9 @@
                         const yearMatch = this.selectedYear === 'all' || date.getFullYear() == this.selectedYear;
                         const monthMatch = this.selectedMonth === 'all' || date.getMonth() == this.selectedMonth;
                         const search = this.searchQuery.toLowerCase();
-                        const keywordMatch = item.name.toLowerCase().includes(search) || 
+                        const keywordMatch = !search ||
+                                           item.sub_item_name.toLowerCase().includes(search) || 
+                                           item.item_name.toLowerCase().includes(search) || 
                                            item.school.toLowerCase().includes(search) || 
                                            item.district.toLowerCase().includes(search) || 
                                            item.category.toLowerCase().includes(search);

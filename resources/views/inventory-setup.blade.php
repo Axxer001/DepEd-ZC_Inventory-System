@@ -1285,6 +1285,21 @@
             updateReadyStatus();
         }
 
+        // Calculate effective remaining stock for a sub-item across ALL tabs
+        function getEffectiveStock(subId) {
+            const raw = rawSubItems.find(s => s.id === subId);
+            if (!raw) return 0;
+            let totalAllocated = 0;
+            distTabsData.forEach(tab => {
+                tab.subItemsSelected.forEach(si => {
+                    if (si.id === subId && si.selected_qty > 0) {
+                        totalAllocated += si.selected_qty;
+                    }
+                });
+            });
+            return Math.max(0, raw.quantity - totalAllocated);
+        }
+
         function filterTabSub(tabId) {
             const dd = document.getElementById(`tabSubDropdown_${tabId}`);
             const q = document.getElementById(`tabSubSearch_${tabId}`).value.trim().toLowerCase();
@@ -1299,11 +1314,11 @@
             let h = '<div class="p-3 text-[10px] text-slate-400 font-extrabold uppercase tracking-widest sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100">Select sub-item</div>';
             h += f.length === 0 ? '<div class="px-4 py-3 text-sm text-slate-400 italic">No sub-items available</div>'
                 : f.map(s => {
-                    const stock = s.quantity;
+                    const stock = getEffectiveStock(s.id);
                     if(stock <= 0) {
                         return `<div class="px-4 py-3 text-sm font-semibold text-slate-300 bg-slate-50 cursor-not-allowed border-b border-slate-50">${s.name} <span class="text-red-400 text-xs">(Out of stock)</span></div>`;
                     }
-                    return `<div onclick="selectTabSub(${tabId}, ${s.id}, '${s.name.replace(/'/g,"\\'")}', ${stock})" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition-colors border-b border-slate-50 flex justify-between"><span>${s.name}</span> <span class="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-xl">${stock} in stock</span></div>`;
+                    return `<div onclick="selectTabSub(${tabId}, ${s.id}, '${s.name.replace(/'/g,"\\'")}', ${stock})" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition-colors border-b border-slate-50 flex justify-between"><span>${s.name}</span> <span class="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-xl">${stock} available</span></div>`;
                 }).join('');
             dd.innerHTML = h;
         }
@@ -1322,6 +1337,8 @@
             const tab = distTabsData[tabId];
             tab.subItemsSelected = tab.subItemsSelected.filter(s => s.id !== subId);
             renderTabSubItems(tabId);
+            // Refresh all other tabs that show the same sub-item (stock freed up)
+            refreshAllTabsForSubItem(subId, tabId);
             updateReadyStatus();
         }
 
@@ -1331,20 +1348,81 @@
             if (!sub) return;
             
             let val = parseInt(valStr);
-            if(isNaN(val)) val = 0;
+            if(isNaN(val) || val < 0) val = 0;
+            sub.selected_qty = val;
+
+            // Recalculate effective stock for this sub-item across all tabs
+            const effectiveStock = getEffectiveStock(subId);
+            // The available amount for THIS specific entry = effectiveStock + this entry's own qty
+            const maxForThis = effectiveStock + val;
+            
             const input = document.getElementById(`subQtyInput_${tabId}_${subId}`);
             const errorLabel = document.getElementById(`subQtyError_${tabId}_${subId}`);
+            const stockLabel = document.getElementById(`subStockLabel_${tabId}_${subId}`);
             
-            if (val > sub.available_qty) {
-                errorLabel.textContent = `Exceeds Stock!`;
+            // Update the stock display for this card
+            if (stockLabel) {
+                const remaining = maxForThis - val;
+                stockLabel.textContent = `${remaining} AVAILABLE`;
+                stockLabel.classList.toggle('text-emerald-600', remaining > 0);
+                stockLabel.classList.toggle('text-red-500', remaining <= 0);
+            }
+
+            if (val > maxForThis || val <= 0) {
+                if (val > maxForThis) {
+                    errorLabel.textContent = `Exceeds available stock (${maxForThis})!`;
+                } else {
+                    errorLabel.textContent = `Enter a quantity ≥ 1`;
+                }
                 errorLabel.classList.remove('hidden');
                 input.classList.add('border-red-400', 'bg-red-50', 'text-red-600');
             } else {
                 errorLabel.classList.add('hidden');
                 input.classList.remove('border-red-400', 'bg-red-50', 'text-red-600');
             }
-            sub.selected_qty = val;
+
+            // Update available_qty to reflect effective stock for validation
+            sub.available_qty = maxForThis;
+
+            // Refresh stock display in all OTHER tabs that have the same sub-item
+            refreshAllTabsForSubItem(subId, tabId);
             updateReadyStatus();
+        }
+
+        // Refresh the stock label and validation for a sub-item across all tabs except excludeTab
+        function refreshAllTabsForSubItem(subId, excludeTabId) {
+            distTabsData.forEach((tab, i) => {
+                if (i === excludeTabId) return;
+                const si = tab.subItemsSelected.find(s => s.id === subId);
+                if (!si) return;
+
+                const effectiveStock = getEffectiveStock(subId);
+                const maxForThis = effectiveStock + si.selected_qty;
+                si.available_qty = maxForThis;
+
+                const stockLabel = document.getElementById(`subStockLabel_${i}_${subId}`);
+                const input = document.getElementById(`subQtyInput_${i}_${subId}`);
+                const errorLabel = document.getElementById(`subQtyError_${i}_${subId}`);
+
+                if (stockLabel) {
+                    const remaining = maxForThis - si.selected_qty;
+                    stockLabel.textContent = `${remaining} AVAILABLE`;
+                    stockLabel.classList.toggle('text-emerald-600', remaining > 0);
+                    stockLabel.classList.toggle('text-red-500', remaining <= 0);
+                }
+
+                // Re-validate
+                if (input && errorLabel) {
+                    if (si.selected_qty > maxForThis) {
+                        errorLabel.textContent = `Exceeds available stock (${maxForThis})!`;
+                        errorLabel.classList.remove('hidden');
+                        input.classList.add('border-red-400', 'bg-red-50', 'text-red-600');
+                    } else if (si.selected_qty > 0) {
+                        errorLabel.classList.add('hidden');
+                        input.classList.remove('border-red-400', 'bg-red-50', 'text-red-600');
+                    }
+                }
+            });
         }
 
         function renderTabSubItems(tabId) {
@@ -1354,19 +1432,26 @@
                 container.innerHTML = '';
                 return;
             }
-            container.innerHTML = tab.subItemsSelected.map(si => `
+            container.innerHTML = tab.subItemsSelected.map(si => {
+                const effectiveStock = getEffectiveStock(si.id);
+                const remaining = effectiveStock + si.selected_qty - si.selected_qty;
+                const displayStock = effectiveStock;
+                const maxForThis = effectiveStock + si.selected_qty;
+                si.available_qty = maxForThis;
+
+                return `
                 <div class="flex items-center gap-3 p-4 bg-white border border-slate-200 shadow-sm rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
                     <div class="flex-grow flex flex-col">
                         <span class="text-sm font-bold text-slate-800">${si.name}</span>
-                        <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mt-1">${si.available_qty} IN STOCK</span>
+                        <span id="subStockLabel_${tabId}_${si.id}" class="text-[10px] font-black uppercase tracking-widest mt-1 ${displayStock > 0 ? 'text-emerald-600' : 'text-red-500'}">${displayStock} AVAILABLE</span>
                     </div>
                     <div class="flex flex-col items-center gap-1">
-                        <input type="number" id="subQtyInput_${tabId}_${si.id}" min="1" max="${si.available_qty}" placeholder="Qty" value="${si.selected_qty || ''}" oninput="updateTabSubQty(${tabId}, ${si.id}, this.value)" class="w-24 p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-sm text-center focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all">
+                        <input type="number" id="subQtyInput_${tabId}_${si.id}" min="1" max="${maxForThis}" placeholder="Qty" value="${si.selected_qty || ''}" oninput="updateTabSubQty(${tabId}, ${si.id}, this.value)" class="w-24 p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-sm text-center focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all">
                         <span id="subQtyError_${tabId}_${si.id}" class="hidden text-[10px] font-bold text-red-500 text-center"></span>
                     </div>
                     <button type="button" onclick="removeTabSub(${tabId}, ${si.id})" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-colors font-bold text-lg shrink-0">✕</button>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
         }
 
         function updateReadyStatus() {
@@ -1439,7 +1524,7 @@
                 showCancelButton: true, confirmButtonColor: '#c00000', cancelButtonColor: '#94a3b8', confirmButtonText: 'Yes, distribute!',
                 customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
             }).then((res) => { 
-                if (res.isConfirmed) submitDistributionPayload([result.payload]);
+                if (res.isConfirmed) submitDistributionPayload([result.payload], tabIndex);
             });
         }
 
@@ -1482,7 +1567,7 @@
             });
         }
 
-        async function submitDistributionPayload(payload) {
+        async function submitDistributionPayload(payload, completedTabIndex) {
             Swal.fire({
                 title: 'Distributing...', text: 'Updating ledgers and deducting stock...',
                 allowOutsideClick: false, showConfirmButton: false, willOpen: () => { Swal.showLoading(); },
@@ -1498,8 +1583,73 @@
                 const result = await response.json();
                 
                 if(response.ok) {
-                    Swal.fire({ title: 'Success!', text: result.message, icon: 'success', confirmButtonColor: '#10b981', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } })
-                    .then(() => { location.reload(); });
+                    // If a single tab was distributed (not batch), remove it and stay on page
+                    if (completedTabIndex !== undefined && completedTabIndex !== null && distTabsData.length > 1) {
+                        // Deduct distributed quantities from local rawSubItems data
+                        const tab = distTabsData[completedTabIndex];
+                        if (tab) {
+                            tab.subItemsSelected.forEach(sub => {
+                                const localSub = rawSubItems.find(s => s.id === sub.id);
+                                if (localSub) {
+                                    localSub.quantity = Math.max(0, localSub.quantity - sub.selected_qty);
+                                }
+                            });
+                        }
+
+                        // Remove the completed tab
+                        distTabsData.splice(completedTabIndex, 1);
+                        // Re-index tabs
+                        distTabsData.forEach((t, i) => t.tabIndex = i);
+                        // Also update the preSelectedSchools array to stay in sync
+                        preSelectedSchools.splice(completedTabIndex, 1);
+
+                        Swal.fire({ 
+                            title: 'Success!', text: result.message, icon: 'success', 
+                            confirmButtonColor: '#10b981', 
+                            customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } 
+                        }).then(() => {
+                            // Re-render tabs UI (creates fresh empty DOM)
+                            renderTabsUI();
+
+                            // Restore each remaining tab's visual state from distTabsData
+                            distTabsData.forEach((t, i) => {
+                                // Restore category selection
+                                if (t.category_id) {
+                                    const cat = rawCategories.find(c => c.id === t.category_id);
+                                    if (cat) {
+                                        document.getElementById(`tabCatSearch_${i}`).value = cat.name;
+                                    }
+                                    // Enable item search
+                                    const itemSearch = document.getElementById(`tabItemSearch_${i}`);
+                                    if (itemSearch) itemSearch.disabled = false;
+                                }
+
+                                // Restore item selection
+                                if (t.item_id) {
+                                    const item = rawItems.find(x => x.id === t.item_id);
+                                    if (item) {
+                                        document.getElementById(`tabItemSearch_${i}`).value = item.name;
+                                    }
+                                    // Enable sub-item search
+                                    const subSearch = document.getElementById(`tabSubSearch_${i}`);
+                                    if (subSearch) subSearch.disabled = false;
+                                }
+
+                                // Restore sub-item cards with quantities
+                                if (t.subItemsSelected.length > 0) {
+                                    renderTabSubItems(i);
+                                }
+                            });
+
+                            // Switch to the next available tab
+                            switchTab(Math.min(completedTabIndex, distTabsData.length - 1));
+                            updateReadyStatus();
+                        });
+                    } else {
+                        // Batch distribute or last remaining tab — reload to reset everything
+                        Swal.fire({ title: 'Success!', text: result.message, icon: 'success', confirmButtonColor: '#10b981', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } })
+                        .then(() => { location.reload(); });
+                    }
                 } else {
                     Swal.fire({ title: 'Error', text: result.message || 'An error occurred during distribution.', icon: 'error', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
                 }
