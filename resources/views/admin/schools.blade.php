@@ -52,8 +52,9 @@
             <section class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-50 overflow-hidden flex flex-col">
                 <div class="p-8 border-b border-slate-50">
                     <form id="filterForm" method="GET" action="{{ route('admin.schools') }}">
-                        {{-- Hidden input for districts array --}}
+                        {{-- Hidden input for districts and quadrants array --}}
                         <input type="hidden" name="districts" :value="selectedDistricts.join(',')">
+                        <input type="hidden" name="quadrants" :value="selectedQuadrants.join(',')">
 
                         <div class="flex flex-col md:flex-row justify-between items-center gap-4">
                             <div class="flex items-center gap-3">
@@ -73,13 +74,13 @@
 
                                 {{-- Filter Toggle Button --}}
                                 <button type="button" @click="showFilters = !showFilters" 
-                                        :class="showFilters || selectedDistricts.length > 0 ? 'bg-[#c00000] text-white border-[#c00000]' : 'bg-white text-slate-600 border-slate-200'"
+                                        :class="showFilters || selectedDistricts.length > 0 || selectedQuadrants.length > 0 ? 'bg-[#c00000] text-white border-[#c00000]' : 'bg-white text-slate-600 border-slate-200'"
                                         class="flex items-center gap-2 px-6 py-4 rounded-2xl border font-bold text-sm transition-all hover:shadow-lg active:scale-95 shrink-0 relative">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 12h7.5" />
                                     </svg>
-                                    <template x-if="selectedDistricts.length > 0">
-                                        <span class="bg-white text-[#c00000] text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black shadow-sm" x-text="selectedDistricts.length"></span>
+                                    <template x-if="(selectedDistricts.length + selectedQuadrants.length) > 0">
+                                        <span class="bg-white text-[#c00000] text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black shadow-sm" x-text="(selectedDistricts.length + selectedQuadrants.length)"></span>
                                     </template>
                                 </button>
                             </div>
@@ -94,12 +95,12 @@
                             <div class="flex flex-col gap-6">
                                 <div class="flex justify-between items-center">
                                     <div class="flex flex-col">
-                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Multi-District Selection</span>
-                                        <p class="text-xs text-slate-500 font-medium">Select one or more districts to filter the list.</p>
+                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Multi-Quadrant & District Selection</span>
+                                        <p class="text-xs text-slate-500 font-medium">Select one or more parameters to filter down the list.</p>
                                     </div>
                                     <div class="flex items-center gap-3">
-                                        <button type="button" x-show="selectedDistricts.length > 0" 
-                                                @click="selectedDistricts = [];"
+                                        <button type="button" x-show="selectedDistricts.length > 0 || selectedQuadrants.length > 0" 
+                                                @click="selectedDistricts = []; selectedQuadrants = [];"
                                                 class="text-[10px] font-black text-slate-400 uppercase hover:text-red-600 transition-colors">
                                             Clear Selection
                                         </button>
@@ -108,13 +109,48 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="flex flex-wrap gap-2.5">
+                                
+                                {{-- Quadrant Selection --}}
+                                <div class="flex flex-col">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Quadrants</p>
+                                    <div class="flex flex-wrap gap-2.5">
+                                        <template x-for="quad in quadrants" :key="quad">
+                                            <button type="button" 
+                                                @click="!isQuadrantDisabled(quad) && toggleQuadrant(quad)"
+                                                :disabled="isQuadrantDisabled(quad)"
+                                                :class="[
+                                                    selectedQuadrants.includes(quad) 
+                                                        ? 'bg-[#c00000] text-white border-[#c00000] shadow-md shadow-red-100' 
+                                                        : 'bg-white text-slate-500 border-slate-200 hover:border-red-200',
+                                                    isQuadrantDisabled(quad) ? 'opacity-40 cursor-not-allowed bg-slate-100 hover:border-slate-200' : 'active:scale-95'
+                                                ]"
+                                                class="px-5 py-2.5 rounded-xl border text-[11px] font-bold uppercase transition-all flex items-center gap-2">
+                                                <span x-text="quad"></span>
+                                                <template x-if="selectedQuadrants.includes(quad)">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
+                                                        <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                                                    </svg>
+                                                </template>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                {{-- District Selection --}}
+                                <div class="flex flex-col">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Districts</p>
+                                    <div class="flex flex-wrap gap-2.5">
                                     <template x-for="dist in districts" :key="dist">
-                                        <button type="button" @click="toggleDistrict(dist)"
-                                            :class="selectedDistricts.includes(dist) 
-                                                ? 'bg-[#c00000] text-white border-[#c00000] shadow-md shadow-red-100' 
-                                                : 'bg-white text-slate-500 border-slate-200 hover:border-red-200'"
-                                            class="px-5 py-2.5 rounded-xl border text-[11px] font-bold uppercase transition-all active:scale-95 flex items-center gap-2">
+                                        <button type="button" 
+                                            @click="!isDistrictDisabled(dist) && toggleDistrict(dist)"
+                                            :disabled="isDistrictDisabled(dist)"
+                                            :class="[
+                                                selectedDistricts.includes(dist) 
+                                                    ? 'bg-[#c00000] text-white border-[#c00000] shadow-md shadow-red-100' 
+                                                    : 'bg-white text-slate-500 border-slate-200 hover:border-red-200',
+                                                isDistrictDisabled(dist) ? 'opacity-40 cursor-not-allowed bg-slate-100 hover:border-slate-200' : 'active:scale-95'
+                                            ]"
+                                            class="px-5 py-2.5 rounded-xl border text-[11px] font-bold uppercase transition-all flex items-center gap-2">
                                             <span x-text="dist"></span>
                                             <template x-if="selectedDistricts.includes(dist)">
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
@@ -123,6 +159,7 @@
                                             </template>
                                         </button>
                                     </template>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -136,6 +173,7 @@
                             <tr class="bg-slate-50/50">
                                 <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">School ID</th>
                                 <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Institutional Name</th>
+                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Quadrant</th>
                                 <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">District</th>
                                 <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center border-b border-slate-100">Action</th>
                             </tr>
@@ -151,6 +189,9 @@
                                         <span class="font-bold text-slate-800 group-hover:text-[#c00000] uppercase text-sm leading-tight transition-colors">{{ $school->name }}</span>
                                         <span class="text-[9px] font-black text-slate-300 uppercase mt-0.5 tracking-tighter italic">Verified DepEd Record</span>
                                     </div>
+                                </td>
+                                <td class="px-8 py-5">
+                                    <span class="font-bold text-slate-600 text-xs italic">{{ $school->quadrant_name ?? 'N/A' }}</span>
                                 </td>
                                 <td class="px-8 py-5">
                                     <div class="flex items-center gap-2">
@@ -213,15 +254,45 @@
         function schoolFilter() {
             return {
                 showFilters: false,
-                districts: ['Ayala', 'Baliwasan', 'Curuan', 'Labuan', 'Manicahan', 'Mercedes', 'Putik', 'Sta. Maria', 'Talon-Talon', 'Tetuan', 'Vitali'],
+                districts: @json($allDistricts ?? []),
+                quadrants: @json($allQuadrants ?? []),
+                mapping: @json($districtQuadrantMapping ?? []),
                 selectedDistricts: @json(request('districts') ? explode(',', request('districts')) : []),
+                selectedQuadrants: @json(request('quadrants') ? explode(',', request('quadrants')) : []),
+                
                 toggleDistrict(dist) {
                     if (this.selectedDistricts.includes(dist)) {
                         this.selectedDistricts = this.selectedDistricts.filter(d => d !== dist);
                     } else {
                         this.selectedDistricts.push(dist);
                     }
-                    {{-- REMOVED AUTO-SUBMIT HERE --}}
+                },
+                
+                toggleQuadrant(quad) {
+                    if (this.selectedQuadrants.includes(quad)) {
+                        this.selectedQuadrants = this.selectedQuadrants.filter(q => q !== quad);
+                    } else {
+                        this.selectedQuadrants.push(quad);
+                    }
+                },
+
+                isDistrictDisabled(distName) {
+                    if (this.selectedQuadrants.length === 0) return false;
+                    // Find the quadrant this district belongs to
+                    const mapItem = this.mapping.find(m => m.district === distName);
+                    if (!mapItem) return false;
+                    // Disabled if its quadrant is NOT in the selected quadrants
+                    return !this.selectedQuadrants.includes(mapItem.quadrant);
+                },
+
+                isQuadrantDisabled(quadName) {
+                    if (this.selectedDistricts.length === 0) return false;
+                    // Get all districts that belong to this specific quadrant
+                    const districtsInQuad = this.mapping.filter(m => m.quadrant === quadName).map(m => m.district);
+                    // Check if ANY of the currently selected districts belong to this quadrant
+                    const hasSelectedDistrict = this.selectedDistricts.some(sd => districtsInQuad.includes(sd));
+                    // Disabled if NONE of the selected districts belong to it
+                    return !hasSelectedDistrict;
                 }
             }
         }

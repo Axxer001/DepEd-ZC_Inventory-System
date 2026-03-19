@@ -71,33 +71,32 @@ class InventorySetupController extends Controller
         }
     }
 
+    /**
+     * MODULE 1: MASTER REGISTRY — Register or update an item in the master list.
+     */
     public function storeItem(Request $request)
     {
         $request->validate([
             'category_id' => 'nullable|exists:categories,id',
             'category_name' => 'nullable|string|max:255',
             'item_name' => 'required|string|max:255',
-            'school_ids' => 'nullable|array',
-            'school_ids.*' => 'exists:schools,id',
-            'quantity' => 'nullable|numeric|min:1|required_with:school_ids',
+            'master_quantity' => 'required|integer|min:1',
         ]);
 
         $userName = auth()->user() ? auth()->user()->name : 'System';
         $existingItemId = $request->existing_item_id;
         $itemName = trim($request->item_name);
-        
+        $masterQty = (int) $request->master_quantity;
+
         $categoryId = $request->category_id;
         $categoryName = trim($request->category_name);
-        $schoolIds = $request->input('school_ids', []);
-        $quantity = $request->input('quantity', 0);
         $messages = [];
 
+        // Resolve category
         if (!$categoryId) {
             if (!$categoryName) {
                 return back()->withErrors(['category_name' => 'Please select a Main Category or type a new one.'])->withInput();
             }
-
-            // Check if user typed an existing category name
             $existingCat = DB::table('categories')
                 ->whereRaw('LOWER(name) = ?', [strtolower($categoryName)])
                 ->first();
@@ -109,7 +108,6 @@ class InventorySetupController extends Controller
                     'name' => $categoryName,
                     'created_at' => now(),
                 ]);
-
                 DB::table('system_logs')->insert([
                     'user' => $userName,
                     'activity' => "Added new category: {$categoryName}",
@@ -121,60 +119,66 @@ class InventorySetupController extends Controller
             }
         }
 
-        // Determine item ID: use existing or create new
+        // Resolve item
         if ($existingItemId) {
-            // Verify the existing item actually exists
             $existingItem = DB::table('items')->where('id', $existingItemId)->first();
             if (!$existingItem) {
                 return back()->withErrors(['item_name' => 'The selected item does not exist.']);
             }
             $itemId = $existingItem->id;
+            // Update master_quantity
+            DB::table('items')->where('id', $itemId)->update([
+                'master_quantity' => DB::raw("master_quantity + {$masterQty}"),
+                'updated_at' => now(),
+            ]);
+            DB::table('system_logs')->insert([
+                'user' => $userName,
+                'activity' => "Updated master quantity of '{$itemName}' by +{$masterQty}",
+                'module' => 'Items',
+                'action_type' => 'Update',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $messages[] = "Item '{$itemName}' master quantity updated by +{$masterQty}";
         } else {
-            // Case-insensitive duplicate check across ALL categories
             $duplicate = DB::table('items')
                 ->whereRaw('LOWER(name) = ?', [strtolower($itemName)])
                 ->first();
 
             if ($duplicate) {
-                return back()->withErrors(['item_name' => "The item '{$itemName}' already exists in the system. Please use the dropdown to select it instead."])->withInput();
-            } else {
-                // Insert new item
-                $itemId = DB::table('items')->insertGetId([
-                    'name' => $itemName,
-                    'category_id' => $categoryId,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                // Log item creation
-                DB::table('system_logs')->insert([
-                    'user' => $userName,
-                    'activity' => "Added new item: {$itemName}",
-                    'module' => 'Items',
-                    'action_type' => 'Create',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                $messages[] = "Item '{$itemName}' added";
+                return back()->withErrors(['item_name' => "The item '{$itemName}' already exists. Please use the dropdown to select it."])->withInput();
             }
+
+            $itemId = DB::table('items')->insertGetId([
+                'name' => $itemName,
+                'category_id' => $categoryId,
+                'master_quantity' => $masterQty,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::table('system_logs')->insert([
+                'user' => $userName,
+                'activity' => "Added new item: {$itemName} (Master Qty: {$masterQty})",
+                'module' => 'Items',
+                'action_type' => 'Create',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+            $messages[] = "Item '{$itemName}' registered with master quantity of {$masterQty}";
         }
 
         // Process new sub-items
         $subItems = $request->input('sub_items', []);
-        $subItems = array_filter(array_map('trim', $subItems)); // Remove empty entries
+        $subItems = array_filter(array_map('trim', $subItems));
 
-        $createdSubItemsData = [];
         foreach ($subItems as $subItemName) {
-            $subItemId = DB::table('sub_items')->insertGetId([
+            DB::table('sub_items')->insertGetId([
                 'name' => $subItemName,
                 'item_id' => $itemId,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            $createdSubItemsData[$subItemId] = $subItemName;
-
-            // Log each sub-item separately
             DB::table('system_logs')->insert([
                 'user' => $userName,
                 'activity' => "Added sub-item '{$subItemName}' under item '{$itemName}'",
@@ -183,79 +187,81 @@ class InventorySetupController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-
             $messages[] = "Sub-item '{$subItemName}' added";
-        }
-
-        // Process existing sub-items
-        $existingSubItemIds = $request->input('existing_sub_item_ids', []);
-        $existingSubItemsData = [];
-        if (!empty($existingSubItemIds)) {
-            $existingSubItemsRecords = DB::table('sub_items')->whereIn('id', $existingSubItemIds)->get();
-            foreach ($existingSubItemsRecords as $es) {
-                $existingSubItemsData[$es->id] = $es->name;
-            }
-        }
-        
-        // Combine all sub-items (new + existing) that need ownership assignment
-        $allSubItemsToAssign = $createdSubItemsData + $existingSubItemsData;
-
-        // Process ownership assignments
-        if (!empty($schoolIds) && $quantity > 0) {
-            $schoolsInfo = DB::table('schools')->whereIn('id', $schoolIds)->get()->keyBy('id');
-            foreach ($schoolIds as $schoolId) {
-                $schoolName = $schoolsInfo->has($schoolId) ? $schoolsInfo[$schoolId]->name : 'Unknown School';
-
-                // Record ownership for the main item
-                DB::table('ownerships')->insert([
-                    'school_id' => $schoolId,
-                    'item_id' => $itemId,
-                    'sub_item_id' => null,
-                    'quantity' => $quantity,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                // Log main item assignment
-                DB::table('system_logs')->insert([
-                    'user' => $userName,
-                    'activity' => "Assigned {$quantity} unit(s) of item '{$itemName}' to school '{$schoolName}'",
-                    'module' => 'Items',
-                    'action_type' => 'Create',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                // Record ownership for each sub-item (newly created AND selected existing)
-                foreach ($allSubItemsToAssign as $subItemId => $subItemName) {
-                    DB::table('ownerships')->insert([
-                        'school_id' => $schoolId,
-                        'item_id' => $itemId,
-                        'sub_item_id' => $subItemId,
-                        'quantity' => $quantity,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-
-                    // Log sub-item assignment
-                    DB::table('system_logs')->insert([
-                        'user' => $userName,
-                        'activity' => "Assigned {$quantity} unit(s) of sub-item '{$subItemName}' to school '{$schoolName}'",
-                        'module' => 'Items',
-                        'action_type' => 'Create',
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
-            $messages[] = "Assigned {$quantity} unit(s) to " . count($schoolIds) . " school(s)";
         }
 
         if (empty($messages)) {
             $messages[] = "Item '{$itemName}' already exists — no changes made";
         }
 
-        $successMsg = implode('. ', $messages) . '.';
-        return back()->with('success', $successMsg);
+        return back()->with('success', implode('. ', $messages) . '.');
+    }
+
+    /**
+     * MODULE 2: ASSET DISTRIBUTION — Allocate items from the Master Registry to schools.
+     */
+    public function storeDistribution(Request $request)
+    {
+        $request->validate([
+            'dist_item_id' => 'required|exists:items,id',
+            'school_ids' => 'required|array|min:1',
+            'school_ids.*' => 'exists:schools,id',
+            'dist_sub_items' => 'required|array|min:1',
+            'dist_sub_items.*' => 'integer|min:1',
+        ]);
+
+        $userName = auth()->user() ? auth()->user()->name : 'System';
+        $itemId = $request->dist_item_id;
+        $schoolIds = $request->school_ids;
+        $distSubItems = $request->dist_sub_items; // [ sub_item_id => quantity ]
+
+        $item = DB::table('items')->where('id', $itemId)->first();
+        if (!$item) {
+            return back()->withErrors(['dist_item_id' => 'Item not found.']);
+        }
+
+        // Validate total quantity against remaining stock
+        $distributedQty = DB::table('ownerships')->where('item_id', $itemId)->sum('quantity');
+        $remainingStock = max(0, $item->master_quantity - $distributedQty);
+        
+        $totalQtyPerSchool = array_sum($distSubItems);
+        $totalRequestedQty = $totalQtyPerSchool * count($schoolIds);
+        
+        if ($totalRequestedQty > $remainingStock) {
+            return back()->withErrors(['dist_sub_items' => "Total requested quantity ({$totalRequestedQty}) exceeds remaining stock ({$remainingStock})."])->withInput();
+        }
+
+        $schoolsInfo = DB::table('schools')->whereIn('id', $schoolIds)->get()->keyBy('id');
+        $messages = [];
+
+        foreach ($schoolIds as $schoolId) {
+            $schoolName = $schoolsInfo->has($schoolId) ? $schoolsInfo[$schoolId]->name : 'Unknown School';
+
+            foreach ($distSubItems as $subItemId => $qty) {
+                $subItem = DB::table('sub_items')->where('id', $subItemId)->first();
+                $subItemName = $subItem ? $subItem->name : 'Unknown';
+
+                DB::table('ownerships')->insert([
+                    'school_id' => $schoolId,
+                    'item_id' => $itemId,
+                    'sub_item_id' => $subItemId,
+                    'quantity' => $qty,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                DB::table('system_logs')->insert([
+                    'user' => $userName,
+                    'activity' => "Distributed {$qty} unit(s) of '{$subItemName}' (under '{$item->name}') to '{$schoolName}'",
+                    'module' => 'Distribution',
+                    'action_type' => 'Create',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        $messages[] = "Distributed {$totalRequestedQty} unit(s) of '{$item->name}' to " . count($schoolIds) . " school(s)";
+        return back()->with('success', implode('. ', $messages) . '.');
     }
 }
