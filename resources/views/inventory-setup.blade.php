@@ -255,6 +255,16 @@
 
         function renderForm() {
             const container = document.getElementById('formContent');
+            const parentWrap = container.parentElement;
+            
+            if (currentModule === 'distribution') {
+                parentWrap.classList.remove('max-w-2xl', 'overflow-hidden');
+                parentWrap.classList.add('max-w-5xl', 'overflow-visible');
+            } else {
+                parentWrap.classList.remove('max-w-5xl', 'overflow-visible');
+                parentWrap.classList.add('max-w-2xl', 'overflow-hidden');
+            }
+
             const modeText = currentMode === 'add' ? 'Register' : 'Update';
             const btnColor = 'bg-[#c00000] hover:bg-red-700 shadow-red-100';
             let html = `<h4 class="text-2xl font-black text-slate-800 mb-8 uppercase tracking-tight italic">${modeText} ${currentModule}</h4>`;
@@ -365,124 +375,140 @@
                                 <p id="itemDuplicateWarning" class="hidden text-xs font-semibold text-red-600 ml-1">⚠ This item already exists in the system. Please use the dropdown to select it instead.</p>
                             </div>
 
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Master Quantity <span class="text-red-500">*</span> <span class="text-xs text-slate-300 normal-case font-medium">(Total units in the system)</span></label>
-                                <input type="number" name="master_quantity" id="masterQuantity" min="1" step="1" placeholder="e.g. 50" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold transition-all" required>
-                            </div>
-
                             <div class="space-y-4 pt-4 border-t border-slate-100">
                                 <div class="space-y-3">
                                     <div class="flex justify-between items-center ml-1">
-                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Specifications / Sub-Items <span class="text-xs text-slate-300 normal-case font-medium">(Optional)</span></label>
-                                        <button type="button" onclick="addSubItemField()" class="text-[10px] font-bold bg-red-50 text-[#c00000] px-3 py-1 rounded-lg hover:bg-[#c00000] hover:text-white transition-all">+ Add Spec</button>
+                                    <div class="flex flex-col">
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Specifications / Sub-Items <span class="text-red-500">*</span></label>
+                                        <span class="text-[10px] text-slate-400 font-medium">Add specs & quantities (Max 10 total). Required for initial stock.</span>
                                     </div>
-                                    <div id="subItemContainer" class="space-y-3 max-h-[200px] overflow-y-auto pr-2 custom-scroll">
-                                        <div class="flex gap-2 group">
-                                            <input type="text" name="sub_items[]" placeholder="e.g. RAM 8GB" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm">
-                                            <button type="button" onclick="this.parentElement.remove()" class="px-4 text-slate-300 hover:text-red-500 font-bold">✕</button>
+                                    <button type="button" id="addSpecBtn" onclick="addSubItemField()" class="text-[10px] font-bold bg-slate-100 text-slate-500 px-3 py-1 rounded-lg hover:bg-slate-200 transition-all">+ Add New Spec</button>
+                                </div>
+                                
+                                <div id="existingSubItemBlock" class="hidden mt-4 bg-emerald-50/50 p-4 border border-emerald-100 rounded-[1.5rem]">
+                                    <label class="block text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-3">1. Add Stock to Existing Specs</label>
+                                    <div class="relative">
+                                         <input type="text" id="existingSubItemSearch" placeholder="Search existing sub-items..." class="w-full p-4 bg-white border border-emerald-200 rounded-2xl outline-none font-bold text-slate-700 transition-all text-sm focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" autocomplete="off" oninput="filterExistingSubItems()" onfocus="filterExistingSubItems()">
+                                         <div id="existingSubItemDropdownList" class="hidden absolute z-30 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll text-left"></div>
+                                    </div>
+                                    <div id="existingSubItemCardsContainer" class="flex flex-col gap-2 mt-3 empty:hidden"></div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">2. Create New Specifications</label>
+                                    <div id="subItemContainer" class="space-y-3 max-h-[250px] overflow-y-auto pr-2 custom-scroll">
+                                        <div class="flex gap-2 group sub-item-row relative">
+                                            <input type="text" name="sub_items[]" placeholder="e.g. Default/General or RAM 8GB" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm flex-1" required autocomplete="off" oninput="checkSubItemDuplicate(this)">
+                                            <input type="number" name="sub_item_quantities[]" placeholder="Qty" min="1" step="1" class="w-24 p-4 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm text-center" required>
+                                            <button type="button" onclick="removeSubItemField(this)" class="px-3 text-slate-300 hover:text-red-500 font-bold transition-colors">✕</button>
                                         </div>
                                     </div>
+                                </div>
+                                
+                                <p id="subItemLimitWarning" class="hidden text-xs font-bold text-red-500 ml-1">⚠ Maximum of 10 sub-items allowed total.</p>
                                 </div>
                             </div>
                             <button type="button" onclick="confirmMasterItemSubmit()" class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">${modeText} Item</button>
                         </form>`;
 
             } else if (currentModule === 'distribution') {
-                // ===== MODULE 2: ASSET DISTRIBUTION =====
-                html += `<form id="distributionForm" action="{{ route('inventory.setup.distribution') }}" method="POST" class="space-y-6">
-                            @csrf
-                            <input type="hidden" name="dist_item_id" id="distItemId" value="">
-                            <div id="hiddenDistInputsContainer"></div>
-
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category <span class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <div class="flex">
-                                        <input type="hidden" name="dist_category_id" id="distCategoryId" value="">
-                                        <input type="text" id="distCategoryName" placeholder="e.g. Electronics" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-l-2xl outline-none font-semibold transition-all" required autocomplete="off" oninput="filterDistCategory()">
-                                        <button type="button" onclick="toggleDistCategoryDropdown()" id="distCategoryDropdownBtn" class="px-4 bg-slate-50 border border-l-0 border-slate-100 rounded-r-2xl text-slate-400 hover:text-[#c00000] hover:bg-red-50 transition-all">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                                        </button>
-                                    </div>
-                                    <div id="distCategoryDropdownList" class="hidden absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll"></div>
-                                </div>
-                                <p id="distCategoryMissing" class="hidden text-xs font-semibold text-red-600 ml-1">⚠ This category does not exist in the Master Registry.</p>
+                html += `
+                    <div id="distPreSelectionPhase" class="space-y-6 animate-in fade-in zoom-in duration-300">
+                        <div class="text-center mb-8">
+                            <h4 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Step 3a: Select Schools</h4>
+                            <p class="text-slate-500 text-sm mt-2 font-medium">Select up to 6 schools to distribute assets. You may select the same school multiple times.</p>
+                        </div>
+                        <div class="max-w-xl mx-auto space-y-4">
+                            <div class="relative">
+                                <input type="text" id="preDistSchoolSearch" placeholder="Type school name or ID..." class="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 transition-all text-center focus:border-[#c00000] focus:ring-4 focus:ring-red-100" autocomplete="off" oninput="filterPreDistSchools()" onfocus="filterPreDistSchools()">
+                                <div id="preDistSchoolDropdownList" class="hidden absolute z-30 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[250px] overflow-y-auto custom-scroll"></div>
                             </div>
-
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item Name <span class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <div class="flex">
-                                        <input type="text" id="distItemName" placeholder="e.g. Smart TV" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-l-2xl outline-none font-semibold transition-all" required autocomplete="off" oninput="filterDistItem()">
-                                        <button type="button" onclick="toggleDistItemDropdown()" id="distItemDropdownBtn" class="px-4 bg-slate-50 border border-l-0 border-slate-100 rounded-r-2xl text-slate-400 hover:text-[#c00000] hover:bg-red-50 transition-all">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                                        </button>
-                                    </div>
-                                    <div id="distItemDropdownList" class="hidden absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll"></div>
-                                </div>
-                                <p id="distItemMissing" class="hidden text-xs font-semibold text-red-600 ml-1">⚠ This item does not exist in the Master Registry. Please register it first under Inventory Items.</p>
-                                <div id="distMasterStockLabel" class="hidden ml-1 mt-1">
-                                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Remaining Stock:</span>
-                                    <span id="distMasterStockValue" class="text-sm font-extrabold text-emerald-600 ml-1">0</span>
-                                </div>
+                            <div id="preDistSelectedSchoolsContainer" class="flex flex-col gap-2 mt-4 min-h-[50px]">
+                                <span class="text-slate-400 text-xs font-bold italic w-full text-center mt-1 select-prompt">No schools selected yet.</span>
                             </div>
-
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select School(s) <span class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <div class="flex">
-                                        <input type="text" id="distSchoolSearch" placeholder="Type to search school..." class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-l-2xl outline-none font-semibold transition-all" autocomplete="off" oninput="filterDistSchools()">
-                                        <button type="button" onclick="toggleDistSchoolDropdown()" id="distSchoolDropdownBtn" class="px-4 bg-slate-50 border border-l-0 border-slate-100 rounded-r-2xl text-slate-400 hover:text-[#c00000] hover:bg-red-50 transition-all">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                                        </button>
-                                    </div>
-                                    <div id="distSchoolDropdownList" class="hidden absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll"></div>
-                                </div>
-                                <div id="distSelectedSchoolsContainer" class="flex flex-wrap gap-2 mt-2 ml-1"></div>
+                            <p id="preDistLimitWarning" class="hidden text-center text-xs font-bold text-red-500 mt-2">⚠ Maximum of 6 schools reached.</p>
+                            <button type="button" id="proceedDistBtn" onclick="proceedToDistributionTabs()" class="w-full mt-6 py-5 bg-slate-200 text-slate-400 rounded-3xl font-black uppercase tracking-widest cursor-not-allowed transition-all" disabled>Proceed to Assign Assets</button>
+                        </div>
+                    </div>
+                    
+                    <div id="distTabsPhase" class="hidden space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
+                            <div>
+                                <h4 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Step 3b: Assign Assets</h4>
+                                <p class="text-slate-500 text-sm mt-1 font-medium">Distribute assets individually per tab, or all at once.</p>
                             </div>
+                            <button type="button" onclick="backToPreSelectionPhase()" class="text-xs font-bold text-slate-400 hover:text-[#c00000] underline underline-offset-4 shrink-0 transition-colors bg-transparent border-0">« Revise Schools</button>
+                        </div>
+                        <div class="flex flex-col md:flex-row gap-6">
+                            <div class="md:w-1/4 flex flex-col gap-2 border-r border-slate-100 pr-4 max-h-[500px] overflow-y-auto custom-scroll" id="distTabsHeader"></div>
+                            <div id="distTabsContentContainer" class="md:w-3/4 min-h-[400px]"></div>
+                        </div>
 
-                            <div class="space-y-4 pt-4 border-t border-slate-100">
-                                <div class="space-y-2">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Sub-Item(s) to Distribute <span class="text-xs text-slate-300 normal-case font-medium">(Max 5)</span></label>
-                                    <div class="relative">
-                                        <div class="flex">
-                                            <input type="text" id="distSubItemSearch" placeholder="Type to search sub-items..." class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-l-2xl outline-none font-semibold transition-all" autocomplete="off" oninput="filterDistSubItems()">
-                                            <button type="button" onclick="toggleDistSubItemDropdown()" id="distSubItemDropdownBtn" class="px-4 bg-slate-50 border border-l-0 border-slate-100 rounded-r-2xl text-slate-400 hover:text-[#c00000] hover:bg-red-50 transition-all">
-                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                                            </button>
-                                        </div>
-                                        <div id="distSubItemDropdownList" class="hidden absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll"></div>
-                                    </div>
-                                    <p id="distSubItemMissing" class="hidden text-xs font-semibold text-red-600 ml-1">⚠ This sub-item does not exist in the Master Registry.</p>
-                                    <div id="distSubItemQtyContainer" class="space-y-3 mt-3"></div>
-                                    <p id="distQtyWarning" class="hidden text-xs font-semibold text-red-600 ml-1">⚠ Total sub-item quantities exceed the Master Stock!</p>
-                                </div>
-                            </div>
-                            <button type="button" onclick="confirmDistributionSubmit()" class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">Distribute Assets</button>
-                        </form>`;
+                        <div class="pt-6 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                            <span class="text-[10px] font-black tracking-widest uppercase text-slate-500 bg-slate-100 rounded-xl px-4 py-2" id="tabStatusCount">0 Assets Ready</span>
+                            <button type="button" onclick="confirmDistributeAll()" id="distributeAllBtn" class="px-8 py-4 bg-[#c00000] hover:bg-red-700 text-white rounded-2xl font-black shadow-xl hover:-translate-y-1 active:scale-95 transition-all text-sm uppercase tracking-wider w-full sm:w-auto">Distribute All Tabs</button>
+                        </div>
+                    </div>
+                `;
             }
             container.innerHTML = html;
             if (currentModule === 'item') {
-                // Master Registry init — no schools/sub-item selectors needed
+                document.getElementById('itemDropdownList').classList.add('hidden');
+                document.getElementById('itemName').readOnly = false;
+                document.getElementById('itemName').classList.remove('bg-emerald-50', 'border-emerald-200', 'bg-blue-50', 'border-blue-400');
             }
             if (currentModule === 'distribution') {
-                distSelectedSchools = [];
-                distSelectedSubItems = [];
-                renderDistSelectedSchools();
-                renderDistSubItemQtyBoxes();
+                preSelectedSchools = [];
+                distTabsData = [];
+                currentActiveTab = 0;
+                renderPreSelectedSchools();
             }
         }
 
         function addSubItemField() {
+            if (getTotalSubItemRows() >= 10) {
+                document.getElementById('subItemLimitWarning').classList.remove('hidden');
+                document.getElementById('addSpecBtn').classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+            
+            document.getElementById('subItemLimitWarning').classList.add('hidden');
             const container = document.getElementById('subItemContainer');
             const div = document.createElement('div');
-            div.className = "flex gap-2 group animate-in fade-in slide-in-from-top-2 duration-300";
+            div.className = "flex gap-2 group animate-in fade-in slide-in-from-top-2 duration-300 sub-item-row relative";
             div.innerHTML = `
-                <input type="text" name="sub_items[]" placeholder="Enter specification" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm">
-                <button type="button" onclick="this.parentElement.remove()" class="px-4 text-slate-300 hover:text-red-500 font-bold transition-colors">✕</button>
+                <input type="text" name="sub_items[]" placeholder="Enter specification" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm flex-1" required autocomplete="off" oninput="checkSubItemDuplicate(this)">
+                <input type="number" name="sub_item_quantities[]" placeholder="Qty" min="1" step="1" class="w-24 p-4 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm text-center" required>
+                <button type="button" onclick="removeSubItemField(this)" class="px-3 text-slate-300 hover:text-red-500 font-bold transition-colors">✕</button>
             `;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
+            updateSubItemRowStates();
+        }
+
+        function removeSubItemField(btnEl) {
+            btnEl.closest('.sub-item-row').remove();
+            updateSubItemRowStates();
+        }
+
+        function getTotalSubItemRows() {
+            return document.querySelectorAll('#existingSubItemCardsContainer .sub-item-row').length + document.querySelectorAll('#subItemContainer .sub-item-row').length;
+        }
+
+        function updateSubItemRowStates() {
+            const total = getTotalSubItemRows();
+            const warning = document.getElementById('subItemLimitWarning');
+            const btn = document.getElementById('addSpecBtn');
+            const search = document.getElementById('existingSubItemSearch');
+            if (total >= 10) {
+                warning.classList.remove('hidden');
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                if(search) search.disabled = true;
+            } else {
+                warning.classList.add('hidden');
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                if(search) search.disabled = false;
+            }
         }
 
         function confirmSchoolSubmit() {
@@ -765,6 +791,119 @@
             dropdown.classList.toggle('hidden');
         }
 
+        let selectedExistingSpecs = [];
+
+        function toggleExistingSpecBlock(itemId) {
+            const block = document.getElementById('existingSubItemBlock');
+            if (!itemId) {
+                block.classList.add('hidden');
+                return;
+            }
+            const available = rawSubItems.filter(s => s.item_id == itemId);
+            if (available.length > 0) {
+                block.classList.remove('hidden');
+            } else {
+                block.classList.add('hidden');
+            }
+            // Clear selections when switching item
+            selectedExistingSpecs = [];
+            document.getElementById('existingSubItemCardsContainer').innerHTML = '';
+            document.getElementById('existingSubItemSearch').value = '';
+            updateSubItemRowStates();
+        }
+
+        function filterExistingSubItems() {
+            const dropdown = document.getElementById('existingSubItemDropdownList');
+            const q = document.getElementById('existingSubItemSearch').value.trim().toLowerCase();
+            const existingId = document.getElementById('existingItemId').value;
+            const itemName = document.getElementById('itemName').value.trim().toLowerCase();
+            const exactItemMatch = rawItems.find(i => i.name.toLowerCase() === itemName);
+            const resolvedItemId = existingId || (exactItemMatch ? exactItemMatch.id : null);
+            
+            if(!resolvedItemId) {
+                dropdown.classList.add('hidden');
+                return;
+            }
+
+            const available = rawSubItems.filter(s => s.item_id == resolvedItemId && !selectedExistingSpecs.includes(s.id));
+            const filtered = q ? available.filter(s => s.name.toLowerCase().includes(q)) : available;
+
+            dropdown.classList.remove('hidden');
+            let html = '<div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Select spec</div>';
+            if (filtered.length === 0) {
+                html += '<div class="px-4 py-3 text-sm text-slate-400 italic">No exact matches left.</div>';
+            } else {
+                filtered.forEach(s => {
+                    html += `<div onclick="selectExistingSpecCard(${s.id}, '${s.name.replace(/'/g, "\\'")}', ${s.quantity})" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer transition-colors border-b border-slate-50 truncate">${s.name} <span class="text-xs font-bold text-slate-400 ml-2">(${s.quantity} in stock)</span></div>`;
+                });
+            }
+            html += `<div onclick="closeExistingSpecDropdown()" class="px-4 py-3 text-xs font-bold text-slate-400 hover:bg-slate-50 cursor-pointer transition-colors text-center border-t border-slate-100">✕ Close</div>`;
+            dropdown.innerHTML = html;
+        }
+
+        function closeExistingSpecDropdown() {
+            const drp = document.getElementById('existingSubItemDropdownList');
+            if(drp) drp.classList.add('hidden');
+        }
+
+        function selectExistingSpecCard(id, name, stock) {
+            if (getTotalSubItemRows() >= 10) {
+                document.getElementById('subItemLimitWarning').classList.remove('hidden');
+                return;
+            }
+
+            selectedExistingSpecs.push(id);
+            document.getElementById('existingSubItemSearch').value = '';
+            closeExistingSpecDropdown();
+
+            const container = document.getElementById('existingSubItemCardsContainer');
+            const div = document.createElement('div');
+            div.className = "flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl shadow-sm animate-in fade-in zoom-in duration-300 sub-item-row";
+            div.innerHTML = `
+                <div class="flex flex-col">
+                    <span class="font-bold text-sm text-slate-800">${name}</span>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-emerald-600">${stock} IN STOCK</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <input type="hidden" name="sub_items[]" value="${name}">
+                    <input type="number" name="sub_item_quantities[]" placeholder="Qty" min="1" step="1" class="w-20 p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-sm text-center focus:border-emerald-400" required>
+                    <button type="button" onclick="removeExistingSpecCard(this, ${id})" class="text-slate-300 hover:text-red-500 font-bold p-2 transition-colors">✕</button>
+                </div>
+            `;
+            container.appendChild(div);
+            updateSubItemRowStates();
+            
+            Array.from(document.querySelectorAll('#subItemContainer input[name="sub_items[]"]')).forEach(i => checkSubItemDuplicate(i));
+        }
+
+        function removeExistingSpecCard(btn, id) {
+            selectedExistingSpecs = selectedExistingSpecs.filter(i => i !== id);
+            btn.closest('.sub-item-row').remove();
+            updateSubItemRowStates();
+            Array.from(document.querySelectorAll('#subItemContainer input[name="sub_items[]"]')).forEach(i => checkSubItemDuplicate(i));
+        }
+
+        function checkSubItemDuplicate(inputEl) {
+            const val = inputEl.value.trim().toLowerCase();
+            const itemId = document.getElementById('existingItemId').value; 
+            const itemName = document.getElementById('itemName').value.trim().toLowerCase();
+            const exactItemMatch = rawItems.find(i => i.name.toLowerCase() === itemName);
+            const resolvedItemId = itemId || (exactItemMatch ? exactItemMatch.id : null);
+
+            let isDuplicate = false;
+            if (resolvedItemId && val) {
+                 isDuplicate = rawSubItems.some(s => s.item_id == resolvedItemId && s.name.toLowerCase() === val);
+            }
+
+            if (isDuplicate) {
+                 inputEl.classList.add('border-red-400', 'bg-red-50', 'text-red-700');
+                 inputEl.setAttribute('title', 'Spec already exists for this Item. Use the Existing Selection tool above.');
+            } else {
+                 inputEl.classList.remove('border-red-400', 'bg-red-50', 'text-red-700');
+                 inputEl.removeAttribute('title');
+            }
+        }
+
         function selectExistingItem(id, name) {
             document.getElementById('existingItemId').value = id;
             document.getElementById('itemName').value = name;
@@ -775,6 +914,7 @@
             const newHint = document.getElementById('itemNewHint');
             if(newHint) newHint.classList.add('hidden');
             document.getElementById('itemDropdownList').classList.add('hidden');
+            toggleExistingSpecBlock(id);
         }
 
         function clearItemSelection() {
@@ -789,6 +929,7 @@
             if(warning) warning.classList.add('hidden');
             document.getElementById('itemDropdownList').classList.add('hidden');
             document.getElementById('itemName').focus();
+            toggleExistingSpecBlock(null);
         }
 
         let itemDuplicateBlocked = false;
@@ -806,26 +947,31 @@
                 if(newHint) newHint.classList.add('hidden');
                 itemDuplicateBlocked = false;
                 input.classList.remove('border-red-400', 'bg-red-50', 'border-blue-400', 'bg-blue-50');
+                toggleExistingSpecBlock(existingId);
                 return;
             }
 
-            if (name && rawItems.some(i => i.name.toLowerCase() === name)) {
+            const exactMatch = rawItems.find(i => i.name.toLowerCase() === name);
+            if (name && exactMatch) {
                 warning.classList.remove('hidden');
                 if(newHint) newHint.classList.add('hidden');
                 itemDuplicateBlocked = true;
                 input.classList.add('border-red-400', 'bg-red-50');
                 input.classList.remove('border-blue-400', 'bg-blue-50');
+                toggleExistingSpecBlock(exactMatch.id);
             } else if (name) {
                 warning.classList.add('hidden');
                 if(newHint) newHint.classList.remove('hidden');
                 itemDuplicateBlocked = false;
                 input.classList.remove('border-red-400', 'bg-red-50');
                 input.classList.add('border-blue-400', 'bg-blue-50');
+                toggleExistingSpecBlock(null);
             } else {
                 warning.classList.add('hidden');
                 if(newHint) newHint.classList.add('hidden');
                 itemDuplicateBlocked = false;
                 input.classList.remove('border-red-400', 'bg-red-50', 'border-blue-400', 'bg-blue-50');
+                toggleExistingSpecBlock(null);
             }
         }
 
@@ -835,7 +981,6 @@
             const categoryId = document.getElementById('itemCategoryId').value;
             const categoryName = document.getElementById('itemCategoryName').value.trim();
             const existingId = document.getElementById('existingItemId').value;
-            const masterQty = document.getElementById('masterQuantity').value;
 
             if (!categoryId && !categoryName) {
                 Swal.fire({ title: 'Category Required', text: 'Please select or type a main category.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
@@ -849,19 +994,40 @@
                 Swal.fire({ title: 'Duplicate Item', text: `"${itemName}" already exists. Use the dropdown to select it.`, icon: 'error', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
                 return;
             }
-            if (!masterQty || parseInt(masterQty) < 1) {
-                Swal.fire({ title: 'Master Quantity Required', text: 'Please enter the total number of units available in the system.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+
+            const existingRows = Array.from(document.querySelectorAll('#existingSubItemCardsContainer .sub-item-row'));
+            const newRows = Array.from(document.querySelectorAll('#subItemContainer .sub-item-row'));
+            const allSubRows = existingRows.concat(newRows);
+
+            if (allSubRows.length === 0) {
+                Swal.fire({ title: 'Sub-Item Required', text: 'Please add at least one specification with its quantity.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                return;
+            }
+            
+            let totalQty = 0;
+            let validSubCount = 0;
+            let hasError = false;
+
+            allSubRows.forEach(row => {
+                const nameInput = row.querySelector('input[name="sub_items[]"]').value.trim();
+                const qtyInput = row.querySelector('input[name="sub_item_quantities[]"]').value;
+                if (!nameInput || !qtyInput || parseInt(qtyInput) < 1) {
+                    hasError = true;
+                } else {
+                    validSubCount++;
+                    totalQty += parseInt(qtyInput);
+                }
+            });
+
+            if (hasError || validSubCount === 0) {
+                Swal.fire({ title: 'Invalid Sub-Items', text: 'Please ensure all specifications have a name and a valid quantity of at least 1.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
                 return;
             }
 
-            const subInputs = document.querySelectorAll('#subItemContainer input[name="sub_items[]"]');
-            const subNames = Array.from(subInputs).map(i => i.value.trim()).filter(v => v);
-
             let msg = existingId
-                ? `Update existing item "${itemName}" with master quantity of ${masterQty}`
-                : `Register new item "${itemName}" with master quantity of ${masterQty}`;
-            if (subNames.length > 0) msg += ` and ${subNames.length} specification(s)`;
-            msg += '?';
+                ? `Update existing item "${itemName}" by adding ${totalQty} unit(s)`
+                : `Register new item "${itemName}" with total quantity of ${totalQty} unit(s)`;
+            msg += ` across ${validSubCount} specification(s)?`;
 
             Swal.fire({
                 title: 'Confirm Registration', text: msg, icon: 'question',
@@ -874,182 +1040,494 @@
         // =============================================
         // ASSET DISTRIBUTION MODULE
         // =============================================
-        let distSelectedSchools = [];
-        let distSelectedSubItems = [];
-        let currentDistMasterStock = 0;
+        let preSelectedSchools = []; // Array of objects { id, name, uid } to allow duplicates
+        let distTabsData = []; // State for each tab
+        let currentActiveTab = 0;
 
-        // --- Distribution Category ---
-        function toggleDistCategoryDropdown() { rebuildDistCategoryDropdown(); document.getElementById('distCategoryDropdownList').classList.toggle('hidden'); }
-        function filterDistCategory() {
-            rebuildDistCategoryDropdown();
-            document.getElementById('distCategoryDropdownList').classList.remove('hidden');
-            const name = document.getElementById('distCategoryName').value.trim().toLowerCase();
-            const el = document.getElementById('distCategoryMissing');
-            el.classList.toggle('hidden', !name || rawCategories.some(c => c.name.toLowerCase() === name));
-        }
-        function rebuildDistCategoryDropdown() {
-            const dd = document.getElementById('distCategoryDropdownList');
-            const q = document.getElementById('distCategoryName').value.toLowerCase();
-            const f = rawCategories.filter(c => c.name.toLowerCase().includes(q));
-            let h = '<div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Select category</div>';
-            h += f.length === 0 ? '<div class="px-4 py-3 text-sm text-slate-400 italic">No categories found</div>'
-                : f.map(c => `<div onclick="selectDistCategory(${c.id},'${c.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors border-b border-slate-50 last:border-0">${c.name}</div>`).join('');
+        // --- Phase 1: Pre-selection ---
+        function filterPreDistSchools() {
+            const dd = document.getElementById('preDistSchoolDropdownList');
+            const q = document.getElementById('preDistSchoolSearch').value.trim().toLowerCase();
+            dd.classList.remove('hidden');
+            
+            const f = allSchoolsList.filter(s => s.name.toLowerCase().includes(q) || (s.school_id && s.school_id.toString().includes(q))).slice(0, 50);
+            
+            let h = '<div class="p-3 text-[10px] text-slate-400 font-extrabold uppercase tracking-widest sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100 z-10">Select school</div>';
+            h += f.length === 0 ? '<div class="px-4 py-4 text-sm font-bold text-slate-400 text-center italic">No schools found</div>'
+                : f.map(s => `<div onclick="addPreDistSchool(${s.id},'${s.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors border-b border-slate-50 last:border-0 truncate">${s.school_id ? s.school_id+' - ':''}${s.name}</div>`).join('');
             dd.innerHTML = h;
         }
-        function selectDistCategory(id, name) {
-            document.getElementById('distCategoryId').value = id;
-            document.getElementById('distCategoryName').value = name;
-            document.getElementById('distCategoryDropdownList').classList.add('hidden');
-            document.getElementById('distCategoryMissing').classList.add('hidden');
-            document.getElementById('distItemId').value = '';
-            document.getElementById('distItemName').value = '';
-            document.getElementById('distMasterStockLabel').classList.add('hidden');
-            distSelectedSubItems = []; renderDistSubItemQtyBoxes();
-        }
 
-        // --- Distribution Item ---
-        function toggleDistItemDropdown() { rebuildDistItemDropdown(); document.getElementById('distItemDropdownList').classList.toggle('hidden'); }
-        function filterDistItem() {
-            rebuildDistItemDropdown();
-            document.getElementById('distItemDropdownList').classList.remove('hidden');
-            const name = document.getElementById('distItemName').value.trim().toLowerCase();
-            const catId = document.getElementById('distCategoryId').value;
-            let pool = catId ? rawItems.filter(i => i.category_id == catId) : rawItems;
-            document.getElementById('distItemMissing').classList.toggle('hidden', !name || pool.some(i => i.name.toLowerCase() === name));
-        }
-        function rebuildDistItemDropdown() {
-            const dd = document.getElementById('distItemDropdownList');
-            const q = document.getElementById('distItemName').value.toLowerCase();
-            const catId = document.getElementById('distCategoryId').value;
-            let pool = catId ? rawItems.filter(i => i.category_id == catId) : rawItems;
-            const f = pool.filter(i => i.name.toLowerCase().includes(q)).slice(0, 50);
-            let h = '<div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Select item</div>';
-            h += f.length === 0 ? '<div class="px-4 py-3 text-sm text-slate-400 italic">No items found</div>'
-                : f.map(i => `<div onclick="selectDistItem(${i.id},'${i.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer transition-colors border-b border-slate-50 last:border-0">${i.name}</div>`).join('');
-            dd.innerHTML = h;
-        }
-        function selectDistItem(id, name) {
-            document.getElementById('distItemId').value = id;
-            document.getElementById('distItemName').value = name;
-            document.getElementById('distItemDropdownList').classList.add('hidden');
-            document.getElementById('distItemMissing').classList.add('hidden');
-            const item = rawItems.find(i => i.id == id);
-            const masterQty = item && item.master_quantity ? Number(item.master_quantity) : 0;
-            const distributed = item && item.distributed_quantity ? Number(item.distributed_quantity) : 0;
-            currentDistMasterStock = Math.max(0, masterQty - distributed);
-            const stockEl = document.getElementById('distMasterStockValue');
-            stockEl.textContent = currentDistMasterStock;
-            stockEl.classList.toggle('text-emerald-600', currentDistMasterStock > 0);
-            stockEl.classList.toggle('text-red-600', currentDistMasterStock === 0);
-            document.getElementById('distMasterStockLabel').classList.remove('hidden');
-            if (!document.getElementById('distCategoryId').value && item) {
-                const cat = rawCategories.find(c => c.id == item.category_id);
-                if (cat) { document.getElementById('distCategoryId').value = cat.id; document.getElementById('distCategoryName').value = cat.name; }
+        function addPreDistSchool(id, name) {
+            if (preSelectedSchools.length >= 6) {
+                document.getElementById('preDistLimitWarning').classList.remove('hidden');
+                return;
             }
-            distSelectedSubItems = []; renderDistSubItemQtyBoxes();
+            preSelectedSchools.push({ id, name, uid: Date.now() + Math.random() });
+            renderPreSelectedSchools();
+            document.getElementById('preDistSchoolSearch').value = '';
+            document.getElementById('preDistSchoolDropdownList').classList.add('hidden');
+            checkPreDistLimit();
         }
 
-        // --- Distribution Schools ---
-        function toggleDistSchoolDropdown() { rebuildDistSchoolDropdown(); document.getElementById('distSchoolDropdownList').classList.toggle('hidden'); }
-        function filterDistSchools() { rebuildDistSchoolDropdown(); document.getElementById('distSchoolDropdownList').classList.remove('hidden'); }
-        function rebuildDistSchoolDropdown() {
-            const dd = document.getElementById('distSchoolDropdownList');
-            const q = document.getElementById('distSchoolSearch').value.toLowerCase();
-            const f = allSchoolsList.filter(s => !distSelectedSchools.includes(s.id) && (s.name.toLowerCase().includes(q) || (s.school_id && s.school_id.toString().includes(q)))).slice(0, 50);
-            let h = '<div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Select school</div>';
-            h += f.length === 0 ? '<div class="px-4 py-3 text-sm text-slate-400 italic">No matches found</div>'
-                : f.map(s => `<div onclick="selectDistSchool(${s.id},'${s.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-xs font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer transition-colors border-b border-slate-50 last:border-0 truncate">${s.school_id ? s.school_id+' - ':''}${s.name}</div>`).join('');
+        function removePreDistSchool(uid) {
+            preSelectedSchools = preSelectedSchools.filter(s => s.uid !== uid);
+            renderPreSelectedSchools();
+            checkPreDistLimit();
+        }
+
+        function checkPreDistLimit() {
+            const warning = document.getElementById('preDistLimitWarning');
+            const btn = document.getElementById('proceedDistBtn');
+            warning.classList.toggle('hidden', preSelectedSchools.length < 6);
+            if (preSelectedSchools.length > 0) {
+                btn.className = "w-full mt-6 py-5 bg-[#c00000] hover:bg-red-700 text-white rounded-3xl font-black uppercase tracking-widest shadow-xl hover:-translate-y-1 active:scale-95 transition-all";
+                btn.disabled = false;
+            } else {
+                btn.className = "w-full mt-6 py-5 bg-slate-200 text-slate-400 rounded-3xl font-black uppercase tracking-widest cursor-not-allowed transition-all";
+                btn.disabled = true;
+            }
+        }
+
+        function renderPreSelectedSchools() {
+            const container = document.getElementById('preDistSelectedSchoolsContainer');
+            if (preSelectedSchools.length === 0) {
+                container.innerHTML = '<span class="text-slate-400 text-xs font-bold italic w-full text-center mt-1 select-prompt">No schools selected yet.</span>';
+                return;
+            }
+            container.innerHTML = preSelectedSchools.map((s, idx) => `
+                <div class="px-4 py-3 bg-white border border-slate-200 shadow-sm rounded-xl flex items-center gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div class="w-6 h-6 rounded-full bg-slate-100 text-slate-500 font-extrabold text-[10px] flex items-center justify-center shrink-0">${idx + 1}</div>
+                    <span class="text-sm font-bold text-slate-700 truncate w-full" title="${s.name}">${s.name}</span>
+                    <button type="button" onclick="removePreDistSchool(${s.uid})" class="w-8 h-8 rounded-full hover:bg-red-50 text-slate-300 hover:text-red-500 flex items-center justify-center shrink-0 transition-colors">✕</button>
+                </div>
+            `).join('');
+        }
+
+        // --- Phase 2: Tabs ---
+        function proceedToDistributionTabs() {
+            if (preSelectedSchools.length === 0) return;
+            document.getElementById('distPreSelectionPhase').classList.add('hidden');
+            document.getElementById('distTabsPhase').classList.remove('hidden');
+            
+            // Initialize tab data states
+            distTabsData = preSelectedSchools.map((school, i) => ({
+                tabIndex: i,
+                school_id: school.id,
+                school_name: school.name,
+                category_id: null,
+                item_id: null,
+                subItemsSelected: [] // array of { id, name, available_qty, selected_qty }
+            }));
+
+            renderTabsUI();
+            switchTab(0);
+        }
+
+        function backToPreSelectionPhase() {
+            document.getElementById('distTabsPhase').classList.add('hidden');
+            document.getElementById('distPreSelectionPhase').classList.remove('hidden');
+        }
+
+        function renderTabsUI() {
+            const headerObj = document.getElementById('distTabsHeader');
+            const contentContainer = document.getElementById('distTabsContentContainer');
+            
+            headerObj.innerHTML = distTabsData.map((tab, i) => `
+                <button type="button" id="tabBtn_${i}" onclick="switchTab(${i})" class="px-4 py-4 rounded-2xl font-bold text-sm text-left transition-all border-2 border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50 w-full shrink-0">
+                    <span class="text-[10px] uppercase font-black text-slate-300 block leading-none mb-1">Tab ${i + 1}</span>
+                    <span class="block w-full leading-snug" title="${tab.school_name}">${tab.school_name}</span>
+                </button>
+            `).join('');
+
+            contentContainer.innerHTML = distTabsData.map((tab, i) => `
+                <div id="tabContent_${i}" class="hidden space-y-6">
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300 mb-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                        <div>
+                            <span class="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1">Distributing Asset To:</span>
+                            <span class="text-lg font-bold text-slate-800">${tab.school_name}</span>
+                        </div>
+                        <button type="button" onclick="confirmDistributeSingleTab(${i})" class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold shadow-md hover:-translate-y-1 active:scale-95 transition-all text-xs uppercase tracking-wider whitespace-nowrap">Distribute This Tab</button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Category Selection -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="text" id="tabCatSearch_${i}" placeholder="Search category..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold transition-all focus:border-red-400 focus:bg-white focus:ring-4 focus:ring-red-50" autocomplete="off" onfocus="filterTabCat(${i})" oninput="filterTabCat(${i})">
+                                <div id="tabCatDropdown_${i}" class="hidden absolute z-30 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll"></div>
+                            </div>
+                            <p id="tabCatError_${i}" class="hidden text-xs font-bold text-red-500 ml-1 mt-1"></p>
+                        </div>
+
+                        <!-- Item Selection -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item Name <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="text" id="tabItemSearch_${i}" placeholder="Search existing item..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold transition-all focus:border-red-400 focus:bg-white focus:ring-4 focus:ring-red-50 disabled:opacity-50 disabled:cursor-not-allowed" autocomplete="off" onfocus="filterTabItem(${i})" oninput="filterTabItem(${i})" disabled>
+                                <div id="tabItemDropdown_${i}" class="hidden absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sub-items Selection -->
+                    <div class="space-y-4 pt-4 border-t border-slate-100">
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Sub-Item(s) to Distribute</label>
+                            <div class="relative">
+                                <input type="text" id="tabSubSearch_${i}" placeholder="Search sub-items..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold transition-all focus:border-red-400 focus:bg-white focus:ring-4 focus:ring-red-50 disabled:opacity-50 disabled:cursor-not-allowed" autocomplete="off" onfocus="filterTabSub(${i})" oninput="filterTabSub(${i})" disabled>
+                                <div id="tabSubDropdown_${i}" class="hidden absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll"></div>
+                            </div>
+                            <div id="tabSubContainer_${i}" class="space-y-3 mt-4"></div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            updateReadyStatus();
+        }
+
+        function switchTab(index) {
+            currentActiveTab = index;
+            distTabsData.forEach((_, i) => {
+                const btn = document.getElementById(`tabBtn_${i}`);
+                const content = document.getElementById(`tabContent_${i}`);
+                if (i === index) {
+                    btn.classList.add('text-[#c00000]', 'border-red-100', 'bg-red-50');
+                    btn.classList.remove('text-slate-400', 'border-transparent', 'bg-slate-50');
+                    content.classList.remove('hidden');
+                    content.classList.add('animate-in', 'fade-in', 'duration-300');
+                } else {
+                    btn.classList.remove('text-[#c00000]', 'border-red-100', 'bg-red-50');
+                    btn.classList.add('text-slate-400', 'border-transparent');
+                    content.classList.add('hidden');
+                }
+            });
+        }
+
+        function filterTabCat(tabId) {
+            const dd = document.getElementById(`tabCatDropdown_${tabId}`);
+            const q = document.getElementById(`tabCatSearch_${tabId}`).value.trim().toLowerCase();
+            dd.classList.remove('hidden');
+
+            const currentSchoolId = distTabsData[tabId].school_id;
+            const usedCategories = [];
+            distTabsData.forEach((tab, index) => {
+                if (index !== tabId && tab.school_id === currentSchoolId && tab.category_id) {
+                    usedCategories.push(tab.category_id);
+                }
+            });
+
+            const f = rawCategories.filter(c => c.name.toLowerCase().includes(q));
+            
+            let h = '<div class="p-3 text-[10px] text-slate-400 font-extrabold uppercase tracking-widest sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100">Select category</div>';
+            h += f.length === 0 ? '<div class="px-4 py-3 text-sm text-slate-400 italic">No categories found</div>'
+                : f.map(c => {
+                    if (usedCategories.includes(c.id)) {
+                        return `<div class="px-4 py-3 text-sm font-semibold text-slate-300 bg-slate-50 border-b border-slate-50 cursor-not-allowed line-through" title="Already selected for this school in another tab">${c.name}</div>`;
+                    }
+                    return `<div onclick="selectTabCat(${tabId}, ${c.id}, '${c.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors border-b border-slate-50 last:border-0">${c.name}</div>`;
+                }).join('');
             dd.innerHTML = h;
         }
-        function selectDistSchool(id) { if (!distSelectedSchools.includes(id)) distSelectedSchools.push(id); renderDistSelectedSchools(); document.getElementById('distSchoolSearch').value=''; document.getElementById('distSchoolDropdownList').classList.add('hidden'); }
-        function removeDistSchool(id) { distSelectedSchools = distSelectedSchools.filter(s => s !== id); renderDistSelectedSchools(); }
-        function renderDistSelectedSchools() {
-            const c = document.getElementById('distSelectedSchoolsContainer');
-            if (!distSelectedSchools.length) { c.innerHTML = ''; return; }
-            c.innerHTML = distSelectedSchools.map(id => { const s = allSchoolsList.find(x => x.id === id); return `<div class="px-3 py-1.5 bg-emerald-50 text-emerald-700 text-xs font-bold rounded-xl flex items-center gap-2 border border-emerald-100 shadow-sm"><span class="truncate max-w-[200px]" title="${s.name}">${s.name}</span><button type="button" onclick="removeDistSchool(${id})" class="text-emerald-400 hover:text-emerald-800 ml-1 font-bold shrink-0">✕</button></div>`; }).join('');
+
+        function selectTabCat(tabId, catId, catName) {
+            const tab = distTabsData[tabId];
+            tab.category_id = catId;
+            tab.item_id = null;
+            tab.subItemsSelected = [];
+
+            document.getElementById(`tabCatSearch_${tabId}`).value = catName;
+            document.getElementById(`tabCatDropdown_${tabId}`).classList.add('hidden');
+            
+            const itemSearch = document.getElementById(`tabItemSearch_${tabId}`);
+            itemSearch.disabled = false;
+            itemSearch.value = '';
+            
+            const subSearch = document.getElementById(`tabSubSearch_${tabId}`);
+            subSearch.disabled = true;
+            subSearch.value = '';
+            
+            document.getElementById(`tabSubContainer_${tabId}`).innerHTML = '';
+            document.getElementById(`tabCatError_${tabId}`).classList.add('hidden');
+            updateReadyStatus();
         }
 
-        // --- Distribution Sub-Items with Dynamic Qty ---
-        function toggleDistSubItemDropdown() { rebuildDistSubItemDropdown(); document.getElementById('distSubItemDropdownList').classList.toggle('hidden'); }
-        function filterDistSubItems() {
-            rebuildDistSubItemDropdown();
-            document.getElementById('distSubItemDropdownList').classList.remove('hidden');
-            const name = document.getElementById('distSubItemSearch').value.trim().toLowerCase();
-            const itemId = document.getElementById('distItemId').value;
-            let pool = itemId ? rawSubItems.filter(s => s.item_id == itemId) : rawSubItems;
-            document.getElementById('distSubItemMissing').classList.toggle('hidden', !name || pool.some(s => s.name.toLowerCase() === name));
-        }
-        function rebuildDistSubItemDropdown() {
-            const dd = document.getElementById('distSubItemDropdownList');
-            const q = document.getElementById('distSubItemSearch').value.toLowerCase();
-            const itemId = document.getElementById('distItemId').value;
-            let pool = itemId ? rawSubItems.filter(s => s.item_id == itemId) : rawSubItems;
-            const f = pool.filter(s => !distSelectedSubItems.some(ds => ds.id === s.id) && s.name.toLowerCase().includes(q)).slice(0, 50);
-            let h = '<div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Select sub-item</div>';
-            h += f.length === 0 ? '<div class="px-4 py-3 text-sm text-slate-400 italic">No sub-items found</div>'
-                : f.map(s => `<div onclick="selectDistSubItem(${s.id},'${s.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition-colors border-b border-slate-50 last:border-0">${s.name}</div>`).join('');
+        function filterTabItem(tabId) {
+            const dd = document.getElementById(`tabItemDropdown_${tabId}`);
+            const q = document.getElementById(`tabItemSearch_${tabId}`).value.trim().toLowerCase();
+            const catId = distTabsData[tabId].category_id;
+            dd.classList.remove('hidden');
+
+            const pool = catId ? rawItems.filter(i => i.category_id == catId) : rawItems;
+            const f = pool.filter(i => i.name.toLowerCase().includes(q)).slice(0, 50);
+
+            let h = '<div class="p-3 text-[10px] text-slate-400 font-extrabold uppercase tracking-widest sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100">Select item</div>';
+            h += f.length === 0 ? '<div class="px-4 py-3 text-sm text-slate-400 italic">No items found</div>'
+                : f.map(i => `<div onclick="selectTabItem(${tabId}, ${i.id}, '${i.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer transition-colors border-b border-slate-50 last:border-0">${i.name}</div>`).join('');
             dd.innerHTML = h;
         }
-        function selectDistSubItem(id, name) {
-            if (distSelectedSubItems.length >= 5) { Swal.fire({ title: 'Limit Reached', text: 'Max 5 sub-items per distribution.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } }); return; }
-            if (!distSelectedSubItems.some(ds => ds.id === id)) { distSelectedSubItems.push({ id, name, qty: 0 }); renderDistSubItemQtyBoxes(); }
-            document.getElementById('distSubItemSearch').value = '';
-            document.getElementById('distSubItemDropdownList').classList.add('hidden');
-            document.getElementById('distSubItemMissing').classList.add('hidden');
-        }
-        function removeDistSubItem(id) { distSelectedSubItems = distSelectedSubItems.filter(s => s.id !== id); renderDistSubItemQtyBoxes(); validateDistQty(); }
-        function renderDistSubItemQtyBoxes() {
-            const c = document.getElementById('distSubItemQtyContainer');
-            if (!distSelectedSubItems.length) { c.innerHTML = ''; return; }
-            c.innerHTML = distSelectedSubItems.map(si => `
-                <div class="flex items-center gap-3 p-3 bg-blue-50 rounded-2xl border border-blue-100 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <span class="flex-grow text-xs font-bold text-blue-700">${si.name}</span>
-                    <input type="number" min="1" step="1" placeholder="Qty" value="${si.qty || ''}" oninput="updateDistSubItemQty(${si.id}, this.value)" class="w-24 p-3 bg-white border border-blue-200 rounded-xl outline-none font-bold text-sm text-center focus:ring-2 focus:ring-blue-200 transition-all">
-                    <button type="button" onclick="removeDistSubItem(${si.id})" class="text-blue-400 hover:text-red-500 font-bold text-lg shrink-0">✕</button>
-                </div>`).join('');
-        }
-        function updateDistSubItemQty(id, val) { const si = distSelectedSubItems.find(s => s.id === id); if (si) si.qty = parseInt(val) || 0; validateDistQty(); }
-        function validateDistQty() {
-            const totalPerSchool = distSelectedSubItems.reduce((s, x) => s + (x.qty || 0), 0);
-            const numSchools = Math.max(1, distSelectedSchools.length);
-            const total = totalPerSchool * numSchools;
-            document.getElementById('distQtyWarning').classList.toggle('hidden', total <= currentDistMasterStock || currentDistMasterStock === 0);
+
+        function selectTabItem(tabId, itemId, itemName) {
+            const tab = distTabsData[tabId];
+            tab.item_id = itemId;
+            tab.subItemsSelected = [];
+
+            document.getElementById(`tabItemSearch_${tabId}`).value = itemName;
+            document.getElementById(`tabItemDropdown_${tabId}`).classList.add('hidden');
+            
+            const subSearch = document.getElementById(`tabSubSearch_${tabId}`);
+            subSearch.disabled = false;
+            subSearch.value = '';
+            
+            document.getElementById(`tabSubContainer_${tabId}`).innerHTML = '';
+            updateReadyStatus();
         }
 
-        // --- Distribution Confirm Submit ---
-        function confirmDistributionSubmit() {
-            const itemId = document.getElementById('distItemId').value;
-            const itemName = document.getElementById('distItemName').value.trim();
-            if (!itemId) { Swal.fire({ title: 'Item Required', text: 'Please select an existing item from the Master Registry.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } }); return; }
-            if (!distSelectedSchools.length) { Swal.fire({ title: 'School Required', text: 'Please select at least one school.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } }); return; }
-            if (!distSelectedSubItems.length) { Swal.fire({ title: 'Sub-Item Required', text: 'Please select at least one sub-item to distribute.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } }); return; }
-            
-            const totalPerSchool = distSelectedSubItems.reduce((s, x) => s + (x.qty || 0), 0);
-            const totalQty = totalPerSchool * distSelectedSchools.length;
-            
-            if (distSelectedSubItems.some(s => !s.qty || s.qty <= 0)) { Swal.fire({ title: 'Invalid Quantity', text: 'Enter a valid quantity for every sub-item.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } }); return; }
-            if (totalQty > currentDistMasterStock && currentDistMasterStock > 0) { Swal.fire({ title: 'Exceeds Remaining Stock', text: `Total requested (${totalQty}) exceeds Remaining Stock (${currentDistMasterStock}).`, icon: 'error', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } }); return; }
+        function filterTabSub(tabId) {
+            const dd = document.getElementById(`tabSubDropdown_${tabId}`);
+            const q = document.getElementById(`tabSubSearch_${tabId}`).value.trim().toLowerCase();
+            const itemId = distTabsData[tabId].item_id;
+            if(!itemId) return;
 
-            const hc = document.getElementById('hiddenDistInputsContainer');
-            let hh = distSelectedSchools.map(id => `<input type="hidden" name="school_ids[]" value="${id}">`).join('');
-            distSelectedSubItems.forEach(si => { hh += `<input type="hidden" name="dist_sub_items[${si.id}]" value="${si.qty}">`; });
-            hc.innerHTML = hh;
+            dd.classList.remove('hidden');
+            const pool = rawSubItems.filter(s => s.item_id == itemId);
+            const selectedIds = distTabsData[tabId].subItemsSelected.map(s => s.id);
+            const f = pool.filter(s => !selectedIds.includes(s.id) && s.name.toLowerCase().includes(q)).slice(0, 50);
+
+            let h = '<div class="p-3 text-[10px] text-slate-400 font-extrabold uppercase tracking-widest sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100">Select sub-item</div>';
+            h += f.length === 0 ? '<div class="px-4 py-3 text-sm text-slate-400 italic">No sub-items available</div>'
+                : f.map(s => {
+                    const stock = s.quantity;
+                    if(stock <= 0) {
+                        return `<div class="px-4 py-3 text-sm font-semibold text-slate-300 bg-slate-50 cursor-not-allowed border-b border-slate-50">${s.name} <span class="text-red-400 text-xs">(Out of stock)</span></div>`;
+                    }
+                    return `<div onclick="selectTabSub(${tabId}, ${s.id}, '${s.name.replace(/'/g,"\\'")}', ${stock})" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition-colors border-b border-slate-50 flex justify-between"><span>${s.name}</span> <span class="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-xl">${stock} in stock</span></div>`;
+                }).join('');
+            dd.innerHTML = h;
+        }
+
+        function selectTabSub(tabId, subId, subName, availableQty) {
+            const tab = distTabsData[tabId];
+            tab.subItemsSelected.push({ id: subId, name: subName, available_qty: availableQty, selected_qty: 0 });
+            
+            document.getElementById(`tabSubSearch_${tabId}`).value = '';
+            document.getElementById(`tabSubDropdown_${tabId}`).classList.add('hidden');
+            renderTabSubItems(tabId);
+            updateReadyStatus();
+        }
+
+        function removeTabSub(tabId, subId) {
+            const tab = distTabsData[tabId];
+            tab.subItemsSelected = tab.subItemsSelected.filter(s => s.id !== subId);
+            renderTabSubItems(tabId);
+            updateReadyStatus();
+        }
+
+        function updateTabSubQty(tabId, subId, valStr) {
+            const tab = distTabsData[tabId];
+            const sub = tab.subItemsSelected.find(s => s.id === subId);
+            if (!sub) return;
+            
+            let val = parseInt(valStr);
+            if(isNaN(val)) val = 0;
+            const input = document.getElementById(`subQtyInput_${tabId}_${subId}`);
+            const errorLabel = document.getElementById(`subQtyError_${tabId}_${subId}`);
+            
+            if (val > sub.available_qty) {
+                errorLabel.textContent = `Exceeds Stock!`;
+                errorLabel.classList.remove('hidden');
+                input.classList.add('border-red-400', 'bg-red-50', 'text-red-600');
+            } else {
+                errorLabel.classList.add('hidden');
+                input.classList.remove('border-red-400', 'bg-red-50', 'text-red-600');
+            }
+            sub.selected_qty = val;
+            updateReadyStatus();
+        }
+
+        function renderTabSubItems(tabId) {
+            const tab = distTabsData[tabId];
+            const container = document.getElementById(`tabSubContainer_${tabId}`);
+            if (tab.subItemsSelected.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            container.innerHTML = tab.subItemsSelected.map(si => `
+                <div class="flex items-center gap-3 p-4 bg-white border border-slate-200 shadow-sm rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div class="flex-grow flex flex-col">
+                        <span class="text-sm font-bold text-slate-800">${si.name}</span>
+                        <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mt-1">${si.available_qty} IN STOCK</span>
+                    </div>
+                    <div class="flex flex-col items-center gap-1">
+                        <input type="number" id="subQtyInput_${tabId}_${si.id}" min="1" max="${si.available_qty}" placeholder="Qty" value="${si.selected_qty || ''}" oninput="updateTabSubQty(${tabId}, ${si.id}, this.value)" class="w-24 p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-sm text-center focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all">
+                        <span id="subQtyError_${tabId}_${si.id}" class="hidden text-[10px] font-bold text-red-500 text-center"></span>
+                    </div>
+                    <button type="button" onclick="removeTabSub(${tabId}, ${si.id})" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-colors font-bold text-lg shrink-0">✕</button>
+                </div>
+            `).join('');
+        }
+
+        function updateReadyStatus() {
+            let totalQty = 0;
+            distTabsData.forEach(tab => {
+                tab.subItemsSelected.forEach(sub => {
+                    if (sub.selected_qty > 0 && sub.selected_qty <= sub.available_qty) {
+                        totalQty += sub.selected_qty;
+                    }
+                });
+            });
+            document.getElementById('tabStatusCount').textContent = `${totalQty} Assets Ready`;
+            
+            const btn = document.getElementById('distributeAllBtn');
+            if (totalQty > 0) {
+                btn.classList.add('bg-[#c00000]', 'hover:bg-red-700');
+                btn.classList.remove('bg-slate-300', 'cursor-not-allowed', 'opacity-50');
+            } else {
+                btn.classList.remove('bg-[#c00000]', 'hover:bg-red-700');
+                btn.classList.add('bg-slate-300', 'cursor-not-allowed', 'opacity-50');
+            }
+        }
+
+        function validatePayloadForTab(i) {
+            const tab = distTabsData[i];
+            let errors = [];
+            let payload = null;
+
+            if(!tab.item_id) { errors.push(`Tab ${i+1} (${tab.school_name}) is missing an Item.`); return { errors, payload }; }
+            if(tab.subItemsSelected.length === 0) { errors.push(`Tab ${i+1} (${tab.school_name}) has no selected sub-items.`); return { errors, payload }; }
+            
+            let tabValid = true;
+            let subItemsPayload = [];
+            tab.subItemsSelected.forEach(sub => {
+                if (sub.selected_qty <= 0) {
+                    errors.push(`Tab ${i+1}: Sub-item "${sub.name}" needs a quantity greater than 0.`);
+                    tabValid = false;
+                } else if (sub.selected_qty > sub.available_qty) {
+                    errors.push(`Tab ${i+1}: Sub-item "${sub.name}" requested (${sub.selected_qty}) exceeds stock (${sub.available_qty}).`);
+                    tabValid = false;
+                } else {
+                    subItemsPayload.push({ id: sub.id, qty: sub.selected_qty });
+                }
+            });
+
+            if(tabValid) {
+                payload = {
+                    tab_id: `tab_${i}`,
+                    school_id: tab.school_id,
+                    item_id: tab.item_id,
+                    sub_items: subItemsPayload
+                };
+            }
+            return { errors, payload };
+        }
+
+        function confirmDistributeSingleTab(tabIndex) {
+            let result = validatePayloadForTab(tabIndex);
+            if (result.errors.length > 0) {
+                Swal.fire({ title: 'Validation Error', html: `<div class="text-left text-sm text-slate-600 block leading-relaxed space-y-2 font-medium">` + result.errors.map(e => `<div><span class="text-red-500 font-bold mr-2">•</span>${e}</div>`).join('') + `</div>`, icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                return;
+            }
+
+            const total = result.payload.sub_items.reduce((s, x) => s + x.qty, 0);
 
             Swal.fire({
-                title: 'Confirm Distribution', text: `Distribute "${itemName}" (${distSelectedSubItems.length} sub-item(s), total qty: ${totalQty}) to ${distSelectedSchools.length} school(s)?`, icon: 'question',
+                title: 'Confirm Distribution', 
+                html: `<div class="text-sm text-slate-500 mt-2 font-medium leading-relaxed">Distribute <span class="font-black text-rose-600 text-lg mx-1">${total}</span> asset(s) to <span class="font-black text-slate-800 mx-1">${distTabsData[tabIndex].school_name}</span>?</div>`, 
+                icon: 'question',
                 showCancelButton: true, confirmButtonColor: '#c00000', cancelButtonColor: '#94a3b8', confirmButtonText: 'Yes, distribute!',
                 customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
-            }).then((result) => { if (result.isConfirmed) document.getElementById('distributionForm').submit(); });
+            }).then((res) => { 
+                if (res.isConfirmed) submitDistributionPayload([result.payload]);
+            });
         }
 
-        // Close all dropdowns on outside click
+        function confirmDistributeAll() {
+            let payload = [];
+            let totalQty = 0;
+            let errors = [];
+
+            distTabsData.forEach((tab, i) => {
+                if(!tab.item_id && tab.subItemsSelected.length === 0 && !tab.category_id) {
+                    return; // Ignore completely untouched tabs
+                }
+                const res = validatePayloadForTab(i);
+                if (res.errors.length > 0) {
+                    errors = errors.concat(res.errors);
+                } else if (res.payload) {
+                    payload.push(res.payload);
+                    totalQty += res.payload.sub_items.reduce((s, x) => s + x.qty, 0);
+                }
+            });
+
+            if (errors.length > 0) {
+                Swal.fire({ title: 'Validation Error', html: `<div class="text-left text-sm text-slate-600 block leading-relaxed space-y-2 font-medium">` + errors.map(e => `<div><span class="text-red-500 font-bold mr-2">•</span>${e}</div>`).join('') + `</div>`, icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                return;
+            }
+
+            if (payload.length === 0) {
+                Swal.fire({ title: 'Nothing to distribute', text: 'Please fill out at least one tab completely.', icon: 'info', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Confirm Batched Distribution', 
+                html: `<div class="text-sm text-slate-500 mt-2 font-medium leading-relaxed">You are about to distribute a total of <span class="font-black text-rose-600 text-lg mx-1">${totalQty}</span> asset(s) across <span class="font-black text-rose-600 text-lg mx-1">${payload.length}</span> tab(s).<br><br>This will permanently deduct the literal quantities from the Master Stock. Proceed?</div>`, 
+                icon: 'question',
+                showCancelButton: true, confirmButtonColor: '#c00000', cancelButtonColor: '#94a3b8', confirmButtonText: 'Yes, distribute all!',
+                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
+            }).then((res) => { 
+                if (res.isConfirmed) submitDistributionPayload(payload);
+            });
+        }
+
+        async function submitDistributionPayload(payload) {
+            Swal.fire({
+                title: 'Distributing...', text: 'Updating ledgers and deducting stock...',
+                allowOutsideClick: false, showConfirmButton: false, willOpen: () => { Swal.showLoading(); },
+                customClass: { popup: 'rounded-[2rem]' }
+            });
+
+            try {
+                const response = await fetch("{{ route('inventory.setup.distribution') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ distributions: payload })
+                });
+                const result = await response.json();
+                
+                if(response.ok) {
+                    Swal.fire({ title: 'Success!', text: result.message, icon: 'success', confirmButtonColor: '#10b981', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } })
+                    .then(() => { location.reload(); });
+                } else {
+                    Swal.fire({ title: 'Error', text: result.message || 'An error occurred during distribution.', icon: 'error', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                }
+            } catch(e) {
+                Swal.fire({ title: 'Submission Failed', text: e.message, icon: 'error', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+            }
+        }
+
+        // Close dropdowns on outside click handler
         document.addEventListener('click', function(e) {
+            if(!document.getElementById('preDistSchoolDropdownList')?.classList.contains('hidden')) {
+                const el = document.getElementById('preDistSchoolSearch');
+                const dd = document.getElementById('preDistSchoolDropdownList');
+                if(el && dd && !el.contains(e.target) && !dd.contains(e.target)) dd.classList.add('hidden');
+            }
+            
+            distTabsData.forEach((_, i) => {
+                ['Cat','Item','Sub'].forEach(type => {
+                    const search = document.getElementById(`tab${type}Search_${i}`);
+                    const dd = document.getElementById(`tab${type}Dropdown_${i}`);
+                    if (search && dd && !dd.classList.contains('hidden') && !search.contains(e.target) && !dd.contains(e.target)) {
+                        dd.classList.add('hidden');
+                    }
+                });
+            });
+            
             [['itemDropdownList','itemDropdownBtn','itemName'],['categoryDropdownList','categoryDropdownBtn','categoryName'],
-             ['itemCategoryDropdownList','itemCategoryDropdownBtn','itemCategoryName'],
-             ['distCategoryDropdownList','distCategoryDropdownBtn','distCategoryName'],
-             ['distItemDropdownList','distItemDropdownBtn','distItemName'],
-             ['distSchoolDropdownList','distSchoolDropdownBtn','distSchoolSearch'],
-             ['distSubItemDropdownList','distSubItemDropdownBtn','distSubItemSearch']
+             ['itemCategoryDropdownList','itemCategoryDropdownBtn','itemCategoryName']
             ].forEach(([ddId, btnId, inputId]) => {
                 const dd = document.getElementById(ddId), btn = document.getElementById(btnId), inp = document.getElementById(inputId);
                 if (dd && btn && !dd.contains(e.target) && !btn.contains(e.target) && e.target !== inp && e.target.id !== inputId) dd.classList.add('hidden');

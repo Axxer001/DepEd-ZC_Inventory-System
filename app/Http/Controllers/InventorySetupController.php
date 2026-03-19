@@ -80,13 +80,35 @@ class InventorySetupController extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'category_name' => 'nullable|string|max:255',
             'item_name' => 'required|string|max:255',
-            'master_quantity' => 'required|integer|min:1',
+            'sub_items' => 'required|array|min:1|max:10',
+            'sub_items.*' => 'required|string|max:255',
+            'sub_item_quantities' => 'required|array|min:1|max:10',
+            'sub_item_quantities.*' => 'required|integer|min:1',
         ]);
 
         $userName = auth()->user() ? auth()->user()->name : 'System';
         $existingItemId = $request->existing_item_id;
         $itemName = trim($request->item_name);
-        $masterQty = (int) $request->master_quantity;
+        
+        $subItemsInput = $request->input('sub_items', []);
+        $subItemQuantities = $request->input('sub_item_quantities', []);
+        
+        $validSubItems = [];
+        $masterQty = 0;
+        foreach ($subItemsInput as $index => $name) {
+            $name = trim($name);
+            if (!empty($name) && isset($subItemQuantities[$index])) {
+                $qty = (int) $subItemQuantities[$index];
+                if ($qty > 0) {
+                    $validSubItems[] = ['name' => $name, 'quantity' => $qty];
+                    $masterQty += $qty;
+                }
+            }
+        }
+
+        if ($masterQty === 0) {
+             return back()->withErrors(['sub_items' => 'You must provide at least one valid sub-item with a quantity greater than zero.'])->withInput();
+        }
 
         $categoryId = $request->category_id;
         $categoryName = trim($request->category_name);
@@ -168,26 +190,51 @@ class InventorySetupController extends Controller
             $messages[] = "Item '{$itemName}' registered with master quantity of {$masterQty}";
         }
 
-        // Process new sub-items
-        $subItems = $request->input('sub_items', []);
-        $subItems = array_filter(array_map('trim', $subItems));
+        // Process sub-items — update existing ones, insert new ones
+        foreach ($validSubItems as $sub) {
+            $subItemName = $sub['name'];
+            $subQty = $sub['quantity'];
 
-        foreach ($subItems as $subItemName) {
-            DB::table('sub_items')->insertGetId([
-                'name' => $subItemName,
-                'item_id' => $itemId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            DB::table('system_logs')->insert([
-                'user' => $userName,
-                'activity' => "Added sub-item '{$subItemName}' under item '{$itemName}'",
-                'module' => 'Items',
-                'action_type' => 'Create',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-            $messages[] = "Sub-item '{$subItemName}' added";
+            // Check if a sub-item with the same name already exists for this item
+            $existingSub = DB::table('sub_items')
+                ->where('item_id', $itemId)
+                ->whereRaw('LOWER(name) = ?', [strtolower($subItemName)])
+                ->first();
+
+            if ($existingSub) {
+                // Update the existing sub-item's quantity
+                DB::table('sub_items')->where('id', $existingSub->id)->update([
+                    'quantity' => DB::raw("quantity + {$subQty}"),
+                    'updated_at' => now(),
+                ]);
+                DB::table('system_logs')->insert([
+                    'user' => $userName,
+                    'activity' => "Updated sub-item '{$subItemName}' quantity by +{$subQty} under item '{$itemName}'",
+                    'module' => 'Items',
+                    'action_type' => 'Update',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $messages[] = "Sub-item '{$subItemName}' quantity updated by +{$subQty}";
+            } else {
+                // Insert a brand-new sub-item
+                DB::table('sub_items')->insertGetId([
+                    'name' => $subItemName,
+                    'item_id' => $itemId,
+                    'quantity' => $subQty,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                DB::table('system_logs')->insert([
+                    'user' => $userName,
+                    'activity' => "Added sub-item '{$subItemName}' (Qty: {$subQty}) under item '{$itemName}'",
+                    'module' => 'Items',
+                    'action_type' => 'Create',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $messages[] = "Sub-item '{$subItemName}' (Qty: {$subQty}) added";
+            }
         }
 
         if (empty($messages)) {
@@ -202,66 +249,95 @@ class InventorySetupController extends Controller
      */
     public function storeDistribution(Request $request)
     {
-        $request->validate([
-            'dist_item_id' => 'required|exists:items,id',
-            'school_ids' => 'required|array|min:1',
-            'school_ids.*' => 'exists:schools,id',
-            'dist_sub_items' => 'required|array|min:1',
-            'dist_sub_items.*' => 'integer|min:1',
-        ]);
+        // Expecting a JSON payload or structured array
+        $payload = $request->input('distributions'); 
+        
+        if (empty($payload) || !is_array($payload)) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'No distributions provided.'], 400);
+            }
+            return back()->withErrors(['distributions' => 'No distributions provided.']);
+        }
 
         $userName = auth()->user() ? auth()->user()->name : 'System';
-        $itemId = $request->dist_item_id;
-        $schoolIds = $request->school_ids;
-        $distSubItems = $request->dist_sub_items; // [ sub_item_id => quantity ]
+        $totalDistributed = 0;
 
-        $item = DB::table('items')->where('id', $itemId)->first();
-        if (!$item) {
-            return back()->withErrors(['dist_item_id' => 'Item not found.']);
-        }
+        DB::beginTransaction();
+        try {
+            foreach ($payload as $dist) {
+                $schoolId = $dist['school_id'] ?? null;
+                $itemId = $dist['item_id'] ?? null;
+                $subItems = $dist['sub_items'] ?? [];
 
-        // Validate total quantity against remaining stock
-        $distributedQty = DB::table('ownerships')->where('item_id', $itemId)->sum('quantity');
-        $remainingStock = max(0, $item->master_quantity - $distributedQty);
-        
-        $totalQtyPerSchool = array_sum($distSubItems);
-        $totalRequestedQty = $totalQtyPerSchool * count($schoolIds);
-        
-        if ($totalRequestedQty > $remainingStock) {
-            return back()->withErrors(['dist_sub_items' => "Total requested quantity ({$totalRequestedQty}) exceeds remaining stock ({$remainingStock})."])->withInput();
-        }
+                if (!$schoolId || !$itemId || empty($subItems)) {
+                    continue; // Skip invalid tabs silently, or throw if preferred
+                }
 
-        $schoolsInfo = DB::table('schools')->whereIn('id', $schoolIds)->get()->keyBy('id');
-        $messages = [];
+                $item = DB::table('items')->where('id', $itemId)->lockForUpdate()->first();
+                $school = DB::table('schools')->where('id', $schoolId)->first();
 
-        foreach ($schoolIds as $schoolId) {
-            $schoolName = $schoolsInfo->has($schoolId) ? $schoolsInfo[$schoolId]->name : 'Unknown School';
+                if (!$item || !$school) {
+                    throw new \Exception("Invalid item or school selected.");
+                }
 
-            foreach ($distSubItems as $subItemId => $qty) {
-                $subItem = DB::table('sub_items')->where('id', $subItemId)->first();
-                $subItemName = $subItem ? $subItem->name : 'Unknown';
+                foreach ($subItems as $sub) {
+                    $subId = $sub['id'];
+                    $qty = (int) ($sub['qty'] ?? 0);
 
-                DB::table('ownerships')->insert([
-                    'school_id' => $schoolId,
-                    'item_id' => $itemId,
-                    'sub_item_id' => $subItemId,
-                    'quantity' => $qty,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                    if ($qty <= 0) continue;
 
-                DB::table('system_logs')->insert([
-                    'user' => $userName,
-                    'activity' => "Distributed {$qty} unit(s) of '{$subItemName}' (under '{$item->name}') to '{$schoolName}'",
-                    'module' => 'Distribution',
-                    'action_type' => 'Create',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                    $subItem = DB::table('sub_items')->where('id', $subId)->where('item_id', $itemId)->lockForUpdate()->first();
+
+                    if (!$subItem) {
+                        throw new \Exception("Sub-item not found.");
+                    }
+
+                    if ($subItem->quantity < $qty) {
+                        throw new \Exception("Requested quantity ({$qty}) for '{$subItem->name}' exceeds available stock ({$subItem->quantity}).");
+                    }
+
+                    // Insert ownership
+                    DB::table('ownerships')->insert([
+                        'school_id' => $schoolId,
+                        'item_id' => $itemId,
+                        'sub_item_id' => $subId,
+                        'quantity' => $qty,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    // Decrement sub-item
+                    DB::table('sub_items')->where('id', $subId)->decrement('quantity', $qty);
+
+                    // Decrement master item
+                    DB::table('items')->where('id', $itemId)->decrement('master_quantity', $qty);
+
+                    // Log activity
+                    DB::table('system_logs')->insert([
+                        'user' => $userName,
+                        'activity' => "Distributed {$qty} unit(s) of '{$subItem->name}' (under '{$item->name}') to '{$school->name}'",
+                        'module' => 'Distribution',
+                        'action_type' => 'Create',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    $totalDistributed += $qty;
+                }
             }
-        }
+            DB::commit();
 
-        $messages[] = "Distributed {$totalRequestedQty} unit(s) of '{$item->name}' to " . count($schoolIds) . " school(s)";
-        return back()->with('success', implode('. ', $messages) . '.');
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => "Successfully distributed {$totalDistributed} asset(s)."]);
+            }
+            return back()->with('success', "Successfully distributed {$totalDistributed} asset(s).");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+            }
+            return back()->withErrors(['distributions' => $e->getMessage()]);
+        }
     }
 }
