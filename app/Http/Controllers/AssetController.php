@@ -8,6 +8,12 @@ class AssetController extends Controller
 {
     public function index()
     {
+        $inventory = $this->buildInventoryData();
+        return view('view-assets', compact('inventory'));
+    }
+
+    private function buildInventoryData()
+    {
         $inventory = [];
 
         // Define icons
@@ -115,7 +121,7 @@ class AssetController extends Controller
             }
         }
 
-        return view('view-assets', compact('inventory'));
+        return $inventory;
     }
 
     // Temporary method para sa dynamic categories (Mock response)
@@ -141,6 +147,12 @@ class AssetController extends Controller
         // Dahil ang dummy data ay nasa mismong blade file mo (gamit ang @php),
         // kailangan lang natin i-return yung view.
         return view('assets.view-all');
+    }
+
+    public function explorer()
+    {
+        $inventory = $this->buildInventoryData();
+        return view('assets.asset-explorer', compact('inventory'));
     }
 
     public function history() {

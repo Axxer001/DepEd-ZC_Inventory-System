@@ -44,7 +44,7 @@ Route::middleware('auth')->group(function () {
             ->select('items.id', 'items.name', 'items.category_id', 'items.master_quantity', DB::raw('COALESCE(dist.distributed_quantity, 0) as distributed_quantity'))
             ->orderBy('items.name')
             ->get();
-        $subItems = DB::table('sub_items')->select('id', 'name', 'item_id')->orderBy('name')->get();
+        $subItems = DB::table('sub_items')->select('id', 'name', 'item_id', 'quantity')->orderBy('name')->get();
         $allSchools = DB::table('schools')->select('id', 'school_id', 'name')->orderBy('name')->get();
         return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'subItems', 'allSchools'));
     })->name('inventory.setup');
@@ -173,9 +173,7 @@ Route::get('/view-all-assets', [AssetController::class, 'viewAll'])->name('asset
 Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('assets.history');
 
 // Route para sa Explorer
-Route::get('/asset-explorer', function () {
-    return view('assets.asset-explorer');
-})->name('assets.explorer');
+Route::get('/asset-explorer', [AssetController::class, 'explorer'])->name('assets.explorer');
 
 
 
