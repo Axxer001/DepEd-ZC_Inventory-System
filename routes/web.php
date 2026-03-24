@@ -45,15 +45,100 @@ Route::middleware('auth')->group(function () {
             ->orderBy('items.name')
             ->get();
         $subItems = DB::table('sub_items')->select('id', 'name', 'item_id', 'quantity')->orderBy('name')->get();
-        $allSchools = DB::table('schools')->select('id', 'school_id', 'name')->orderBy('name')->get();
-        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'subItems', 'allSchools'));
+        $allSchools = DB::table('schools')
+            ->leftJoin('ownerships', 'schools.id', '=', 'ownerships.school_id')
+            ->select('schools.id', 'schools.school_id', 'schools.name', DB::raw('COALESCE(SUM(ownerships.quantity), 0) as total_assets'))
+            ->groupBy('schools.id', 'schools.school_id', 'schools.name')
+            ->orderBy('schools.name')
+            ->get();
+            
+        $schoolOwnerships = DB::table('ownerships')
+            ->join('items', 'ownerships.item_id', '=', 'items.id')
+            ->join('categories', 'items.category_id', '=', 'categories.id')
+            ->join('sub_items', 'ownerships.sub_item_id', '=', 'sub_items.id')
+            ->select(
+                'ownerships.school_id',
+                'categories.id as category_id',
+                'categories.name as category_name',
+                'items.id as item_id',
+                'items.name as item_name',
+                'sub_items.id as sub_item_id',
+                'sub_items.name as sub_item_name',
+                'ownerships.quantity'
+            )
+            ->get()
+            ->groupBy('school_id');
+
+        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'subItems', 'allSchools', 'schoolOwnerships'));
     })->name('inventory.setup');
+
+    // --- NEW: Dedicated Route for the Editor (Asset Modifier) ---
+    Route::get('/inventory-modifier', function () {
+        $districts = DB::table('districts')
+            ->join('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
+            ->select('districts.id', 'districts.name', 'quadrants.legislative_district_id', 'quadrants.name as quadrant_name')
+            ->get();
+        $legislativeDistricts = DB::table('legislative_districts')->get();
+        $quadrants = DB::table('quadrants')->get();
+        $categories = DB::table('categories')->orderBy('name')->get();
+        $items = DB::table('items')
+            ->leftJoin(DB::raw('(SELECT item_id, COALESCE(SUM(quantity), 0) as distributed_quantity FROM ownerships GROUP BY item_id) as dist'), 'items.id', '=', 'dist.item_id')
+            ->select('items.id', 'items.name', 'items.category_id', 'items.master_quantity', DB::raw('COALESCE(dist.distributed_quantity, 0) as distributed_quantity'))
+            ->orderBy('items.name')
+            ->get();
+        $subItems = DB::table('sub_items')->select('id', 'name', 'item_id', 'quantity')->orderBy('name')->get();
+        $allSchools = DB::table('schools')
+            ->leftJoin('ownerships', 'schools.id', '=', 'ownerships.school_id')
+            ->select('schools.id', 'schools.school_id', 'schools.name', DB::raw('COALESCE(SUM(ownerships.quantity), 0) as total_assets'))
+            ->groupBy('schools.id', 'schools.school_id', 'schools.name')
+            ->orderBy('schools.name')
+            ->get();
+            
+        $schoolOwnerships = DB::table('ownerships')
+            ->join('items', 'ownerships.item_id', '=', 'items.id')
+            ->join('categories', 'items.category_id', '=', 'categories.id')
+            ->join('sub_items', 'ownerships.sub_item_id', '=', 'sub_items.id')
+            ->select(
+                'ownerships.school_id',
+                'categories.id as category_id',
+                'categories.name as category_name',
+                'items.id as item_id',
+                'items.name as item_name',
+                'sub_items.id as sub_item_id',
+                'sub_items.name as sub_item_name',
+                'ownerships.quantity'
+            )
+            ->get()
+            ->groupBy('school_id');
+
+        return view('inventory-modifier', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'subItems', 'allSchools', 'schoolOwnerships'));
+    })->name('inventory.modifier');
+
+    // --- NEW: Dedicated Route for the School Modifier ---
+    Route::get('/inventory-modifier/school', function () {
+        $allSchools = DB::table('schools')
+            ->join('districts', 'schools.district_id', '=', 'districts.id')
+            ->select('schools.id', 'schools.school_id', 'schools.name', 'schools.district_id', 'districts.name as district_name')
+            ->orderBy('schools.name')
+            ->get();
+            
+        return view('school-modifier', compact('allSchools'));
+    })->name('inventory.modifier.school');
+    // --- END NEW ROUTE ---
+    // --- END NEW ROUTE ---
 
     // Process form submissions from Setup
     Route::post('/inventory-setup/school', [InventorySetupController::class, 'storeSchool'])->name('inventory.setup.school');
     Route::post('/inventory-setup/category', [InventorySetupController::class, 'storeCategory'])->name('inventory.setup.category');
     Route::post('/inventory-setup/item', [InventorySetupController::class, 'storeItem'])->name('inventory.setup.item');
     Route::post('/inventory-setup/distribution', [InventorySetupController::class, 'storeDistribution'])->name('inventory.setup.distribution');
+    
+    // Dedicated processors for the Modifier forms
+    Route::post('/inventory-modifier/distribution', [InventorySetupController::class, 'updateDistribution'])->name('inventory.modifier.distribution');
+    Route::post('/inventory-modifier/school', [InventorySetupController::class, 'updateSchool'])->name('inventory.modifier.school');
+    Route::post('/inventory-setup/rename', [InventorySetupController::class, 'renameRecord'])->name('inventory.setup.rename');
+    Route::post('/inventory-setup/delete', [InventorySetupController::class, 'deleteRecord'])->name('inventory.setup.delete');
+    Route::post('/inventory-setup/preview-delete', [InventorySetupController::class, 'previewDelete'])->name('inventory.setup.preview_delete');
 
     Route::get('/admin/schools', function (Request $request) {
         $search = $request->query('search');
@@ -152,22 +237,27 @@ Route::middleware('auth')->group(function () {
             $schools = DB::table('schools')->whereIn('district_id', $districts->pluck('id'))->orderBy('name')->get();
             $schoolsByDistrict = [];
             foreach ($districts as $district) {
-                $schoolsByDistrict[$district->id] = $schools->where('district_id', $district->id)->pluck('name')->values()->toArray();
+                $schoolsByDistrict[$district->id] = $schools->where('district_id', $district->id)->map(function($s) {
+                    return ['id' => $s->id, 'name' => $s->name];
+                })->values()->toArray();
             }
             $allSchools = $schools->map(function ($s) {
-                return ['name' => $s->name, 'school_id' => $s->school_id, 'district_id' => $s->district_id];
+                return ['id' => $s->id, 'name' => $s->name, 'school_id' => $s->school_id, 'district_id' => $s->district_id];
             })->values()->toArray();
             return view($view, compact('districts', 'schoolsByDistrict', 'allSchools'));
         };
     };
 
-    // Route para sa main selection (yung 2 big buttons)
+// Route para sa main selection (yung 2 big buttons)
 Route::get('/view-assets', function () {
-    return view('assets.view-assets'); // folder.filename
+    return view('assets.view-assets');
 })->name('assets.view');
 
 // Route para sa Master List
 Route::get('/view-all-assets', [AssetController::class, 'viewAll'])->name('assets.view_all');
+
+// Route para sa isang school's assets
+Route::get('/api/schools/{id}/assets', [AssetController::class, 'getSchoolAssets'])->name('api.schools.assets');
 
 // Sa routes/web.php mo
 Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('assets.history');

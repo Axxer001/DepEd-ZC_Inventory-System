@@ -271,4 +271,33 @@ class AssetController extends Controller
         ]);
     }
 
+    public function getSchoolAssets($id)
+    {
+        $records = \Illuminate\Support\Facades\DB::table('ownerships')
+            ->join('items', 'ownerships.item_id', '=', 'items.id')
+            ->join('categories', 'items.category_id', '=', 'categories.id')
+            ->leftJoin('sub_items', 'ownerships.sub_item_id', '=', 'sub_items.id')
+            ->where('ownerships.school_id', $id)
+            ->select(
+                'categories.name as category_name',
+                'items.name as item_name',
+                'sub_items.name as sub_item_name',
+                'ownerships.quantity'
+            )
+            ->orderBy('categories.name')
+            ->orderBy('items.name')
+            ->orderBy('sub_items.name')
+            ->get();
+
+        $assets = $records->map(function ($row) {
+            return [
+                'category' => $row->category_name,
+                'item'     => $row->item_name,
+                'sub_item' => $row->sub_item_name ?? 'General / Default',
+                'quantity' => (int) $row->quantity
+            ];
+        });
+
+        return response()->json(['success' => true, 'assets' => $assets]);
+    }
 }

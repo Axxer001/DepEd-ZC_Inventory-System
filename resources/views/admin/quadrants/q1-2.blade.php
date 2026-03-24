@@ -78,8 +78,8 @@
                         <table class="w-full text-left">
                             <thead>
                                 <tr class="bg-slate-50/50">
-                                    <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item Name</th>
                                     <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Sub-Item / Description</th>
+                                    <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item Name</th>
                                     <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Category</th>
                                     <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Quantity</th>
                                 </tr>
@@ -107,34 +107,55 @@
             if (districtId && schoolsByDistrict[districtId]) {
                 schoolSelect.disabled = false;
                 schoolsByDistrict[districtId].forEach(school => {
-                    schoolSelect.innerHTML += `<option value="${school}">${school}</option>`;
+                    schoolSelect.innerHTML += `<option value="${school.id}">${school.name}</option>`;
                 });
             } else {
                 schoolSelect.disabled = true;
             }
         }
 
-        function showItems() {
-            const school = document.getElementById('schoolSelect').value;
+        async function showItems() {
+            const schoolId = document.getElementById('schoolSelect').value;
+            const schoolName = document.getElementById('schoolSelect').options[document.getElementById('schoolSelect').selectedIndex].text;
             const tbody = document.getElementById('itemsTableBody');
             const container = document.getElementById('tableContainer');
 
-            if (school) {
-                document.getElementById('displaySchoolName').innerText = school;
-                tbody.innerHTML = '';
+            if (schoolId) {
+                document.getElementById('displaySchoolName').innerText = schoolName;
+                tbody.innerHTML = '<tr><td colspan="4" class="px-8 py-10 text-center text-slate-400 font-bold italic">Fetching latest records...</td></tr>';
                 container.classList.remove('hidden');
+
+                try {
+                    const res = await fetch(`/api/schools/${schoolId}/assets`);
+                    const data = await res.json();
+                    
+                    if (data.success && data.assets.length > 0) {
+                        tbody.innerHTML = data.assets.map(asset => `
+                            <tr>
+                                <td class="px-8 py-4 text-sm font-bold text-slate-700">${asset.sub_item}</td>
+                                <td class="px-8 py-4 text-sm font-semibold text-slate-600">${asset.item}</td>
+                                <td class="px-8 py-4 text-xs font-bold text-slate-400 uppercase tracking-widest">${asset.category}</td>
+                                <td class="px-8 py-4 text-sm font-black text-slate-800 text-center">${asset.quantity}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="4" class="px-8 py-10 text-center text-slate-400 font-bold italic">No assets found for this school.</td></tr>';
+                    }
+                } catch (e) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="px-8 py-10 text-center text-red-400 font-bold italic">Failed to fetch distribution records.</td></tr>';
+                }
             } else {
                 container.classList.add('hidden');
             }
         }
 
-        function selectSchoolFromSearch(districtId, schoolName) {
+        function selectSchoolFromSearch(districtId, schoolId, schoolName) {
             const districtSelect = document.getElementById('districtSelect');
             districtSelect.value = districtId;
             updateSchools();
 
             const schoolSelect = document.getElementById('schoolSelect');
-            schoolSelect.value = schoolName;
+            schoolSelect.value = schoolId;
             showItems();
         }
 
@@ -163,7 +184,7 @@
                         li.addEventListener('click', function() {
                             searchInput.value = school.name;
                             searchResults.classList.add('hidden');
-                            selectSchoolFromSearch(school.district_id, school.name);
+                            selectSchoolFromSearch(school.district_id, school.id, school.name);
                         });
                         searchResults.appendChild(li);
                     });

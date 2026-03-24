@@ -93,7 +93,7 @@
                     <h2 class="text-3xl font-black text-slate-900 tracking-tight italic">Inventory Setup</h2>
                     <p class="text-slate-500 text-sm font-medium italic">Zamboanga City Division Asset Management</p>
                 </div>
-                <button id="backBtn" onclick="goBack()" class="hidden px-6 py-3 back-btn-cool rounded-2xl text-sm font-bold text-slate-600 flex items-center gap-2 shadow-sm active:scale-95">
+                <button id="backBtn" onclick="goBack()" class="px-6 py-3 back-btn-cool rounded-2xl text-sm font-bold text-slate-600 flex items-center gap-2 shadow-sm active:scale-95">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" />
                     </svg>
@@ -101,71 +101,8 @@
                 </button>
             </header>
 
-            {{-- Step 1: Add or Edit Selection --}}
-            <div id="step1" class="step-content active">
-                <h3 class="text-center text-lg font-bold text-slate-400 uppercase tracking-[0.3em] mb-10">What would you like to do?</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 px-4">
-                    <div onclick="nextStep(2, 'add')" class="group bg-white p-12 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-[#c00000] transition-all duration-300 cursor-pointer text-center">
-                        <div class="w-20 h-20 bg-red-50 text-[#c00000] rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-10 h-10">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                            </svg>
-                        </div>
-                        <h4 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Add New</h4>
-                        <p class="text-slate-400 text-xs font-bold uppercase mt-3 tracking-widest leading-tight">Register new data to the system</p>
-                    </div>
-
-                    <div onclick="nextStep(2, 'edit')" class="group bg-white p-12 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-[#c00000] transition-all duration-300 cursor-pointer text-center">
-                        <div class="w-20 h-20 bg-slate-50 text-slate-600 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-10 h-10">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                            </svg>
-                        </div>
-                        <h4 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Edit / Update</h4>
-                        <p class="text-slate-400 text-xs font-bold uppercase mt-3 tracking-widest leading-tight">Modify or update existing records</p>
-                    </div>
-                </div>
-            </div>
-
-          {{-- Step 2: Category Selection --}}
-<div id="step2" class="step-content text-center">
-    <h3 id="step2Title" class="text-lg font-bold text-slate-400 uppercase tracking-[0.3em] mb-10">Select Category</h3>
-    
-    <div class="flex flex-wrap lg:flex-nowrap justify-center gap-6 max-w-5xl mx-auto px-4">
-        
-        <div onclick="nextStep(3, 'school')" class="bg-white p-8 w-full sm:w-64 rounded-[2.5rem] shadow-lg border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group">
-            <div class="w-12 h-12 bg-red-50 text-[#c00000] rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A4.833 4.833 0 0012 9a4.833 4.833 0 00-7.5 1.332V21m15 0h-15" />
-                </svg>
-            </div>
-            <span class="block font-extrabold text-slate-800 uppercase text-[10px] tracking-widest">Schools</span>
-        </div>             
-
-        <div onclick="nextStep(3, 'item')" class="bg-white p-8 w-full sm:w-64 rounded-[2.5rem] shadow-lg border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group">
-            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
-                </svg>
-            </div>
-            <span class="block font-extrabold text-slate-800 uppercase text-[10px] tracking-widest">Inventory Items</span>
-        </div>
-
-        <div onclick="nextStep(3, 'distribution')" class="bg-white p-8 w-full sm:w-64 rounded-[2.5rem] shadow-lg border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group">
-            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-10.5v.008H15V4.5zm0 9v.008H15V13.5zm0-4.5v.008H15V9zm0-4.5v.008H15V4.5zM9 15l-3 1.5L3 15V5.25l3-1.5L9 5.25M9 15l3.047-1.524c.499-.25 1.096-.217 1.565.083L17.25 15l3-1.5V4.5l-3 1.5-3.638-2.046c-.469-.264-1.025-.264-1.494 0L9 5.25" />
-                </svg>
-            </div>
-            <span class="block font-extrabold text-slate-800 uppercase text-[10px] tracking-widest">Asset Distribution</span>
-        </div>
-
-    
-    </div>
-</div>
-
             {{-- Step 3: Form Content --}}
-            <div id="step3" class="step-content">
+            <div id="step3" class="step-content active">
                 @if($errors->any())
                     <div class="max-w-2xl mx-auto mb-6 bg-red-50 text-red-600 p-6 font-bold rounded-3xl shadow-sm border border-red-100 flex items-start gap-4">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-red-500 shrink-0">
@@ -193,16 +130,10 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        let history = [1];
-        let currentMode = '';
-        let currentModule = '';
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('step') === '2' && urlParams.get('mode') === 'edit') {
-                nextStep(2, 'edit');
-            }
-        });
+        let history = [3];
+        let currentMode = 'edit';
+        let currentModule = 'distribution';
+        document.addEventListener('DOMContentLoaded', () => { renderForm(); });
 
         const rawCategories = {{ Js::from($categories) }};
         const rawItems = {{ Js::from($items) }};
@@ -212,6 +143,7 @@
         const rawLds = @json($legislativeDistricts);
         const rawQuadrants = @json($quadrants);
         const allSchoolsList = @json($allSchools);
+        const schoolOwnershipsList = @json($schoolOwnerships);
         const districtMap = {};
         rawDistricts.forEach(d => {
             districtMap[d.name] = { ld: d.legislative_district_id, quad: d.quadrant_name.replace('Quadrant ', '') };
@@ -226,14 +158,6 @@
                 document.getElementById('step2Title').innerText = (value === 'add' ? 'ADD NEW' : 'EDIT') + ' RECORD';
             }
             if (step === 3) {
-                if (currentMode === 'edit' && value === 'school') {
-                    window.location.href = '/inventory-modifier/school';
-                    return;
-                }
-                if (currentMode === 'edit' && value === 'distribution') {
-                    window.location.href = '/inventory-modifier';
-                    return;
-                }
                 currentModule = value;
                 renderForm();
             }
@@ -244,18 +168,7 @@
         }
 
         function goBack() {
-            if (history.length > 1) {
-                history.pop();
-                const prevStep = history[history.length - 1];
-                document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-                document.getElementById('step' + prevStep).classList.add('active');
-                updateBackButton();
-            }
-        }
-
-        function updateBackButton() {
-            const btn = document.getElementById('backBtn');
-            btn.classList.toggle('hidden', history[history.length - 1] === 1);
+            window.location.href = '/inventory-setup?step=2&mode=edit';
         }
 
         function filterQuadrants() {
@@ -272,239 +185,16 @@
             const container = document.getElementById('formContent');
             const parentWrap = container.parentElement;
             
-            if (currentModule === 'distribution') {
-                parentWrap.classList.remove('max-w-2xl', 'overflow-hidden');
-                parentWrap.classList.add('max-w-5xl', 'overflow-visible');
-            } else {
-                parentWrap.classList.remove('max-w-5xl', 'overflow-visible');
-                parentWrap.classList.add('max-w-2xl', 'overflow-hidden');
-            }
+            parentWrap.classList.remove('max-w-2xl', 'overflow-hidden');
+            parentWrap.classList.add('max-w-5xl', 'overflow-visible');
 
-            const modeText = currentMode === 'add' ? 'Register' : 'Update';
-            const btnColor = 'bg-[#c00000] hover:bg-red-700 shadow-red-100';
-            let html = `<h4 class="text-2xl font-black text-slate-800 mb-8 uppercase tracking-tight italic">${modeText} ${currentModule}</h4>`;
+            let html = `<h4 class="text-2xl font-black text-slate-800 mb-8 uppercase tracking-tight italic">Asset Modifier</h4>`;
 
-            if (currentModule === 'school') {
-                html += `<form id="schoolForm" action="{{ route('inventory.setup.school') }}" method="POST" class="space-y-6">
-                            @csrf
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select District <span class="text-red-500">*</span></label>
-                                <select name="district_id" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold focus:ring-2 focus:ring-red-100 transition-all cursor-pointer" required>
-                                    <option value="">Select District</option>
-                                    ${rawDistricts.map(d => `<option value="${d.id}">${d.name}</option>`).join('')}
-                                </select>
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">School ID (6-Digits) <span class="text-red-500">*</span></label>
-                                <input type="text" name="school_id" placeholder="e.g. 123456" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold transition-all" required maxlength="6" pattern="[0-9]{6}">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">School Name <span class="text-red-500">*</span></label>
-                                <input type="text" name="name" placeholder="e.g. Ayala National High School" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold transition-all" required>
-                            </div>
-                            <button type="button" onclick="confirmSchoolSubmit()" class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">${modeText} School</button>
-                        </form>`;
-            } else if (currentModule === 'district') {
-                html += `<div class="space-y-6">
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="space-y-2">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Legislative District</label>
-                                    <select id="dist_ld" onchange="filterQuadrants()" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold focus:ring-2 focus:ring-blue-100 transition-all">
-                                        <option value="">Select LD</option>
-                                        ${rawLds.map(ld => `<option value="${ld.id}">${ld.name}</option>`).join('')}
-                                    </select>
-                                </div>
-                                <div class="space-y-2">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quadrant</label>
-                                    <select id="dist_quad" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold focus:ring-2 focus:ring-blue-100 transition-all">
-                                        <option value="">Select Quadrant</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">District Name</label>
-                                <input type="text" placeholder="e.g. District 1" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold transition-all">
-                            </div>
-                            <button class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl active:scale-95">${modeText} District</button>
-                        </div>`;
-            } else if (currentModule === 'category') {
-                html += `<form id="categoryForm" action="{{ route('inventory.setup.category') }}" method="POST" class="space-y-6">
-                            @csrf
-                            <input type="hidden" name="existing_category_id" id="existingCategoryId" value="">
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category Name <span class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <div class="flex">
-                                        <input type="text" name="name" id="categoryName" placeholder="e.g. Electronics" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-l-2xl outline-none font-semibold transition-all" required oninput="checkCategoryDuplicate()">
-                                        <button type="button" onclick="toggleCategoryDropdown()" id="categoryDropdownBtn" class="px-4 bg-slate-50 border border-l-0 border-slate-100 rounded-r-2xl text-slate-400 hover:text-[#c00000] hover:bg-red-50 transition-all" title="Select existing category">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                                        </button>
-                                    </div>
-                                    <div id="categoryDropdownList" class="hidden absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll">
-                                        <div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest">Select existing category</div>
-                                    </div>
-                                </div>
-                                <p id="categoryExistingHint" class="hidden text-xs font-semibold text-emerald-600 ml-1">✓ Using existing category — no duplicate will be created.</p>
-                                <p id="categoryNewHint" class="hidden text-xs font-semibold text-blue-600 ml-1">✦ Creating new category.</p>
-                                <p id="categoryDuplicateWarning" class="hidden text-xs font-semibold text-red-600 ml-1">⚠ This category already exists in the system. Please use the dropdown to select it instead.</p>
-                            </div>
-                            <button type="button" onclick="confirmCategorySubmit()" class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">${modeText} Category</button>
-                        </form>`;
-            } else if (currentModule === 'item' && currentMode === 'edit') {
-                // ===== EDIT MODE: UPDATE / DELETE ITEMS =====
-                html += `
-                    <p id="editModeDesc" class="text-slate-400 text-xs font-semibold mb-6 -mt-4">Choose an action, then select the record type and target.</p>
-
-                    {{-- Action Mode Selector --}}
-                    <div class="flex gap-3 mb-6">
-                        <button type="button" id="editModeUpdateBtn" onclick="setEditAction('update')" class="flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-[#c00000] bg-red-50 text-[#c00000]">
-                            ✏️ Update / Rename
-                        </button>
-                        <button type="button" id="editModeDeleteBtn" onclick="setEditAction('delete')" class="flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-slate-200 bg-white text-slate-400 hover:border-red-300 hover:text-red-400">
-                            🗑️ Delete
-                        </button>
-                    </div>
-
-                    {{-- Type Selector --}}
-                    <div class="space-y-2 mb-6">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Record Type <span class="text-red-500">*</span></label>
-                        <select id="renameType" onchange="onRenameTypeChange()" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold focus:ring-2 focus:ring-red-100 transition-all cursor-pointer">
-                            <option value="">-- Select record type --</option>
-                            <option value="category">Category</option>
-                            <option value="item">Item</option>
-                            <option value="sub_item">Sub-Item</option>
-                        </select>
-                    </div>
-
-                    {{-- Cascading Dropdowns Row --}}
-                    <div id="renameCascadeRow" class="hidden flex flex-col sm:flex-row gap-3 mb-6">
-                        <div id="renameCatWrap" class="flex-1 space-y-2 hidden">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Category <span class="text-red-500">*</span></label>
-                            <select id="renameCatSelect" onchange="onRenameCatChange()" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold focus:ring-2 focus:ring-red-100 transition-all cursor-pointer">
-                                <option value="">-- Choose Category --</option>
-                                ${rawCategories.map(c => `<option value="${c.id}" data-name="${c.name.replace(/"/g,'&quot;')}">${c.name}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div id="renameItemWrap" class="flex-1 space-y-2 hidden">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Item <span class="text-red-500">*</span></label>
-                            <select id="renameItemSelect" onchange="onRenameItemChange()" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold focus:ring-2 focus:ring-red-100 transition-all cursor-pointer disabled:opacity-50">
-                                <option value="">-- Choose Item --</option>
-                            </select>
-                        </div>
-                        <div id="renameSubWrap" class="flex-1 space-y-2 hidden">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Sub-Item <span class="text-red-500">*</span></label>
-                            <select id="renameSubSelect" onchange="onRenameSubChange()" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold focus:ring-2 focus:ring-red-100 transition-all cursor-pointer disabled:opacity-50">
-                                <option value="">-- Choose Sub-Item --</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {{-- Rename Input Box (UPDATE mode only) --}}
-                    <div id="renameInputWrap" class="hidden space-y-2 mb-6">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">New Name <span class="text-red-500">*</span></label>
-                        <input type="text" id="renameNewName" placeholder="Enter new name..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold transition-all focus:ring-2 focus:ring-red-100">
-                        <p id="renameCurrentHint" class="text-xs font-semibold text-slate-400 ml-1"></p>
-                    </div>
-
-                    {{-- Delete Warning (DELETE mode only) --}}
-                    <div id="deleteWarningWrap" class="hidden mb-6">
-                        <p id="deleteCurrentHint" class="text-xs font-semibold text-slate-500 ml-1 mb-2"></p>
-                        <div id="deleteImpactBox" class="hidden p-4 bg-red-50 border border-red-200 rounded-2xl space-y-1">
-                            <p class="text-xs font-black text-red-600 uppercase tracking-widest mb-2">⚠ Deletion Impact</p>
-                            <p id="deleteImpactDetails" class="text-sm font-semibold text-red-700 leading-relaxed"></p>
-                        </div>
-                    </div>
-
-                    <button type="button" id="renameSubmitBtn" onclick="submitRename()" class="hidden w-full py-5 bg-[#c00000] hover:bg-red-700 shadow-red-100 text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">
-                        Rename Record
-                    </button>
-                    <button type="button" id="deleteSubmitBtn" onclick="submitDelete()" class="hidden w-full py-5 bg-red-600 hover:bg-red-800 shadow-red-200 text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">
-                        🗑️ Permanently Delete Record
-                    </button>
-                `;
-            } else if (currentModule === 'item') {
-                // ===== MODULE 1: MASTER REGISTRY (Inventory Items) — ADD MODE =====
-                html += `<form id="itemForm" action="{{ route('inventory.setup.item') }}" method="POST" class="space-y-6">
-                            @csrf
-                            <input type="hidden" name="existing_item_id" id="existingItemId" value="">
-
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category <span class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <div class="flex">
-                                        <input type="hidden" name="category_id" id="itemCategoryId" value="">
-                                        <input type="text" name="category_name" id="itemCategoryName" placeholder="e.g. Electronics" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-l-2xl outline-none font-semibold transition-all" required autocomplete="off" oninput="filterItemCategory()">
-                                        <button type="button" onclick="toggleItemCategoryDropdown()" id="itemCategoryDropdownBtn" class="px-4 bg-slate-50 border border-l-0 border-slate-100 rounded-r-2xl text-slate-400 hover:text-[#c00000] hover:bg-red-50 transition-all" title="Select existing category">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                                        </button>
-                                    </div>
-                                    <div id="itemCategoryDropdownList" class="hidden absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll"></div>
-                                </div>
-                                <p id="itemCategoryExistingHint" class="hidden text-xs font-semibold text-emerald-600 ml-1">✓ Using existing category.</p>
-                                <p id="itemCategoryNewHint" class="hidden text-xs font-semibold text-blue-600 ml-1">✦ Creating new category.</p>
-                            </div>
-
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item Name <span class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <div class="flex">
-                                        <input type="text" name="item_name" id="itemName" placeholder="e.g. Smart TV" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-l-2xl outline-none font-semibold transition-all" required oninput="checkItemDuplicate()">
-                                        <button type="button" onclick="toggleItemDropdown()" id="itemDropdownBtn" class="px-4 bg-slate-50 border border-l-0 border-slate-100 rounded-r-2xl text-slate-400 hover:text-[#c00000] hover:bg-red-50 transition-all" title="Select existing item">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                                        </button>
-                                    </div>
-                                    <div id="itemDropdownList" class="hidden absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll">
-                                        <div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest">Select existing item</div>
-                                    </div>
-                                </div>
-                                <p id="itemExistingHint" class="hidden text-xs font-semibold text-emerald-600 ml-1">✓ Using existing item — no duplicate will be created.</p>
-                                <p id="itemNewHint" class="hidden text-xs font-semibold text-blue-600 ml-1">✦ Creating new item.</p>
-                                <p id="itemDuplicateWarning" class="hidden text-xs font-semibold text-red-600 ml-1">⚠ This item already exists in the system. Please use the dropdown to select it instead.</p>
-                            </div>
-
-                            <div class="space-y-4 pt-4 border-t border-slate-100">
-                                <div class="space-y-3">
-                                    <div class="flex justify-between items-center ml-1">
-                                    <div class="flex flex-col">
-                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Specifications / Sub-Items <span class="text-red-500">*</span></label>
-                                        <span class="text-[10px] text-slate-400 font-medium">Add specs & quantities (Max 10 total). Required for initial stock.</span>
-                                    </div>
-                                    <button type="button" id="addSpecBtn" onclick="addSubItemField()" class="text-[10px] font-bold bg-slate-100 text-slate-500 px-3 py-1 rounded-lg hover:bg-slate-200 transition-all">+ Add New Spec</button>
-                                </div>
-                                
-                                <div id="existingSubItemBlock" class="hidden mt-4 bg-emerald-50/50 p-4 border border-emerald-100 rounded-[1.5rem]">
-                                    <label class="block text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-3">1. Add Stock to Existing Specs</label>
-                                    <div class="relative">
-                                         <input type="text" id="existingSubItemSearch" placeholder="Search existing sub-items..." class="w-full p-4 bg-white border border-emerald-200 rounded-2xl outline-none font-bold text-slate-700 transition-all text-sm focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" autocomplete="off" oninput="filterExistingSubItems()" onfocus="filterExistingSubItems()">
-                                         <div id="existingSubItemDropdownList" class="hidden absolute z-30 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll text-left"></div>
-                                    </div>
-                                    <div id="existingSubItemCardsContainer" class="flex flex-col gap-2 mt-3 empty:hidden"></div>
-                                </div>
-
-                                <div class="mt-4">
-                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">2. Create New Specifications</label>
-                                    <div id="subItemContainer" class="space-y-3 max-h-[250px] overflow-y-auto pr-2 custom-scroll">
-                                        <div class="flex gap-2 group sub-item-row relative">
-                                            <input type="text" name="sub_items[]" placeholder="e.g. Default/General or RAM 8GB" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm flex-1" required autocomplete="off" oninput="checkSubItemDuplicate(this)">
-                                            <input type="number" name="sub_item_quantities[]" placeholder="Qty" min="1" step="1" class="w-24 p-4 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm text-center" required>
-                                            <button type="button" onclick="removeSubItemField(this)" class="px-3 text-slate-300 hover:text-red-500 font-bold transition-colors">✕</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <p id="subItemLimitWarning" class="hidden text-xs font-bold text-red-500 ml-1">⚠ Maximum of 10 sub-items allowed total.</p>
-                                </div>
-                            </div>
-                            <button type="button" onclick="confirmMasterItemSubmit()" class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">${modeText} Item</button>
-                        </form>`;
-
-
-            } else if (currentModule === 'distribution') {
-                html += `
+            html += `
                     <div id="distPreSelectionPhase" class="space-y-6 animate-in fade-in zoom-in duration-300">
                         <div class="text-center mb-8">
-                            <h4 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Step 3a: Select Schools</h4>
-                            <p class="text-slate-500 text-sm mt-2 font-medium">Select up to 6 schools to distribute assets. You may select the same school multiple times.</p>
+                            <h4 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Step 1: Select Schools</h4>
+                            <p class="text-slate-500 text-sm mt-2 font-medium">Select up to 6 schools to modify their asset distribution. You may select the same school multiple times.</p>
                         </div>
                         <div class="max-w-xl mx-auto space-y-4">
                             <div class="relative">
@@ -515,15 +205,15 @@
                                 <span class="text-slate-400 text-xs font-bold italic w-full text-center mt-1 select-prompt">No schools selected yet.</span>
                             </div>
                             <p id="preDistLimitWarning" class="hidden text-center text-xs font-bold text-red-500 mt-2">⚠ Maximum of 6 schools reached.</p>
-                            <button type="button" id="proceedDistBtn" onclick="proceedToDistributionTabs()" class="w-full mt-6 py-5 bg-slate-200 text-slate-400 rounded-3xl font-black uppercase tracking-widest cursor-not-allowed transition-all" disabled>Proceed to Assign Assets</button>
+                            <button type="button" id="proceedDistBtn" onclick="proceedToDistributionTabs()" class="w-full mt-6 py-5 bg-slate-200 text-slate-400 rounded-3xl font-black uppercase tracking-widest cursor-not-allowed transition-all" disabled>Proceed to Modify Assets</button>
                         </div>
                     </div>
                     
                     <div id="distTabsPhase" class="hidden space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
                             <div>
-                                <h4 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Step 3b: Assign Assets</h4>
-                                <p class="text-slate-500 text-sm mt-1 font-medium">Distribute assets individually per tab, or all at once.</p>
+                                <h4 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Step 2: Modify Assets</h4>
+                                <p class="text-slate-500 text-sm mt-1 font-medium">Add, subtract, or delete asset distributions per tab.</p>
                             </div>
                             <button type="button" onclick="backToPreSelectionPhase()" class="text-xs font-bold text-slate-400 hover:text-[#c00000] underline underline-offset-4 shrink-0 transition-colors bg-transparent border-0">« Revise Schools</button>
                         </div>
@@ -534,25 +224,16 @@
 
                         <div class="pt-6 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
                             <span class="text-[10px] font-black tracking-widest uppercase text-slate-500 bg-slate-100 rounded-xl px-4 py-2" id="tabStatusCount">0 Assets Ready</span>
-                            <button type="button" onclick="confirmDistributeAll()" id="distributeAllBtn" class="px-8 py-4 bg-[#c00000] hover:bg-red-700 text-white rounded-2xl font-black shadow-xl hover:-translate-y-1 active:scale-95 transition-all text-sm uppercase tracking-wider w-full sm:w-auto">Distribute All Tabs</button>
+                            <button type="button" onclick="confirmDistributeAll()" id="distributeAllBtn" class="px-8 py-4 bg-[#c00000] hover:bg-red-700 text-white rounded-2xl font-black shadow-xl hover:-translate-y-1 active:scale-95 transition-all text-sm uppercase tracking-wider w-full sm:w-auto">Confirm Modifications</button>
                         </div>
                     </div>
                 `;
-            }
             container.innerHTML = html;
-            if (currentModule === 'item' && currentMode !== 'edit') {
-                document.getElementById('itemDropdownList').classList.add('hidden');
-                document.getElementById('itemName').readOnly = false;
-                document.getElementById('itemName').classList.remove('bg-emerald-50', 'border-emerald-200', 'bg-blue-50', 'border-blue-400');
-            }
-            if (currentModule === 'distribution') {
-                preSelectedSchools = [];
-                distTabsData = [];
-                currentActiveTab = 0;
-                renderPreSelectedSchools();
-            }
+            preSelectedSchools = [];
+            distTabsData = [];
+            currentActiveTab = 0;
+            renderPreSelectedSchools();
         }
-
         function addSubItemField() {
             if (getTotalSubItemRows() >= 10) {
                 document.getElementById('subItemLimitWarning').classList.remove('hidden');
@@ -1142,7 +823,10 @@
             
             let h = '<div class="p-3 text-[10px] text-slate-400 font-extrabold uppercase tracking-widest sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100 z-10">Select school</div>';
             h += f.length === 0 ? '<div class="px-4 py-4 text-sm font-bold text-slate-400 text-center italic">No schools found</div>'
-                : f.map(s => `<div onclick="addPreDistSchool(${s.id},'${s.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors border-b border-slate-50 last:border-0 truncate">${s.school_id ? s.school_id+' - ':''}${s.name}</div>`).join('');
+                : f.map(s => `<div onclick="addPreDistSchool(${s.id},'${s.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors border-b border-slate-50 last:border-0 flex justify-between items-center group">
+                    <span class="truncate pr-2">${s.school_id ? s.school_id+' - ':''}${s.name}</span>
+                    <span class="text-[10px] font-black tracking-widest text-slate-400 bg-slate-50 group-hover:text-[#c00000] group-hover:bg-white px-2 py-0.5 rounded border border-slate-200 group-hover:border-red-200 transition-colors uppercase shrink-0">${s.total_assets} Assets</span>
+                </div>`).join('');
             dd.innerHTML = h;
         }
 
@@ -1307,10 +991,14 @@
                 }
             });
 
-            const f = rawCategories.filter(c => c.name.toLowerCase().includes(q));
+            // Limit to categories the school actually owns
+            const ownedSubItems = schoolOwnershipsList[currentSchoolId] || [];
+            const ownedCategoryIds = [...new Set(ownedSubItems.map(o => o.category_id))];
+
+            const f = rawCategories.filter(c => ownedCategoryIds.includes(c.id) && c.name.toLowerCase().includes(q));
             
             let h = '<div class="p-3 text-[10px] text-slate-400 font-extrabold uppercase tracking-widest sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100">Select category</div>';
-            h += f.length === 0 ? '<div class="px-4 py-3 text-sm text-slate-400 italic">No categories found</div>'
+            h += f.length === 0 ? '<div class="px-4 py-3 text-sm text-slate-400 italic">No categories found or owned</div>'
                 : f.map(c => {
                     if (usedCategories.includes(c.id)) {
                         return `<div class="px-4 py-3 text-sm font-semibold text-slate-300 bg-slate-50 border-b border-slate-50 cursor-not-allowed line-through" title="Already selected for this school in another tab">${c.name}</div>`;
@@ -1346,14 +1034,25 @@
             const dd = document.getElementById(`tabItemDropdown_${tabId}`);
             const q = document.getElementById(`tabItemSearch_${tabId}`).value.trim().toLowerCase();
             const catId = distTabsData[tabId].category_id;
+            const currentSchoolId = distTabsData[tabId].school_id;
             dd.classList.remove('hidden');
 
-            const pool = catId ? rawItems.filter(i => i.category_id == catId) : rawItems;
+            const ownedSubItems = schoolOwnershipsList[currentSchoolId] || [];
+            const ownedInCat = ownedSubItems.filter(o => o.category_id == catId);
+            const ownedItemIds = [...new Set(ownedInCat.map(o => o.item_id))];
+
+            const pool = catId ? rawItems.filter(i => ownedItemIds.includes(i.id)) : [];
             const f = pool.filter(i => i.name.toLowerCase().includes(q)).slice(0, 50);
 
             let h = '<div class="p-3 text-[10px] text-slate-400 font-extrabold uppercase tracking-widest sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100">Select item</div>';
-            h += f.length === 0 ? '<div class="px-4 py-3 text-sm text-slate-400 italic">No items found</div>'
-                : f.map(i => `<div onclick="selectTabItem(${tabId}, ${i.id}, '${i.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer transition-colors border-b border-slate-50 last:border-0">${i.name}</div>`).join('');
+            h += f.length === 0 ? '<div class="px-4 py-3 text-sm text-slate-400 italic">No items found or owned</div>'
+                : f.map(i => {
+                    const totalOwned = ownedInCat.filter(o => o.item_id == i.id).reduce((sum, o) => sum + o.quantity, 0);
+                    return `<div onclick="selectTabItem(${tabId}, ${i.id}, '${i.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer transition-colors border-b border-slate-50 last:border-0 flex justify-between items-center group">
+                        <span class="truncate pr-2">${i.name}</span>
+                        <span class="text-[10px] font-black tracking-widest text-[#c00000] bg-red-50 group-hover:bg-white px-2 py-0.5 rounded border border-slate-200 group-hover:border-red-200 uppercase shrink-0">${totalOwned} Owned</span>
+                    </div>`;
+                }).join('');
             dd.innerHTML = h;
         }
 
@@ -1392,28 +1091,35 @@
             const dd = document.getElementById(`tabSubDropdown_${tabId}`);
             const q = document.getElementById(`tabSubSearch_${tabId}`).value.trim().toLowerCase();
             const itemId = distTabsData[tabId].item_id;
+            const currentSchoolId = distTabsData[tabId].school_id;
             if(!itemId) return;
 
             dd.classList.remove('hidden');
-            const pool = rawSubItems.filter(s => s.item_id == itemId);
+            
+            const ownedSubItems = schoolOwnershipsList[currentSchoolId] || [];
+            const ownedInItem = ownedSubItems.filter(o => o.item_id == itemId);
+            const ownedSubIds = ownedInItem.map(o => o.sub_item_id);
+
+            const pool = rawSubItems.filter(s => ownedSubIds.includes(s.id));
             const selectedIds = distTabsData[tabId].subItemsSelected.map(s => s.id);
             const f = pool.filter(s => !selectedIds.includes(s.id) && s.name.toLowerCase().includes(q)).slice(0, 50);
 
             let h = '<div class="p-3 text-[10px] text-slate-400 font-extrabold uppercase tracking-widest sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100">Select sub-item</div>';
-            h += f.length === 0 ? '<div class="px-4 py-3 text-sm text-slate-400 italic">No sub-items available</div>'
+            h += f.length === 0 ? '<div class="px-4 py-3 text-sm text-slate-400 italic">No sub-items available or owned</div>'
                 : f.map(s => {
-                    const stock = getEffectiveStock(s.id);
-                    if(stock <= 0) {
-                        return `<div class="px-4 py-3 text-sm font-semibold text-slate-300 bg-slate-50 cursor-not-allowed border-b border-slate-50">${s.name} <span class="text-red-400 text-xs">(Out of stock)</span></div>`;
-                    }
-                    return `<div onclick="selectTabSub(${tabId}, ${s.id}, '${s.name.replace(/'/g,"\\'")}', ${stock})" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition-colors border-b border-slate-50 flex justify-between"><span>${s.name}</span> <span class="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-xl">${stock} available</span></div>`;
+                    const ownedData = ownedInItem.find(o => o.sub_item_id == s.id);
+                    const qtyOwned = ownedData ? ownedData.quantity : 0;
+                    return `<div onclick="selectTabSub(${tabId}, ${s.id}, '${s.name.replace(/'/g,"\\'")}', ${qtyOwned})" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition-colors border-b border-slate-50 flex justify-between items-center group">
+                        <span class="truncate pr-2">${s.name}</span>
+                        <span class="text-[10px] font-black tracking-widest text-[#c00000] bg-red-50 group-hover:bg-white px-2 py-0.5 rounded border border-slate-200 group-hover:border-red-200 uppercase shrink-0">${qtyOwned} Owned</span>
+                    </div>`;
                 }).join('');
             dd.innerHTML = h;
         }
 
-        function selectTabSub(tabId, subId, subName, availableQty) {
+        function selectTabSub(tabId, subId, subName, qtyOwned) {
             const tab = distTabsData[tabId];
-            tab.subItemsSelected.push({ id: subId, name: subName, available_qty: availableQty, selected_qty: 0 });
+            tab.subItemsSelected.push({ id: subId, name: subName, owned_qty: qtyOwned, selected_qty: 0, action: 'subtract' });
             
             document.getElementById(`tabSubSearch_${tabId}`).value = '';
             document.getElementById(`tabSubDropdown_${tabId}`).classList.add('hidden');
@@ -1425,9 +1131,59 @@
             const tab = distTabsData[tabId];
             tab.subItemsSelected = tab.subItemsSelected.filter(s => s.id !== subId);
             renderTabSubItems(tabId);
-            // Refresh all other tabs that show the same sub-item (stock freed up)
             refreshAllTabsForSubItem(subId, tabId);
             updateReadyStatus();
+        }
+
+        // Calculate net change on the pool.
+        function getEffectiveStock(subId) {
+            const raw = rawSubItems.find(s => s.id === subId);
+            if (!raw) return 0;
+            let totalAllocated = 0;
+            distTabsData.forEach(tab => {
+                tab.subItemsSelected.forEach(si => {
+                    if (si.id === subId && si.selected_qty > 0) {
+                        if (si.action === 'subtract' || si.action === 'delete_all') {
+                            totalAllocated -= si.selected_qty;
+                        }
+                    }
+                });
+            });
+            return raw.quantity - totalAllocated;
+        }
+
+        function validateSubItemUI(tabId, subId) {
+            const tab = distTabsData[tabId];
+            const sub = tab.subItemsSelected.find(s => s.id === subId);
+            if (!sub) return;
+
+            const input = document.getElementById(`subQtyInput_${tabId}_${subId}`);
+            const errorLabel = document.getElementById(`subQtyError_${tabId}_${subId}`);
+            if (!input || !errorLabel) return;
+            
+            let hasError = false;
+            let errMsg = '';
+
+            if (sub.action === 'subtract') {
+                if (sub.selected_qty > sub.owned_qty) {
+                    hasError = true;
+                    errMsg = `Cannot subtract more than owned (${sub.owned_qty})!`;
+                }
+            }
+
+            if (sub.selected_qty <= 0 && sub.action !== 'delete_all') {
+                hasError = true;
+                errMsg = `Enter a quantity ≥ 1`;
+            }
+
+            if (hasError) {
+                errorLabel.textContent = errMsg;
+                errorLabel.classList.remove('hidden');
+                input.classList.add('border-red-400', 'bg-red-50', 'text-red-600');
+            } else {
+                errorLabel.classList.add('hidden');
+                input.classList.remove('border-red-400', 'bg-red-50', 'text-red-600');
+            }
         }
 
         function updateTabSubQty(tabId, subId, valStr) {
@@ -1437,80 +1193,47 @@
             
             let val = parseInt(valStr);
             if(isNaN(val) || val < 0) val = 0;
+            if (sub.action === 'delete_all') val = sub.owned_qty;
+
             sub.selected_qty = val;
-
-            // Recalculate effective stock for this sub-item across all tabs
-            const effectiveStock = getEffectiveStock(subId);
-            // The available amount for THIS specific entry = effectiveStock + this entry's own qty
-            const maxForThis = effectiveStock + val;
             
-            const input = document.getElementById(`subQtyInput_${tabId}_${subId}`);
-            const errorLabel = document.getElementById(`subQtyError_${tabId}_${subId}`);
-            const stockLabel = document.getElementById(`subStockLabel_${tabId}_${subId}`);
-            
-            // Update the stock display for this card
-            if (stockLabel) {
-                const remaining = maxForThis - val;
-                stockLabel.textContent = `${remaining} AVAILABLE`;
-                stockLabel.classList.toggle('text-emerald-600', remaining > 0);
-                stockLabel.classList.toggle('text-red-500', remaining <= 0);
-            }
-
-            if (val > maxForThis || val <= 0) {
-                if (val > maxForThis) {
-                    errorLabel.textContent = `Exceeds available stock (${maxForThis})!`;
-                } else {
-                    errorLabel.textContent = `Enter a quantity ≥ 1`;
-                }
-                errorLabel.classList.remove('hidden');
-                input.classList.add('border-red-400', 'bg-red-50', 'text-red-600');
-            } else {
-                errorLabel.classList.add('hidden');
-                input.classList.remove('border-red-400', 'bg-red-50', 'text-red-600');
-            }
-
-            // Update available_qty to reflect effective stock for validation
-            sub.available_qty = maxForThis;
-
-            // Refresh stock display in all OTHER tabs that have the same sub-item
+            validateSubItemUI(tabId, subId);
             refreshAllTabsForSubItem(subId, tabId);
             updateReadyStatus();
         }
 
-        // Refresh the stock label and validation for a sub-item across all tabs except excludeTab
         function refreshAllTabsForSubItem(subId, excludeTabId) {
+            // Need to update UI visually for the pool count
             distTabsData.forEach((tab, i) => {
-                if (i === excludeTabId) return;
                 const si = tab.subItemsSelected.find(s => s.id === subId);
                 if (!si) return;
-
-                const effectiveStock = getEffectiveStock(subId);
-                const maxForThis = effectiveStock + si.selected_qty;
-                si.available_qty = maxForThis;
-
-                const stockLabel = document.getElementById(`subStockLabel_${i}_${subId}`);
-                const input = document.getElementById(`subQtyInput_${i}_${subId}`);
-                const errorLabel = document.getElementById(`subQtyError_${i}_${subId}`);
-
+                
+                const stockLabel = document.getElementById(`subStockLabelPool_${i}_${subId}`);
                 if (stockLabel) {
-                    const remaining = maxForThis - si.selected_qty;
-                    stockLabel.textContent = `${remaining} AVAILABLE`;
-                    stockLabel.classList.toggle('text-emerald-600', remaining > 0);
-                    stockLabel.classList.toggle('text-red-500', remaining <= 0);
+                    const effectiveStock = getEffectiveStock(subId);
+                    let viewingLimit = effectiveStock;
+                    if (si.action === 'subtract' || si.action === 'delete_all') viewingLimit -= si.selected_qty;
+                    
+                    stockLabel.textContent = viewingLimit;
                 }
 
-                // Re-validate
-                if (input && errorLabel) {
-                    if (si.selected_qty > maxForThis) {
-                        errorLabel.textContent = `Exceeds available stock (${maxForThis})!`;
-                        errorLabel.classList.remove('hidden');
-                        input.classList.add('border-red-400', 'bg-red-50', 'text-red-600');
-                    } else if (si.selected_qty > 0) {
-                        errorLabel.classList.add('hidden');
-                        input.classList.remove('border-red-400', 'bg-red-50', 'text-red-600');
-                    }
-                }
+                if (i !== excludeTabId) validateSubItemUI(i, subId);
             });
+        }
+
+        function setSubItemAction(tabId, subId, state) {
+            const tab = distTabsData[tabId];
+            const sub = tab.subItemsSelected.find(s => s.id === subId);
+            if (!sub) return;
+            sub.action = state;
+            if (state === 'delete_all') {
+                sub.selected_qty = sub.owned_qty;
+            } else if (state === 'subtract' && sub.selected_qty > sub.owned_qty) {
+                sub.selected_qty = sub.owned_qty;
+            }
+            renderTabSubItems(tabId);
+            updateTabSubQty(tabId, subId, sub.selected_qty); // re-trigger mapping logic
+            refreshAllTabsForSubItem(subId, tabId);
         }
 
         function renderTabSubItems(tabId) {
@@ -1521,23 +1244,35 @@
                 return;
             }
             container.innerHTML = tab.subItemsSelected.map(si => {
-                const effectiveStock = getEffectiveStock(si.id);
-                const remaining = effectiveStock + si.selected_qty - si.selected_qty;
-                const displayStock = effectiveStock;
-                const maxForThis = effectiveStock + si.selected_qty;
-                si.available_qty = maxForThis;
+                const effectiveStockObj = getEffectiveStock(si.id);
+                let viewingLimit = effectiveStockObj;
+                if (si.action === 'subtract' || si.action === 'delete_all') viewingLimit -= si.selected_qty;
 
                 return `
-                <div class="flex items-center gap-3 p-4 bg-white border border-slate-200 shadow-sm rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div class="flex-grow flex flex-col">
-                        <span class="text-sm font-bold text-slate-800">${si.name}</span>
-                        <span id="subStockLabel_${tabId}_${si.id}" class="text-[10px] font-black uppercase tracking-widest mt-1 ${displayStock > 0 ? 'text-emerald-600' : 'text-red-500'}">${displayStock} AVAILABLE</span>
+                <div class="flex flex-col gap-3 p-4 bg-white border border-slate-200 shadow-sm rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div class="flex items-center justify-between">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-bold text-slate-800">${si.name}</span>
+                            <span class="text-[10px] font-black uppercase tracking-widest mt-1 text-slate-500">Currently Owned: <span class="text-[#c00000]">${si.owned_qty}</span> | Unallocated Pool: <span id="subStockLabelPool_${tabId}_${si.id}" class="text-emerald-600">${viewingLimit}</span></span>
+                        </div>
+                        <button type="button" onclick="removeTabSub(${tabId}, ${si.id})" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-colors font-bold text-lg shrink-0">✕</button>
                     </div>
-                    <div class="flex flex-col items-center gap-1">
-                        <input type="number" id="subQtyInput_${tabId}_${si.id}" min="1" max="${maxForThis}" placeholder="Qty" value="${si.selected_qty || ''}" oninput="updateTabSubQty(${tabId}, ${si.id}, this.value)" class="w-24 p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-sm text-center focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all">
-                        <span id="subQtyError_${tabId}_${si.id}" class="hidden text-[10px] font-bold text-red-500 text-center"></span>
+                    
+                    <div class="flex items-center gap-2 mt-2">
+                        <input type="number" id="subQtyInput_${tabId}_${si.id}" min="0" placeholder="0" value="${si.selected_qty}" oninput="updateTabSubQty(${tabId}, ${si.id}, this.value)" class="w-24 p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-sm text-center focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all ${si.action === 'delete_all' ? 'opacity-50 cursor-not-allowed bg-slate-100' : ''}" ${si.action === 'delete_all' ? 'disabled' : ''}>
+                        
+                        <div class="flex flex-wrap gap-2">
+                            <button type="button" onclick="setSubItemAction(${tabId}, ${si.id}, 'subtract')" class="flex items-center gap-1.5 px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all border ${si.action === 'subtract' ? 'bg-orange-50 text-orange-700 border-orange-300 shadow-sm' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
+                                Subtract
+                            </button>
+                            <button type="button" onclick="setSubItemAction(${tabId}, ${si.id}, 'delete_all')" class="flex items-center gap-1.5 px-3 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all border ${si.action === 'delete_all' ? 'bg-red-50 text-red-700 border-red-300 shadow-sm' : 'bg-white text-slate-400 border-slate-200 hover:bg-slate-50'}">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                Delete All
+                            </button>
+                        </div>
                     </div>
-                    <button type="button" onclick="removeTabSub(${tabId}, ${si.id})" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-colors font-bold text-lg shrink-0">✕</button>
+                    <span id="subQtyError_${tabId}_${si.id}" class="hidden text-[10px] font-bold text-red-500 mt-1"></span>
                 </div>`;
             }).join('');
         }
@@ -1574,14 +1309,14 @@
             let tabValid = true;
             let subItemsPayload = [];
             tab.subItemsSelected.forEach(sub => {
-                if (sub.selected_qty <= 0) {
+                if (sub.selected_qty <= 0 && sub.action !== 'delete_all') {
                     errors.push(`Tab ${i+1}: Sub-item "${sub.name}" needs a quantity greater than 0.`);
                     tabValid = false;
-                } else if (sub.selected_qty > sub.available_qty) {
-                    errors.push(`Tab ${i+1}: Sub-item "${sub.name}" requested (${sub.selected_qty}) exceeds stock (${sub.available_qty}).`);
+                } else if (sub.action === 'subtract' && sub.selected_qty > sub.owned_qty) {
+                    errors.push(`Tab ${i+1}: Sub-item "${sub.name}" requested subtraction (${sub.selected_qty}) exceeds owned (${sub.owned_qty}).`);
                     tabValid = false;
                 } else {
-                    subItemsPayload.push({ id: sub.id, qty: sub.selected_qty });
+                    subItemsPayload.push({ id: sub.id, qty: sub.selected_qty, action: sub.action });
                 }
             });
 
@@ -1663,7 +1398,7 @@
             });
 
             try {
-                const response = await fetch("{{ route('inventory.setup.distribution') }}", {
+                const response = await fetch("{{ route('inventory.modifier.distribution') }}", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ distributions: payload })
@@ -1743,344 +1478,6 @@
                 }
             } catch(e) {
                 Swal.fire({ title: 'Submission Failed', text: e.message, icon: 'error', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-            }
-        }
-
-        // =============================================
-        // RENAME MODULE — Update Items logic
-        // =============================================
-        let renameTargetId   = null;
-        let renameTargetType = null;
-        let renameTargetName = null;
-
-        function onRenameTypeChange() {
-            const type = document.getElementById('renameType').value;
-            renameTargetId   = null;
-            renameTargetType = type || null;
-            renameTargetName = null;
-
-            const cascadeRow  = document.getElementById('renameCascadeRow');
-            const catWrap     = document.getElementById('renameCatWrap');
-            const itemWrap    = document.getElementById('renameItemWrap');
-            const subWrap     = document.getElementById('renameSubWrap');
-            const inputWrap   = document.getElementById('renameInputWrap');
-            const submitBtn   = document.getElementById('renameSubmitBtn');
-
-            // Reset all child selects
-            document.getElementById('renameCatSelect').value  = '';
-            document.getElementById('renameItemSelect').innerHTML = '<option value="">-- Choose Item --</option>';
-            document.getElementById('renameSubSelect').innerHTML  = '<option value="">-- Choose Sub-Item --</option>';
-            document.getElementById('renameNewName').value     = '';
-            document.getElementById('renameCurrentHint').textContent = '';
-
-            if (typeof hideActionUI === 'function') hideActionUI();
-
-            if (!type) {
-                cascadeRow.classList.add('hidden');
-                catWrap.classList.add('hidden');
-                itemWrap.classList.add('hidden');
-                subWrap.classList.add('hidden');
-                return;
-            }
-
-            cascadeRow.classList.remove('hidden');
-            // Category dropdown always shows
-            catWrap.classList.remove('hidden');
-            // Item dropdown shows for 'item' and 'sub_item'
-            itemWrap.classList.toggle('hidden', type === 'category');
-            // Sub-item dropdown shows only for 'sub_item'
-            subWrap.classList.toggle('hidden', type !== 'sub_item');
-        }
-
-        function onRenameCatChange() {
-            const type       = document.getElementById('renameType').value;
-            const catSelect  = document.getElementById('renameCatSelect');
-            const catId      = catSelect.value;
-            const catName    = catId ? catSelect.options[catSelect.selectedIndex].text : '';
-
-            const itemSelect = document.getElementById('renameItemSelect');
-            const subSelect  = document.getElementById('renameSubSelect');
-
-            renameTargetId   = null;
-            renameTargetName = null;
-
-            // Reset dependent dropdowns
-            itemSelect.innerHTML = '<option value="">-- Choose Item --</option>';
-            subSelect.innerHTML  = '<option value="">-- Choose Sub-Item --</option>';
-            document.getElementById('renameNewName').value = '';
-            document.getElementById('renameCurrentHint').textContent = '';
-            if (typeof hideActionUI === 'function') hideActionUI();
-
-            if (type === 'category') {
-                // Selecting a category IS the target
-                if (catId) {
-                    renameTargetId   = parseInt(catId);
-                    renameTargetType = 'category';
-                    renameTargetName = catName;
-                    document.getElementById('renameCurrentHint').textContent = `Currently named: "${catName}"`;
-                    if (typeof triggerActionUI === 'function') triggerActionUI();
-                }
-                return;
-            }
-
-            // For item & sub_item: populate items filtered by chosen category
-            if (!catId) return;
-            const items = rawItems.filter(i => i.category_id == catId);
-            itemSelect.innerHTML = '<option value="">-- Choose Item --</option>';
-            items.forEach(i => {
-                itemSelect.innerHTML += `<option value="${i.id}" data-name="${i.name.replace(/"/g,'&quot;')}">${i.name}</option>`;
-            });
-        }
-
-        function onRenameItemChange() {
-            const type      = document.getElementById('renameType').value;
-            const itemSel   = document.getElementById('renameItemSelect');
-            const itemId    = itemSel.value;
-            const itemName  = itemId ? itemSel.options[itemSel.selectedIndex].text : '';
-            const subSelect = document.getElementById('renameSubSelect');
-
-            renameTargetId   = null;
-            renameTargetName = null;
-
-            subSelect.innerHTML = '<option value="">-- Choose Sub-Item --</option>';
-            document.getElementById('renameNewName').value = '';
-            document.getElementById('renameCurrentHint').textContent = '';
-            if (typeof hideActionUI === 'function') hideActionUI();
-
-            if (type === 'item') {
-                if (itemId) {
-                    renameTargetId   = parseInt(itemId);
-                    renameTargetType = 'item';
-                    renameTargetName = itemName;
-                    document.getElementById('renameCurrentHint').textContent = `Currently named: "${itemName}"`;
-                    if (typeof triggerActionUI === 'function') triggerActionUI();
-                }
-                return;
-            }
-
-            // For sub_item: populate sub-items filtered by chosen item
-            if (!itemId) return;
-            const subs = rawSubItems.filter(s => s.item_id == itemId);
-            subSelect.innerHTML = '<option value="">-- Choose Sub-Item --</option>';
-            subs.forEach(s => {
-                subSelect.innerHTML += `<option value="${s.id}">${s.name}</option>`;
-            });
-        }
-
-        function onRenameSubChange() {
-            const subSel   = document.getElementById('renameSubSelect');
-            const subId    = subSel.value;
-            const subName  = subId ? subSel.options[subSel.selectedIndex].text : '';
-
-            renameTargetId   = null;
-            renameTargetName = null;
-
-            document.getElementById('renameNewName').value = '';
-            document.getElementById('renameCurrentHint').textContent = '';
-            if (typeof hideActionUI === 'function') hideActionUI();
-
-            if (subId) {
-                renameTargetId   = parseInt(subId);
-                renameTargetType = 'sub_item';
-                renameTargetName = subName;
-                document.getElementById('renameCurrentHint').textContent = `Currently named: "${subName}"`;
-                if (typeof triggerActionUI === 'function') triggerActionUI();
-            }
-        }
-
-        async function submitRename() {
-            const newName = document.getElementById('renameNewName').value.trim();
-            if (!renameTargetId || !renameTargetType) {
-                Swal.fire({ title: 'Nothing Selected', text: 'Please complete all selections before renaming.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-            if (!newName) {
-                Swal.fire({ title: 'New Name Required', text: 'Please enter a new name.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-            if (newName.toLowerCase() === renameTargetName.toLowerCase()) {
-                Swal.fire({ title: 'No Change Detected', text: 'The new name is the same as the current name.', icon: 'info', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-
-            const typeLabel = renameTargetType === 'sub_item' ? 'Sub-Item' : (renameTargetType.charAt(0).toUpperCase() + renameTargetType.slice(1));
-            const result = await Swal.fire({
-                title: `Rename ${typeLabel}`,
-                html: `Rename <b>"${renameTargetName}"</b> to <b>"${newName}"</b>?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#c00000', cancelButtonColor: '#94a3b8',
-                confirmButtonText: 'Yes, rename it!',
-                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
-            });
-
-            if (!result.isConfirmed) return;
-
-            Swal.fire({ title: 'Renaming...', allowOutsideClick: false, showConfirmButton: false, willOpen: () => Swal.showLoading(), customClass: { popup: 'rounded-[2rem]' } });
-
-            try {
-                const res = await fetch("{{ route('inventory.setup.rename') }}", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ type: renameTargetType, id: renameTargetId, new_name: newName })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    // Update local raw data so the dropdowns reflect the change immediately
-                    if (renameTargetType === 'category') {
-                        const cat = rawCategories.find(c => c.id === renameTargetId);
-                        if (cat) cat.name = newName;
-                    } else if (renameTargetType === 'item') {
-                        const item = rawItems.find(i => i.id === renameTargetId);
-                        if (item) item.name = newName;
-                    } else if (renameTargetType === 'sub_item') {
-                        const sub = rawSubItems.find(s => s.id === renameTargetId);
-                        if (sub) sub.name = newName;
-                    }
-                    Swal.fire({ title: 'Success!', text: data.message, icon: 'success', confirmButtonColor: '#10b981', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } })
-                    .then(() => {
-                        // Reset the rename form
-                        document.getElementById('renameType').value = '';
-                        onRenameTypeChange();
-                    });
-                } else {
-                    Swal.fire({ title: 'Error', text: data.message || 'An error occurred.', icon: 'error', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                }
-            } catch(e) {
-                Swal.fire({ title: 'Request Failed', text: e.message, icon: 'error', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-            }
-        }
-
-        // ===== EDIT MODE (Update/Delete) ACTIONS =====
-        let currentEditAction = 'update';
-
-        function setEditAction(action) {
-            currentEditAction = action;
-            const updateBtn = document.getElementById('editModeUpdateBtn');
-            const deleteBtn = document.getElementById('editModeDeleteBtn');
-            const inputWrap = document.getElementById('renameInputWrap');
-            const warnWrap  = document.getElementById('deleteWarningWrap');
-            const rnSubmit  = document.getElementById('renameSubmitBtn');
-            const delSubmit = document.getElementById('deleteSubmitBtn');
-
-            if (action === 'update') {
-                updateBtn.className = 'flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-[#c00000] bg-red-50 text-[#c00000]';
-                deleteBtn.className = 'flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-slate-200 bg-white text-slate-400 hover:border-red-300 hover:text-red-400';
-                if (renameTargetId) {
-                    inputWrap.classList.remove('hidden');
-                    rnSubmit.classList.remove('hidden');
-                }
-                warnWrap.classList.add('hidden');
-                delSubmit.classList.add('hidden');
-            } else {
-                updateBtn.className = 'flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-slate-200 bg-white text-slate-400 hover:border-red-300 hover:text-red-400';
-                deleteBtn.className = 'flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-red-600 bg-red-50 text-red-600';
-                inputWrap.classList.add('hidden');
-                rnSubmit.classList.add('hidden');
-                if (renameTargetId) {
-                    warnWrap.classList.remove('hidden');
-                    delSubmit.classList.remove('hidden');
-                    previewDeleteImpact();
-                }
-            }
-        }
-
-        function triggerActionUI() {
-            if (currentEditAction === 'update') {
-                document.getElementById('renameInputWrap').classList.remove('hidden');
-                document.getElementById('renameSubmitBtn').classList.remove('hidden');
-                document.getElementById('deleteWarningWrap').classList.add('hidden');
-                document.getElementById('deleteSubmitBtn').classList.add('hidden');
-            } else {
-                document.getElementById('renameInputWrap').classList.add('hidden');
-                document.getElementById('renameSubmitBtn').classList.add('hidden');
-                document.getElementById('deleteWarningWrap').classList.remove('hidden');
-                document.getElementById('deleteCurrentHint').textContent = `Record to delete: "${renameTargetName}"`;
-                document.getElementById('deleteSubmitBtn').classList.remove('hidden');
-                previewDeleteImpact();
-            }
-        }
-
-        function hideActionUI() {
-            document.getElementById('renameInputWrap').classList.add('hidden');
-            document.getElementById('renameSubmitBtn').classList.add('hidden');
-            document.getElementById('deleteWarningWrap').classList.add('hidden');
-            document.getElementById('deleteSubmitBtn').classList.add('hidden');
-        }
-
-        async function previewDeleteImpact() {
-            const impactBox = document.getElementById('deleteImpactBox');
-            const impactTxt = document.getElementById('deleteImpactDetails');
-            
-            impactBox.classList.remove('hidden');
-            impactTxt.innerHTML = '<span class="text-slate-500 animate-pulse">Calculating impact...</span>';
-            
-            try {
-                const res = await fetch("{{ route('inventory.setup.preview_delete') }}", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ type: renameTargetType, id: renameTargetId })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    const i = data.impact;
-                    let msgs = [];
-                    if (renameTargetType === 'category' && i.items > 0) msgs.push(`• <b>${i.items}</b> associated Item(s)`);
-                    if (['category', 'item'].includes(renameTargetType) && i.sub_items > 0) msgs.push(`• <b>${i.sub_items}</b> Sub-Item(s) specification(s)`);
-                    if (i.total_stock > 0) msgs.push(`• <b>${i.total_stock}</b> items in master stock`);
-                    if (i.ownerships > 0) msgs.push(`• <b>${i.ownerships}</b> distributed physical asset(s) across <b>${i.schools_affected}</b> school(s)`);
-                    
-                    if (msgs.length === 0) {
-                        impactTxt.innerHTML = '<span class="text-emerald-600 font-bold">Safe to delete: No associated records or stock will be affected.</span>';
-                        impactBox.classList.replace('bg-red-50', 'bg-emerald-50');
-                        impactBox.classList.replace('border-red-200', 'border-emerald-200');
-                    } else {
-                        impactTxt.innerHTML = 'This action will instantly delete the record AND cascade to permanently destroy:<br>' + msgs.join('<br>');
-                        impactBox.classList.replace('bg-emerald-50', 'bg-red-50');
-                        impactBox.classList.replace('border-emerald-200', 'border-red-200');
-                    }
-                } else {
-                    impactTxt.innerHTML = '<span class="text-slate-500">Failed to calculate impact.</span>';
-                }
-            } catch (e) {
-                impactTxt.innerHTML = '<span class="text-slate-500">Failed to calculate impact.</span>';
-            }
-        }
-
-        async function submitDelete() {
-            if (!renameTargetId || !renameTargetType) return;
-            
-            const typeLabel = renameTargetType === 'sub_item' ? 'Sub-Item' : (renameTargetType.charAt(0).toUpperCase() + renameTargetType.slice(1));
-            const result = await Swal.fire({
-                title: 'CRITICAL DELETION',
-                html: `Are you absolutely sure you want to permanently delete the ${typeLabel} <b>"${renameTargetName}"</b>?<br><br><span class="text-red-600 font-bold text-sm">This action cannot be undone and will destroy any associated physical inventory records!</span>`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#c00000', cancelButtonColor: '#94a3b8',
-                confirmButtonText: 'Yes, permanently destroy it',
-                cancelButtonText: 'Cancel',
-                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
-            });
-
-            if (!result.isConfirmed) return;
-
-            Swal.fire({ title: 'Destroying Records...', allowOutsideClick: false, showConfirmButton: false, willOpen: () => Swal.showLoading(), customClass: { popup: 'rounded-[2rem]' } });
-
-            try {
-                const res = await fetch("{{ route('inventory.setup.delete') }}", {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    body: JSON.stringify({ type: renameTargetType, id: renameTargetId })
-                });
-                const data = await res.json();
-                if (res.ok && data.success) {
-                    Swal.fire({ title: 'Deleted!', text: data.message, icon: 'success', confirmButtonColor: '#10b981', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } })
-                    .then(() => { location.reload(); }); // Reload to refresh all related dropdowns and UI
-                } else {
-                    Swal.fire({ title: 'Error', text: data.message || 'An error occurred.', icon: 'error', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                }
-            } catch(e) {
-                Swal.fire({ title: 'Request Failed', text: e.message, icon: 'error', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
             }
         }
 
