@@ -224,7 +224,7 @@
 
                         <div class="pt-6 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
                             <span class="text-[10px] font-black tracking-widest uppercase text-slate-500 bg-slate-100 rounded-xl px-4 py-2" id="tabStatusCount">0 Assets Ready</span>
-                            <button type="button" onclick="confirmDistributeAll()" id="distributeAllBtn" class="px-8 py-4 bg-[#c00000] hover:bg-red-700 text-white rounded-2xl font-black shadow-xl hover:-translate-y-1 active:scale-95 transition-all text-sm uppercase tracking-wider w-full sm:w-auto">Confirm Modifications</button>
+                            <button type="button" onclick="confirmDistributeAll()" id="distributeAllBtn" class="px-8 py-4 bg-slate-300 cursor-not-allowed opacity-50 text-white rounded-2xl font-black shadow-xl transition-all text-sm uppercase tracking-wider w-full sm:w-auto" disabled>Confirm Modifications</button>
                         </div>
                     </div>
                 `;
@@ -1281,7 +1281,8 @@
             let totalQty = 0;
             distTabsData.forEach(tab => {
                 tab.subItemsSelected.forEach(sub => {
-                    if (sub.selected_qty > 0 && sub.selected_qty <= sub.available_qty) {
+                    // Count if quantity is valid (between 1 and owned amount)
+                    if (sub.selected_qty > 0 && sub.selected_qty <= sub.owned_qty) {
                         totalQty += sub.selected_qty;
                     }
                 });
@@ -1341,10 +1342,10 @@
             const total = result.payload.sub_items.reduce((s, x) => s + x.qty, 0);
 
             Swal.fire({
-                title: 'Confirm Distribution', 
-                html: `<div class="text-sm text-slate-500 mt-2 font-medium leading-relaxed">Distribute <span class="font-black text-rose-600 text-lg mx-1">${total}</span> asset(s) to <span class="font-black text-slate-800 mx-1">${distTabsData[tabIndex].school_name}</span>?</div>`, 
+                title: 'Confirm Asset Modification', 
+                html: `<div class="text-sm text-slate-500 mt-2 font-medium leading-relaxed">Modify <span class="font-black text-rose-600 text-lg mx-1">${total}</span> asset(s) for <span class="font-black text-slate-800 mx-1">${distTabsData[tabIndex].school_name}</span>?</div>`, 
                 icon: 'question',
-                showCancelButton: true, confirmButtonColor: '#c00000', cancelButtonColor: '#94a3b8', confirmButtonText: 'Yes, distribute!',
+                showCancelButton: true, confirmButtonColor: '#c00000', cancelButtonColor: '#94a3b8', confirmButtonText: 'Yes, modify!',
                 customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
             }).then((res) => { 
                 if (res.isConfirmed) submitDistributionPayload([result.payload], tabIndex);
@@ -1380,10 +1381,10 @@
             }
 
             Swal.fire({
-                title: 'Confirm Batched Distribution', 
-                html: `<div class="text-sm text-slate-500 mt-2 font-medium leading-relaxed">You are about to distribute a total of <span class="font-black text-rose-600 text-lg mx-1">${totalQty}</span> asset(s) across <span class="font-black text-rose-600 text-lg mx-1">${payload.length}</span> tab(s).<br><br>This will permanently deduct the literal quantities from the Master Stock. Proceed?</div>`, 
+                title: 'Confirm Batched Modifications', 
+                html: `<div class="text-sm text-slate-500 mt-2 font-medium leading-relaxed">You are about to modify a total of <span class="font-black text-rose-600 text-lg mx-1">${totalQty}</span> asset(s) across <span class="font-black text-rose-600 text-lg mx-1">${payload.length}</span> tab(s).<br><br>This will update the distribution records for the selected school(s). Proceed?</div>`, 
                 icon: 'question',
-                showCancelButton: true, confirmButtonColor: '#c00000', cancelButtonColor: '#94a3b8', confirmButtonText: 'Yes, distribute all!',
+                showCancelButton: true, confirmButtonColor: '#c00000', cancelButtonColor: '#94a3b8', confirmButtonText: 'Yes, modify all!',
                 customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
             }).then((res) => { 
                 if (res.isConfirmed) submitDistributionPayload(payload);
