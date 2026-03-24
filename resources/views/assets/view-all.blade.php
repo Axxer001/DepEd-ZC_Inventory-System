@@ -124,7 +124,7 @@
                             <tr class="bg-slate-50/80">
                                 <th class="px-5 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Asset</th>
                                 <th class="px-5 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Specs Stock</th>
-                                <th class="px-5 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Deployments (Schools)</th>
+                                <th class="px-5 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Recipient Schools</th>
                                 <th class="px-5 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Master</th>
                                 <th class="px-5 py-4 text-[9px] font-black text-blue-500 uppercase tracking-widest border-b border-slate-100 text-center bg-blue-50/20">Sent</th>
                                 <th class="px-5 py-4 text-[9px] font-black text-emerald-500 uppercase tracking-widest border-b border-slate-100 text-center bg-emerald-50/20">Rem</th>
@@ -154,25 +154,17 @@
                                             </template>
                                         </div>
                                     </td>
-                                    {{-- Compact School Cards Grid --}}
-                                    <td class="px-5 py-4 min-w-[350px]">
-                                        <div class="grid grid-cols-2 gap-2">
-                                            <template x-for="dist in getFilteredDistribution(asset)" :key="dist.school">
-                                                <div class="school-card flex items-center gap-2">
-                                                    <div class="w-6 h-6 bg-red-50 rounded-lg flex items-center justify-center text-[#c00000]">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
-                                                    </div>
-                                                    <div class="flex flex-col min-w-0">
-                                                        <span class="text-[9px] font-black text-slate-700 uppercase truncate" x-text="dist.school"></span>
-                                                        <span class="text-[7px] font-bold text-slate-400 uppercase italic leading-none" x-text="`${dist.district} • ${dist.quadrant}`"></span>
-                                                    </div>
-                                                    <span class="ml-auto text-[10px] font-black text-[#c00000]" x-text="dist.qty"></span>
-                                                </div>
-                                            </template>
-                                            <template x-if="getFilteredDistribution(asset).length === 0">
-                                                <span class="text-[8px] font-bold text-slate-300 italic col-span-2">No deployments</span>
-                                            </template>
-                                        </div>
+                                    {{-- Compact Recipient Count --}}
+                                    <td class="px-5 py-4 min-w-[200px] text-center">
+                                        <template x-if="getFilteredDistribution(asset).length > 0">
+                                            <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-red-50 text-[#c00000] border border-red-100 rounded-full font-black text-[12px]">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4"><path fill-rule="evenodd" d="M10 2a.75.75 0 01.59.299l7.5 9.75a.75.75 0 01-1.18.902L10 3.864 3.09 12.951a.75.75 0 01-1.18-.902l7.5-9.75A.75.75 0 0110 2zM3 15.75a.75.75 0 01.75-.75h12.5a.75.75 0 010 1.5H3.75a.75.75 0 01-.75-.75z" clip-rule="evenodd" /></svg>
+                                                <span x-text="`${getFilteredDistribution(asset).length} Schools`"></span>
+                                            </div>
+                                        </template>
+                                        <template x-if="getFilteredDistribution(asset).length === 0">
+                                            <span class="text-[10px] font-bold text-slate-300 italic">No deployments</span>
+                                        </template>
                                     </td>
                                     {{-- Numbers --}}
                                     <td class="px-5 py-4 text-center font-black text-[13px] text-slate-900" x-text="asset.master_quantity"></td>

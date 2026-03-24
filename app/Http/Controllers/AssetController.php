@@ -149,11 +149,12 @@ class AssetController extends Controller
         $categories = \Illuminate\Support\Facades\DB::table('categories')->orderBy('name')->pluck('name');
         $quadrants = \Illuminate\Support\Facades\DB::table('quadrants')->orderBy('name')->get(['id', 'name']);
 
-        // 2. Fetch all items with category info
+        // 2. Fetch all items with category info (Distinct strictly)
         $allItems = \Illuminate\Support\Facades\DB::table('items')
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->select('items.id', 'items.name', 'items.master_quantity', 'categories.name as category')
             ->orderBy('items.name')
+            ->distinct()
             ->get();
 
         // 3. Fetch all sub-items grouped by item
