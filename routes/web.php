@@ -277,6 +277,18 @@ Route::get('/inventory-setup/add-recipients', function () {
 })->name('inventory.setup.add_recipients');
 
 
+Route::middleware('auth')->group(function () {
+    // Distributors View Page
+    Route::get('/distributors', function () {
+        return view('distributors');
+    })->name('distributors.index');
+
+    // Recipients View Page
+    Route::get('/recipients', function () {
+        return view('recipients');
+    })->name('recipients.index');
+});
+
     Route::get('/admin/quadrant-1-1', $quadrantHandler(1, 'admin.quadrants.q1-1'))->name('quadrant.1.1');
     Route::get('/admin/quadrant-1-2', $quadrantHandler(2, 'admin.quadrants.q1-2'))->name('quadrant.1.2');
     Route::get('/admin/quadrant-2-1', $quadrantHandler(3, 'admin.quadrants.q2-1'))->name('quadrant.2.1');
