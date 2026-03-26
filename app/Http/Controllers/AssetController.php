@@ -89,7 +89,8 @@ class AssetController extends Controller
                 'categories.name as category_name',
                 'items.name as item_name',
                 'sub_items.name as sub_item_name',
-                'ownerships.quantity'
+                'ownerships.quantity',
+                'ownerships.condition'
             )
             ->get();
 
@@ -117,7 +118,7 @@ class AssetController extends Controller
                 $inventory[$cat]['items'][$item]['sub_items'][$sub][] = [
                     'name' => $row->school_name,
                     'qty' => $row->quantity,
-                    'status' => 'Serviceable'
+                    'status' => $row->condition ?? 'Serviceable'
                 ];
             }
         }

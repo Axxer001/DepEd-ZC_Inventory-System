@@ -133,6 +133,7 @@ class InventorySetupController extends Controller
         
         $subItemsInput = $request->input('sub_items', []);
         $subItemQuantities = $request->input('sub_item_quantities', []);
+        $subItemConditions = $request->input('sub_item_conditions', []);
         
         $validSubItems = [];
         $masterQty = 0;
@@ -141,7 +142,8 @@ class InventorySetupController extends Controller
             if (!empty($name) && isset($subItemQuantities[$index])) {
                 $qty = (int) $subItemQuantities[$index];
                 if ($qty > 0) {
-                    $validSubItems[] = ['name' => $name, 'quantity' => $qty];
+                    $condition = $subItemConditions[$index] ?? 'Serviceable';
+                    $validSubItems[] = ['name' => $name, 'quantity' => $qty, 'condition' => $condition];
                     $masterQty += $qty;
                 }
             }
@@ -235,6 +237,7 @@ class InventorySetupController extends Controller
         foreach ($validSubItems as $sub) {
             $subItemName = $sub['name'];
             $subQty = $sub['quantity'];
+            $subCondition = $sub['condition'] ?? 'Serviceable';
 
             // Check if a sub-item with the same name already exists for this item
             $existingSub = DB::table('sub_items')
@@ -243,14 +246,15 @@ class InventorySetupController extends Controller
                 ->first();
 
             if ($existingSub) {
-                // Update the existing sub-item's quantity
+                // Update the existing sub-item's quantity and condition
                 DB::table('sub_items')->where('id', $existingSub->id)->update([
                     'quantity' => DB::raw("quantity + {$subQty}"),
+                    'condition' => $subCondition,
                     'updated_at' => now(),
                 ]);
                 DB::table('system_logs')->insert([
                     'user' => $userName,
-                    'activity' => "Updated sub-item '{$subItemName}' quantity by +{$subQty} under item '{$itemName}'",
+                    'activity' => "Updated sub-item '{$subItemName}' quantity by +{$subQty} (Condition: {$subCondition}) under item '{$itemName}'",
                     'module' => 'Items',
                     'action_type' => 'Update',
                     'created_at' => now(),
@@ -263,12 +267,13 @@ class InventorySetupController extends Controller
                     'name' => $subItemName,
                     'item_id' => $itemId,
                     'quantity' => $subQty,
+                    'condition' => $subCondition,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
                 DB::table('system_logs')->insert([
                     'user' => $userName,
-                    'activity' => "Added sub-item '{$subItemName}' (Qty: {$subQty}) under item '{$itemName}'",
+                    'activity' => "Added sub-item '{$subItemName}' (Qty: {$subQty}, Condition: {$subCondition}) under item '{$itemName}'",
                     'module' => 'Items',
                     'action_type' => 'Create',
                     'created_at' => now(),
@@ -343,6 +348,7 @@ class InventorySetupController extends Controller
                         'item_id' => $itemId,
                         'sub_item_id' => $subId,
                         'quantity' => $qty,
+                        'condition' => $sub['condition'] ?? 'Serviceable',
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
@@ -650,6 +656,7 @@ class InventorySetupController extends Controller
                                 'item_id' => $itemId,
                                 'sub_item_id' => $subId,
                                 'quantity' => $qty,
+                                'condition' => $sub['condition'] ?? 'Serviceable',
                                 'created_at' => now(),
                                 'updated_at' => now(),
                             ]);

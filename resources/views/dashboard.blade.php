@@ -48,7 +48,7 @@
                 </div>
             </header>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                 <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default">
                     <div class="flex justify-between items-start mb-4">
 <div class="p-4 bg-blue-50 text-blue-500 rounded-2xl group-hover:scale-110 transition-transform">
@@ -85,6 +85,18 @@
                     <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Pasira / Damaged</h3>
                     <p class="text-5xl font-extrabold text-orange-500 tracking-tighter leading-none">{{ number_format($unserviceableCount) }}</p>
                 </div>
+
+                <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default">
+                    <div class="flex justify-between items-start mb-4">
+<div class="p-4 bg-amber-50 text-amber-500 rounded-2xl group-hover:scale-110 transition-transform">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17l-5.49-5.49a2.12 2.12 0 010-3l.7-.7a2.12 2.12 0 013 0l5.49 5.49m-3.7 3.7l3.7-3.7m-3.7 3.7l1.06 1.06a2.12 2.12 0 003 0l3.36-3.36a2.12 2.12 0 000-3L16.58 2.9a2.12 2.12 0 00-3 0L10.22 6.26" />
+    </svg>
+</div>                        <span class="bg-amber-100 text-amber-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">For Repair</span>
+                    </div>
+                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Needs Fixing</h3>
+                    <p class="text-5xl font-extrabold text-amber-500 tracking-tighter leading-none">{{ number_format($forRepairCount) }}</p>
+                </div>
             </div>
 
             <section class="mb-12">
@@ -113,7 +125,7 @@
                         </div>
                     </div>
 
-                    <form action="{{ route('inventory.dashboard.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-5 gap-6">
+                    <form action="{{ route('inventory.dashboard.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-6 gap-6">
                         @csrf
                         <div class="space-y-2 relative">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assigned School</label>
@@ -152,6 +164,15 @@
                                 @foreach($subItems as $sub)
                                     <option value="{{ $sub->id }}" data-item="{{ $sub->item_id }}">{{ $sub->name }}</option>
                                 @endforeach
+                            </select>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Condition</label>
+                            <select name="condition" class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all">
+                                <option value="Serviceable" selected>Serviceable</option>
+                                <option value="Unserviceable">Unserviceable</option>
+                                <option value="For Repair">For Repair</option>
                             </select>
                         </div>
 

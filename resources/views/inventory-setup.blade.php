@@ -486,7 +486,12 @@
                                     <div id="subItemContainer" class="space-y-3 max-h-[250px] overflow-y-auto pr-2 custom-scroll">
                                         <div class="flex gap-2 group sub-item-row relative">
                                             <input type="text" name="sub_items[]" placeholder="e.g. Default/General or RAM 8GB" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm flex-1" required autocomplete="off" oninput="checkSubItemDuplicate(this)">
-                                            <input type="number" name="sub_item_quantities[]" placeholder="Qty" min="1" step="1" class="w-24 p-4 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm text-center" required>
+                                            <input type="number" name="sub_item_quantities[]" placeholder="Qty" min="1" step="1" class="w-20 p-4 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm text-center" required>
+                                            <select name="sub_item_conditions[]" class="w-36 p-4 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm cursor-pointer" title="Condition">
+                                                <option value="Serviceable" selected>Serviceable</option>
+                                                <option value="Unserviceable">Unserviceable</option>
+                                                <option value="For Repair">For Repair</option>
+                                            </select>
                                             <button type="button" onclick="removeSubItemField(this)" class="px-3 text-slate-300 hover:text-red-500 font-bold transition-colors">✕</button>
                                         </div>
                                     </div>
@@ -566,7 +571,12 @@
             div.className = "flex gap-2 group animate-in fade-in slide-in-from-top-2 duration-300 sub-item-row relative";
             div.innerHTML = `
                 <input type="text" name="sub_items[]" placeholder="Enter specification" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm flex-1" required autocomplete="off" oninput="checkSubItemDuplicate(this)">
-                <input type="number" name="sub_item_quantities[]" placeholder="Qty" min="1" step="1" class="w-24 p-4 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm text-center" required>
+                <input type="number" name="sub_item_quantities[]" placeholder="Qty" min="1" step="1" class="w-20 p-4 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm text-center" required>
+                <select name="sub_item_conditions[]" class="w-36 p-4 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm cursor-pointer" title="Condition">
+                    <option value="Serviceable" selected>Serviceable</option>
+                    <option value="Unserviceable">Unserviceable</option>
+                    <option value="For Repair">For Repair</option>
+                </select>
                 <button type="button" onclick="removeSubItemField(this)" class="px-3 text-slate-300 hover:text-red-500 font-bold transition-colors">✕</button>
             `;
             container.appendChild(div);
@@ -955,6 +965,11 @@
                 <div class="flex items-center gap-3">
                     <input type="hidden" name="sub_items[]" value="${name}">
                     <input type="number" name="sub_item_quantities[]" placeholder="Qty" min="1" step="1" class="w-20 p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-sm text-center focus:border-emerald-400" required>
+                    <select name="sub_item_conditions[]" class="w-36 p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-semibold text-sm cursor-pointer" title="Condition">
+                        <option value="Serviceable" selected>Serviceable</option>
+                        <option value="Unserviceable">Unserviceable</option>
+                        <option value="For Repair">For Repair</option>
+                    </select>
                     <button type="button" onclick="removeExistingSpecCard(this, ${id})" class="text-slate-300 hover:text-red-500 font-bold p-2 transition-colors">✕</button>
                 </div>
             `;

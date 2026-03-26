@@ -17,10 +17,13 @@ class DashboardController extends Controller
         // 1. Total System Assets (Sum of all master quantities across registry)
         $totalAssets = \Illuminate\Support\Facades\DB::table('items')->sum('master_quantity');
         
-        // Calculate Distributed Assets to compute serviceable / unserviceable
-        $totalDistributed = \Illuminate\Support\Facades\DB::table('ownerships')->sum('quantity');
-        $serviceableCount = $totalDistributed; // For now, all distributed are serviceable
-        $unserviceableCount = 0;
+        // Calculate condition-based counts from ownerships
+        $serviceableCount = \Illuminate\Support\Facades\DB::table('ownerships')
+            ->where('condition', 'Serviceable')->sum('quantity');
+        $unserviceableCount = \Illuminate\Support\Facades\DB::table('ownerships')
+            ->where('condition', 'Unserviceable')->sum('quantity');
+        $forRepairCount = \Illuminate\Support\Facades\DB::table('ownerships')
+            ->where('condition', 'For Repair')->sum('quantity');
 
         // 2. Per-Quadrant Totals
         // Join ownerships -> schools -> districts -> quadrants
@@ -80,6 +83,7 @@ class DashboardController extends Controller
             'totalAssets', 
             'serviceableCount', 
             'unserviceableCount', 
+            'forRepairCount',
             'quadrantTotals',
             'recentOwnerships',
             'categories',
@@ -103,11 +107,14 @@ class DashboardController extends Controller
             $subItemId = null;
         }
 
+        $condition = $request->input('condition', 'Serviceable');
+
         \Illuminate\Support\Facades\DB::table('ownerships')->insert([
             'school_id' => $request->school_id,
             'item_id' => $request->item_id,
             'sub_item_id' => $subItemId,
             'quantity' => $request->quantity,
+            'condition' => $condition,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
