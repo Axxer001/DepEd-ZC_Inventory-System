@@ -290,18 +290,56 @@ Route::get('/inventory-setup/add-distributors', function () {
 Route::get('/inventory-setup/add-recipients', function () {
     return view('add-recipients'); // dapat add-recipients.blade.php ang filename
 })->name('inventory.setup.add_recipients');
-
-
 Route::middleware('auth')->group(function () {
-    // Distributors View Page
-    Route::get('/distributors', function () {
-        return view('distributors');
-    })->name('distributors.index');
 
-    // Recipients View Page
-    Route::get('/recipients', function () {
-        return view('recipients');
-    })->name('recipients.index');
+    // --- DISTRIBUTORS GROUP ---
+    Route::prefix('distributors')->group(function () {
+        // URL: /distributors
+        Route::get('/', function () {
+            return view('distributors.distributors'); 
+        })->name('distributors.index');
+
+        // URL: /distributors/list
+        Route::get('/list', function () {
+            return view('distributors.list'); 
+        })->name('distributors.list');
+
+        // URL: /distributors/explorer
+        Route::get('/explorer', function () {
+            return view('distributors.explorer'); 
+        })->name('distributors.explorer');
+
+        // URL: /distributors/history
+        Route::get('/history', function () {
+            return view('distributors.history'); 
+        })->name('distributors.history');
+    });
+
+    // --- RECIPIENTS GROUP ---
+    Route::prefix('recipients')->group(function () {
+        // URL: /recipients
+        Route::get('/', function () {
+            return view('recipients.recipients'); 
+        })->name('recipients.index');
+
+        // URL: /recipients/list
+        Route::get('/list', function () {
+            return view('recipients.list'); 
+        })->name('recipients.list');
+
+        // URL: /recipients/explorer
+        Route::get('/explorer', function () {
+            return view('recipients.explorer'); 
+        })->name('recipients.explorer');
+
+        // URL: /recipients/history
+        Route::get('/history', function () {
+            return view('recipients.history'); 
+        })->name('recipients.history');
+    });
+
+
+
 });
 
     Route::get('/admin/quadrant-1-1', $quadrantHandler(1, 'admin.quadrants.q1-1'))->name('quadrant.1.1');
