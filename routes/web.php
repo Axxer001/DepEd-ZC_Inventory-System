@@ -261,6 +261,8 @@ Route::middleware('auth')->group(function () {
             })->values()->toArray();
             return view($view, compact('districts', 'schoolsByDistrict', 'allSchools'));
         };
+
+        
     };
 
 // Route para sa main selection (yung 2 big buttons)
@@ -280,6 +282,14 @@ Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('
 // Route para sa Explorer
 Route::get('/asset-explorer', [AssetController::class, 'explorer'])->name('assets.explorer');
 
+Route::get('/inventory-setup/add-distributors', function () {
+    return view('add-distributors'); // dapat add-distributors.blade.php ang filename
+})->name('inventory.setup.add_distributors');
+
+// Route para sa Add Recipients
+Route::get('/inventory-setup/add-recipients', function () {
+    return view('add-recipients'); // dapat add-recipients.blade.php ang filename
+})->name('inventory.setup.add_recipients');
 
 
     Route::get('/admin/quadrant-1-1', $quadrantHandler(1, 'admin.quadrants.q1-1'))->name('quadrant.1.1');
