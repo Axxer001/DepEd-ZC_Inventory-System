@@ -86,6 +86,186 @@ class StakeholderController extends Controller
     }
 
     /**
+     * Store a group of stakeholders (Main entity + personnel).
+     */
+    public function storeGroup(Request $request)
+    {
+        $request->validate([
+            'org_name' => 'nullable|string|max:255',
+            'personnel' => 'nullable|array',
+            'personnel.*' => 'nullable|string|max:255',
+            'type' => 'required|string|max:255',
+        ]);
+
+        $userName = auth()->user() ? auth()->user()->name : 'System';
+        $type = trim($request->type);
+        $orgName = trim($request->org_name);
+
+        $addedCount = 0;
+        
+        if (!empty($orgName)) {
+            $parent = DB::table('stakeholders')
+                ->where('name', $orgName)
+                ->where('type', $type)
+                ->whereNull('parent_id')
+                ->first();
+
+            if ($parent) {
+                $parentId = $parent->id ?? null;
+            } else {
+                $parentId = DB::table('stakeholders')->insertGetId([
+                    'name' => $orgName,
+                    'type' => $type,
+                    'parent_id' => null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                
+                DB::table('system_logs')->insert([
+                    'user' => $userName,
+                    'activity' => "Created main {$type} '{$orgName}'",
+                    'module' => 'Stakeholders',
+                    'action_type' => 'Create',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            if (!empty($request->personnel)) {
+                foreach ($request->personnel as $personName) {
+                    $personName = trim($personName);
+                    if (empty($personName)) continue;
+                    
+                    $exists = DB::table('stakeholders')
+                        ->where('name', $personName)
+                        ->where('parent_id', $parentId)
+                        ->where('type', $type)
+                        ->exists();
+                        
+                    if (!$exists) {
+                        DB::table('stakeholders')->insert([
+                            'name' => $personName,
+                            'type' => $type,
+                            'parent_id' => $parentId,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                        $addedCount++;
+                    }
+                }
+                if ($addedCount > 0) {
+                    DB::table('system_logs')->insert([
+                        'user' => $userName,
+                        'activity' => "Added {$addedCount} sub-categor(ies) to {$type} '{$orgName}'",
+                        'module' => 'Stakeholders',
+                        'action_type' => 'Create',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+        }
+
+        // --- Cross-Registration Logic (Phase 3) ---
+        $crossAdded = 0;
+        $copyParents = $request->input('copy_parents', []);
+        $copyChildren = $request->input('copy_children', []);
+        
+        if (!empty($copyChildren)) {
+            $childrenEntities = DB::table('stakeholders')->whereIn('id', $copyChildren)->get();
+            foreach ($childrenEntities as $child) {
+                if ($child->parent_id && !in_array($child->parent_id, $copyParents)) {
+                    $copyParents[] = $child->parent_id;
+                }
+            }
+        }
+        
+        if (!empty($copyParents)) {
+            $parentsToCopy = DB::table('stakeholders')->whereIn('id', $copyParents)->get();
+            $parentMap = [];
+            
+            foreach ($parentsToCopy as $oldParent) {
+                $existingNewParent = DB::table('stakeholders')
+                    ->where('name', $oldParent->name)
+                    ->where('type', $type)
+                    ->whereNull('parent_id')
+                    ->first();
+                    
+                if ($existingNewParent) {
+                    $parentMap[$oldParent->id] = $existingNewParent->id;
+                } else {
+                    $newParentId = DB::table('stakeholders')->insertGetId([
+                        'name' => $oldParent->name,
+                        'type' => $type,
+                        'parent_id' => null,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    $parentMap[$oldParent->id] = $newParentId;
+                    $crossAdded++;
+                }
+            }
+            
+            if (!empty($copyChildren) && isset($childrenEntities)) {
+                foreach ($childrenEntities as $oldChild) {
+                    if (isset($parentMap[$oldChild->parent_id])) {
+                        $newParentId = $parentMap[$oldChild->parent_id];
+                        $existingNewChild = DB::table('stakeholders')
+                            ->where('name', $oldChild->name)
+                            ->where('type', $type)
+                            ->where('parent_id', $newParentId)
+                            ->exists();
+                            
+                        if (!$existingNewChild) {
+                            DB::table('stakeholders')->insert([
+                                'name' => $oldChild->name,
+                                'type' => $type,
+                                'parent_id' => $newParentId,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                            $crossAdded++;
+                        }
+                    }
+                }
+            }
+            
+            if ($crossAdded > 0) {
+                $opposingType = ($type === 'Distributor') ? 'Recipient' : 'Distributor';
+                DB::table('system_logs')->insert([
+                    'user' => $userName,
+                    'activity' => "Cross-registered {$crossAdded} entities from {$opposingType} to {$type}",
+                    'module' => 'Stakeholders',
+                    'action_type' => 'Create',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        if (empty($orgName) && empty($copyParents) && empty($copyChildren)) {
+            return back()->withErrors(['The main organization field cannot be empty unless you have selected existing entities to copy from the right panel.']);
+        }
+
+        $msgParts = [];
+        if (!empty($orgName)) {
+            $baseMsg = "Successfully saved {$orgName}!";
+            if ($addedCount > 0) $baseMsg .= " Added {$addedCount} new sub-category/personnel.";
+            $msgParts[] = $baseMsg;
+        }
+        
+        if ($crossAdded > 0) {
+            $msgParts[] = "Cross-registered {$crossAdded} opposite entities.";
+        }
+
+        if (empty($msgParts)) {
+            $msgParts[] = "No new entities were created (they may already exist).";
+        }
+
+        return redirect('/inventory-setup?step=2&mode=add')->with('success', implode(' ', $msgParts));
+    }
+
+    /**
      * Update an existing stakeholder.
      */
     public function update(Request $request, $id)
@@ -161,5 +341,70 @@ class StakeholderController extends Controller
         }
 
         return back()->with('success', "Stakeholder '{$stakeholderName}' deleted.");
+    }
+
+    /**
+     * Retrieves and filters entities from the opposite type for cross-registration.
+     * Prevents displaying entities that already exist in the target type.
+     */
+    public static function getCrossRegistrationEntities($targetType)
+    {
+        $oppositeType = ($targetType === 'Distributor') ? 'Recipient' : 'Distributor';
+
+        // Fetch target entities to build existence maps
+        $targetMains = \Illuminate\Support\Facades\DB::table('stakeholders')->where('type', $targetType)->whereNull('parent_id')->get();
+        $targetSubs = \Illuminate\Support\Facades\DB::table('stakeholders')->where('type', $targetType)->whereNotNull('parent_id')->get();
+        
+        $targetMainMap = [];
+        foreach ($targetMains as $m) $targetMainMap[strtolower($m->name)] = $m->id;
+        
+        $targetSubMap = [];
+        foreach ($targetSubs as $s) {
+            $targetSubMap[$s->parent_id . '_' . strtolower($s->name)] = true;
+        }
+
+        // Fetch opposite entities (potential copies)
+        $oppositeMainsQuery = \Illuminate\Support\Facades\DB::table('stakeholders')->where('type', $oppositeType)->whereNull('parent_id')->orderBy('name')->get();
+        $oppositeSubsQuery = \Illuminate\Support\Facades\DB::table('stakeholders')->where('type', $oppositeType)->whereNotNull('parent_id')->orderBy('name')->get();
+
+        // Filter sub-categories that already exist in the target type under the same parent name
+        $filteredSubs = $oppositeSubsQuery->filter(function($sub) use ($oppositeMainsQuery, $targetMainMap, $targetSubMap) {
+            $parent = $oppositeMainsQuery->firstWhere('id', $sub->parent_id);
+            if (!$parent) return true;
+
+            $parentNameLower = strtolower($parent->name);
+            if (isset($targetMainMap[$parentNameLower])) {
+                $targetParentId = $targetMainMap[$parentNameLower];
+                $subKey = $targetParentId . '_' . strtolower($sub->name);
+                if (isset($targetSubMap[$subKey])) {
+                    return false; // Sub already exists in target
+                }
+            }
+            return true;
+        })->values();
+
+        // Filter main categories if they are fully registered already
+        $filteredMains = $oppositeMainsQuery->filter(function($main) use ($targetMainMap, $oppositeSubsQuery, $filteredSubs) {
+            $nameLower = strtolower($main->name);
+            
+            if (isset($targetMainMap[$nameLower])) {
+                // Parent already exists. Check if it has any surviving sub-categories
+                $originalSubsCount = $oppositeSubsQuery->where('parent_id', $main->id)->count();
+                if ($originalSubsCount == 0) {
+                    return false; // Parent exists and had no subs to copy
+                }
+                
+                $survivingSubsCount = $filteredSubs->where('parent_id', $main->id)->count();
+                if ($survivingSubsCount == 0) {
+                    return false; // Parent exists and ALL its subs are already copied
+                }
+            }
+            return true;
+        })->values();
+
+        return [
+            'oppositeMains' => $filteredMains,
+            'oppositeSubs' => $filteredSubs,
+        ];
     }
 }
