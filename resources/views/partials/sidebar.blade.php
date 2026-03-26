@@ -75,7 +75,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.129-1.125V11.25c0-4.446-3.604-8.1-8.1-8.1H9a8.1 8.1 0 0 0-8.1 8.1v3.375c0 .621.504 1.125 1.125 1.125H3.375M9 15h3.375M9 15V3.375M9 15h3.375M9 15h3.375" />
         </svg>
-        <span class="sidebar-label hidden whitespace-nowrap text-sm">Distributors</span>
+        <span class="sidebar-label hidden whitespace-nowrap text-sm">Asset Sources</span>
     </a>
     @if(request()->routeIs('distributors.*'))
         <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#c00000] rounded-r-full shadow-[1px_0_10px_rgba(192,0,0,0.3)]"></div>

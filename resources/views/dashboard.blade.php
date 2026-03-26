@@ -17,12 +17,11 @@
         .custom-scroll::-webkit-scrollbar { height: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     </style>
-</head>
-<body class="bg-slate-50 min-h-screen flex animate-fade-in text-slate-800 overflow-x-hidden">
+</head><body class="bg-slate-50 min-h-screen flex animate-fade-in text-slate-800 overflow-x-hidden">
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto">
+    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll">
         
         <header class="lg:hidden bg-white border-b border-slate-200 p-4 sticky top-0 z-30 flex items-center gap-4">
             <button onclick="toggleSidebar()" class="p-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100 transition-all">
@@ -39,7 +38,7 @@
         <main class="p-6 lg:p-10">
             <header class="flex flex-col md:flex-row md:justify-between md:items-center mb-10 gap-4">
                 <div>
-                    <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">Welcome, Admin!</h2>
+                    <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight italic uppercase">Welcome, Admin!</h2>
                     <p class="text-slate-500 text-sm mt-1 font-medium italic">Zamboanga City Division Asset Overview</p>
                 </div>
                 <div class="hidden sm:block text-right bg-white px-6 py-3 rounded-2xl shadow-sm border border-slate-100">
@@ -48,57 +47,89 @@
                 </div>
             </header>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default">
+            {{-- MAIN STATS GRID: 2 Rows of 3 Columns --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+                
+                {{-- 1. TOTAL QUANTITY --}}
+                <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 cursor-default">
                     <div class="flex justify-between items-start mb-4">
-<div class="p-4 bg-blue-50 text-blue-500 rounded-2xl group-hover:scale-110 transition-transform">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6.75h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75H21m-3.75 3.75H21" />
-    </svg>
-</div>
+                        <div class="p-4 bg-blue-50 text-blue-500 rounded-2xl group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6.75h.75m-.75 3h.75m-.75 3h.75" />
+                            </svg>
+                        </div>
                         <span class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Division Wide</span>
                     </div>
                     <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total System Assets</h3>
                     <p class="text-5xl font-extrabold text-slate-800 tracking-tighter leading-none">{{ number_format($totalAssets) }}</p>
                 </div>
 
-                <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default">
+                {{-- 3. SERVICEABLE --}}
+                <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 cursor-default border-l-[12px] border-l-emerald-500">
                     <div class="flex justify-between items-start mb-4">
-<div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21a3.745 3.745 0 01-3.129-1.593 3.745 3.745 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.745 3.745 0 013.296-1.043A3.745 3.745 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.745 3.745 0 013.296 1.043 3.745 3.745 0 011.043 3.296A3.745 3.745 0 0121 12z" />
-    </svg>
-</div>                        <span class="bg-emerald-100 text-emerald-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Serviceable</span>
+                        <div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21a3.745 3.745 0 01-3.129-1.593 3.745 3.745 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.745 3.745 0 013.296-1.043A3.745 3.745 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.745 3.745 0 013.296 1.043 3.745 3.745 0 011.043 3.296A3.745 3.745 0 0121 12z" />
+                            </svg>
+                        </div>
+                        <span class="bg-emerald-100 text-emerald-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Operational</span>
                     </div>
-                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Good Condition</h3>
+                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Serviceable Condition</h3>
                     <p class="text-5xl font-extrabold text-emerald-600 tracking-tighter leading-none">{{ number_format($serviceableCount) }}</p>
                 </div>
 
-                <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default">
-                    <div class="flex justify-between items-start mb-4">
-<div class="p-4 bg-orange-50 text-orange-500 rounded-2xl group-hover:scale-110 transition-transform">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-    </svg>
-</div>                        <span class="bg-orange-100 text-orange-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Unserviceable</span>
-                    </div>
-                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Pasira / Damaged</h3>
+                {{-- 2. UNSERVICEABLE --}}
+                <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 border-l-[12px] border-l-orange-500">
+                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Unserviceable List</h3>
                     <p class="text-5xl font-extrabold text-orange-500 tracking-tighter leading-none">{{ number_format($unserviceableCount) }}</p>
+                    <span class="text-[10px] font-black text-orange-400 uppercase mt-4 block italic">For Disposal</span>
                 </div>
 
-                <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl cursor-default">
+
+                {{-- 4. TOTAL AMOUNT --}}
+                <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 cursor-default">
                     <div class="flex justify-between items-start mb-4">
-<div class="p-4 bg-amber-50 text-amber-500 rounded-2xl group-hover:scale-110 transition-transform">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17l-5.49-5.49a2.12 2.12 0 010-3l.7-.7a2.12 2.12 0 013 0l5.49 5.49m-3.7 3.7l3.7-3.7m-3.7 3.7l1.06 1.06a2.12 2.12 0 003 0l3.36-3.36a2.12 2.12 0 000-3L16.58 2.9a2.12 2.12 0 00-3 0L10.22 6.26" />
-    </svg>
-</div>                        <span class="bg-amber-100 text-amber-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">For Repair</span>
+                        <div class="p-4 bg-slate-50 text-slate-600 rounded-2xl group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.546 1.16 3.74.322 4.298-1.517.39-1.283-.34-2.63-1.732-3.46l-1.096-.653c-1.393-.83-2.122-2.177-1.732-3.46.558-1.839 2.752-2.677 4.298-1.517l.879.659M10.5 21h3m-3-18h3" />
+                            </svg>
+                        </div>
+                        <span class="bg-slate-200 text-slate-700 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Valuation</span>
                     </div>
-                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Needs Fixing</h3>
-                    <p class="text-5xl font-extrabold text-amber-500 tracking-tighter leading-none">{{ number_format($forRepairCount) }}</p>
+                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Asset Value</h3>
+                    <div class="flex items-baseline gap-1">
+                        <span class="text-xl font-black text-slate-400">₱</span>
+                        <p class="text-5xl font-extrabold text-slate-800 tracking-tighter leading-none">{{ number_format($totalAmount ?? 0, 2) }}</p>
+                    </div>
                 </div>
+
+                {{-- 5. FOR REPAIR --}}
+                <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 border-l-[12px] border-l-amber-500">
+                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">For Repair Status</h3>
+                    <p class="text-5xl font-extrabold text-amber-500 tracking-tighter leading-none">{{ number_format($forRepairCount) }}</p>
+                    <span class="text-[10px] font-black text-amber-400 uppercase mt-4 block italic">In Maintenance</span>
+                </div>
+
+                {{-- 6. SDO AUTO-GENERATE CARD --}}
+                <div class="group bg-gradient-to-br from-[#c00000] to-red-800 p-8 rounded-[2.5rem] shadow-2xl shadow-red-200/50 border border-white transition-all duration-300 hover:-translate-y-2 cursor-default text-white">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="p-3 bg-white/20 text-white rounded-2xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h2.25m-2.25 0v-4.661a.25.25 0 00-.066-.176L14.135 10.34a.25.25 0 01-.065-.176V3.67a.25.25 0 00-.25-.25H6.233a.25.25 0 00-.25.25v6.494" />
+                            </svg>
+                        </div>
+                        <span class="bg-white/20 text-white px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">SDO Source</span>
+                    </div>
+                    <h3 class="text-red-100 text-xs font-bold uppercase tracking-widest mb-2 leading-tight">SDO Procured Summary</h3>
+                    <div class="space-y-1">
+                        <p class="text-3xl font-black tracking-tighter">{{ number_format($sdoQty ?? 0) }} <span class="text-xs opacity-60">Units</span></p>
+                        <p class="text-lg font-bold opacity-90 italic">₱{{ number_format($sdoAmount ?? 0, 0) }}</p>
+                    </div>
+                </div>
+
             </div>
 
+            {{-- QUICK ASSET ENTRY (KEEP LOGIC) --}}
             <section class="mb-12">
                 <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-50 relative overflow-hidden">
                     <div class="absolute top-0 right-0 p-8 opacity-5">
@@ -107,7 +138,7 @@
                     
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                         <div>
-                            <h3 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
+                            <h3 class="text-xl font-extrabold text-slate-800 flex items-center gap-2 italic uppercase">
                                 <span class="bg-red-100 text-[#c00000] p-2 rounded-xl text-sm italic">New</span>
                                 Quick Asset Entry
                             </h3>
@@ -116,12 +147,10 @@
                         
                         <div class="relative w-full md:w-72 group" id="searchContainer">
                             <input type="text" id="schoolSearch" placeholder="Search school..." autocomplete="off" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-red-50 transition-all font-semibold relative z-20">
-<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 absolute left-4 top-3.5 text-slate-300 group-focus-within:text-[#c00000] transition-colors z-20">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-</svg>                            
-                            <!-- Search Autocomplete Results -->
-                            <ul id="searchResults" class="absolute z-30 w-full bg-white border border-slate-100 rounded-2xl shadow-xl mt-2 max-h-60 overflow-y-auto hidden custom-scroll">
-                            </ul>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 absolute left-4 top-3.5 text-slate-300 group-focus-within:text-[#c00000] transition-colors z-20">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                            </svg>
+                            <ul id="searchResults" class="absolute z-30 w-full bg-white border border-slate-100 rounded-2xl shadow-xl mt-2 max-h-60 overflow-y-auto hidden custom-scroll"></ul>
                         </div>
                     </div>
 
@@ -136,7 +165,6 @@
                                 @endforeach
                             </select>
                         </div>
-
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category</label>
                             <select name="category_id" id="categorySelect" required class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all">
@@ -146,40 +174,36 @@
                                 @endforeach
                             </select>
                         </div>
-
                         <div class="space-y-2 flex-grow">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item</label>
-                            <select id="itemSelect" name="item_id" disabled class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all disabled:opacity-50">
+                            <select id="itemSelect" name="item_id" disabled class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none transition-all disabled:opacity-50">
                                 <option value="">Select Item</option>
                                 @foreach($items as $item)
                                     <option value="{{ $item->id }}" data-category="{{ $item->category_id }}" data-avail="{{ $item->available_stock }}">{{ $item->name }}</option>
                                 @endforeach
                             </select>
                         </div>
-
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sub-Item</label>
-                            <select name="sub_item_id" id="subItemSelect" disabled class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all disabled:opacity-50">
+                            <select name="sub_item_id" id="subItemSelect" disabled class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none transition-all disabled:opacity-50">
                                 <option value="">Select Sub-Item</option>
                                 @foreach($subItems as $sub)
                                     <option value="{{ $sub->id }}" data-item="{{ $sub->item_id }}">{{ $sub->name }}</option>
                                 @endforeach
                             </select>
                         </div>
-
                         <div class="space-y-2">
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Condition</label>
-                            <select name="condition" class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all">
+                            <select name="condition" class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none transition-all">
                                 <option value="Serviceable" selected>Serviceable</option>
                                 <option value="Unserviceable">Unserviceable</option>
                                 <option value="For Repair">For Repair</option>
                             </select>
                         </div>
-
                         <div class="flex items-end gap-3">
                             <div class="space-y-2 flex-grow">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity</label>
-                                <input type="number" name="quantity" id="quantityInput" value="1" min="1" required class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none text-center">
+                                <input type="number" name="quantity" id="quantityInput" value="1" min="1" required class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-center">
                             </div>
                             <button type="submit" class="p-4 bg-[#c00000] text-white rounded-2xl font-bold hover:bg-red-700 shadow-lg shadow-red-200 transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-6 h-6">
@@ -189,8 +213,6 @@
                         </div>
                     </form>
                 </div>
-            </section>
-
 
             <section class="mb-12">
     <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-50 overflow-hidden">

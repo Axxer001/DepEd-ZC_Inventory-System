@@ -28,7 +28,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                 </svg>
             </button>
-            <span class="font-extrabold italic text-sm text-orange-600">DepEd ZC Resource Providers</span>
+            <span class="font-extrabold italic text-sm text-orange-600">DepEd ZC Asset Source Providers</span>
         </header>
 
         <main class="flex-grow flex flex-col items-center justify-center p-6 lg:p-10">
@@ -40,7 +40,7 @@
                     <span class="w-1.5 h-1.5 bg-orange-600 rounded-full animate-pulse"></span>
                     <span>Registry</span>
                 </div>
-                <h2 class="text-4xl font-black text-slate-900 tracking-tight italic uppercase">Resource Providers</h2>
+                <h2 class="text-4xl font-black text-slate-900 tracking-tight italic uppercase">Asset Source Providers</h2>
                 <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px] mt-2">Manage and track all originating agencies and asset sources</p>
             </div>
 

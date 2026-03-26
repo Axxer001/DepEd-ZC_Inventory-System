@@ -149,7 +149,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.129-1.125V11.25c0-4.446-3.604-8.1-8.1-8.1H9a8.1 8.1 0 0 0-8.1 8.1v3.375c0 .621.504 1.125 1.125 1.125H3.375M9 15h3.375M9 15V3.375M9 15h3.375M9 15h3.375" />
                 </svg>
             </div>
-            <span class="block font-black text-slate-800 uppercase text-xs tracking-widest">Resource Providers</span>
+            <span class="block font-black text-slate-800 uppercase text-xs tracking-widest">Asset Source Providers</span>
             <p class="category-subtext text-[11px] text-slate-400 uppercase font-bold mt-2 tracking-tight leading-tight opacity-80" data-add="Register new asset sources" data-edit="Modify existing provider info"></p>
         </a>
 

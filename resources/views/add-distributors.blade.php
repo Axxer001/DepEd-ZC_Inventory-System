@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register Distributor | DepEd ZC</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></sc    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -47,8 +46,7 @@
             <header class="flex justify-between items-center mb-12 max-w-3xl mx-auto w-full px-4">
                 <div>
                     <h2 class="text-3xl font-black text-slate-900 tracking-tight italic uppercase">Inventory Setup</h2>
-                    <p class="text-slate-500 text-sm font-medium italic">Register New Distributor</p>
-                </div>
+                    <p class="text-slate-500 text-sm font-medium italic">Register New Asset Source               </div>
                 <a href="{{ url('/inventory-setup?step=2&mode=add') }}" class="px-6 py-3 back-btn-cool rounded-2xl text-sm font-bold text-slate-600 flex items-center gap-2 shadow-sm active:scale-95">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
                     Back
@@ -57,8 +55,7 @@
 
             <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                 <div class="lg:col-span-2 bg-white p-12 main-card shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-50 relative">
-                    <h1 class="text-4xl font-black text-slate-900 mb-8 italic uppercase tracking-tighter">Register Distributor</h1>
-
+                    <h1 class="text-4xl font-black text-slate-900 mb-8 italic uppercase tracking-tighter">Register Asset Source</h1>
                     @if(session('success'))
                         <div class="mb-8 bg-emerald-50 border border-emerald-200 text-emerald-700 px-6 py-4 rounded-2xl font-bold flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
@@ -109,7 +106,7 @@
                     </div>
 
                     <button type="button" onclick="confirmRegistration()" class="w-full py-6 bg-[#c00000] hover:bg-[#a00000] text-white rounded-[1.5rem] font-bold text-lg shadow-xl shadow-red-100 transition-all hover:scale-[1.01] active:scale-[0.98]">
-                        Register Distributor
+                        Register Asset Source
                     </button>
                 </form>
                 </form>
@@ -394,6 +391,9 @@
                     form.submit();
                 }
             });
+  `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
         }
     </script>
 </body>
