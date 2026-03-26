@@ -17,13 +17,24 @@ class DashboardController extends Controller
         // 1. Total System Assets (Sum of all master quantities across registry)
         $totalAssets = \Illuminate\Support\Facades\DB::table('items')->sum('master_quantity');
         
-        // Calculate condition-based counts from ownerships
-        $serviceableCount = \Illuminate\Support\Facades\DB::table('ownerships')
+        // Calculate condition-based counts from BOTH warehouse (sub_items) and distributed (ownerships)
+        $warehouseServiceable = \Illuminate\Support\Facades\DB::table('sub_items')
             ->where('condition', 'Serviceable')->sum('quantity');
-        $unserviceableCount = \Illuminate\Support\Facades\DB::table('ownerships')
+        $warehouseUnserviceable = \Illuminate\Support\Facades\DB::table('sub_items')
             ->where('condition', 'Unserviceable')->sum('quantity');
-        $forRepairCount = \Illuminate\Support\Facades\DB::table('ownerships')
+        $warehouseForRepair = \Illuminate\Support\Facades\DB::table('sub_items')
             ->where('condition', 'For Repair')->sum('quantity');
+
+        $distServiceable = \Illuminate\Support\Facades\DB::table('ownerships')
+            ->where('condition', 'Serviceable')->sum('quantity');
+        $distUnserviceable = \Illuminate\Support\Facades\DB::table('ownerships')
+            ->where('condition', 'Unserviceable')->sum('quantity');
+        $distForRepair = \Illuminate\Support\Facades\DB::table('ownerships')
+            ->where('condition', 'For Repair')->sum('quantity');
+
+        $serviceableCount = $warehouseServiceable + $distServiceable;
+        $unserviceableCount = $warehouseUnserviceable + $distUnserviceable;
+        $forRepairCount = $warehouseForRepair + $distForRepair;
 
         // 2. Per-Quadrant Totals
         // Join ownerships -> schools -> districts -> quadrants

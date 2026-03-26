@@ -212,6 +212,8 @@
         const rawLds = @json($legislativeDistricts);
         const rawQuadrants = @json($quadrants);
         const allSchoolsList = @json($allSchools);
+        const rawStakeholders = @json($stakeholders);
+        const rawOwnerships = @json($stakeholderOwnerships);
         const districtMap = {};
         rawDistricts.forEach(d => {
             districtMap[d.name] = { ld: d.legislative_district_id, quad: d.quadrant_name.replace('Quadrant ', '') };
@@ -508,19 +510,35 @@
                 html += `
                     <div id="distPreSelectionPhase" class="space-y-6 animate-in fade-in zoom-in duration-300">
                         <div class="text-center mb-8">
-                            <h4 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Step 3a: Select Schools</h4>
-                            <p class="text-slate-500 text-sm mt-2 font-medium">Select up to 6 schools to distribute assets. You may select the same school multiple times.</p>
+                            <h4 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Step 3a: Select Source & Targets</h4>
+                            <p class="text-slate-500 text-sm mt-2 font-medium">Select where the assets are coming from, and up to 6 recipients.</p>
                         </div>
-                        <div class="max-w-xl mx-auto space-y-4">
+                        <div class="max-w-xl mx-auto space-y-6">
+                            <!-- Source Distributor Selection -->
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Distributor (Source) <span class="text-red-500">*</span></label>
+                                <select id="globalSourceDistributor" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 transition-all focus:border-[#c00000] focus:ring-4 focus:ring-red-100 cursor-pointer">
+                                    <optgroup label="System Categories">
+                                        <option value="">-- Fetching System Stakeholders --</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <hr class="border-slate-100">
+
+                            <!-- Target Recipients Search (Phased out allSchoolsList logic) -->
+                            <div class="space-y-2">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Recipients (Max 6)</label>
                             <div class="relative">
-                                <input type="text" id="preDistSchoolSearch" placeholder="Type school name or ID..." class="w-full p-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 transition-all text-center focus:border-[#c00000] focus:ring-4 focus:ring-red-100" autocomplete="off" oninput="filterPreDistSchools()" onfocus="filterPreDistSchools()">
+                                <input type="text" id="preDistSchoolSearch" placeholder="Type name or code..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 transition-all text-center focus:border-[#c00000] focus:ring-4 focus:ring-red-100" autocomplete="off" oninput="filterPreDistSchools()" onfocus="filterPreDistSchools()">
                                 <div id="preDistSchoolDropdownList" class="hidden absolute z-30 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[250px] overflow-y-auto custom-scroll"></div>
                             </div>
                             <div id="preDistSelectedSchoolsContainer" class="flex flex-col gap-2 mt-4 min-h-[50px]">
-                                <span class="text-slate-400 text-xs font-bold italic w-full text-center mt-1 select-prompt">No schools selected yet.</span>
+                                <span class="text-slate-400 text-xs font-bold italic w-full text-center mt-1 select-prompt">No recipients selected yet.</span>
                             </div>
-                            <p id="preDistLimitWarning" class="hidden text-center text-xs font-bold text-red-500 mt-2">⚠ Maximum of 6 schools reached.</p>
-                            <button type="button" id="proceedDistBtn" onclick="proceedToDistributionTabs()" class="w-full mt-6 py-5 bg-slate-200 text-slate-400 rounded-3xl font-black uppercase tracking-widest cursor-not-allowed transition-all" disabled>Proceed to Assign Assets</button>
+                            <p id="preDistLimitWarning" class="hidden text-center text-xs font-bold text-red-500 mt-2">⚠ Maximum of 6 recipients reached.</p>
+                            </div>
+                            <button type="button" id="proceedDistBtn" onclick="proceedToDistributionTabs()" class="w-full mt-8 py-5 bg-slate-200 text-slate-400 rounded-3xl font-black uppercase tracking-widest cursor-not-allowed transition-all" disabled>Proceed to Assign Assets</button>
                         </div>
                     </div>
                     
@@ -529,8 +547,9 @@
                             <div>
                                 <h4 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Step 3b: Assign Assets</h4>
                                 <p class="text-slate-500 text-sm mt-1 font-medium">Distribute assets individually per tab, or all at once.</p>
+                                <p id="distPhaseSourceLabel" class="text-xs font-bold text-[#c00000] mt-1 bg-red-50 inline-block px-3 py-1 rounded-lg border border-red-100"></p>
                             </div>
-                            <button type="button" onclick="backToPreSelectionPhase()" class="text-xs font-bold text-slate-400 hover:text-[#c00000] underline underline-offset-4 shrink-0 transition-colors bg-transparent border-0">« Revise Schools</button>
+                            <button type="button" onclick="backToPreSelectionPhase()" class="text-xs font-bold text-slate-400 hover:text-[#c00000] underline underline-offset-4 shrink-0 transition-colors bg-transparent border-0">« Revise Source/Targets</button>
                         </div>
                         <div class="flex flex-col md:flex-row gap-6">
                             <div class="md:w-1/4 flex flex-col gap-2 border-r border-slate-100 pr-4 max-h-[500px] overflow-y-auto custom-scroll" id="distTabsHeader"></div>
@@ -555,6 +574,35 @@
                 distTabsData = [];
                 currentActiveTab = 0;
                 renderPreSelectedSchools();
+                populateSourceStakeholders();
+            }
+        }
+        
+        function populateSourceStakeholders() {
+            const select = document.getElementById('globalSourceDistributor');
+            if (!select) return;
+            let html = '<option value="">-- Select Source Distributor --</option>';
+            
+            const grouped = rawStakeholders.reduce((acc, obj) => {
+                const key = obj.type || 'Other';
+                if (!acc[key]) acc[key] = [];
+                acc[key].push(obj);
+                return acc;
+            }, {});
+            
+            for (const type in grouped) {
+                html += `<optgroup label="${type} Stakeholders">`;
+                grouped[type].forEach(s => {
+                    html += `<option value="${s.id}" data-name="${s.name}">${s.name}</option>`;
+                });
+                html += `</optgroup>`;
+            }
+            select.innerHTML = html;
+            
+            // Auto-select System Warehouse if it exists
+            const systemWarehouse = rawStakeholders.find(s => s.type === 'System' && s.name.includes('Warehouse'));
+            if (systemWarehouse) {
+                select.value = systemWarehouse.id;
             }
         }
 
@@ -1153,15 +1201,27 @@
             const q = document.getElementById('preDistSchoolSearch').value.trim().toLowerCase();
             dd.classList.remove('hidden');
             
-            const f = allSchoolsList.filter(s => s.name.toLowerCase().includes(q) || (s.school_id && s.school_id.toString().includes(q))).slice(0, 50);
+            // Also filter out the currently selected Source
+            const sourceSelect = document.getElementById('globalSourceDistributor');
+            const sourceId = sourceSelect ? parseInt(sourceSelect.value) : null;
             
-            let h = '<div class="p-3 text-[10px] text-slate-400 font-extrabold uppercase tracking-widest sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100 z-10">Select school</div>';
-            h += f.length === 0 ? '<div class="px-4 py-4 text-sm font-bold text-slate-400 text-center italic">No schools found</div>'
-                : f.map(s => `<div onclick="addPreDistSchool(${s.id},'${s.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors border-b border-slate-50 last:border-0 truncate">${s.school_id ? s.school_id+' - ':''}${s.name}</div>`).join('');
+            const f = rawStakeholders.filter(s => 
+                (s.id !== sourceId) && 
+                (s.name.toLowerCase().includes(q) || (s.school_id && s.school_id.toString().includes(q)))
+            ).slice(0, 50);
+            
+            let h = '<div class="p-3 text-[10px] text-slate-400 font-extrabold uppercase tracking-widest sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100 z-10">Select recipient</div>';
+            h += f.length === 0 ? '<div class="px-4 py-4 text-sm font-bold text-slate-400 text-center italic">No recipients found</div>'
+                : f.map(s => `<div onclick="addPreDistSchool(${s.id},'${s.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors border-b border-slate-50 last:border-0 truncate"><span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md mr-2">${s.type}</span> ${s.school_id ? s.school_id+' - ':''}${s.name}</div>`).join('');
             dd.innerHTML = h;
         }
 
         function addPreDistSchool(id, name) {
+            const sourceSelect = document.getElementById('globalSourceDistributor');
+            if (sourceSelect && !sourceSelect.value) {
+                Swal.fire({ title: 'Select Source', text: 'Please select a Distributor (Source) first.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                return;
+            }
             if (preSelectedSchools.length >= 6) {
                 document.getElementById('preDistLimitWarning').classList.remove('hidden');
                 return;
@@ -1210,17 +1270,30 @@
         // --- Phase 2: Tabs ---
         function proceedToDistributionTabs() {
             if (preSelectedSchools.length === 0) return;
+            
+            const sourceSelect = document.getElementById('globalSourceDistributor');
+            if (!sourceSelect || !sourceSelect.value) {
+                Swal.fire({ title: 'Select Source', text: 'Please select a Distributor (Source) before proceeding.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                return;
+            }
+            const sourceId = sourceSelect.value;
+            const sourceName = sourceSelect.options[sourceSelect.selectedIndex].text;
+            
             document.getElementById('distPreSelectionPhase').classList.add('hidden');
             document.getElementById('distTabsPhase').classList.remove('hidden');
+            
+            document.getElementById('distPhaseSourceLabel').innerText = `Source: ${sourceName}`;
             
             // Initialize tab data states
             distTabsData = preSelectedSchools.map((school, i) => ({
                 tabIndex: i,
-                school_id: school.id,
-                school_name: school.name,
+                distributor_id: parseInt(sourceId),
+                distributor_name: sourceName,
+                recipient_id: school.id,
+                recipient_name: school.name,
                 category_id: null,
                 item_id: null,
-                subItemsSelected: [] // array of { id, name, available_qty, selected_qty }
+                subItemsSelected: [] // array of { id, name, available_qty, selected_qty, condition }
             }));
 
             renderTabsUI();
@@ -1239,7 +1312,7 @@
             headerObj.innerHTML = distTabsData.map((tab, i) => `
                 <button type="button" id="tabBtn_${i}" onclick="switchTab(${i})" class="px-4 py-4 rounded-2xl font-bold text-sm text-left transition-all border-2 border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-50 w-full shrink-0">
                     <span class="text-[10px] uppercase font-black text-slate-300 block leading-none mb-1">Tab ${i + 1}</span>
-                    <span class="block w-full leading-snug" title="${tab.school_name}">${tab.school_name}</span>
+                    <span class="block w-full leading-snug truncate" title="${tab.recipient_name}">${tab.recipient_name}</span>
                 </button>
             `).join('');
 
@@ -1248,7 +1321,7 @@
                     <div class="p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300 mb-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                         <div>
                             <span class="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1">Distributing Asset To:</span>
-                            <span class="text-lg font-bold text-slate-800">${tab.school_name}</span>
+                            <span class="text-lg font-bold text-slate-800">${tab.recipient_name}</span>
                         </div>
                         <button type="button" onclick="confirmDistributeSingleTab(${i})" class="px-6 py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold shadow-md hover:-translate-y-1 active:scale-95 transition-all text-xs uppercase tracking-wider whitespace-nowrap">Distribute This Tab</button>
                     </div>
@@ -1390,8 +1463,19 @@
 
         // Calculate effective remaining stock for a sub-item across ALL tabs
         function getEffectiveStock(subId) {
-            const raw = rawSubItems.find(s => s.id === subId);
-            if (!raw) return 0;
+            if (distTabsData.length === 0) return 0;
+            const distributorId = distTabsData[0].distributor_id;
+            
+            let initialStock = 0;
+            const sysWarehouse = rawStakeholders.find(s => s.type === 'System' && s.name.includes('Warehouse'));
+            if (sysWarehouse && distributorId === sysWarehouse.id) {
+                const raw = rawSubItems.find(s => s.id === subId);
+                initialStock = raw ? raw.quantity : 0;
+            } else {
+                const owns = rawOwnerships[distributorId] || [];
+                initialStock = owns.filter(o => o.sub_item_id === subId).reduce((sum, o) => sum + o.quantity, 0);
+            }
+
             let totalAllocated = 0;
             distTabsData.forEach(tab => {
                 tab.subItemsSelected.forEach(si => {
@@ -1400,7 +1484,7 @@
                     }
                 });
             });
-            return Math.max(0, raw.quantity - totalAllocated);
+            return Math.max(0, initialStock - totalAllocated);
         }
 
         function filterTabSub(tabId) {
@@ -1583,8 +1667,8 @@
             let errors = [];
             let payload = null;
 
-            if(!tab.item_id) { errors.push(`Tab ${i+1} (${tab.school_name}) is missing an Item.`); return { errors, payload }; }
-            if(tab.subItemsSelected.length === 0) { errors.push(`Tab ${i+1} (${tab.school_name}) has no selected sub-items.`); return { errors, payload }; }
+            if(!tab.item_id) { errors.push(`Tab ${i+1} (${tab.recipient_name}) is missing an Item.`); return { errors, payload }; }
+            if(tab.subItemsSelected.length === 0) { errors.push(`Tab ${i+1} (${tab.recipient_name}) has no selected sub-items.`); return { errors, payload }; }
             
             let tabValid = true;
             let subItemsPayload = [];
@@ -1603,7 +1687,8 @@
             if(tabValid) {
                 payload = {
                     tab_id: `tab_${i}`,
-                    school_id: tab.school_id,
+                    distributor_id: tab.distributor_id,
+                    recipient_id: tab.recipient_id,
                     item_id: tab.item_id,
                     sub_items: subItemsPayload
                 };
@@ -1622,7 +1707,7 @@
 
             Swal.fire({
                 title: 'Confirm Distribution', 
-                html: `<div class="text-sm text-slate-500 mt-2 font-medium leading-relaxed">Distribute <span class="font-black text-rose-600 text-lg mx-1">${total}</span> asset(s) to <span class="font-black text-slate-800 mx-1">${distTabsData[tabIndex].school_name}</span>?</div>`, 
+                html: `<div class="text-sm text-slate-500 mt-2 font-medium leading-relaxed">Distribute <span class="font-black text-rose-600 text-lg mx-1">${total}</span> asset(s) to <span class="font-black text-slate-800 mx-1">${distTabsData[tabIndex].recipient_name}</span>?</div>`, 
                 icon: 'question',
                 showCancelButton: true, confirmButtonColor: '#c00000', cancelButtonColor: '#94a3b8', confirmButtonText: 'Yes, distribute!',
                 customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
@@ -1686,73 +1771,9 @@
                 const result = await response.json();
                 
                 if(response.ok) {
-                    // If a single tab was distributed (not batch), remove it and stay on page
-                    if (completedTabIndex !== undefined && completedTabIndex !== null && distTabsData.length > 1) {
-                        // Deduct distributed quantities from local rawSubItems data
-                        const tab = distTabsData[completedTabIndex];
-                        if (tab) {
-                            tab.subItemsSelected.forEach(sub => {
-                                const localSub = rawSubItems.find(s => s.id === sub.id);
-                                if (localSub) {
-                                    localSub.quantity = Math.max(0, localSub.quantity - sub.selected_qty);
-                                }
-                            });
-                        }
+                    Swal.fire({ title: 'Success!', text: result.message, icon: 'success', confirmButtonColor: '#10b981', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } })
+                    .then(() => { location.reload(); });
 
-                        // Remove the completed tab
-                        distTabsData.splice(completedTabIndex, 1);
-                        // Re-index tabs
-                        distTabsData.forEach((t, i) => t.tabIndex = i);
-                        // Also update the preSelectedSchools array to stay in sync
-                        preSelectedSchools.splice(completedTabIndex, 1);
-
-                        Swal.fire({ 
-                            title: 'Success!', text: result.message, icon: 'success', 
-                            confirmButtonColor: '#10b981', 
-                            customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } 
-                        }).then(() => {
-                            // Re-render tabs UI (creates fresh empty DOM)
-                            renderTabsUI();
-
-                            // Restore each remaining tab's visual state from distTabsData
-                            distTabsData.forEach((t, i) => {
-                                // Restore category selection
-                                if (t.category_id) {
-                                    const cat = rawCategories.find(c => c.id === t.category_id);
-                                    if (cat) {
-                                        document.getElementById(`tabCatSearch_${i}`).value = cat.name;
-                                    }
-                                    // Enable item search
-                                    const itemSearch = document.getElementById(`tabItemSearch_${i}`);
-                                    if (itemSearch) itemSearch.disabled = false;
-                                }
-
-                                // Restore item selection
-                                if (t.item_id) {
-                                    const item = rawItems.find(x => x.id === t.item_id);
-                                    if (item) {
-                                        document.getElementById(`tabItemSearch_${i}`).value = item.name;
-                                    }
-                                    // Enable sub-item search
-                                    const subSearch = document.getElementById(`tabSubSearch_${i}`);
-                                    if (subSearch) subSearch.disabled = false;
-                                }
-
-                                // Restore sub-item cards with quantities
-                                if (t.subItemsSelected.length > 0) {
-                                    renderTabSubItems(i);
-                                }
-                            });
-
-                            // Switch to the next available tab
-                            switchTab(Math.min(completedTabIndex, distTabsData.length - 1));
-                            updateReadyStatus();
-                        });
-                    } else {
-                        // Batch distribute or last remaining tab — reload to reset everything
-                        Swal.fire({ title: 'Success!', text: result.message, icon: 'success', confirmButtonColor: '#10b981', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } })
-                        .then(() => { location.reload(); });
-                    }
                 } else {
                     Swal.fire({ title: 'Error', text: result.message || 'An error occurred during distribution.', icon: 'error', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
                 }

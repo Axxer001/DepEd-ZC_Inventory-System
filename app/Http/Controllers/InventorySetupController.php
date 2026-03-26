@@ -39,8 +39,12 @@ class InventorySetupController extends Controller
             return back()->withErrors(['school' => 'School not found.']);
         }
 
+        $schoolIdStr = $school->school_id ?? '';
+        $schoolName = $school->name ?? '';
+        $schoolIdDb = $school->id ?? $request->id;
+
         // Prevent duplicate school IDs
-        if ($school->school_id !== $request->new_school_id) {
+        if ($schoolIdStr !== $request->new_school_id) {
             $duplicateId = DB::table('schools')->where('school_id', $request->new_school_id)->first();
             if ($duplicateId) {
                 return back()->withErrors(['new_school_id' => "The school ID '{$request->new_school_id}' is already in use by another school."]);
@@ -49,7 +53,7 @@ class InventorySetupController extends Controller
 
         $userName = auth()->user() ? auth()->user()->name : 'System';
 
-        DB::table('schools')->where('id', $school->id)->update([
+        DB::table('schools')->where('id', $schoolIdDb)->update([
             'school_id' => $request->new_school_id,
             'name' => $request->new_school_name,
             'updated_at' => now(),
@@ -57,7 +61,7 @@ class InventorySetupController extends Controller
 
         DB::table('system_logs')->insert([
             'user' => $userName,
-            'activity' => "Updated school info: [{$school->school_id}] {$school->name} -> [{$request->new_school_id}] {$request->new_school_name}",
+            'activity' => "Updated school info: [{$schoolIdStr}] {$schoolName} -> [{$request->new_school_id}] {$request->new_school_name}",
             'module' => 'Schools',
             'action_type' => 'Update',
             'created_at' => now(),
@@ -310,20 +314,30 @@ class InventorySetupController extends Controller
 
         DB::beginTransaction();
         try {
+            // Fetch default System Warehouse ID
+            $systemWarehouseId = DB::table('stakeholders')->where('type', 'System')->value('id');
+
             foreach ($payload as $dist) {
-                $schoolId = $dist['school_id'] ?? null;
+                // Fallback to school_id if old UI is used temporarily, otherwise use recipient_id
+                $recipientId = $dist['recipient_id'] ?? null;
+                if (!$recipientId && isset($dist['school_id'])) {
+                    $recipientId = DB::table('stakeholders')->where('school_id', $dist['school_id'])->value('id');
+                }
+                
+                $distributorId = $dist['distributor_id'] ?? $systemWarehouseId;
                 $itemId = $dist['item_id'] ?? null;
                 $subItems = $dist['sub_items'] ?? [];
 
-                if (!$schoolId || !$itemId || empty($subItems)) {
-                    continue; // Skip invalid tabs silently, or throw if preferred
+                if (!$recipientId || !$itemId || empty($subItems)) {
+                    continue; // Skip invalid tabs silently
                 }
 
                 $item = DB::table('items')->where('id', $itemId)->lockForUpdate()->first();
-                $school = DB::table('schools')->where('id', $schoolId)->first();
+                $recipient = DB::table('stakeholders')->where('id', $recipientId)->first();
+                $distributor = DB::table('stakeholders')->where('id', $distributorId)->first();
 
-                if (!$item || !$school) {
-                    throw new \Exception("Invalid item or school selected.");
+                if (!$item || !$recipient) {
+                    throw new \Exception("Invalid item or recipient selected.");
                 }
 
                 foreach ($subItems as $sub) {
@@ -332,34 +346,72 @@ class InventorySetupController extends Controller
 
                     if ($qty <= 0) continue;
 
-                    $subItem = DB::table('sub_items')->where('id', $subId)->where('item_id', $itemId)->lockForUpdate()->first();
+                    // If distributing from System Warehouse, check global sub_items available stock
+                    if ($distributorId == $systemWarehouseId) {
+                        $subItem = DB::table('sub_items')->where('id', $subId)->where('item_id', $itemId)->lockForUpdate()->first();
 
-                    if (!$subItem) {
-                        throw new \Exception("Sub-item not found.");
+                        if (!$subItem) {
+                            throw new \Exception("Sub-item not found in warehouse.");
+                        }
+
+                        if ($subItem->quantity < $qty) {
+                            throw new \Exception("Requested quantity ({$qty}) for '{$subItem->name}' exceeds available warehouse stock ({$subItem->quantity}).");
+                        }
+
+                        // Decrement sub-item available stock in warehouse
+                        DB::table('sub_items')->where('id', $subId)->decrement('quantity', $qty);
+                    } else {
+                        // If distributing from another stakeholder, check their specific ownership stock
+                        $ownershipStock = DB::table('ownerships')
+                            ->where('recipient_id', $distributorId)
+                            ->where('sub_item_id', $subId)
+                            ->where('condition', $sub['condition'] ?? 'Serviceable')
+                            ->lockForUpdate()
+                            ->first();
+
+                        if (!$ownershipStock || $ownershipStock->quantity < $qty) {
+                            throw new \Exception("Distributor does not have enough stock of this sub-item and condition.");
+                        }
+
+                        // Decrement distributor's stock
+                        DB::table('ownerships')->where('id', $ownershipStock->id)->decrement('quantity', $qty);
                     }
 
-                    if ($subItem->quantity < $qty) {
-                        throw new \Exception("Requested quantity ({$qty}) for '{$subItem->name}' exceeds available stock ({$subItem->quantity}).");
+                    // Insert or update ownership for the recipient
+                    $existingOwnership = DB::table('ownerships')
+                        ->where('recipient_id', $recipientId)
+                        ->where('sub_item_id', $subId)
+                        ->where('condition', $sub['condition'] ?? 'Serviceable')
+                        ->first();
+
+                    if ($existingOwnership) {
+                        DB::table('ownerships')->where('id', $existingOwnership->id)->update([
+                            'quantity' => $existingOwnership->quantity + $qty,
+                            'updated_at' => now(),
+                            'distributor_id' => $distributorId // Update last distributor source
+                        ]);
+                    } else {
+                        DB::table('ownerships')->insert([
+                            'distributor_id' => $distributorId,
+                            'recipient_id' => $recipientId,
+                            'item_id' => $itemId,
+                            'sub_item_id' => $subId,
+                            'quantity' => $qty,
+                            'condition' => $sub['condition'] ?? 'Serviceable',
+                            'school_id' => $recipient->school_id ?? null, // Keep for backward compatibility reporting if needed
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
                     }
-
-                    // Insert ownership
-                    DB::table('ownerships')->insert([
-                        'school_id' => $schoolId,
-                        'item_id' => $itemId,
-                        'sub_item_id' => $subId,
-                        'quantity' => $qty,
-                        'condition' => $sub['condition'] ?? 'Serviceable',
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-
-                    // Decrement sub-item available stock (master_quantity stays unchanged)
-                    DB::table('sub_items')->where('id', $subId)->decrement('quantity', $qty);
 
                     // Log activity
+                    $itemName = $item->name ?? 'Unknown Item';
+                    $distributorName = $distributor->name ?? 'Unknown Distributor';
+                    $recipientName = $recipient->name ?? 'Unknown Recipient';
+                    
                     DB::table('system_logs')->insert([
                         'user' => $userName,
-                        'activity' => "Distributed {$qty} unit(s) of '{$subItem->name}' (under '{$item->name}') to '{$school->name}'",
+                        'activity' => "Distributed {$qty} unit(s) of sub-item ID {$subId} (under '{$itemName}') from '{$distributorName}' to '{$recipientName}'",
                         'module' => 'Distribution',
                         'action_type' => 'Create',
                         'created_at' => now(),

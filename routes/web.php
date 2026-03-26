@@ -9,6 +9,7 @@ use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventorySetupController;
 use App\Http\Controllers\AssetController;
+use App\Http\Controllers\StakeholderController;
 
 Route::get('/view-assets', [AssetController::class, 'index'])->name('assets.view');
 
@@ -52,24 +53,30 @@ Route::middleware('auth')->group(function () {
             ->orderBy('schools.name')
             ->get();
             
-        $schoolOwnerships = DB::table('ownerships')
+        $stakeholders = DB::table('stakeholders')
+            ->select('id', 'parent_id', 'name', 'type', 'school_id')
+            ->orderBy('name')
+            ->get();
+            
+        $stakeholderOwnerships = DB::table('ownerships')
             ->join('items', 'ownerships.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->join('sub_items', 'ownerships.sub_item_id', '=', 'sub_items.id')
             ->select(
-                'ownerships.school_id',
+                'ownerships.recipient_id',
                 'categories.id as category_id',
                 'categories.name as category_name',
                 'items.id as item_id',
                 'items.name as item_name',
                 'sub_items.id as sub_item_id',
                 'sub_items.name as sub_item_name',
+                'ownerships.condition',
                 'ownerships.quantity'
             )
             ->get()
-            ->groupBy('school_id');
+            ->groupBy('recipient_id');
 
-        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'subItems', 'allSchools', 'schoolOwnerships'));
+        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'subItems', 'allSchools', 'stakeholderOwnerships', 'stakeholders'));
     })->name('inventory.setup');
 
     // --- NEW: Dedicated Route for the Editor (Asset Modifier) ---
@@ -139,6 +146,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/inventory-setup/rename', [InventorySetupController::class, 'renameRecord'])->name('inventory.setup.rename');
     Route::post('/inventory-setup/delete', [InventorySetupController::class, 'deleteRecord'])->name('inventory.setup.delete');
     Route::post('/inventory-setup/preview-delete', [InventorySetupController::class, 'previewDelete'])->name('inventory.setup.preview_delete');
+
+    // --- Stakeholder Management Routes ---
+    Route::get('/admin/stakeholders', [StakeholderController::class, 'index'])->name('admin.stakeholders');
+    Route::get('/api/stakeholders', [StakeholderController::class, 'list'])->name('api.stakeholders.list');
+    Route::post('/admin/stakeholders', [StakeholderController::class, 'store'])->name('admin.stakeholders.store');
+    Route::put('/admin/stakeholders/{id}', [StakeholderController::class, 'update'])->name('admin.stakeholders.update');
+    Route::delete('/admin/stakeholders/{id}', [StakeholderController::class, 'destroy'])->name('admin.stakeholders.destroy');
+
 
     Route::get('/admin/schools', function (Request $request) {
         $search = $request->query('search');
