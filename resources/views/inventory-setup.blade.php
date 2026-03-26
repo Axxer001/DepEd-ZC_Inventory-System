@@ -218,6 +218,19 @@
             if (urlParams.get('step') === '2' && urlParams.get('mode') === 'edit') {
                 nextStep(2, 'edit');
             }
+            if (urlParams.get('step') === '2' && urlParams.get('mode') === 'add') {
+                nextStep(2, 'add');
+            }
+
+            @if(session('success'))
+                Swal.fire({
+                    title: 'Registration Successful!',
+                    text: @json(session('success')),
+                    icon: 'success',
+                    confirmButtonColor: '#10b981',
+                    customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
+                });
+            @endif
         });
 
         const rawCategories = {{ Js::from($categories) }};

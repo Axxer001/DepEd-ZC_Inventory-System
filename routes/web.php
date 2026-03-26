@@ -283,12 +283,49 @@ Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('
 Route::get('/asset-explorer', [AssetController::class, 'explorer'])->name('assets.explorer');
 
 Route::get('/inventory-setup/add-distributors', function () {
-    return view('add-distributors'); // dapat add-distributors.blade.php ang filename
+    // Current Type
+    $distributors = \Illuminate\Support\Facades\DB::table('stakeholders')
+        ->where('type', 'Distributor')
+        ->whereNull('parent_id')
+        ->orderBy('name')
+        ->get();
+        
+    $subDistributors = \Illuminate\Support\Facades\DB::table('stakeholders')
+        ->where('type', 'Distributor')
+        ->whereNotNull('parent_id')
+        ->get();
+
+    // Opposite Type for Cross-Registration (Filtered)
+    $crossData = \App\Http\Controllers\StakeholderController::getCrossRegistrationEntities('Distributor');
+    $oppositeMains = $crossData['oppositeMains'];
+    $oppositeSubs = $crossData['oppositeSubs'];
+        
+    return view('add-distributors', compact('distributors', 'subDistributors', 'oppositeMains', 'oppositeSubs'));
 })->name('inventory.setup.add_distributors');
+
+Route::post('/inventory-setup/add-distributors', [\App\Http\Controllers\StakeholderController::class, 'storeGroup'])
+    ->name('inventory.setup.store_distributor_group');
 
 // Route para sa Add Recipients
 Route::get('/inventory-setup/add-recipients', function () {
-    return view('add-recipients'); // dapat add-recipients.blade.php ang filename
+    // Current Type
+    $recipients = \Illuminate\Support\Facades\DB::table('stakeholders')
+        ->where('type', 'Recipient')
+        ->whereNull('parent_id')
+        ->orderBy('name')
+        ->get();
+        
+    $subRecipients = \Illuminate\Support\Facades\DB::table('stakeholders')
+        ->where('type', 'Recipient')
+        ->whereNotNull('parent_id')
+        ->get();
+
+    // Opposite Type for Cross-Registration (Filtered)
+    $crossData = \App\Http\Controllers\StakeholderController::getCrossRegistrationEntities('Recipient');
+    $oppositeMains = $crossData['oppositeMains'];
+    $oppositeSubs = $crossData['oppositeSubs'];
+        
+    return view('add-recipients', compact('recipients', 'subRecipients', 'oppositeMains', 'oppositeSubs'));
 })->name('inventory.setup.add_recipients');
 Route::middleware('auth')->group(function () {
 
