@@ -339,7 +339,12 @@ Route::get('/inventory-setup/add-recipients', function () {
     $oppositeMains = $crossData['oppositeMains'];
     $oppositeSubs = $crossData['oppositeSubs'];
         
-    return view('add-recipients', compact('recipients', 'subRecipients', 'oppositeMains', 'oppositeSubs'));
+    $allSchools = \Illuminate\Support\Facades\DB::table('schools')
+        ->select('id', 'school_id', 'name')
+        ->orderBy('name')
+        ->get();
+
+    return view('add-recipients', compact('recipients', 'subRecipients', 'oppositeMains', 'oppositeSubs', 'allSchools'));
 })->name('inventory.setup.add_recipients');
 Route::middleware('auth')->group(function () {
 

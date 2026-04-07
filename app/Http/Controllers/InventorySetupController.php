@@ -140,16 +140,38 @@ class InventorySetupController extends Controller
         $subItemConditions = $request->input('sub_item_conditions', []);
         $subItemDistributors = $request->input('sub_item_distributors', []);
         
+        $subItemPrices = $request->input('sub_item_prices', []);
+        $subItemDates = $request->input('sub_item_dates', []);
+        $subItemSerialized = $request->input('sub_item_serialized', []);
+        $subItemPropertyNumbers = $request->input('sub_item_property_numbers', []);
+        $subItemSerialNumbers = $request->input('sub_item_serial_numbers', []);
+        
         $validSubItems = [];
         $masterQty = 0;
         foreach ($subItemsInput as $index => $name) {
             $name = trim($name);
             if (!empty($name) && isset($subItemQuantities[$index])) {
                 $qty = (int) $subItemQuantities[$index];
+                // Enforce serialized logic
+                $isSerialized = isset($subItemSerialized[$index]) && $subItemSerialized[$index] === '1';
+                if ($isSerialized) {
+                    $qty = 1; // Strictly enforce qty 1 for serialized items
+                }
+
                 if ($qty > 0) {
                     $condition = $subItemConditions[$index] ?? 'Serviceable';
                     $distributorId = !empty($subItemDistributors[$index]) ? (int) $subItemDistributors[$index] : null;
-                    $validSubItems[] = ['name' => $name, 'quantity' => $qty, 'condition' => $condition, 'distributor_id' => $distributorId];
+                    $validSubItems[] = [
+                        'name' => $name, 
+                        'quantity' => $qty, 
+                        'condition' => $condition, 
+                        'distributor_id' => $distributorId,
+                        'unit_price' => !empty($subItemPrices[$index]) ? (float) $subItemPrices[$index] : null,
+                        'date_acquired' => !empty($subItemDates[$index]) ? $subItemDates[$index] : null,
+                        'is_serialized' => $isSerialized,
+                        'property_number' => !empty($subItemPropertyNumbers[$index]) ? trim($subItemPropertyNumbers[$index]) : null,
+                        'serial_number' => !empty($subItemSerialNumbers[$index]) ? trim($subItemSerialNumbers[$index]) : null,
+                    ];
                     $masterQty += $qty;
                 }
             }
@@ -245,11 +267,15 @@ class InventorySetupController extends Controller
             $subQty = $sub['quantity'];
             $subCondition = $sub['condition'] ?? 'Serviceable';
 
-            // Check if a sub-item with the same name already exists for this item
-            $existingSub = DB::table('sub_items')
-                ->where('item_id', $itemId)
-                ->whereRaw('LOWER(name) = ?', [strtolower($subItemName)])
-                ->first();
+            // Serialized items should never be grouped, they must always exist as a unique row
+            $existingSub = null;
+            if (!$sub['is_serialized']) {
+                $existingSub = DB::table('sub_items')
+                    ->where('item_id', $itemId)
+                    ->where('is_serialized', false)
+                    ->whereRaw('LOWER(name) = ?', [strtolower($subItemName)])
+                    ->first();
+            }
 
             if ($existingSub) {
                 // Update the existing sub-item's quantity and condition
@@ -279,6 +305,12 @@ class InventorySetupController extends Controller
                     'quantity' => $subQty,
                     'condition' => $subCondition,
                     'distributor_id' => $sub['distributor_id'],
+                    'qr_hash' => \Illuminate\Support\Str::uuid()->toString(),
+                    'is_serialized' => $sub['is_serialized'],
+                    'unit_price' => $sub['unit_price'],
+                    'date_acquired' => $sub['date_acquired'] ?: now()->toDateString(),
+                    'property_number' => $sub['property_number'],
+                    'serial_number' => $sub['serial_number'],
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);

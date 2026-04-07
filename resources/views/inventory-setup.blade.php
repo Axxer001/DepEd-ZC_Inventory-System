@@ -190,7 +190,7 @@
             {{-- Step 3: Form Content --}}
             <div id="step3" class="step-content">
                 @if($errors->any())
-                    <div class="max-w-2xl mx-auto mb-6 bg-red-50 text-red-600 p-6 font-bold rounded-3xl shadow-sm border border-red-100 flex items-start gap-4">
+                    <div class="max-w-4xl mx-auto mb-6 bg-red-50 text-red-600 p-6 font-bold rounded-3xl shadow-sm border border-red-100 flex items-start gap-4">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-red-500 shrink-0">
                             <path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003zM12 8.25a.75.75 0 01.75.75v3.75a.75.75 0 01-1.5 0V9a.75.75 0 01.75-.75zm0 8.25a.75.75 0 100-1.5.75.75 0 000 1.5z" clip-rule="evenodd" />
                         </svg>
@@ -205,7 +205,7 @@
                     </div>
                 @endif
 
-                <div class="max-w-2xl mx-auto bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-50 relative overflow-visible">
+                <div class="max-w-4xl mx-auto bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-50 relative overflow-visible">
                     <div id="formContent"></div>
                 </div>
             </div>
@@ -531,14 +531,13 @@
                                 <div class="space-y-3">
                                     <div class="flex justify-between items-center ml-1">
                                     <div class="flex flex-col">
-                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Specifications / Sub-Items <span class="text-red-500">*</span></label>
-                                        <span class="text-[10px] text-slate-400 font-medium">Add specs & quantities (Max 10 total). Required for initial stock.</span>
+                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Initial Specification (Sub-Item) <span class="text-red-500">*</span></label>
+                                        <span class="text-[10px] text-slate-400 font-medium">Add spec & quantity. Required for initial stock.</span>
                                     </div>
-                                    <button type="button" id="addSpecBtn" onclick="addSubItemField()" class="text-[10px] font-bold bg-slate-100 text-slate-500 px-3 py-1 rounded-lg hover:bg-slate-200 transition-all">+ Add New Spec</button>
                                 </div>
                                 
                                 <div id="existingSubItemBlock" class="hidden mt-4 bg-emerald-50/50 p-4 border border-emerald-100 rounded-[1.5rem]">
-                                    <label class="block text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-3">1. Add Stock to Existing Specs</label>
+                                    <label class="block text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-3">Add Stock to Existing Specs</label>
                                     <div class="relative">
                                          <input type="text" id="existingSubItemSearch" placeholder="Search existing sub-items..." class="w-full p-4 bg-white border border-emerald-200 rounded-2xl outline-none font-bold text-slate-700 transition-all text-sm focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" autocomplete="off" oninput="filterExistingSubItems()" onfocus="filterExistingSubItems()">
                                          <div id="existingSubItemDropdownList" class="hidden absolute z-30 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll text-left"></div>
@@ -547,8 +546,8 @@
                                 </div>
 
                                 <div class="mt-4">
-                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">2. Create New Specifications</label>
-                                    <div id="subItemContainer" class="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scroll">
+                                    <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">Specification Details</label>
+                                    <div id="subItemContainer" class="space-y-3 overflow-y-auto pr-2 custom-scroll">
                                         <div class="flex flex-col gap-1 group sub-item-row relative border border-slate-100 rounded-2xl p-3 bg-slate-50/50">
                                             <div class="flex gap-2">
                                                 <select name="sub_item_distributors[]" class="w-40 p-3 flex-shrink-0 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs cursor-pointer" title="Distributor">
@@ -561,7 +560,6 @@
                                                     <option value="Unserviceable">Unserviceable</option>
                                                     <option value="For Repair">For Repair</option>
                                                 </select>
-                                                <button type="button" onclick="removeSubItemField(this)" class="px-3 text-slate-300 hover:text-red-500 font-bold transition-colors">✕</button>
                                             </div>
                                             <div class="flex gap-2 items-center">
                                                 <div class="flex items-center gap-1.5">
@@ -575,8 +573,9 @@
                                                 <button type="button" onclick="toggleSerialPanel(this)" class="ml-auto px-3 py-1.5 text-[10px] font-black bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-100 hover:text-[#c00000] transition-all uppercase tracking-wider">⚙ Serial Info</button>
                                             </div>
                                             <div class="serial-panel hidden flex gap-2 pt-2 border-t border-slate-100">
+                                                <input type="hidden" name="sub_item_serialized[]" class="serialized-flag" value="0">
                                                 <label class="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
-                                                    <input type="checkbox" name="sub_item_serialized[]" value="1" class="w-4 h-4 accent-[#c00000]" onchange="toggleSerializedFields(this)"> Serialized Asset (Qty locked to 1)
+                                                    <input type="checkbox" class="w-4 h-4 accent-[#c00000]" onchange="toggleSerializedFields(this)"> Serialized Asset (Qty locked to 1)
                                                 </label>
                                                 <input type="text" name="sub_item_property_numbers[]" placeholder="Property No." class="serial-field hidden flex-1 p-2.5 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs">
                                                 <input type="text" name="sub_item_serial_numbers[]" placeholder="Serial No." class="serial-field hidden flex-1 p-2.5 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs">
@@ -584,8 +583,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <p id="subItemLimitWarning" class="hidden text-xs font-bold text-red-500 ml-1">⚠ Maximum of 10 sub-items allowed total.</p>
                                 </div>
                             </div>
                             <button type="button" onclick="confirmMasterItemSubmit()" class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">${modeText} Item</button>
@@ -603,17 +600,24 @@
 
                             <hr class="border-slate-100">
 
-                            <!-- Target Recipients Search (Phased out allSchoolsList logic) -->
+                            <!-- Target Recipients Search -->
                             <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Recipients (Max 6)</label>
-                            <div class="relative">
-                                <input type="text" id="preDistSchoolSearch" placeholder="Type name or code..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 transition-all text-center focus:border-[#c00000] focus:ring-4 focus:ring-red-100" autocomplete="off" oninput="filterPreDistSchools()" onfocus="filterPreDistSchools()">
-                                <div id="preDistSchoolDropdownList" class="hidden absolute z-30 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[250px] overflow-y-auto custom-scroll"></div>
-                            </div>
-                            <div id="preDistSelectedSchoolsContainer" class="flex flex-col gap-2 mt-4 min-h-[50px]">
-                                <span class="text-slate-400 text-xs font-bold italic w-full text-center mt-1 select-prompt">No recipients selected yet.</span>
-                            </div>
-                            <p id="preDistLimitWarning" class="hidden text-center text-xs font-bold text-red-500 mt-2">⚠ Maximum of 6 recipients reached.</p>
+                                <div class="flex justify-between items-end ml-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Target Recipients (Max 6)</label>
+                                    <div class="flex bg-slate-100 p-1 rounded-lg gap-1 border border-slate-200">
+                                        <button type="button" id="tabRecipSchoolBtn" onclick="switchRecipTab('school')" class="text-[10px] font-bold px-3 py-1 rounded-md bg-white shadow-sm text-slate-700 transition-all">Schools</button>
+                                        <button type="button" id="tabRecipIndivBtn" onclick="switchRecipTab('indiv')" class="text-[10px] font-bold px-3 py-1 rounded-md text-slate-500 hover:text-slate-700 transition-all">Offices/Individuals</button>
+                                    </div>
+                                </div>
+                                <div class="relative">
+                                    <input type="hidden" id="currentRecipTab" value="school">
+                                    <input type="text" id="preDistSchoolSearch" placeholder="Search schools..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 transition-all text-center focus:border-[#c00000] focus:ring-4 focus:ring-red-100" autocomplete="off" oninput="filterPreDistSchools()" onfocus="filterPreDistSchools()">
+                                    <div id="preDistSchoolDropdownList" class="hidden absolute z-30 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[250px] overflow-y-auto custom-scroll text-left"></div>
+                                </div>
+                                <div id="preDistSelectedSchoolsContainer" class="flex flex-col gap-2 mt-4 min-h-[50px]">
+                                    <span class="text-slate-400 text-xs font-bold italic w-full text-center mt-1 select-prompt">No recipients selected yet.</span>
+                                </div>
+                                <p id="preDistLimitWarning" class="hidden text-center text-xs font-bold text-red-500 mt-2">⚠ Maximum of 6 recipients reached.</p>
                             </div>
                             <button type="button" id="proceedDistBtn" onclick="proceedToDistributionTabs()" class="w-full mt-8 py-5 bg-slate-200 text-slate-400 rounded-3xl font-black uppercase tracking-widest cursor-not-allowed transition-all" disabled>Proceed to Assign Assets</button>
                         </div>
@@ -728,8 +732,9 @@
                     <button type="button" onclick="toggleSerialPanel(this)" class="ml-auto px-3 py-1.5 text-[10px] font-black bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-100 hover:text-[#c00000] transition-all uppercase tracking-wider">⚙ Serial Info</button>
                 </div>
                 <div class="serial-panel hidden flex gap-2 pt-2 border-t border-slate-100">
+                    <input type="hidden" name="sub_item_serialized[]" class="serialized-flag" value="0">
                     <label class="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
-                        <input type="checkbox" name="sub_item_serialized[]" value="1" class="w-4 h-4 accent-[#c00000]" onchange="toggleSerializedFields(this)"> Serialized Asset (Qty locked to 1)
+                        <input type="checkbox" class="w-4 h-4 accent-[#c00000]" onchange="toggleSerializedFields(this)"> Serialized Asset (Qty locked to 1)
                     </label>
                     <input type="text" name="sub_item_property_numbers[]" placeholder="Property No." class="serial-field hidden flex-1 p-2.5 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs">
                     <input type="text" name="sub_item_serial_numbers[]" placeholder="Serial No." class="serial-field hidden flex-1 p-2.5 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs">
@@ -762,6 +767,37 @@
                 warning.classList.add('hidden');
                 btn.classList.remove('opacity-50', 'cursor-not-allowed');
                 if(search) search.disabled = false;
+            }
+        }
+
+        function toggleSerialPanel(btnEl) {
+            const row = btnEl.closest('.sub-item-row');
+            const panel = row.querySelector('.serial-panel');
+            panel.classList.toggle('hidden');
+        }
+
+        function toggleSerializedFields(checkboxEl) {
+            const row = checkboxEl.closest('.sub-item-row');
+            const fields = row.querySelectorAll('.serial-field');
+            const qtyInput = row.querySelector('input[name="sub_item_quantities[]"]');
+            const flagInput = row.querySelector('.serialized-flag');
+            
+            if (checkboxEl.checked) {
+                flagInput.value = '1';
+                fields.forEach(f => {
+                    f.classList.remove('hidden');
+                });
+                qtyInput.value = 1;
+                qtyInput.readOnly = true;
+                qtyInput.classList.add('bg-slate-100', 'text-slate-400');
+            } else {
+                flagInput.value = '0';
+                fields.forEach(f => {
+                    f.classList.add('hidden');
+                    f.value = '';
+                });
+                qtyInput.readOnly = false;
+                qtyInput.classList.remove('bg-slate-100', 'text-slate-400');
             }
         }
 
@@ -1307,18 +1343,59 @@
         let currentActiveTab = 0;
 
         // --- Phase 1: Pre-selection ---
+        function switchRecipTab(tab) {
+            document.getElementById('currentRecipTab').value = tab;
+            const btnSchool = document.getElementById('tabRecipSchoolBtn');
+            const btnIndiv = document.getElementById('tabRecipIndivBtn');
+            const search = document.getElementById('preDistSchoolSearch');
+            
+            if (tab === 'school') {
+                btnSchool.className = "text-[10px] font-bold px-3 py-1 rounded-md bg-white shadow-sm text-slate-700 transition-all";
+                btnIndiv.className = "text-[10px] font-bold px-3 py-1 rounded-md text-slate-500 hover:text-slate-700 transition-all bg-transparent";
+                search.placeholder = "Search schools...";
+            } else {
+                btnIndiv.className = "text-[10px] font-bold px-3 py-1 rounded-md bg-white shadow-sm text-slate-700 transition-all";
+                btnSchool.className = "text-[10px] font-bold px-3 py-1 rounded-md text-slate-500 hover:text-slate-700 transition-all bg-transparent";
+                search.placeholder = "Search individual records or offices...";
+            }
+            
+            filterPreDistSchools();
+            document.getElementById('preDistSchoolSearch').focus();
+        }
+
         function filterPreDistSchools() {
             const dd = document.getElementById('preDistSchoolDropdownList');
-            const q = document.getElementById('preDistSchoolSearch').value.trim().toLowerCase();
+            const searchInput = document.getElementById('preDistSchoolSearch');
+            if(!searchInput) return;
+            const q = searchInput.value.trim().toLowerCase();
+            const tabInput = document.getElementById('currentRecipTab');
+            const tab = tabInput ? tabInput.value : 'school';
+            
             dd.classList.remove('hidden');
             
-            const f = rawStakeholders.filter(s => 
+            let filteredList = rawStakeholders.filter(s => s.type === 'Recipient');
+            if (tab === 'school') {
+                filteredList = filteredList.filter(s => s.entity_type === 'School');
+            } else {
+                filteredList = filteredList.filter(s => s.entity_type !== 'School');
+            }
+            
+            const f = filteredList.filter(s => 
                 (s.name.toLowerCase().includes(q) || (s.school_id && s.school_id.toString().includes(q)))
             ).slice(0, 50);
             
             let h = '<div class="p-3 text-[10px] text-slate-400 font-extrabold uppercase tracking-widest sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100 z-10">Select recipient</div>';
             h += f.length === 0 ? '<div class="px-4 py-4 text-sm font-bold text-slate-400 text-center italic">No recipients found</div>'
-                : f.map(s => `<div onclick="addPreDistSchool(${s.id},'${s.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors border-b border-slate-50 last:border-0 truncate"><span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md mr-2">${s.type}</span> ${s.school_id ? s.school_id+' - ':''}${s.name}</div>`).join('');
+                : f.map(s => {
+                    let positionBadge = s.position ? `<span class="text-[9px] bg-slate-100 text-slate-500 ml-2 px-1.5 py-0.5 rounded uppercase tracking-widest">${s.position}</span>` : '';
+                    let schoolCodeText = s.school_id && tab === 'school' ? `<span class="text-xs font-normal text-slate-500 mr-2">${s.school_id}</span>` : '';
+                    let displayName = tab === 'school' ? s.name : (s.person_name || s.name);
+                    
+                    return `<div onclick="addPreDistSchool(${s.id},'${displayName.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors border-b border-slate-50 last:border-0 truncate flex items-center">
+                        <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md mr-2">${s.entity_type}</span>
+                        ${schoolCodeText}${displayName}${positionBadge}
+                    </div>`;
+                }).join('');
             dd.innerHTML = h;
         }
 
@@ -1782,7 +1859,17 @@
                 const safeName = si.name.replace(/[^a-zA-Z0-9]/g, '_');
                 const escapedName = si.name.replace(/'/g, "\\'");
                 
-                let sourceDropdownHtml = '';
+                let sourceBadgeHtml = '';
+                const distributor = rawStakeholders.find(st => st.id == si.distributor_id);
+                if (distributor) {
+                    const st = distributor.source_type;
+                    if (st === 'Government') sourceBadgeHtml = `<span class="bg-blue-50 text-blue-600 border border-blue-200 px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ml-2" title="Source Category: Government">🏛️ Govt</span>`;
+                    else if (st === 'Donor') sourceBadgeHtml = `<span class="bg-purple-50 text-purple-600 border border-purple-200 px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ml-2" title="Source Category: Donor">🤝 Donor</span>`;
+                    else if (st === 'Contractor') sourceBadgeHtml = `<span class="bg-orange-50 text-orange-600 border border-orange-200 px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ml-2" title="Source Category: Contractor">🏢 Contract</span>`;
+                    else if (st === 'NGO') sourceBadgeHtml = `<span class="bg-emerald-50 text-emerald-600 border border-emerald-200 px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ml-2" title="Source Category: NGO">🌍 NGO</span>`;
+                    else if (st) sourceBadgeHtml = `<span class="bg-slate-100 text-slate-500 border border-slate-200 px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ml-2">📦 ${st}</span>`;
+                }
+
                 if (si.all_sources && si.all_sources.length > 1) {
                     const options = si.all_sources.map(s => {
                         const stockText = s.id === si.sub_item_id 
@@ -1793,12 +1880,15 @@
                     }).join('');
                     
                     sourceDropdownHtml = `
-                        <select onchange="changeSubItemSource(${tabId}, '${escapedName}', this.value)" class="w-full mt-1.5 p-2 text-xs bg-slate-50 border border-slate-200 rounded outline-none font-semibold text-slate-600 cursor-pointer focus:border-blue-400 max-w-[280px]">
-                            ${options}
-                        </select>
+                        <div class="flex items-center mt-1.5">
+                            <select onchange="changeSubItemSource(${tabId}, '${escapedName}', this.value)" class="flex-grow p-2 text-xs bg-slate-50 border border-slate-200 rounded outline-none font-semibold text-slate-600 cursor-pointer focus:border-blue-400 max-w-[280px]">
+                                ${options}
+                            </select>
+                            ${sourceBadgeHtml}
+                        </div>
                     `;
                 } else if (si.all_sources && si.all_sources.length === 1) {
-                     sourceDropdownHtml = `<div class="mt-1 text-[10px] text-slate-500 font-medium">Source: ${si.all_sources[0].distributor_name}</div>`;
+                     sourceDropdownHtml = `<div class="mt-1 flex items-center text-[10px] text-slate-500 font-medium">Source: ${si.all_sources[0].distributor_name} ${sourceBadgeHtml}</div>`;
                 }
 
                 return `

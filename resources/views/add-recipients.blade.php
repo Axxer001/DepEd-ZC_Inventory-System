@@ -307,6 +307,7 @@
 <script>
     const existingRecipients = @json($recipients ?? []);
     const existingSubRecipients = @json($subRecipients ?? []);
+    const allSchools = @json($allSchools ?? []);
 
     let currentTrack = null;
 
@@ -424,10 +425,14 @@
         const dropdown = document.getElementById('indivSchoolDropdown');
         const query = input.value.trim().toLowerCase();
         dropdown.classList.remove('hidden');
-        const filtered = existingRecipients.filter(r => r.name.toLowerCase().includes(query)).slice(0, 20);
-        if (filtered.length === 0 && query === '') { dropdown.classList.add('hidden'); return; }
+        if (query === '') { dropdown.classList.add('hidden'); return; }
+        
+        const filtered = allSchools.filter(r => (r.name.toLowerCase().includes(query) || (r.school_id && r.school_id.toString().includes(query)))).slice(0, 20);
         if (filtered.length === 0) { dropdown.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400 font-bold text-center italic">No match — leave blank for Division-level</div>'; return; }
-        dropdown.innerHTML = filtered.map(r => `<div onclick="document.getElementById('indivSchoolInput').value='${r.name.replace(/'/g, "\\'")}';document.getElementById('indivSchoolDropdown').classList.add('hidden')" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer border-b border-slate-50 last:border-0">${r.name}</div>`).join('');
+        
+        let html = '<div class="p-3 text-[10px] text-slate-400 font-extrabold uppercase tracking-widest sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100 z-10">Select school link</div>';
+        html += filtered.map(r => `<div onclick="document.getElementById('indivSchoolInput').value='${r.name.replace(/'/g, "\\'")}';document.getElementById('indivSchoolDropdown').classList.add('hidden')" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer border-b border-slate-50 last:border-0 truncate">${r.school_id ? r.school_id+' - ' : ''}${r.name}</div>`).join('');
+        dropdown.innerHTML = html;
     }
 
     document.addEventListener('click', function(e) {
