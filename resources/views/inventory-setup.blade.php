@@ -127,59 +127,66 @@
                 </div>
             </div>
 
-          {{-- Step 2: Category Selection --}}
-<div id="step2" class="step-content text-center">
-    <h3 id="step2Title" class="text-lg font-bold text-slate-400 uppercase tracking-[0.3em] mb-10">Select Category</h3>
+{{-- Step 2: Category Selection --}}
+<div id="step2" class="step-content">
+    <h3 id="step2Title" class="text-lg font-black text-slate-400 uppercase tracking-[0.3em] text-center mb-6 -mt-6">Select Category</h3>
     
-    <div class="flex flex-wrap justify-center gap-6 max-w-5xl mx-auto px-4">
+    <div class="hidden md:grid md:grid-cols-3 gap-6 max-w-6xl mx-auto px-4 mb-6">
         
         {{-- Schools --}}
-        <div onclick="nextStep(3, 'school')" class="bg-white p-8 w-full sm:w-[256px] rounded-[2.5rem] shadow-lg border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group">
-            <div class="w-12 h-12 bg-red-50 text-[#c00000] rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A4.833 4.833 0 0012 9a4.833 4.833 0 00-7.5 1.332V21m15 0h-15" /></svg>
+        <div onclick="nextStep(3, 'school')" class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
+            <div class="w-16 h-16 bg-red-50 text-[#c00000] rounded-[1.5rem] flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A4.833 4.833 0 0012 9a4.833 4.833 0 00-7.5 1.332V21m15 0h-15" /></svg>
             </div>
-            <span class="block font-extrabold text-slate-800 uppercase text-[10px] tracking-widest">Schools</span>
+            <span class="block font-black text-slate-800 uppercase text-xs tracking-widest">Schools</span>
+            <p class="category-subtext text-[11px] text-slate-400 uppercase font-bold mt-2 tracking-tight leading-tight opacity-80" data-add="Register new school profiles" data-edit="Modify existing school records"></p>
         </div>
 
-        {{-- Distributors --}}
-<a href="{{ route('inventory.setup.add_distributors') }}" class="bg-white p-8 w-full sm:w-[256px] rounded-[2.5rem] shadow-lg border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group block text-center">
-    <div class="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.129-1.125V11.25c0-4.446-3.604-8.1-8.1-8.1H9a8.1 8.1 0 0 0-8.1 8.1v3.375c0 .621.504 1.125 1.125 1.125H3.375M9 15h3.375M9 15V3.375M9 15h3.375M9 15h3.375" />
-        </svg>
-    </div>
-    <span class="block font-extrabold text-slate-800 uppercase text-[10px] tracking-widest">Distributors</span>
-</a>
-
-{{-- Recipients --}}
-<a href="{{ route('inventory.setup.add_recipients') }}" class="bg-white p-8 w-full sm:w-[256px] rounded-[2.5rem] shadow-lg border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group block text-center">
-    <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-        </svg>
-    </div>
-    <span class="block font-extrabold text-slate-800 uppercase text-[10px] tracking-widest">Recipients</span>
-</a>
-
-        {{-- Inventory Items --}}
-        <div onclick="nextStep(3, 'item')" class="bg-white p-8 w-full sm:w-[256px] rounded-[2.5rem] shadow-lg border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group">
-            <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" /></svg>
+        {{-- Resource Providers --}}
+        <a id="providerLink" href="{{ route('inventory.setup.add_distributors') }}" class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
+            <div class="w-16 h-16 bg-orange-50 text-orange-600 rounded-[1.5rem] flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.129-1.125V11.25c0-4.446-3.604-8.1-8.1-8.1H9a8.1 8.1 0 0 0-8.1 8.1v3.375c0 .621.504 1.125 1.125 1.125H3.375M9 15h3.375M9 15V3.375M9 15h3.375M9 15h3.375" />
+                </svg>
             </div>
-            <span class="block font-extrabold text-slate-800 uppercase text-[10px] tracking-widest">Inventory Items</span>
+            <span class="block font-black text-slate-800 uppercase text-xs tracking-widest">Asset Source Providers</span>
+            <p class="category-subtext text-[11px] text-slate-400 uppercase font-bold mt-2 tracking-tight leading-tight opacity-80" data-add="Register new asset sources" data-edit="Modify existing provider info"></p>
+        </a>
+
+        {{-- Recipients --}}
+        <a href="{{ route('inventory.setup.add_recipients') }}" class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
+            <div class="w-16 h-16 bg-purple-50 text-purple-600 rounded-[1.5rem] flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                </svg>
+            </div>
+            <span class="block font-black text-slate-800 uppercase text-xs tracking-widest">Recipients</span>
+            <p class="category-subtext text-[11px] text-slate-400 uppercase font-bold mt-2 tracking-tight leading-tight opacity-80" data-add="Add new asset receivers" data-edit="Update recipient details"></p>
+        </a>
+    </div>
+
+    <div class="hidden md:flex md:justify-center md:gap-6 max-w-6xl mx-auto px-4">
+        
+        {{-- Inventory Items --}}
+        <div onclick="nextStep(3, 'item')" class="bg-white p-8 w-full md:w-[32%] rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
+            <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-[1.5rem] flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" /></svg>
+            </div>
+            <span class="block font-black text-slate-800 uppercase text-xs tracking-widest">Inventory Items</span>
+            <p class="category-subtext text-[11px] text-slate-400 uppercase font-bold mt-2 tracking-tight leading-tight opacity-80" data-add="Register new supply items" data-edit="Edit item specifications"></p>
         </div>
 
         {{-- Asset Distribution --}}
-        <div onclick="nextStep(3, 'distribution')" class="bg-white p-8 w-full sm:w-[256px] rounded-[2.5rem] shadow-lg border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group">
-            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:rotate-12 transition-transform">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-10.5v.008H15V4.5zm0 9v.008H15V13.5zm0-4.5v.008H15V9zm0-4.5v.008H15V4.5zM9 15l-3 1.5L3 15V5.25l3-1.5L9 5.25M9 15l3.047-1.524c.499-.25 1.096-.217 1.565.083L17.25 15l3-1.5V4.5l-3 1.5-3.638-2.046c-.469-.264-1.025-.264-1.494 0L9 5.25" /></svg>
+        <div onclick="nextStep(3, 'distribution')" class="bg-white p-8 w-full md:w-[32%] rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
+            <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-[1.5rem] flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-10.5v.008H15V4.5zm0 9v.008H15V13.5zm0-4.5v.008H15V9zm0-4.5v.008H15V4.5zM9 15l-3 1.5L3 15V5.25l3-1.5L9 5.25M9 15l3.047-1.524c.499-.25 1.096-.217 1.565.083L17.25 15l3-1.5V4.5l-3 1.5-3.638-2.046c-.469-.264-1.025-.264-1.494 0L9 5.25" /></svg>
             </div>
-            <span class="block font-extrabold text-slate-800 uppercase text-[10px] tracking-widest">Asset Distribution</span>
+            <span class="block font-black text-slate-800 uppercase text-xs tracking-widest">Asset Distribution</span>
+            <p class="category-subtext text-[11px] text-slate-400 uppercase font-bold mt-2 tracking-tight leading-tight opacity-80" data-add="Record new asset deployment" data-edit="Modify deployment history"></p>
         </div>
 
     </div>
 </div>
-
             {{-- Step 3: Form Content --}}
             <div id="step3" class="step-content">
                 @if($errors->any())
@@ -252,27 +259,54 @@
         let selectedSubItemsArray = [];
 
         function nextStep(step, value) {
-            if (step === 2) {
-                currentMode = value;
-                document.getElementById('step2Title').innerText = (value === 'add' ? 'ADD NEW' : 'EDIT') + ' RECORD';
+    if (step === 2) {
+        currentMode = value; // 'add' or 'edit'
+        
+        // Update the main header text of Step 2
+        document.getElementById('step2Title').innerText = (value === 'add' ? 'ADD NEW' : 'EDIT') + ' RECORD';
+
+        // Update all sub-texts dynamically based on the mode
+        const subTexts = document.querySelectorAll('.category-subtext');
+        subTexts.forEach(p => {
+            if (currentMode === 'add') {
+                p.innerText = p.getAttribute('data-add');
+            } else {
+                p.innerText = p.getAttribute('data-edit');
             }
-            if (step === 3) {
-                if (currentMode === 'edit' && value === 'school') {
-                    window.location.href = '/inventory-modifier/school';
-                    return;
-                }
-                if (currentMode === 'edit' && value === 'distribution') {
-                    window.location.href = '/inventory-modifier';
-                    return;
-                }
-                currentModule = value;
-                renderForm();
-            }
-            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-            document.getElementById('step' + step).classList.add('active');
-            history.push(step);
-            updateBackButton();
+        });
+
+        // Ensure the Resource Providers link includes the current mode
+        const providerLink = document.getElementById('providerLink');
+        if (providerLink) {
+            // This preserves your existing route but tells the next page the mode
+            const baseUrl = "{{ route('inventory.setup.add_distributors') }}";
+            providerLink.href = `${baseUrl}?mode=${currentMode}`;
         }
+    }
+
+    if (step === 3) {
+        // Redirection logic for Edit mode
+        if (currentMode === 'edit' && value === 'school') {
+            window.location.href = '/inventory-modifier/school';
+            return;
+        }
+        if (currentMode === 'edit' && value === 'distribution') {
+            window.location.href = '/inventory-modifier';
+            return;
+        }
+
+        currentModule = value;
+        renderForm();
+    }
+
+    // Navigation Logic
+    document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+    document.getElementById('step' + step).classList.add('active');
+    
+    // Track history for the back button
+    history.push(step);
+    updateBackButton();
+}
 
         function goBack() {
             if (history.length > 1) {
