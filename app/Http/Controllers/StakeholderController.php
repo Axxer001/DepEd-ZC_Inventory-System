@@ -31,7 +31,7 @@ class StakeholderController extends Controller
     public function list()
     {
         $stakeholders = DB::table('stakeholders')
-            ->select('id', 'parent_id', 'name', 'type', 'school_id')
+            ->select('id', 'parent_id', 'name', 'type', 'school_id', 'source_type', 'entity_type', 'position')
             ->orderBy('name')
             ->get();
 
@@ -44,21 +44,39 @@ class StakeholderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
-            'parent_id' => 'nullable|integer|exists:stakeholders,id',
-            'school_id' => 'nullable|integer|exists:schools,id',
+            'name'        => 'required|string|max:255',
+            'type'        => 'required|string|max:255',
+            'parent_id'   => 'nullable|integer|exists:stakeholders,id',
+            'school_id'   => 'nullable|integer|exists:schools,id',
+            'source_type' => 'nullable|string|in:Government,Contractor,Donor,NGO,Other',
+            'entity_type' => 'nullable|string|in:School,District,Division,Individual,External',
         ]);
 
         $userName = auth()->user() ? auth()->user()->name : 'System';
 
+        // Rule 1: Duplicate source prevention (case-insensitive)
+        if ($request->type === 'Distributor' && empty($request->parent_id)) {
+            $existing = DB::table('stakeholders')
+                ->whereRaw('LOWER(name) = ?', [strtolower(trim($request->name))])
+                ->where('type', 'Distributor')
+                ->first();
+            if ($existing) {
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => "A distributor named '{$existing->name}' already exists.", 'existing_id' => $existing->id], 409);
+                }
+                return back()->withErrors(["A distributor named '{$existing->name}' already exists."]);
+            }
+        }
+
         $id = DB::table('stakeholders')->insertGetId([
-            'parent_id' => $request->parent_id,
-            'name' => trim($request->name),
-            'type' => trim($request->type),
-            'school_id' => $request->school_id,
-            'created_at' => now(),
-            'updated_at' => now(),
+            'parent_id'   => $request->parent_id,
+            'name'        => trim($request->name),
+            'type'        => trim($request->type),
+            'school_id'   => $request->school_id,
+            'source_type' => $request->source_type,
+            'entity_type' => $request->entity_type ?? 'School',
+            'created_at'  => now(),
+            'updated_at'  => now(),
         ]);
 
         $parentLabel = $request->parent_id
@@ -66,23 +84,146 @@ class StakeholderController extends Controller
             : 'None (Main Category)';
 
         DB::table('system_logs')->insert([
-            'user' => $userName,
-            'activity' => "Created stakeholder '{$request->name}' (Type: {$request->type}, Parent: {$parentLabel})",
-            'module' => 'Stakeholders',
+            'user'        => $userName,
+            'activity'    => "Created stakeholder '{$request->name}' (Type: {$request->type}, Parent: {$parentLabel})",
+            'module'      => 'Stakeholders',
             'action_type' => 'Create',
-            'created_at' => now(),
-            'updated_at' => now(),
+            'created_at'  => now(),
+            'updated_at'  => now(),
         ]);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
                 'message' => "Stakeholder '{$request->name}' created successfully.",
-                'id' => $id,
+                'id'      => $id,
             ]);
         }
 
         return back()->with('success', "Stakeholder '{$request->name}' created successfully.");
+    }
+
+    /**
+     * Store a single Individual or Office recipient (Tracks B & C).
+     */
+    public function storeIndividualRecipient(Request $request)
+    {
+        $request->validate([
+            'type'       => 'required|string',
+            'org_name'   => 'nullable|string|max:255',
+            'person_name'=> 'nullable|string|max:255',
+            'position'   => 'nullable|string|max:255',
+            'is_office'  => 'nullable',
+        ]);
+
+        $userName = auth()->user() ? auth()->user()->name : 'System';
+        $isOffice = $request->input('is_office') == '1';
+
+        if ($isOffice) {
+            // Track C — Office / Department
+            $officeName = trim($request->org_name ?? '');
+            if (empty($officeName)) {
+                return back()->withErrors(['Office name is required.']);
+            }
+            $entityType = $request->input('office_entity_type', 'Division');
+
+            // Duplicate check (case-insensitive)
+            $existing = DB::table('stakeholders')
+                ->whereRaw('LOWER(name) = ?', [strtolower($officeName)])
+                ->where('type', 'Recipient')
+                ->whereNull('parent_id')
+                ->first();
+
+            if ($existing) {
+                return redirect('/inventory-setup?step=2&mode=add')
+                    ->with('success', "Office '{$existing->name}' already exists and was not duplicated.");
+            }
+
+            $id = DB::table('stakeholders')->insertGetId([
+                'name'        => $officeName,
+                'type'        => 'Recipient',
+                'entity_type' => $entityType,
+                'source_type' => null,
+                'position'    => null,
+                'person_name' => null,
+                'parent_id'   => null,
+                'school_id'   => null,
+                'status'      => 'Active',
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+
+            DB::table('system_logs')->insert([
+                'user'        => $userName,
+                'activity'    => "Registered office recipient '{$officeName}' (Entity: {$entityType})",
+                'module'      => 'Stakeholders',
+                'action_type' => 'Create',
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+
+            return redirect('/inventory-setup?step=2&mode=add')
+                ->with('success', "Office '{$officeName}' registered successfully as a recipient.");
+
+        } else {
+            // Track B — Individual (Position-Based)
+            $personName = trim($request->person_name ?? '');
+            $position   = trim($request->position ?? '');
+            if (empty($personName) || empty($position)) {
+                return back()->withErrors(['Full name and position are both required.']);
+            }
+
+            $entityType  = $request->input('individual_entity_type', 'School');
+            $linkedSchool = trim($request->org_name ?? '');
+
+            // Resolve school_id if a linked school name was provided
+            $schoolId = null;
+            if (!empty($linkedSchool)) {
+                $school = DB::table('schools')->whereRaw('LOWER(name) = ?', [strtolower($linkedSchool)])->first();
+                $schoolId = $school ? $school->id : null;
+            }
+
+            // The 'name' column stores a readable display: "Position — PersonName"
+            $displayName = "{$position} — {$personName}";
+
+            // Loose duplicate check: same person name + same position
+            $existing = DB::table('stakeholders')
+                ->whereRaw('LOWER(person_name) = ?', [strtolower($personName)])
+                ->whereRaw('LOWER(position) = ?', [strtolower($position)])
+                ->where('type', 'Recipient')
+                ->first();
+
+            if ($existing) {
+                return redirect('/inventory-setup?step=2&mode=add')
+                    ->with('success', "'{$personName}' ({$position}) already exists and was not duplicated.");
+            }
+
+            $id = DB::table('stakeholders')->insertGetId([
+                'name'        => $displayName,
+                'type'        => 'Recipient',
+                'entity_type' => $entityType,
+                'source_type' => null,
+                'position'    => $position,
+                'person_name' => $personName,
+                'parent_id'   => null,
+                'school_id'   => $schoolId,
+                'status'      => 'Active',
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+
+            DB::table('system_logs')->insert([
+                'user'        => $userName,
+                'activity'    => "Registered individual recipient '{$personName}' as {$position} (Entity: {$entityType})",
+                'module'      => 'Stakeholders',
+                'action_type' => 'Create',
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+
+            return redirect('/inventory-setup?step=2&mode=add')
+                ->with('success', "'{$personName}' ({$position}) registered successfully as a recipient.");
+        }
     }
 
     /**
@@ -91,15 +232,19 @@ class StakeholderController extends Controller
     public function storeGroup(Request $request)
     {
         $request->validate([
-            'org_name' => 'nullable|string|max:255',
-            'personnel' => 'nullable|array',
+            'org_name'    => 'nullable|string|max:255',
+            'personnel'   => 'nullable|array',
             'personnel.*' => 'nullable|string|max:255',
-            'type' => 'required|string|max:255',
+            'type'        => 'required|string|max:255',
+            'source_type' => 'nullable|string|in:Government,Contractor,Donor,NGO,Other',
+            'entity_type' => 'nullable|string|in:School,District,Division,Individual,External',
         ]);
 
-        $userName = auth()->user() ? auth()->user()->name : 'System';
-        $type = trim($request->type);
-        $orgName = trim($request->org_name);
+        $userName   = auth()->user() ? auth()->user()->name : 'System';
+        $type       = trim($request->type);
+        $orgName    = trim($request->org_name);
+        $sourceType = $request->source_type;
+        $entityType = $request->entity_type ?? ($type === 'Distributor' ? 'External' : 'School');
 
         $addedCount = 0;
         
@@ -111,14 +256,20 @@ class StakeholderController extends Controller
                 ->first();
 
             if ($parent) {
+                // If exists and this is a Distributor, update source_type if not already set
+                if ($type === 'Distributor' && $sourceType && empty($parent->source_type)) {
+                    DB::table('stakeholders')->where('id', $parent->id)->update(['source_type' => $sourceType, 'updated_at' => now()]);
+                }
                 $parentId = $parent->id ?? null;
             } else {
                 $parentId = DB::table('stakeholders')->insertGetId([
-                    'name' => $orgName,
-                    'type' => $type,
-                    'parent_id' => null,
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'name'        => $orgName,
+                    'type'        => $type,
+                    'source_type' => $sourceType,
+                    'entity_type' => $entityType,
+                    'parent_id'   => null,
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
                 ]);
                 
                 DB::table('system_logs')->insert([
@@ -144,11 +295,13 @@ class StakeholderController extends Controller
                         
                     if (!$exists) {
                         DB::table('stakeholders')->insert([
-                            'name' => $personName,
-                            'type' => $type,
-                            'parent_id' => $parentId,
-                            'created_at' => now(),
-                            'updated_at' => now(),
+                            'name'        => $personName,
+                            'type'        => $type,
+                            'source_type' => $sourceType,
+                            'entity_type' => $entityType,
+                            'parent_id'   => $parentId,
+                            'created_at'  => now(),
+                            'updated_at'  => now(),
                         ]);
                         $addedCount++;
                     }
@@ -195,11 +348,13 @@ class StakeholderController extends Controller
                     $parentMap[$oldParent->id] = $existingNewParent->id;
                 } else {
                     $newParentId = DB::table('stakeholders')->insertGetId([
-                        'name' => $oldParent->name,
-                        'type' => $type,
-                        'parent_id' => null,
-                        'created_at' => now(),
-                        'updated_at' => now(),
+                        'name'        => $oldParent->name,
+                        'type'        => $type,
+                        'source_type' => $sourceType,
+                        'entity_type' => $entityType,
+                        'parent_id'   => null,
+                        'created_at'  => now(),
+                        'updated_at'  => now(),
                     ]);
                     $parentMap[$oldParent->id] = $newParentId;
                     $crossAdded++;
@@ -218,11 +373,13 @@ class StakeholderController extends Controller
                             
                         if (!$existingNewChild) {
                             DB::table('stakeholders')->insert([
-                                'name' => $oldChild->name,
-                                'type' => $type,
-                                'parent_id' => $newParentId,
-                                'created_at' => now(),
-                                'updated_at' => now(),
+                                'name'        => $oldChild->name,
+                                'type'        => $type,
+                                'source_type' => $sourceType,
+                                'entity_type' => $entityType,
+                                'parent_id'   => $newParentId,
+                                'created_at'  => now(),
+                                'updated_at'  => now(),
                             ]);
                             $crossAdded++;
                         }

@@ -316,6 +316,10 @@ Route::get('/inventory-setup/add-distributors', function () {
 Route::post('/inventory-setup/add-distributors', [\App\Http\Controllers\StakeholderController::class, 'storeGroup'])
     ->name('inventory.setup.store_distributor_group');
 
+// Route for Individual / Office recipient registration (Tracks B & C)
+Route::post('/inventory-setup/add-recipients/individual', [\App\Http\Controllers\StakeholderController::class, 'storeIndividualRecipient'])
+    ->name('inventory.setup.store_individual_recipient');
+
 // Route para sa Add Recipients
 Route::get('/inventory-setup/add-recipients', function () {
     // Current Type
