@@ -516,6 +516,9 @@
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">2. Create New Specifications</label>
                                     <div id="subItemContainer" class="space-y-3 max-h-[250px] overflow-y-auto pr-2 custom-scroll">
                                         <div class="flex gap-2 group sub-item-row relative">
+                                            <select name="sub_item_distributors[]" class="w-40 p-4 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm cursor-pointer" title="Distributor">
+                                                ${getDistributorOptionsHtml()}
+                                            </select>
                                             <input type="text" name="sub_items[]" placeholder="e.g. Default/General or RAM 8GB" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm flex-1" required autocomplete="off" oninput="checkSubItemDuplicate(this)">
                                             <input type="number" name="sub_item_quantities[]" placeholder="Qty" min="1" step="1" class="w-20 p-4 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm text-center" required>
                                             <select name="sub_item_conditions[]" class="w-36 p-4 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm cursor-pointer" title="Condition">
@@ -543,15 +546,6 @@
                             <p class="text-slate-500 text-sm mt-2 font-medium">Select where the assets are coming from, and up to 6 recipients.</p>
                         </div>
                         <div class="max-w-xl mx-auto space-y-6">
-                            <!-- Source Distributor Selection -->
-                            <div class="space-y-2">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Distributor (Source) <span class="text-red-500">*</span></label>
-                                <select id="globalSourceDistributor" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 transition-all focus:border-[#c00000] focus:ring-4 focus:ring-red-100 cursor-pointer">
-                                    <optgroup label="System Categories">
-                                        <option value="">-- Fetching System Stakeholders --</option>
-                                    </optgroup>
-                                </select>
-                            </div>
 
                             <hr class="border-slate-100">
 
@@ -607,6 +601,15 @@
             }
         }
         
+        function getDistributorOptionsHtml() {
+            let html = '<option value="">-- Distributor --</option>';
+            const distributors = rawStakeholders.filter(s => s.type === 'Distributor');
+            distributors.forEach(d => {
+                html += `<option value="${d.id}">${d.name}</option>`;
+            });
+            return html;
+        }
+
         function populateSourceStakeholders() {
             const select = document.getElementById('globalSourceDistributor');
             if (!select) return;
@@ -647,6 +650,9 @@
             const div = document.createElement('div');
             div.className = "flex gap-2 group animate-in fade-in slide-in-from-top-2 duration-300 sub-item-row relative";
             div.innerHTML = `
+                <select name="sub_item_distributors[]" class="w-40 p-4 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm cursor-pointer" title="Distributor">
+                    ${getDistributorOptionsHtml()}
+                </select>
                 <input type="text" name="sub_items[]" placeholder="Enter specification" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm flex-1" required autocomplete="off" oninput="checkSubItemDuplicate(this)">
                 <input type="number" name="sub_item_quantities[]" placeholder="Qty" min="1" step="1" class="w-20 p-4 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm text-center" required>
                 <select name="sub_item_conditions[]" class="w-36 p-4 flex-shrink-0 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-sm cursor-pointer" title="Condition">
@@ -1041,6 +1047,9 @@
                 </div>
                 <div class="flex items-center gap-3">
                     <input type="hidden" name="sub_items[]" value="${name}">
+                    <select name="sub_item_distributors[]" class="w-36 p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-semibold text-sm cursor-pointer" title="Distributor">
+                        ${getDistributorOptionsHtml()}
+                    </select>
                     <input type="number" name="sub_item_quantities[]" placeholder="Qty" min="1" step="1" class="w-20 p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-sm text-center focus:border-emerald-400" required>
                     <select name="sub_item_conditions[]" class="w-36 p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-semibold text-sm cursor-pointer" title="Condition">
                         <option value="Serviceable" selected>Serviceable</option>
@@ -1230,12 +1239,7 @@
             const q = document.getElementById('preDistSchoolSearch').value.trim().toLowerCase();
             dd.classList.remove('hidden');
             
-            // Also filter out the currently selected Source
-            const sourceSelect = document.getElementById('globalSourceDistributor');
-            const sourceId = sourceSelect ? parseInt(sourceSelect.value) : null;
-            
             const f = rawStakeholders.filter(s => 
-                (s.id !== sourceId) && 
                 (s.name.toLowerCase().includes(q) || (s.school_id && s.school_id.toString().includes(q)))
             ).slice(0, 50);
             
@@ -1246,11 +1250,6 @@
         }
 
         function addPreDistSchool(id, name) {
-            const sourceSelect = document.getElementById('globalSourceDistributor');
-            if (sourceSelect && !sourceSelect.value) {
-                Swal.fire({ title: 'Select Source', text: 'Please select a Distributor (Source) first.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
             if (preSelectedSchools.length >= 6) {
                 document.getElementById('preDistLimitWarning').classList.remove('hidden');
                 return;
@@ -1300,29 +1299,17 @@
         function proceedToDistributionTabs() {
             if (preSelectedSchools.length === 0) return;
             
-            const sourceSelect = document.getElementById('globalSourceDistributor');
-            if (!sourceSelect || !sourceSelect.value) {
-                Swal.fire({ title: 'Select Source', text: 'Please select a Distributor (Source) before proceeding.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-            const sourceId = sourceSelect.value;
-            const sourceName = sourceSelect.options[sourceSelect.selectedIndex].text;
-            
             document.getElementById('distPreSelectionPhase').classList.add('hidden');
             document.getElementById('distTabsPhase').classList.remove('hidden');
-            
-            document.getElementById('distPhaseSourceLabel').innerText = `Source: ${sourceName}`;
             
             // Initialize tab data states
             distTabsData = preSelectedSchools.map((school, i) => ({
                 tabIndex: i,
-                distributor_id: parseInt(sourceId),
-                distributor_name: sourceName,
                 recipient_id: school.id,
                 recipient_name: school.name,
                 category_id: null,
                 item_id: null,
-                subItemsSelected: [] // array of { id, name, available_qty, selected_qty, condition }
+                subItemsSelected: [] // array of { id, name, available_qty, selected_qty, distributor_id, sub_item_id }
             }));
 
             renderTabsUI();
@@ -1490,30 +1477,35 @@
             updateReadyStatus();
         }
 
-        // Calculate effective remaining stock for a sub-item across ALL tabs
+        // Calculate effective remaining stock for a specific sub-item ID (which is distinct per distributor)
         function getEffectiveStock(subId) {
             if (distTabsData.length === 0) return 0;
-            const distributorId = distTabsData[0].distributor_id;
             
-            let initialStock = 0;
-            const sysWarehouse = rawStakeholders.find(s => s.type === 'System' && s.name.includes('Warehouse'));
-            if (sysWarehouse && distributorId === sysWarehouse.id) {
-                const raw = rawSubItems.find(s => s.id === subId);
-                initialStock = raw ? raw.quantity : 0;
-            } else {
-                const owns = rawOwnerships[distributorId] || [];
-                initialStock = owns.filter(o => o.sub_item_id === subId).reduce((sum, o) => sum + o.quantity, 0);
-            }
+            // Total stock = the specific sub-item's own quantity (warehouse inventory for this distributor)
+            const raw = rawSubItems.find(s => s.id === subId);
+            let totalStock = raw ? raw.quantity : 0;
 
-            let totalAllocated = 0;
-            distTabsData.forEach(tab => {
-                tab.subItemsSelected.forEach(si => {
-                    if (si.id === subId && si.selected_qty > 0) {
-                        totalAllocated += si.selected_qty;
+            // Subtract already-distributed quantities (across all ownerships)
+            let alreadyDistributed = 0;
+            Object.values(rawOwnerships).forEach(ownershipList => {
+                ownershipList.forEach(o => {
+                    if (o.sub_item_id === subId) {
+                        alreadyDistributed += o.quantity;
                     }
                 });
             });
-            return Math.max(0, initialStock - totalAllocated);
+
+            // Subtract quantities allocated in the current distribution session across ALL tabs
+            let sessionAllocated = 0;
+            distTabsData.forEach(tab => {
+                tab.subItemsSelected.forEach(si => {
+                    if (si.sub_item_id === subId && si.selected_qty > 0) {
+                        sessionAllocated += si.selected_qty;
+                    }
+                });
+            });
+
+            return Math.max(0, totalStock - alreadyDistributed - sessionAllocated);
         }
 
         function filterTabSub(tabId) {
@@ -1523,25 +1515,56 @@
             if(!itemId) return;
 
             dd.classList.remove('hidden');
-            const pool = rawSubItems.filter(s => s.item_id == itemId);
-            const selectedIds = distTabsData[tabId].subItemsSelected.map(s => s.id);
-            const f = pool.filter(s => !selectedIds.includes(s.id) && s.name.toLowerCase().includes(q)).slice(0, 50);
+            const pool = rawSubItems.filter(s => s.item_id == itemId && s.distributor_id); // Only those with distributors
+            
+            // Group by sub-item name to consolidate multiple distributors
+            const grouped = {};
+            pool.forEach(s => {
+                if (!grouped[s.name]) {
+                    grouped[s.name] = { name: s.name, total_stock: 0, sources: [] };
+                }
+                const stock = getEffectiveStock(s.id);
+                grouped[s.name].sources.push({ ...s, effective_stock: stock });
+                grouped[s.name].total_stock += stock;
+            });
+
+            const selectedNames = distTabsData[tabId].subItemsSelected.map(s => s.name);
+            const availableGroups = Object.values(grouped).filter(g => !selectedNames.includes(g.name));
+            const f = availableGroups.filter(g => g.name.toLowerCase().includes(q)).slice(0, 50);
 
             let h = '<div class="p-3 text-[10px] text-slate-400 font-extrabold uppercase tracking-widest sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100">Select sub-item</div>';
             h += f.length === 0 ? '<div class="px-4 py-3 text-sm text-slate-400 italic">No sub-items available</div>'
-                : f.map(s => {
-                    const stock = getEffectiveStock(s.id);
-                    if(stock <= 0) {
-                        return `<div class="px-4 py-3 text-sm font-semibold text-slate-300 bg-slate-50 cursor-not-allowed border-b border-slate-50">${s.name} <span class="text-red-400 text-xs">(Out of stock)</span></div>`;
+                : f.map(g => {
+                    if(g.total_stock <= 0) {
+                        return `<div class="px-4 py-3 text-sm font-semibold text-slate-300 bg-slate-50 cursor-not-allowed border-b border-slate-50">${g.name} <span class="text-red-400 text-xs">(Out of stock everywhere)</span></div>`;
                     }
-                    return `<div onclick="selectTabSub(${tabId}, ${s.id}, '${s.name.replace(/'/g,"\\'")}', ${stock})" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition-colors border-b border-slate-50 flex justify-between"><span>${s.name}</span> <span class="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-xl">${stock} available</span></div>`;
+                    // For selecting, we pass the group name. The specific sub_item_id/distributor is resolved inside the card.
+                    return `<div onclick="selectTabSub(${tabId}, '${g.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 cursor-pointer transition-colors border-b border-slate-50 flex justify-between"><span>${g.name}</span> <span class="text-xs font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-xl">${g.total_stock} across ${g.sources.length} source(s)</span></div>`;
                 }).join('');
             dd.innerHTML = h;
         }
 
-        function selectTabSub(tabId, subId, subName, availableQty) {
+        function selectTabSub(tabId, subName) {
             const tab = distTabsData[tabId];
-            tab.subItemsSelected.push({ id: subId, name: subName, available_qty: availableQty, selected_qty: 0 });
+            const itemId = tab.item_id;
+            const pool = rawSubItems.filter(s => s.item_id == itemId && s.name === subName && s.distributor_id);
+            
+            // Calculate current stock for each source
+            const sources = pool.map(s => ({ ...s, effective_stock: getEffectiveStock(s.id) })).filter(s => s.effective_stock > 0);
+            
+            if (sources.length === 0) return; // Paranoia
+
+            // Default to the first available source
+            const defaultSource = sources[0];
+
+            tab.subItemsSelected.push({ 
+                name: subName, 
+                sub_item_id: defaultSource.id, 
+                distributor_id: defaultSource.distributor_id,
+                available_qty: defaultSource.effective_stock, 
+                selected_qty: 0,
+                all_sources: sources // Store all possible sources to feed the dropdown
+            });
             
             document.getElementById(`tabSubSearch_${tabId}`).value = '';
             document.getElementById(`tabSubDropdown_${tabId}`).classList.add('hidden');
@@ -1549,34 +1572,66 @@
             updateReadyStatus();
         }
 
-        function removeTabSub(tabId, subId) {
+        function removeTabSub(tabId, subName) {
             const tab = distTabsData[tabId];
-            tab.subItemsSelected = tab.subItemsSelected.filter(s => s.id !== subId);
+            const sub = tab.subItemsSelected.find(s => s.name === subName);
+            if (!sub) return;
+            const freedSubId = sub.sub_item_id;
+            
+            tab.subItemsSelected = tab.subItemsSelected.filter(s => s.name !== subName);
             renderTabSubItems(tabId);
-            // Refresh all other tabs that show the same sub-item (stock freed up)
-            refreshAllTabsForSubItem(subId, tabId);
+            refreshAllTabsForSubItem(freedSubId, tabId);
             updateReadyStatus();
         }
 
-        function updateTabSubQty(tabId, subId, valStr) {
+        // When the user changes which distributor's stock they want to deduct from
+        function changeSubItemSource(tabId, subName, newSubIdStr) {
             const tab = distTabsData[tabId];
-            const sub = tab.subItemsSelected.find(s => s.id === subId);
+            const sub = tab.subItemsSelected.find(s => s.name === subName);
+            if (!sub) return;
+            
+            const oldSubId = sub.sub_item_id;
+            const newSubId = parseInt(newSubIdStr);
+            const newSource = sub.all_sources.find(s => s.id === newSubId);
+            
+            if (newSource) {
+                // Return stock to old source
+                sub.selected_qty = 0; 
+                refreshAllTabsForSubItem(oldSubId, -1); // Refresh all including this one
+                
+                // Switch to new source
+                sub.sub_item_id = newSubId;
+                sub.distributor_id = newSource.distributor_id;
+                
+                // Effective stock check for new source
+                const effectiveStock = getEffectiveStock(newSubId);
+                sub.available_qty = effectiveStock;
+                
+                renderTabSubItems(tabId); // Re-render this card
+                refreshAllTabsForSubItem(newSubId, tabId); // Update others using this new source
+                updateReadyStatus();
+            }
+        }
+
+        function updateTabSubQty(tabId, subName, valStr) {
+            const tab = distTabsData[tabId];
+            const sub = tab.subItemsSelected.find(s => s.name === subName);
             if (!sub) return;
             
             let val = parseInt(valStr);
             if(isNaN(val) || val < 0) val = 0;
             sub.selected_qty = val;
 
-            // Recalculate effective stock for this sub-item across all tabs
-            const effectiveStock = getEffectiveStock(subId);
-            // The available amount for THIS specific entry = effectiveStock + this entry's own qty
+            const effectiveStock = getEffectiveStock(sub.sub_item_id);
             const maxForThis = effectiveStock + val;
             
-            const input = document.getElementById(`subQtyInput_${tabId}_${subId}`);
-            const errorLabel = document.getElementById(`subQtyError_${tabId}_${subId}`);
-            const stockLabel = document.getElementById(`subStockLabel_${tabId}_${subId}`);
+            // Clean subName string for use in element IDs to avoid CSS selector issues
+            const safeName = subName.replace(/[^a-zA-Z0-9]/g, '_');
             
-            // Update the stock display for this card
+            const input = document.getElementById(`subQtyInput_${tabId}_${safeName}`);
+            const errorLabel = document.getElementById(`subQtyError_${tabId}_${safeName}`);
+            const stockLabel = document.getElementById(`subStockLabel_${tabId}_${safeName}`);
+            
             if (stockLabel) {
                 const remaining = maxForThis - val;
                 stockLabel.textContent = `${remaining} AVAILABLE`;
@@ -1597,28 +1652,25 @@
                 input.classList.remove('border-red-400', 'bg-red-50', 'text-red-600');
             }
 
-            // Update available_qty to reflect effective stock for validation
             sub.available_qty = maxForThis;
-
-            // Refresh stock display in all OTHER tabs that have the same sub-item
-            refreshAllTabsForSubItem(subId, tabId);
+            refreshAllTabsForSubItem(sub.sub_item_id, tabId);
             updateReadyStatus();
         }
 
-        // Refresh the stock label and validation for a sub-item across all tabs except excludeTab
         function refreshAllTabsForSubItem(subId, excludeTabId) {
             distTabsData.forEach((tab, i) => {
                 if (i === excludeTabId) return;
-                const si = tab.subItemsSelected.find(s => s.id === subId);
+                const si = tab.subItemsSelected.find(s => s.sub_item_id === subId);
                 if (!si) return;
 
                 const effectiveStock = getEffectiveStock(subId);
                 const maxForThis = effectiveStock + si.selected_qty;
                 si.available_qty = maxForThis;
 
-                const stockLabel = document.getElementById(`subStockLabel_${i}_${subId}`);
-                const input = document.getElementById(`subQtyInput_${i}_${subId}`);
-                const errorLabel = document.getElementById(`subQtyError_${i}_${subId}`);
+                const safeName = si.name.replace(/[^a-zA-Z0-9]/g, '_');
+                const stockLabel = document.getElementById(`subStockLabel_${i}_${safeName}`);
+                const input = document.getElementById(`subQtyInput_${i}_${safeName}`);
+                const errorLabel = document.getElementById(`subQtyError_${i}_${safeName}`);
 
                 if (stockLabel) {
                     const remaining = maxForThis - si.selected_qty;
@@ -1627,7 +1679,6 @@
                     stockLabel.classList.toggle('text-red-500', remaining <= 0);
                 }
 
-                // Re-validate
                 if (input && errorLabel) {
                     if (si.selected_qty > maxForThis) {
                         errorLabel.textContent = `Exceeds available stock (${maxForThis})!`;
@@ -1649,23 +1700,46 @@
                 return;
             }
             container.innerHTML = tab.subItemsSelected.map(si => {
-                const effectiveStock = getEffectiveStock(si.id);
-                const remaining = effectiveStock + si.selected_qty - si.selected_qty;
-                const displayStock = effectiveStock;
+                const effectiveStock = getEffectiveStock(si.sub_item_id);
+                // The display stock shouldn't include this tab's selected qty because the getEffectiveStock already subtracted it
+                const displayStock = effectiveStock + si.selected_qty - si.selected_qty; // equivalent to effectiveStock
                 const maxForThis = effectiveStock + si.selected_qty;
                 si.available_qty = maxForThis;
+                
+                const safeName = si.name.replace(/[^a-zA-Z0-9]/g, '_');
+                const escapedName = si.name.replace(/'/g, "\\'");
+                
+                let sourceDropdownHtml = '';
+                if (si.all_sources && si.all_sources.length > 1) {
+                    const options = si.all_sources.map(s => {
+                        const stockText = s.id === si.sub_item_id 
+                            ? ` (${getEffectiveStock(s.id) + si.selected_qty} left)` 
+                            : ` (${getEffectiveStock(s.id)} left)`;
+                        const isSelected = s.id === si.sub_item_id ? 'selected' : '';
+                        return `<option value="${s.id}" ${isSelected}>Source: ${s.distributor_name}${stockText}</option>`;
+                    }).join('');
+                    
+                    sourceDropdownHtml = `
+                        <select onchange="changeSubItemSource(${tabId}, '${escapedName}', this.value)" class="w-full mt-1.5 p-2 text-xs bg-slate-50 border border-slate-200 rounded outline-none font-semibold text-slate-600 cursor-pointer focus:border-blue-400 max-w-[280px]">
+                            ${options}
+                        </select>
+                    `;
+                } else if (si.all_sources && si.all_sources.length === 1) {
+                     sourceDropdownHtml = `<div class="mt-1 text-[10px] text-slate-500 font-medium">Source: ${si.all_sources[0].distributor_name}</div>`;
+                }
 
                 return `
                 <div class="flex items-center gap-3 p-4 bg-white border border-slate-200 shadow-sm rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
                     <div class="flex-grow flex flex-col">
                         <span class="text-sm font-bold text-slate-800">${si.name}</span>
-                        <span id="subStockLabel_${tabId}_${si.id}" class="text-[10px] font-black uppercase tracking-widest mt-1 ${displayStock > 0 ? 'text-emerald-600' : 'text-red-500'}">${displayStock} AVAILABLE</span>
+                        ${sourceDropdownHtml}
+                        <span id="subStockLabel_${tabId}_${safeName}" class="text-[10px] font-black uppercase tracking-widest mt-1 ${displayStock > 0 ? 'text-emerald-600' : 'text-red-500'}">${displayStock} AVAILABLE FROM SOURCE</span>
                     </div>
                     <div class="flex flex-col items-center gap-1">
-                        <input type="number" id="subQtyInput_${tabId}_${si.id}" min="1" max="${maxForThis}" placeholder="Qty" value="${si.selected_qty || ''}" oninput="updateTabSubQty(${tabId}, ${si.id}, this.value)" class="w-24 p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-sm text-center focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all">
-                        <span id="subQtyError_${tabId}_${si.id}" class="hidden text-[10px] font-bold text-red-500 text-center"></span>
+                        <input type="number" id="subQtyInput_${tabId}_${safeName}" min="1" max="${maxForThis}" placeholder="Qty" value="${si.selected_qty || ''}" oninput="updateTabSubQty(${tabId}, '${escapedName}', this.value)" class="w-24 p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-black text-sm text-center focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all">
+                        <span id="subQtyError_${tabId}_${safeName}" class="hidden text-[10px] font-bold text-red-500 text-center"></span>
                     </div>
-                    <button type="button" onclick="removeTabSub(${tabId}, ${si.id})" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-colors font-bold text-lg shrink-0">✕</button>
+                    <button type="button" onclick="removeTabSub(${tabId}, '${escapedName}')" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-colors font-bold text-lg shrink-0">✕</button>
                 </div>`;
             }).join('');
         }
@@ -1709,14 +1783,17 @@
                     errors.push(`Tab ${i+1}: Sub-item "${sub.name}" requested (${sub.selected_qty}) exceeds stock (${sub.available_qty}).`);
                     tabValid = false;
                 } else {
-                    subItemsPayload.push({ id: sub.id, qty: sub.selected_qty });
+                    subItemsPayload.push({ 
+                        id: sub.sub_item_id, 
+                        distributor_id: sub.distributor_id,
+                        qty: sub.selected_qty 
+                    });
                 }
             });
 
             if(tabValid) {
                 payload = {
                     tab_id: `tab_${i}`,
-                    distributor_id: tab.distributor_id,
                     recipient_id: tab.recipient_id,
                     item_id: tab.item_id,
                     sub_items: subItemsPayload

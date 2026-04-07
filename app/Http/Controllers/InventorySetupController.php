@@ -138,6 +138,7 @@ class InventorySetupController extends Controller
         $subItemsInput = $request->input('sub_items', []);
         $subItemQuantities = $request->input('sub_item_quantities', []);
         $subItemConditions = $request->input('sub_item_conditions', []);
+        $subItemDistributors = $request->input('sub_item_distributors', []);
         
         $validSubItems = [];
         $masterQty = 0;
@@ -147,7 +148,8 @@ class InventorySetupController extends Controller
                 $qty = (int) $subItemQuantities[$index];
                 if ($qty > 0) {
                     $condition = $subItemConditions[$index] ?? 'Serviceable';
-                    $validSubItems[] = ['name' => $name, 'quantity' => $qty, 'condition' => $condition];
+                    $distributorId = !empty($subItemDistributors[$index]) ? (int) $subItemDistributors[$index] : null;
+                    $validSubItems[] = ['name' => $name, 'quantity' => $qty, 'condition' => $condition, 'distributor_id' => $distributorId];
                     $masterQty += $qty;
                 }
             }
@@ -251,11 +253,15 @@ class InventorySetupController extends Controller
 
             if ($existingSub) {
                 // Update the existing sub-item's quantity and condition
-                DB::table('sub_items')->where('id', $existingSub->id)->update([
+                $updateData = [
                     'quantity' => DB::raw("quantity + {$subQty}"),
                     'condition' => $subCondition,
                     'updated_at' => now(),
-                ]);
+                ];
+                if ($sub['distributor_id']) {
+                    $updateData['distributor_id'] = $sub['distributor_id'];
+                }
+                DB::table('sub_items')->where('id', $existingSub->id)->update($updateData);
                 DB::table('system_logs')->insert([
                     'user' => $userName,
                     'activity' => "Updated sub-item '{$subItemName}' quantity by +{$subQty} (Condition: {$subCondition}) under item '{$itemName}'",
@@ -272,6 +278,7 @@ class InventorySetupController extends Controller
                     'item_id' => $itemId,
                     'quantity' => $subQty,
                     'condition' => $subCondition,
+                    'distributor_id' => $sub['distributor_id'],
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -314,9 +321,6 @@ class InventorySetupController extends Controller
 
         DB::beginTransaction();
         try {
-            // Fetch default System Warehouse ID
-            $systemWarehouseId = DB::table('stakeholders')->where('type', 'System')->value('id');
-
             foreach ($payload as $dist) {
                 // Fallback to school_id if old UI is used temporarily, otherwise use recipient_id
                 $recipientId = $dist['recipient_id'] ?? null;
@@ -324,7 +328,6 @@ class InventorySetupController extends Controller
                     $recipientId = DB::table('stakeholders')->where('school_id', $dist['school_id'])->value('id');
                 }
                 
-                $distributorId = $dist['distributor_id'] ?? $systemWarehouseId;
                 $itemId = $dist['item_id'] ?? null;
                 $subItems = $dist['sub_items'] ?? [];
 
@@ -334,7 +337,6 @@ class InventorySetupController extends Controller
 
                 $item = DB::table('items')->where('id', $itemId)->lockForUpdate()->first();
                 $recipient = DB::table('stakeholders')->where('id', $recipientId)->first();
-                $distributor = DB::table('stakeholders')->where('id', $distributorId)->first();
 
                 if (!$item || !$recipient) {
                     throw new \Exception("Invalid item or recipient selected.");
@@ -343,39 +345,24 @@ class InventorySetupController extends Controller
                 foreach ($subItems as $sub) {
                     $subId = $sub['id'];
                     $qty = (int) ($sub['qty'] ?? 0);
+                    $distributorId = $sub['distributor_id'] ?? null;
 
-                    if ($qty <= 0) continue;
+                    if ($qty <= 0 || !$distributorId) continue;
 
-                    // If distributing from System Warehouse, check global sub_items available stock
-                    if ($distributorId == $systemWarehouseId) {
-                        $subItem = DB::table('sub_items')->where('id', $subId)->where('item_id', $itemId)->lockForUpdate()->first();
+                    // Fetch the specific sub-item record which inherently belongs to a specific distributor
+                    $subItem = DB::table('sub_items')->where('id', $subId)->lockForUpdate()->first();
+                    $distributor = DB::table('stakeholders')->where('id', $distributorId)->first();
 
-                        if (!$subItem) {
-                            throw new \Exception("Sub-item not found in warehouse.");
-                        }
-
-                        if ($subItem->quantity < $qty) {
-                            throw new \Exception("Requested quantity ({$qty}) for '{$subItem->name}' exceeds available warehouse stock ({$subItem->quantity}).");
-                        }
-
-                        // Decrement sub-item available stock in warehouse
-                        DB::table('sub_items')->where('id', $subId)->decrement('quantity', $qty);
-                    } else {
-                        // If distributing from another stakeholder, check their specific ownership stock
-                        $ownershipStock = DB::table('ownerships')
-                            ->where('recipient_id', $distributorId)
-                            ->where('sub_item_id', $subId)
-                            ->where('condition', $sub['condition'] ?? 'Serviceable')
-                            ->lockForUpdate()
-                            ->first();
-
-                        if (!$ownershipStock || $ownershipStock->quantity < $qty) {
-                            throw new \Exception("Distributor does not have enough stock of this sub-item and condition.");
-                        }
-
-                        // Decrement distributor's stock
-                        DB::table('ownerships')->where('id', $ownershipStock->id)->decrement('quantity', $qty);
+                    if (!$subItem || !$distributor) {
+                        throw new \Exception("Sub-item or distributor not found.");
                     }
+
+                    if ($subItem->quantity < $qty) {
+                        throw new \Exception("Requested quantity ({$qty}) for '{$subItem->name}' exceeds available stock ({$subItem->quantity}).");
+                    }
+
+                    // Decrement sub-item available stock directly from its master record
+                    DB::table('sub_items')->where('id', $subId)->decrement('quantity', $qty);
 
                     // Insert or update ownership for the recipient
                     $existingOwnership = DB::table('ownerships')
@@ -386,7 +373,7 @@ class InventorySetupController extends Controller
 
                     if ($existingOwnership) {
                         DB::table('ownerships')->where('id', $existingOwnership->id)->update([
-                            'quantity' => $existingOwnership->quantity + $qty,
+                            'quantity' => DB::raw("quantity + {$qty}"),
                             'updated_at' => now(),
                             'distributor_id' => $distributorId // Update last distributor source
                         ]);

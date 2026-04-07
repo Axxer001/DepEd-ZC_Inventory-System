@@ -33,6 +33,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/dashboard/quick-asset', [DashboardController::class, 'storeQuickAsset'])->name('inventory.dashboard.store');
     
     Route::get('/inventory-setup', function () {
+        set_time_limit(300); // Prevent timeouts due to high latency remote database queries
+        
         $districts = DB::table('districts')
             ->join('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
             ->select('districts.id', 'districts.name', 'quadrants.legislative_district_id', 'quadrants.name as quadrant_name')
@@ -45,7 +47,11 @@ Route::middleware('auth')->group(function () {
             ->select('items.id', 'items.name', 'items.category_id', 'items.master_quantity', DB::raw('COALESCE(dist.distributed_quantity, 0) as distributed_quantity'))
             ->orderBy('items.name')
             ->get();
-        $subItems = DB::table('sub_items')->select('id', 'name', 'item_id', 'quantity')->orderBy('name')->get();
+        $subItems = DB::table('sub_items')
+            ->leftJoin('stakeholders', 'sub_items.distributor_id', '=', 'stakeholders.id')
+            ->select('sub_items.id', 'sub_items.name', 'sub_items.item_id', 'sub_items.quantity', 'sub_items.distributor_id', 'stakeholders.name as distributor_name')
+            ->orderBy('sub_items.name')
+            ->get();
         $allSchools = DB::table('schools')
             ->leftJoin('ownerships', 'schools.id', '=', 'ownerships.school_id')
             ->select('schools.id', 'schools.school_id', 'schools.name', DB::raw('COALESCE(SUM(ownerships.quantity), 0) as total_assets'))
@@ -81,6 +87,8 @@ Route::middleware('auth')->group(function () {
 
     // --- NEW: Dedicated Route for the Editor (Asset Modifier) ---
     Route::get('/inventory-modifier', function () {
+        set_time_limit(300); // Prevent timeouts due to high latency remote database queries
+        
         $districts = DB::table('districts')
             ->join('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
             ->select('districts.id', 'districts.name', 'quadrants.legislative_district_id', 'quadrants.name as quadrant_name')
@@ -123,6 +131,8 @@ Route::middleware('auth')->group(function () {
 
     // --- NEW: Dedicated Route for the School Modifier ---
     Route::get('/inventory-modifier/school', function () {
+        set_time_limit(300); // Prevent timeouts due to high latency remote database queries
+        
         $allSchools = DB::table('schools')
             ->join('districts', 'schools.district_id', '=', 'districts.id')
             ->select('schools.id', 'schools.school_id', 'schools.name', 'schools.district_id', 'districts.name as district_name')
