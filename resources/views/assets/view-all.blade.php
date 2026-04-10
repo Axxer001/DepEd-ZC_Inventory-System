@@ -127,7 +127,7 @@
                                 <th class="px-5 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Recipient Schools</th>
                                 <th class="px-5 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Master</th>
                                 <th class="px-5 py-4 text-[9px] font-black text-blue-500 uppercase tracking-widest border-b border-slate-100 text-center bg-blue-50/20">Sent</th>
-                                <th class="px-5 py-4 text-[9px] font-black text-emerald-500 uppercase tracking-widest border-b border-slate-100 text-center bg-emerald-50/20">Rem</th>
+                                <th class="px-5 py-4 text-[9px] font-black text-emerald-500 uppercase tracking-widest border-b border-slate-100 text-center bg-emerald-50/20">Available Stock</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
