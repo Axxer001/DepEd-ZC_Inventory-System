@@ -15,10 +15,20 @@ class InventorySetupController extends Controller
             'district_id' => 'required|exists:districts,id',
         ]);
 
-        DB::table('schools')->insert([
+        $schoolId = DB::table('schools')->insertGetId([
             'school_id' => $request->school_id,
             'name' => $request->name,
             'district_id' => $request->district_id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Automatically register the school as a stakeholder (recipient)
+        DB::table('stakeholders')->insert([
+            'name' => $request->name,
+            'type' => 'Recipient',
+            'entity_type' => 'School',
+            'school_id' => $schoolId,
             'created_at' => now(),
             'updated_at' => now(),
         ]);

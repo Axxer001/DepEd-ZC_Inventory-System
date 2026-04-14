@@ -60,7 +60,7 @@ Route::middleware('auth')->group(function () {
             ->get();
             
         $stakeholders = DB::table('stakeholders')
-            ->select('id', 'parent_id', 'name', 'type', 'school_id')
+            ->select('id', 'parent_id', 'name', 'type', 'school_id', 'entity_type', 'position', 'person_name', 'status')
             ->orderBy('name')
             ->get();
             
@@ -292,60 +292,7 @@ Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('
 // Route para sa Explorer
 Route::get('/asset-explorer', [AssetController::class, 'explorer'])->name('assets.explorer');
 
-Route::get('/inventory-setup/add-distributors', function () {
-    // Current Type
-    $distributors = \Illuminate\Support\Facades\DB::table('stakeholders')
-        ->where('type', 'Distributor')
-        ->whereNull('parent_id')
-        ->orderBy('name')
-        ->get();
-        
-    $subDistributors = \Illuminate\Support\Facades\DB::table('stakeholders')
-        ->where('type', 'Distributor')
-        ->whereNotNull('parent_id')
-        ->get();
 
-    // Opposite Type for Cross-Registration (Filtered)
-    $crossData = \App\Http\Controllers\StakeholderController::getCrossRegistrationEntities('Distributor');
-    $oppositeMains = $crossData['oppositeMains'];
-    $oppositeSubs = $crossData['oppositeSubs'];
-        
-    return view('add-distributors', compact('distributors', 'subDistributors', 'oppositeMains', 'oppositeSubs'));
-})->name('inventory.setup.add_distributors');
-
-Route::post('/inventory-setup/add-distributors', [\App\Http\Controllers\StakeholderController::class, 'storeGroup'])
-    ->name('inventory.setup.store_distributor_group');
-
-// Route for Individual / Office recipient registration (Tracks B & C)
-Route::post('/inventory-setup/add-recipients/individual', [\App\Http\Controllers\StakeholderController::class, 'storeIndividualRecipient'])
-    ->name('inventory.setup.store_individual_recipient');
-
-// Route para sa Add Recipients
-Route::get('/inventory-setup/add-recipients', function () {
-    // Current Type
-    $recipients = \Illuminate\Support\Facades\DB::table('stakeholders')
-        ->where('type', 'Recipient')
-        ->whereNull('parent_id')
-        ->orderBy('name')
-        ->get();
-        
-    $subRecipients = \Illuminate\Support\Facades\DB::table('stakeholders')
-        ->where('type', 'Recipient')
-        ->whereNotNull('parent_id')
-        ->get();
-
-    // Opposite Type for Cross-Registration (Filtered)
-    $crossData = \App\Http\Controllers\StakeholderController::getCrossRegistrationEntities('Recipient');
-    $oppositeMains = $crossData['oppositeMains'];
-    $oppositeSubs = $crossData['oppositeSubs'];
-        
-    $allSchools = \Illuminate\Support\Facades\DB::table('schools')
-        ->select('id', 'school_id', 'name')
-        ->orderBy('name')
-        ->get();
-
-    return view('add-recipients', compact('recipients', 'subRecipients', 'oppositeMains', 'oppositeSubs', 'allSchools'));
-})->name('inventory.setup.add_recipients');
 Route::middleware('auth')->group(function () {
 
     // --- DISTRIBUTORS GROUP ---
