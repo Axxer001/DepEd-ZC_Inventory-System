@@ -142,27 +142,7 @@
             <p class="category-subtext text-[11px] text-slate-400 uppercase font-bold mt-2 tracking-tight leading-tight opacity-80" data-add="Register new school profiles" data-edit="Modify existing school records"></p>
         </div>
 
-        {{-- Resource Providers --}}
-        <a id="providerLink" href="{{ route('inventory.setup.add_distributors') }}" class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
-            <div class="w-16 h-16 bg-orange-50 text-orange-600 rounded-[1.5rem] flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.129-1.125V11.25c0-4.446-3.604-8.1-8.1-8.1H9a8.1 8.1 0 0 0-8.1 8.1v3.375c0 .621.504 1.125 1.125 1.125H3.375M9 15h3.375M9 15V3.375M9 15h3.375M9 15h3.375" />
-                </svg>
-            </div>
-            <span class="block font-black text-slate-800 uppercase text-xs tracking-widest">Asset Source Providers</span>
-            <p class="category-subtext text-[11px] text-slate-400 uppercase font-bold mt-2 tracking-tight leading-tight opacity-80" data-add="Register new asset sources" data-edit="Modify existing provider info"></p>
-        </a>
 
-        {{-- Recipients --}}
-        <a href="{{ route('inventory.setup.add_recipients') }}" class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
-            <div class="w-16 h-16 bg-purple-50 text-purple-600 rounded-[1.5rem] flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform shrink-0">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                </svg>
-            </div>
-            <span class="block font-black text-slate-800 uppercase text-xs tracking-widest">Recipients</span>
-            <p class="category-subtext text-[11px] text-slate-400 uppercase font-bold mt-2 tracking-tight leading-tight opacity-80" data-add="Add new asset receivers" data-edit="Update recipient details"></p>
-        </a>
     </div>
 
     <div class="hidden md:flex md:justify-center md:gap-6 max-w-6xl mx-auto px-4">
@@ -275,13 +255,7 @@
             }
         });
 
-        // Ensure the Resource Providers link includes the current mode
-        const providerLink = document.getElementById('providerLink');
-        if (providerLink) {
-            // This preserves your existing route but tells the next page the mode
-            const baseUrl = "{{ route('inventory.setup.add_distributors') }}";
-            providerLink.href = `${baseUrl}?mode=${currentMode}`;
-        }
+
     }
 
     if (step === 3) {
@@ -1372,39 +1346,56 @@
             const tab = tabInput ? tabInput.value : 'school';
             
             dd.classList.remove('hidden');
-            
-            let filteredList = rawStakeholders.filter(s => s.type === 'Recipient');
-            if (tab === 'school') {
-                filteredList = filteredList.filter(s => s.entity_type === 'School');
-            } else {
-                filteredList = filteredList.filter(s => s.entity_type !== 'School');
-            }
-            
-            const f = filteredList.filter(s => 
-                (s.name.toLowerCase().includes(q) || (s.school_id && s.school_id.toString().includes(q)))
-            ).slice(0, 50);
-            
             let h = '<div class="p-3 text-[10px] text-slate-400 font-extrabold uppercase tracking-widest sticky top-0 bg-white/90 backdrop-blur border-b border-slate-100 z-10">Select recipient</div>';
-            h += f.length === 0 ? '<div class="px-4 py-4 text-sm font-bold text-slate-400 text-center italic">No recipients found</div>'
-                : f.map(s => {
-                    let positionBadge = s.position ? `<span class="text-[9px] bg-slate-100 text-slate-500 ml-2 px-1.5 py-0.5 rounded uppercase tracking-widest">${s.position}</span>` : '';
-                    let schoolCodeText = s.school_id && tab === 'school' ? `<span class="text-xs font-normal text-slate-500 mr-2">${s.school_id}</span>` : '';
-                    let displayName = tab === 'school' ? s.name : (s.person_name || s.name);
-                    
-                    return `<div onclick="addPreDistSchool(${s.id},'${displayName.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors border-b border-slate-50 last:border-0 truncate flex items-center">
-                        <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md mr-2">${s.entity_type}</span>
-                        ${schoolCodeText}${displayName}${positionBadge}
-                    </div>`;
-                }).join('');
+            
+            if (tab === 'school') {
+                const filteredList = allSchoolsList.filter(s => 
+                    s.name.toLowerCase().includes(q) || (s.school_id && s.school_id.toString().includes(q))
+                ).slice(0, 50);
+
+                if (filteredList.length === 0) {
+                    h += '<div class="px-4 py-4 text-sm font-bold text-slate-400 text-center italic">No schools found</div>';
+                } else {
+                    h += filteredList.map(s => {
+                        let schoolCodeText = s.school_id ? `<span class="text-xs font-normal text-slate-500 mr-2">${s.school_id}</span>` : '';
+                        let stakeholder = rawStakeholders.find(st => st.school_id === s.id && st.type === 'Recipient');
+                        let stakeholderId = stakeholder ? stakeholder.id : 'null';
+                        
+                        return `<div onclick="addPreDistSchool(${stakeholderId}, ${s.id}, '${s.name.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors border-b border-slate-50 last:border-0 truncate flex items-center">
+                            <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md mr-2">School</span>
+                            ${schoolCodeText}${s.name}
+                        </div>`;
+                    }).join('');
+                }
+            } else {
+                let filteredList = rawStakeholders.filter(s => s.type === 'Recipient' && s.entity_type !== 'School');
+                const matches = filteredList.filter(s => 
+                    (s.person_name && s.person_name.toLowerCase().includes(q)) || (s.name && s.name.toLowerCase().includes(q))
+                ).slice(0, 50);
+
+                if (matches.length === 0) {
+                    h += '<div class="px-4 py-4 text-sm font-bold text-slate-400 text-center italic">No recipients found</div>';
+                } else {
+                    h += matches.map(s => {
+                        let positionBadge = s.position ? `<span class="text-[9px] bg-slate-100 text-slate-500 ml-2 px-1.5 py-0.5 rounded uppercase tracking-widest">${s.position}</span>` : '';
+                        let displayName = (s.person_name || s.name);
+                        
+                        return `<div onclick="addPreDistSchool(${s.id}, null, '${displayName.replace(/'/g,"\\'")}')" class="px-4 py-3 text-sm font-bold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors border-b border-slate-50 last:border-0 truncate flex items-center">
+                            <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md mr-2">${s.entity_type || 'Entity'}</span>
+                            ${displayName}${positionBadge}
+                        </div>`;
+                    }).join('');
+                }
+            }
             dd.innerHTML = h;
         }
 
-        function addPreDistSchool(id, name) {
+        function addPreDistSchool(recipient_id, school_id, name) {
             if (preSelectedSchools.length >= 6) {
                 document.getElementById('preDistLimitWarning').classList.remove('hidden');
                 return;
             }
-            preSelectedSchools.push({ id, name, uid: Date.now() + Math.random() });
+            preSelectedSchools.push({ id: recipient_id, school_id: school_id, name, uid: Date.now() + Math.random() });
             renderPreSelectedSchools();
             document.getElementById('preDistSchoolSearch').value = '';
             document.getElementById('preDistSchoolDropdownList').classList.add('hidden');
@@ -1456,6 +1447,7 @@
             distTabsData = preSelectedSchools.map((school, i) => ({
                 tabIndex: i,
                 recipient_id: school.id,
+                school_id: school.school_id,
                 recipient_name: school.name,
                 category_id: null,
                 item_id: null,
@@ -1958,6 +1950,7 @@
                 payload = {
                     tab_id: `tab_${i}`,
                     recipient_id: tab.recipient_id,
+                    school_id: tab.school_id,
                     item_id: tab.item_id,
                     sub_items: subItemsPayload
                 };
