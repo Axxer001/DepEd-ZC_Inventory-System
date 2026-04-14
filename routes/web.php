@@ -403,6 +403,9 @@ Route::post('/partials/import', function () {
     return "Form submitted! Processing logic goes here.";
 })->name('assets.import.process');
 
+Route::get('/register-distributions', function () {
+    return view('register-distributions');
+});
 
 });
 
