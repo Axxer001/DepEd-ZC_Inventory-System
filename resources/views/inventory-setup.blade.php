@@ -559,6 +559,20 @@
                                 </div>
                                 </div>
                             </div>
+
+                            <!-- Rapid Registration Toggle & Scanned Tag -->
+                            <div class="flex items-center justify-between bg-slate-50 border border-slate-100 p-4 rounded-2xl">
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-bold text-slate-700">⚡ Rapid Registration Mode</span>
+                                    <span class="text-[10px] text-slate-400 font-medium tracking-wide">Save details to quickly scan and register the next item.</span>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="rapidRegisterToggle" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#c00000]"></div>
+                                </label>
+                            </div>
+                            <input type="hidden" name="scanned_tag" id="scannedTagInput" value="">
+                            
                             <button type="button" onclick="confirmMasterItemSubmit()" class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">${modeText} Item</button>
                         </form>`;
 
@@ -1306,7 +1320,43 @@
                 showCancelButton: true, confirmButtonColor: '#c00000', cancelButtonColor: '#94a3b8',
                 confirmButtonText: 'Yes, register it!',
                 customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
-            }).then((result) => { if (result.isConfirmed) form.submit(); });
+            }).then((result) => { 
+                if (result.isConfirmed) {
+                    // Check Rapid Registration toggle
+                    const toggle = document.getElementById('rapidRegisterToggle');
+                    if (toggle && toggle.checked) {
+                        try {
+                            const mainCategory = document.getElementById('itemCategoryName').value.trim();
+                            const itemName = document.getElementById('itemName').value.trim();
+                            const subRow = document.querySelector('#subItemContainer .sub-item-row');
+                            let distributorId = '';
+                            let unitPrice = '';
+                            let condition = 'Serviceable';
+                            let subItemName = '';
+                            
+                            if (subRow) {
+                                subItemName = subRow.querySelector('input[name="sub_items[]"]').value;
+                                distributorId = subRow.querySelector('select[name="sub_item_distributors[]"]').value;
+                                unitPrice = subRow.querySelector('input[name="sub_item_prices[]"]').value;
+                                condition = subRow.querySelector('select[name="sub_item_conditions[]"]').value;
+                            }
+                            
+                            sessionStorage.setItem('rapidRegistrationData', JSON.stringify({
+                                categoryName: mainCategory,
+                                itemName: itemName,
+                                subItemName: subItemName,
+                                distributorId: distributorId,
+                                unitPrice: unitPrice,
+                                condition: condition
+                            }));
+                        } catch(e) { console.error("Could not save to session storage"); }
+                    } else {
+                        sessionStorage.removeItem('rapidRegistrationData');
+                    }
+                    
+                    form.submit(); 
+                }
+            });
         }
 
         // =============================================
@@ -2444,6 +2494,70 @@
             }
         }
     }
+
+    // --- RAPID REGISTRATION LOGIC ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const scannedTag = params.get('scanned_tag');
+        
+        let shouldOpenItemMode = false;
+
+        // If there's a scanned tag, populate it
+        if (scannedTag) {
+            // Wait for dynamic DOM render
+            setTimeout(() => {
+                const tagInput = document.getElementById('scannedTagInput');
+                if (tagInput) tagInput.value = scannedTag;
+                
+                // Force Serialized fields to be open if we are creating a unique QR 
+                const serialToggle = document.querySelector('.serial-panel input[type="checkbox"]');
+                if (serialToggle) {
+                    serialToggle.checked = true;
+                    toggleSerializedFields(serialToggle);
+                    const panel = serialToggle.closest('.serial-panel');
+                    panel.classList.remove('hidden');
+                }
+            }, 500); // short delay since switchMode('item') may need a tick
+            shouldOpenItemMode = true;
+        }
+
+        // Check if there is data from previous registration
+        const savedDataJson = sessionStorage.getItem('rapidRegistrationData');
+        if (savedDataJson) {
+            try {
+                const data = JSON.parse(savedDataJson);
+                setTimeout(() => {
+                    const toggle = document.getElementById('rapidRegisterToggle');
+                    if (toggle) toggle.checked = true;
+
+                    if (data.categoryName) document.getElementById('itemCategoryName').value = data.categoryName;
+                    if (data.itemName) document.getElementById('itemName').value = data.itemName;
+                    
+                    const subRow = document.querySelector('#subItemContainer .sub-item-row');
+                    if (subRow) {
+                        subRow.querySelector('input[name="sub_items[]"]').value = data.subItemName || '';
+                        subRow.querySelector('select[name="sub_item_distributors[]"]').value = data.distributorId || '';
+                        subRow.querySelector('input[name="sub_item_prices[]"]').value = data.unitPrice || '';
+                        subRow.querySelector('select[name="sub_item_conditions[]"]').value = data.condition || 'Serviceable';
+                    }
+
+                    // Optional: Call validation methods manually if needed
+                    if (data.itemName) {
+                        const evt = new Event('input');
+                        document.getElementById('itemName').dispatchEvent(evt);
+                    }
+                }, 600);
+            } catch(e) {};
+            shouldOpenItemMode = true;
+        }
+
+        // If we found any reason to jump into item registration mode, do it immediately
+        if (shouldOpenItemMode && window.location.search.includes('mode=add')) {
+            // Already handled by existing parameter check, but just to be sure we're on 'item'
+            switchMode('item');
+        }
+    });
+
 </script>
 </body>
 </html>

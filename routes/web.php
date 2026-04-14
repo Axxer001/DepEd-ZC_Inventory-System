@@ -292,6 +292,25 @@ Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('
 // Route para sa Explorer
 Route::get('/asset-explorer', [AssetController::class, 'explorer'])->name('assets.explorer');
 
+// QR Tag Generation and Scanning Routes
+Route::get('/assets/print-tags', function (Illuminate\Http\Request $request) {
+    // Generate batches of tags dynamically
+    $count = $request->query('count', 24); // Default to 24 tags (like an A4 sheet)
+    $tags = [];
+    for ($i = 0; $i < $count; $i++) {
+        $tags[] = (string) Illuminate\Support\Str::uuid();
+    }
+    return view('assets.print-tags', compact('tags'));
+})->name('assets.print_tags');
+
+Route::get('/scan', function (Illuminate\Http\Request $request) {
+    $tag = $request->query('tag');
+    if (!$tag) {
+        return redirect('/dashboard')->withErrors(['scan' => 'No QR tag sequence found.']);
+    }
+    // Pre-populate the inventory setup mode with the scanned tag
+    return redirect()->route('inventory.setup', ['mode' => 'add', 'scanned_tag' => $tag]);
+})->name('assets.scan');
 
 Route::middleware('auth')->group(function () {
 
@@ -341,14 +360,10 @@ Route::middleware('auth')->group(function () {
         })->name('recipients.history');
     });
 
-    Route::get('/partials/import', function () {
-
-return view('partials.import'); // Gawa tayo ng view para dito later
-
-})->name('assets.import');
-Route::post('/partials/import', function () {
-    return "Form submitted! Processing logic goes here.";
-})->name('assets.import.process');
+    Route::match(['get', 'post'], '/partials/import/template', [\App\Http\Controllers\ImportController::class, 'downloadTemplate'])->name('assets.import.template');
+    Route::get('/partials/import', [\App\Http\Controllers\ImportController::class, 'show'])->name('assets.import');
+    Route::post('/partials/import', [\App\Http\Controllers\ImportController::class, 'process'])->name('assets.import.process');
+    Route::post('/partials/import/confirm', [\App\Http\Controllers\ImportController::class, 'confirm'])->name('assets.import.confirm');
 
 
 });

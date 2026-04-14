@@ -315,8 +315,9 @@ class InventorySetupController extends Controller
                     'quantity' => $subQty,
                     'condition' => $subCondition,
                     'distributor_id' => $sub['distributor_id'],
-                    'qr_hash' => \Illuminate\Support\Str::uuid()->toString(),
+                    'qr_hash' => $request->input('scanned_tag') ?: \Illuminate\Support\Str::uuid()->toString(),
                     'is_serialized' => $sub['is_serialized'],
+
                     'unit_price' => $sub['unit_price'],
                     'date_acquired' => $sub['date_acquired'] ?: now()->toDateString(),
                     'property_number' => $sub['property_number'],

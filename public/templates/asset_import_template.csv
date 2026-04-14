@@ -1,0 +1,6 @@
+category,item_name,sub_item_name,quantity,condition,source,unit_price,date_acquired,is_serialized,property_number,serial_number
+ICT Equipment,Laptop,Lenovo ThinkPad E14,1,Serviceable,DepEd Central Office,32500.00,2025-06-15,yes,ICT-2025-0001,SN-LVTP-00123
+ICT Equipment,Laptop,HP ProBook 450,1,Serviceable,DepEd Central Office,29800.00,2025-06-15,yes,ICT-2025-0002,SN-HPPB-00456
+Furniture,Plastic Chair,Uratex Monoblock White,200,Serviceable,Local Government Unit,350.00,2025-03-10,no,,
+Furniture,Teacher's Desk,Wooden Desk 120x60,50,Serviceable,Local Government Unit,4200.00,2025-03-10,no,,
+School Supplies,Whiteboard Marker,Pilot V-Board Master Black,500,Serviceable,DepEd Central Office,45.00,2025-01-20,no,,
