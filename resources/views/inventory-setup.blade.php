@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory Setup | DepEd Zamboanga City</title>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -574,73 +575,94 @@
 
             } else if (currentModule === 'distribution') {
                 html += `
-                    <div id="distPreSelectionPhase" class="space-y-6 animate-in fade-in zoom-in duration-300">
-                        <div class="text-center mb-8">
-                            <h4 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Step 3a: Select Source & Targets</h4>
-                            <p class="text-slate-500 text-sm mt-2 font-medium">Select where the assets are coming from, and up to 6 recipients.</p>
-                        </div>
-                        <div class="max-w-xl mx-auto space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full -mx-2">
 
-                            <hr class="border-slate-100">
+                        {{-- Left: Recipient Builder --}}
+                        <div class="lg:col-span-7 space-y-6">
+                            <div>
+                                <h4 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Recipient Registry</h4>
+                                <p class="text-slate-400 text-xs font-bold uppercase mt-1 tracking-widest">Register new entities to the master list</p>
+                            </div>
 
-                            <!-- Target Recipients Search -->
-                            <div class="space-y-2">
-                                <div class="flex justify-between items-end ml-1">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Target Recipients (Max 6)</label>
-                                    <div class="flex bg-slate-100 p-1 rounded-lg gap-1 border border-slate-200">
-                                        <button type="button" id="tabRecipSchoolBtn" onclick="switchRecipTab('school')" class="text-[10px] font-bold px-3 py-1 rounded-md bg-white shadow-sm text-slate-700 transition-all">Schools</button>
-                                        <button type="button" id="tabRecipIndivBtn" onclick="switchRecipTab('indiv')" class="text-[10px] font-bold px-3 py-1 rounded-md text-slate-500 hover:text-slate-700 transition-all">Offices/Individuals</button>
+                            <div class="space-y-5">
+                                <div class="space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Entity Type <span class="text-red-500">*</span></label>
+                                    <select id="distSourceType" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700 cursor-pointer transition-all focus:border-[#c00000] focus:ring-4 focus:ring-red-100" onchange="distToggleSource()">
+                                        <option value="">-- Select Entity Type --</option>
+                                        <option value="school">School</option>
+                                        <option value="external">External (Offices / Individuals)</option>
+                                    </select>
+                                </div>
+
+                                <div id="distSchoolBox" class="hidden space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Search School <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <input id="distSchoolInput" data-school-id="" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700 transition-all focus:border-[#c00000] focus:ring-4 focus:ring-red-100" placeholder="Type school name..." oninput="distFilterSchools()">
+                                        <div id="distSchoolDropdown" class="hidden absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-52 overflow-y-auto custom-scroll"></div>
                                     </div>
                                 </div>
-                                <div class="relative">
-                                    <input type="hidden" id="currentRecipTab" value="school">
-                                    <input type="text" id="preDistSchoolSearch" placeholder="Search schools..." class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 transition-all text-center focus:border-[#c00000] focus:ring-4 focus:ring-red-100" autocomplete="off" oninput="filterPreDistSchools()" onfocus="filterPreDistSchools()">
-                                    <div id="preDistSchoolDropdownList" class="hidden absolute z-30 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[250px] overflow-y-auto custom-scroll text-left"></div>
+
+                                <div id="distExternalBox" class="hidden space-y-2">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">External Office / Organization <span class="text-red-500">*</span></label>
+                                    <input type="text" id="distExternalInput" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700 transition-all focus:border-[#c00000] focus:ring-4 focus:ring-red-100" placeholder="e.g. City Health Office, Private Contractor...">
                                 </div>
-                                <div id="preDistSelectedSchoolsContainer" class="flex flex-col gap-2 mt-4 min-h-[50px]">
-                                    <span class="text-slate-400 text-xs font-bold italic w-full text-center mt-1 select-prompt">No recipients selected yet.</span>
+
+                                <div id="distPersonnelSection" class="hidden pt-6 border-t border-slate-100 space-y-4">
+                                    <div>
+                                        <h3 class="font-black text-slate-800 uppercase tracking-tight italic text-base">Personnel Details <span class="text-slate-400 text-sm font-medium italic lowercase">(optional)</span></h3>
+                                        <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Assign an authorized receiver</p>
+                                    </div>
+
+                                    <div class="flex flex-col sm:flex-row gap-3 p-4 bg-slate-50/50 rounded-3xl border border-slate-100">
+                                        <input type="text" id="distPersonnelName" placeholder="Personnel Name" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700 text-sm transition-all focus:border-[#c00000]">
+                                        <input type="text" id="distPersonnelPosition" placeholder="Job Title / Position" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700 text-sm transition-all focus:border-[#c00000]">
+                                    </div>
+
+                                    <button type="button" onclick="distAddRecipientToList()" class="w-full py-5 bg-[#c00000] hover:bg-red-700 text-white rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-xl transition-all hover:-translate-y-1 active:scale-95">
+                                        Add Recipient
+                                    </button>
                                 </div>
-                                <p id="preDistLimitWarning" class="hidden text-center text-xs font-bold text-red-500 mt-2">⚠ Maximum of 6 recipients reached.</p>
                             </div>
-                            <button type="button" id="proceedDistBtn" onclick="proceedToDistributionTabs()" class="w-full mt-8 py-5 bg-slate-200 text-slate-400 rounded-3xl font-black uppercase tracking-widest cursor-not-allowed transition-all" disabled>Proceed to Assign Assets</button>
-                        </div>
-                    </div>
-                    
-                    <div id="distTabsPhase" class="hidden space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
-                            <div>
-                                <h4 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Step 3b: Assign Assets</h4>
-                                <p class="text-slate-500 text-sm mt-1 font-medium">Distribute assets individually per tab, or all at once.</p>
-                                <p id="distPhaseSourceLabel" class="text-xs font-bold text-[#c00000] mt-1 bg-red-50 inline-block px-3 py-1 rounded-lg border border-red-100"></p>
-                            </div>
-                            <button type="button" onclick="backToPreSelectionPhase()" class="text-xs font-bold text-slate-400 hover:text-[#c00000] underline underline-offset-4 shrink-0 transition-colors bg-transparent border-0">« Revise Source/Targets</button>
-                        </div>
-                        <div class="flex flex-col md:flex-row gap-6">
-                            <div class="md:w-1/4 flex flex-col gap-2 border-r border-slate-100 pr-4 max-h-[500px] overflow-y-auto custom-scroll" id="distTabsHeader"></div>
-                            <div id="distTabsContentContainer" class="md:w-3/4 min-h-[400px]"></div>
                         </div>
 
-                        <div class="pt-6 border-t border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-                            <span class="text-[10px] font-black tracking-widest uppercase text-slate-500 bg-slate-100 rounded-xl px-4 py-2" id="tabStatusCount">0 Assets Ready</span>
-                            <button type="button" onclick="confirmDistributeAll()" id="distributeAllBtn" class="px-8 py-4 bg-[#c00000] hover:bg-red-700 text-white rounded-2xl font-black shadow-xl hover:-translate-y-1 active:scale-95 transition-all text-sm uppercase tracking-wider w-full sm:w-auto">Distribute All Tabs</button>
+                        {{-- Right: Recipient List --}}
+                        <div class="lg:col-span-5 bg-slate-900 p-6 rounded-[2.5rem] shadow-2xl border border-slate-800 flex flex-col overflow-hidden relative" style="min-height: 400px;">
+                            <div class="mb-6 flex justify-between items-start">
+                                <div>
+                                    <h4 class="text-lg font-black text-white uppercase tracking-tight italic">Recipient List</h4>
+                                    <p class="text-slate-400 text-[10px] font-bold uppercase mt-1 tracking-widest">Selected targets for batch</p>
+                                </div>
+                                <span id="distRecipientCount" class="bg-white/10 text-white px-4 py-1 rounded-full text-[10px] font-black uppercase">0 People</span>
+                            </div>
+
+                            <div id="distActiveList" class="space-y-3 flex-grow overflow-y-auto custom-scroll pr-2">
+                                <div id="distEmptyState" class="text-center py-16">
+                                    <div class="w-14 h-14 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-3 border border-white/5">
+                                        <svg class="w-7 h-7 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                    </div>
+                                    <p class="text-slate-500 text-xs font-bold uppercase tracking-widest italic">List is empty</p>
+                                </div>
+                            </div>
+
+                            <div id="distListFooter" class="hidden pt-5 mt-5 border-t border-white/10">
+                                <button type="button" onclick="distProceedToAssign()" class="w-full py-4 bg-white text-slate-900 rounded-2xl font-black uppercase tracking-widest hover:bg-slate-100 transition-all text-xs">
+                                    Proceed to Assign Assets
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
-            }
+            }   // <-- closes else if (currentModule === 'distribution')
+
             container.innerHTML = html;
             if (currentModule === 'item' && currentMode !== 'edit') {
                 document.getElementById('itemDropdownList').classList.add('hidden');
                 document.getElementById('itemName').readOnly = false;
                 document.getElementById('itemName').classList.remove('bg-emerald-50', 'border-emerald-200', 'bg-blue-50', 'border-blue-400');
             }
-            if (currentModule === 'distribution') {
-                preSelectedSchools = [];
-                distTabsData = [];
-                currentActiveTab = 0;
-                renderPreSelectedSchools();
-                populateSourceStakeholders();
-            }
         }
+
+
         
         function getDistributorOptionsHtml() {
             let html = '<option value="">-- Distributor --</option>';
@@ -2552,6 +2574,182 @@
             switchMode('item');
         }
     });
+
+
+        // ============================================================
+        // DISTRIBUTION MODULE — RECIPIENT REGISTRY FUNCTIONS
+        // ============================================================
+
+        let distRecipientCount = 0;
+        let distAddedIds = []; // tracks stakeholder IDs already in the list
+
+        function distToggleSource() {
+            const type = document.getElementById('distSourceType')?.value;
+            const sBox = document.getElementById('distSchoolBox');
+            const eBox = document.getElementById('distExternalBox');
+            const pSection = document.getElementById('distPersonnelSection');
+            if (sBox) sBox.classList.toggle('hidden', type !== 'school');
+            if (eBox) eBox.classList.toggle('hidden', type !== 'external');
+            if (pSection) pSection.classList.toggle('hidden', type === '');
+
+            // Clear previous inputs on switch
+            const schoolInput = document.getElementById('distSchoolInput');
+            if (schoolInput) { schoolInput.value = ''; schoolInput.dataset.schoolId = ''; }
+            const extInput = document.getElementById('distExternalInput');
+            if (extInput) extInput.value = '';
+            const pName = document.getElementById('distPersonnelName');
+            const pPos = document.getElementById('distPersonnelPosition');
+            if (pName) pName.value = '';
+            if (pPos) pPos.value = '';
+        }
+
+        function distFilterSchools() {
+            const input = document.getElementById('distSchoolInput');
+            const dropdown = document.getElementById('distSchoolDropdown');
+            if (!input || !dropdown) return;
+
+            // Clear school id when user types again
+            input.dataset.schoolId = '';
+
+            const val = input.value.toLowerCase().trim();
+            if (!val) { dropdown.classList.add('hidden'); return; }
+
+            const results = allSchoolsList.filter(s => s.name.toLowerCase().includes(val)).slice(0, 20);
+            dropdown.innerHTML = results.length
+                ? results.map(s =>
+                    `<div onclick="distSelectSchool('${s.name.replace(/'/g,"\\'")}', ${s.id})"
+                          class="px-5 py-3 hover:bg-red-50 hover:text-[#c00000] cursor-pointer font-bold text-sm border-b border-slate-50 last:border-0">
+                        ${s.name}
+                    </div>`
+                  ).join('')
+                : `<div class="px-5 py-4 text-slate-400 text-sm font-semibold">No schools found</div>`;
+
+            dropdown.classList.remove('hidden');
+        }
+
+        function distSelectSchool(name, schoolId) {
+            const input = document.getElementById('distSchoolInput');
+            const dropdown = document.getElementById('distSchoolDropdown');
+            if (input) { input.value = name; input.dataset.schoolId = schoolId; }
+            if (dropdown) dropdown.classList.add('hidden');
+        }
+
+        async function distAddRecipientToList() {
+            const type = document.getElementById('distSourceType')?.value;
+            if (!type) {
+                Swal.fire('Required', 'Please select an Entity Type first.', 'warning');
+                return;
+            }
+
+            const schoolInput = document.getElementById('distSchoolInput');
+            const schoolId = parseInt(schoolInput?.dataset?.schoolId || '0') || null;
+            const externalName = document.getElementById('distExternalInput')?.value?.trim() || '';
+            const personName  = document.getElementById('distPersonnelName')?.value?.trim() || '';
+            const position    = document.getElementById('distPersonnelPosition')?.value?.trim() || '';
+
+            // Validation
+            if (type === 'school' && !schoolId) {
+                Swal.fire('Required', 'Please search and select a school from the dropdown.', 'warning');
+                return;
+            }
+            if (type === 'external' && !externalName) {
+                Swal.fire('Required', 'Please enter the external office or organization name.', 'warning');
+                return;
+            }
+
+            // Show loading state
+            const addBtn = document.querySelector('[onclick="distAddRecipientToList()"]');
+            if (addBtn) { addBtn.disabled = true; addBtn.innerText = 'Adding...'; }
+
+            try {
+                const resp = await fetch('{{ route("recipients.add") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ entity_type: type, school_id: schoolId, external_name: externalName, person_name: personName, position })
+                });
+
+                const data = await resp.json();
+
+                if (!resp.ok) {
+                    Swal.fire('Error', data.error || 'Something went wrong.', 'error');
+                    return;
+                }
+
+                // Duplicate guard
+                if (distAddedIds.includes(data.id)) {
+                    Swal.fire('Duplicate', `${data.display_name} is already in the recipient list.`, 'info');
+                    return;
+                }
+
+                distAddedIds.push(data.id);
+                distRecipientCount++;
+
+                // Build card
+                const newBadge = data.is_new
+                    ? `<span class="text-[8px] font-black bg-emerald-400/20 text-emerald-400 px-2 py-0.5 rounded-full uppercase tracking-widest ml-1">NEW</span>`
+                    : '';
+
+                const card = document.createElement('div');
+                card.className = 'bg-white/5 border border-white/10 p-4 rounded-2xl flex justify-between items-center';
+                card.dataset.stakeholderId = data.id;
+                card.innerHTML = `
+                    <div class="overflow-hidden flex-1">
+                        <div class="flex items-center gap-1">
+                            <p class="text-white font-bold text-xs truncate">${data.display_name}</p>
+                            ${newBadge}
+                        </div>
+                        <p class="text-slate-500 text-[9px] uppercase font-black tracking-widest truncate mt-0.5">${data.sub_label}</p>
+                    </div>
+                    <button onclick="distRemoveRecipient(this, ${data.id})" class="text-slate-600 hover:text-red-400 transition-colors ml-3 shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>`;
+
+                const activeList = document.getElementById('distActiveList');
+                if (activeList) activeList.appendChild(card);
+
+                document.getElementById('distEmptyState')?.classList.add('hidden');
+                document.getElementById('distListFooter')?.classList.remove('hidden');
+                distUpdateCount();
+
+                // Clear fields after adding
+                if (document.getElementById('distPersonnelName')) document.getElementById('distPersonnelName').value = '';
+                if (document.getElementById('distPersonnelPosition')) document.getElementById('distPersonnelPosition').value = '';
+
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Network error. Please try again.', 'error');
+            } finally {
+                if (addBtn) { addBtn.disabled = false; addBtn.innerText = 'Add Recipient'; }
+            }
+        }
+
+        function distRemoveRecipient(btn, stakeholderId) {
+            btn.closest('[data-stakeholder-id]')?.remove();
+            distAddedIds = distAddedIds.filter(id => id !== stakeholderId);
+            distRecipientCount--;
+            distUpdateCount();
+        }
+
+        function distUpdateCount() {
+            const counter = document.getElementById('distRecipientCount');
+            if (counter) counter.innerText = `${distRecipientCount} ${distRecipientCount === 1 ? 'Person' : 'People'}`;
+            if (distRecipientCount <= 0) {
+                distRecipientCount = 0;
+                document.getElementById('distEmptyState')?.classList.remove('hidden');
+                document.getElementById('distListFooter')?.classList.add('hidden');
+            }
+        }
+
+        function distProceedToAssign() {
+            if (distRecipientCount === 0) {
+                Swal.fire('No Recipients', 'Add at least one recipient before proceeding.', 'warning');
+                return;
+            }
+            Swal.fire({ title: 'Coming Soon', text: 'Asset assignment workflow will be wired in the next phase.', icon: 'info', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+        }
 
 </script>
 </body>

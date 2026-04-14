@@ -369,6 +369,8 @@ Route::get('/register-distributions', function () {
     return view('register-distributions');
 });
 
+    Route::post('/api/recipients/add', [\App\Http\Controllers\RecipientRegistryController::class, 'add'])->name('recipients.add');
+
 });
 
     Route::get('/admin/quadrant-1-1', $quadrantHandler(1, 'admin.quadrants.q1-1'))->name('quadrant.1.1');
