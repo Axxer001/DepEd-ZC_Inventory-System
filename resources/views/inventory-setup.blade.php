@@ -131,24 +131,19 @@
 <div id="step2" class="step-content">
     <h3 id="step2Title" class="text-lg font-black text-slate-400 uppercase tracking-[0.3em] text-center mb-6 -mt-6">Select Category</h3>
     
-    <div class="hidden md:grid md:grid-cols-3 gap-6 max-w-6xl mx-auto px-4 mb-6">
+    <div class="grid grid-cols-3 gap-6 max-w-5xl mx-auto px-4 mb-8">
         
         {{-- Schools --}}
-        <div onclick="nextStep(3, 'school')" class="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
+        <div onclick="nextStep(3, 'school')" class="bg-white p-8 w-full rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
             <div class="w-16 h-16 bg-red-50 text-[#c00000] rounded-[1.5rem] flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A4.833 4.833 0 0012 9a4.833 4.833 0 00-7.5 1.332V21m15 0h-15" /></svg>
             </div>
             <span class="block font-black text-slate-800 uppercase text-xs tracking-widest">Schools</span>
             <p class="category-subtext text-[11px] text-slate-400 uppercase font-bold mt-2 tracking-tight leading-tight opacity-80" data-add="Register new school profiles" data-edit="Modify existing school records"></p>
         </div>
-
-
-    </div>
-
-    <div class="hidden md:flex md:justify-center md:gap-6 max-w-6xl mx-auto px-4">
         
         {{-- Inventory Items --}}
-        <div onclick="nextStep(3, 'item')" class="bg-white p-8 w-full md:w-[32%] rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
+        <div onclick="nextStep(3, 'item')" class="bg-white p-8 w-full rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
             <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-[1.5rem] flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" /></svg>
             </div>
@@ -157,7 +152,7 @@
         </div>
 
         {{-- Asset Distribution --}}
-        <div onclick="nextStep(3, 'distribution')" class="bg-white p-8 w-full md:w-[32%] rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
+        <div onclick="nextStep(3, 'distribution')" class="bg-white p-8 w-full rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
             <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-[1.5rem] flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8"><path stroke-linecap="round" stroke-linejoin="round" d="M9 6.75V15m6-10.5v.008H15V4.5zm0 9v.008H15V13.5zm0-4.5v.008H15V9zm0-4.5v.008H15V4.5zM9 15l-3 1.5L3 15V5.25l3-1.5L9 5.25M9 15l3.047-1.524c.499-.25 1.096-.217 1.565.083L17.25 15l3-1.5V4.5l-3 1.5-3.638-2.046c-.469-.264-1.025-.264-1.494 0L9 5.25" /></svg>
             </div>
