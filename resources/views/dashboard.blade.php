@@ -49,97 +49,109 @@
             </header>
 
             {{-- 1. MAIN STATS GRID --}}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-6">
-                
-                {{-- Total Assets --}}
-                <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 cursor-default">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="p-4 bg-blue-50 text-blue-500 rounded-2xl group-hover:scale-110 transition-transform">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6.75h.75m-.75 3h.75m-.75 3h.75" />
-                            </svg>
+            <div class="space-y-8 mb-6">
+                {{-- TOP ROW: General Overview --}}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {{-- Total System Assets --}}
+                    <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 cursor-default">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-4 bg-blue-50 text-blue-500 rounded-2xl group-hover:scale-110 transition-transform">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6.75h.75m-.75 3h.75m-.75 3h.75" />
+                                </svg>
+                            </div>
+                            <span class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Inventory</span>
                         </div>
-                        <span class="bg-blue-100 text-blue-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Division Wide</span>
+                        <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total System Assets</h3>
+                        <p class="text-5xl font-extrabold text-slate-800 tracking-tighter leading-none">{{ number_format($totalAssets) }}</p>
                     </div>
-                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total System Assets</h3>
-                    <p class="text-5xl font-extrabold text-slate-800 tracking-tighter leading-none">{{ number_format($totalAssets) }}</p>
-                </div>
 
-                {{-- Serviceable --}}
-                <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 cursor-default border-l-[12px] border-l-emerald-500">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="p-4 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 01-1.043 3.296 3.745 3.745 0 01-3.296 1.043A3.745 3.745 0 0112 21a3.745 3.745 0 01-3.129-1.593 3.745 3.745 0 01-3.296-1.043 3.745 3.745 0 01-1.043-3.296A3.745 3.745 0 013 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 011.043-3.296 3.745 3.745 0 013.296-1.043A3.745 3.745 0 0112 3c1.268 0 2.39.63 3.068 1.593a3.745 3.745 0 013.296 1.043 3.745 3.745 0 011.043 3.296A3.745 3.745 0 0121 12z" />
-                            </svg>
+                    {{-- Total Assets Distributed --}}
+                    <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 cursor-default">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-4 bg-indigo-50 text-indigo-500 rounded-2xl group-hover:scale-110 transition-transform">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1115 0z" />
+                                </svg>
+                            </div>
+                            <span class="bg-indigo-100 text-indigo-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Deployments</span>
                         </div>
-                        <span class="bg-emerald-100 text-emerald-600 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Operational</span>
+                        <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Assets Distributed</h3>
+                        <p class="text-5xl font-extrabold text-slate-800 tracking-tighter leading-none">{{ number_format($distributedCount ?? 0) }}</p>
                     </div>
-                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Serviceable Condition</h3>
-                    <p class="text-5xl font-extrabold text-emerald-600 tracking-tighter leading-none">{{ number_format($serviceableCount) }}</p>
-                </div>
 
-                {{-- Valuation --}}
-                <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 cursor-default">
-                    <div class="flex justify-between items-start mb-4">
-                        <div class="p-4 bg-slate-50 text-slate-600 rounded-2xl group-hover:scale-110 transition-transform">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.546 1.16 3.74.322 4.298-1.517.39-1.283-.34-2.63-1.732-3.46l-1.096-.653c-1.393-.83-2.122-2.177-1.732-3.46.558-1.839 2.752-2.677 4.298-1.517l.879.659M10.5 21h3m-3-18h3" />
-                            </svg>
+                    {{-- Total Asset Value --}}
+                    <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 cursor-default">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="p-4 bg-slate-50 text-slate-600 rounded-2xl group-hover:scale-110 transition-transform">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-8 h-8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818l.879.659c1.546 1.16 3.74.322 4.298-1.517.39-1.283-.34-2.63-1.732-3.46l-1.096-.653c-1.393-.83-2.122-2.177-1.732-3.46.558-1.839 2.752-2.677 4.298-1.517l.879.659M10.5 21h3m-3-18h3" />
+                                </svg>
+                            </div>
+                            <span class="bg-slate-200 text-slate-700 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Valuation</span>
                         </div>
-                        <span class="bg-slate-200 text-slate-700 px-4 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-widest italic">Valuation</span>
-                    </div>
-                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Asset Value</h3>
-                    <div class="flex items-baseline gap-1">
-                        <span class="text-xl font-black text-slate-400">₱</span>
-                        <p class="text-5xl font-extrabold text-slate-800 tracking-tighter leading-none">{{ number_format($totalAmount ?? 0, 2) }}</p>
+                        <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Total Asset Value</h3>
+                        <div class="flex items-baseline gap-1">
+                            <span class="text-xl font-black text-slate-400">₱</span>
+                            <p class="text-5xl font-extrabold text-slate-800 tracking-tighter leading-none">{{ number_format($totalAmount ?? 0, 2) }}</p>
+                        </div>
                     </div>
                 </div>
 
-                {{-- Unserviceable --}}
-                <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 border-l-[12px] border-l-orange-500">
-                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Unserviceable List</h3>
-                    <p class="text-5xl font-extrabold text-orange-500 tracking-tighter leading-none">{{ number_format($unserviceableCount) }}</p>
-                    <span class="text-[10px] font-black text-orange-400 uppercase mt-4 block italic">For Disposal</span>
-                </div>
+                {{-- BOTTOM ROW: Condition Status --}}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {{-- Serviceable --}}
+                    <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 cursor-default border-l-[12px] border-l-emerald-500">
+                        <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Serviceable Condition</h3>
+                        <p class="text-5xl font-extrabold text-emerald-600 tracking-tighter leading-none">{{ number_format($serviceableCount) }}</p>
+                        <span class="text-[10px] font-black text-emerald-400 uppercase mt-4 block italic tracking-wider">Operational</span>
+                    </div>
 
-                {{-- For Repair --}}
-                <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 border-l-[12px] border-l-amber-500">
-                    <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">For Repair Status</h3>
-                    <p class="text-5xl font-extrabold text-amber-500 tracking-tighter leading-none">{{ number_format($forRepairCount) }}</p>
-                    <span class="text-[10px] font-black text-amber-400 uppercase mt-4 block italic">In Maintenance</span>
+                    {{-- For Repair --}}
+                    <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 border-l-[12px] border-l-amber-500">
+                        <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">For Repair</h3>
+                        <p class="text-5xl font-extrabold text-amber-500 tracking-tighter leading-none">{{ number_format($forRepairCount) }}</p>
+                        <span class="text-[10px] font-black text-amber-400 uppercase mt-4 block italic tracking-wider">In Maintenance</span>
+                    </div>
+
+                    {{-- Unserviceable --}}
+                    <div class="group bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-50 transition-all duration-300 hover:-translate-y-2 border-l-[12px] border-l-orange-500">
+                        <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest mb-1">Unserviceable</h3>
+                        <p class="text-5xl font-extrabold text-orange-500 tracking-tighter leading-none">{{ number_format($unserviceableCount) }}</p>
+                        <span class="text-[10px] font-black text-orange-400 uppercase mt-4 block italic tracking-wider">For Disposal</span>
+                    </div>
                 </div>
             </div>
 
            {{-- 2. DYNAMIC SOURCE BREAKDOWN --}}
-<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-12">
-    {{-- Check if variable exists and is not empty --}}
-    @if(isset($sourceBreakdown) && $sourceBreakdown->count() > 0)
-        @foreach($sourceBreakdown as $source)
-        <div class="group bg-white p-4 rounded-3xl shadow-sm border border-slate-100 transition-all hover:border-red-200">
-            <div class="flex items-center gap-2 mb-2">
-                <div class="w-1.5 h-5 bg-[#c00000] rounded-full"></div>
-                <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-wider truncate">
-                    {{ $source->source_name ?? 'Unknown Source' }}
-                </h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-12">
+                @if(isset($sourceBreakdown) && $sourceBreakdown->count() > 0)
+                    @foreach($sourceBreakdown as $source)
+                    <div class="group bg-white p-4 rounded-3xl shadow-sm border border-slate-100 transition-all hover:border-red-200">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-1.5 h-5 bg-[#c00000] rounded-full"></div>
+                            <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-wider truncate">
+                                {{ $source->source_name ?? 'Unknown Source' }}
+                            </h4>
+                        </div>
+                        <div class="pl-3">
+                            <p class="text-xl font-black text-slate-800 tracking-tighter leading-none">
+                                {{ number_format($source->total_qty) }}
+                            </p>
+                            <p class="text-[9px] font-bold text-slate-400 mt-1 italic">
+                                ₱{{ number_format($source->total_amount, 0) }}
+                            </p>
+                        </div>
+                    </div>
+                    @endforeach
+                @else
+                    <div class="col-span-full py-4 text-center border-2 border-dashed border-slate-200 rounded-[2rem]">
+                        <p class="text-slate-400 text-xs font-bold uppercase italic tracking-widest">No fund sources registered yet</p>
+                    </div>
+                @endif
             </div>
-            <div class="pl-3">
-                <p class="text-xl font-black text-slate-800 tracking-tighter leading-none">
-                    {{ number_format($source->total_qty) }}
-                </p>
-                <p class="text-[9px] font-bold text-slate-400 mt-1 italic">
-                    ₱{{ number_format($source->total_amount, 0) }}
-                </p>
-            </div>
-        </div>
-        @endforeach
-    @else
-        {{-- Placeholder pag wala pang data --}}
-        <div class="col-span-full py-4 text-center border-2 border-dashed border-slate-200 rounded-[2rem]">
-            <p class="text-slate-400 text-xs font-bold uppercase italic tracking-widest">No fund sources registered yet</p>
-        </div>
-    @endif
-</div>
+
             {{-- 3. QUICK ASSET ENTRY --}}
             <section class="mb-12">
                 <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-50 relative overflow-hidden">

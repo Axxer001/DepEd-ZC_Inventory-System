@@ -394,6 +394,14 @@ Route::middleware('auth')->group(function () {
         })->name('recipients.history');
     });
 
+    Route::get('/partials/import', function () {
+
+return view('partials.import'); // Gawa tayo ng view para dito later
+
+})->name('assets.import');
+Route::post('/partials/import', function () {
+    return "Form submitted! Processing logic goes here.";
+})->name('assets.import.process');
 
 
 });
