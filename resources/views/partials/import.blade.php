@@ -80,7 +80,20 @@
             <div class="lg:col-span-7">
                 <div class="card-premium p-10 relative overflow-hidden h-full flex flex-col justify-center">
                     <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic mb-1">Upload File</h2>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">Select your CSV inventory list</p>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Select your CSV inventory list</p>
+
+                    @if($errors->any())
+                        <div class="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200">
+                            @foreach($errors->all() as $error)
+                                <p class="text-xs font-bold text-red-600 flex items-center gap-2">
+                                    <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                    {{ $error }}
+                                </p>
+                            @endforeach
+                        </div>
+                    @endif
 
                     <form action="{{ route('assets.import.process') }}" method="POST" enctype="multipart/form-data">
                         @csrf
@@ -217,12 +230,12 @@
 
         {{-- 3. CSV BUILDER --}}
         <div id="csv-builder-section" class="card-premium p-10">
-            <div class="flex justify-between items-center mb-8">
+            <div class="flex justify-between items-center mb-6">
                 <div>
                     <h4 class="text-2xl font-black text-slate-800 italic uppercase leading-none">CSV Builder</h4>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Manual Template Generator</p>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Manual Template Generator &mdash; <span class="text-emerald-600">date_acquired</span> is auto-set to today on download</p>
                 </div>
-                <button type="button" onclick="addCustomRow()"
+                <button type="button" onclick="addCsvRow()"
                     class="bg-deped text-white px-6 py-3 rounded-2xl font-black uppercase text-xs shadow-lg shadow-red-100 hover:scale-105 transition-all flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -231,9 +244,26 @@
                 </button>
             </div>
 
+            {{-- Column header labels --}}
+            <div id="csvColLabels" class="hidden mb-1 text-[9px] font-black text-slate-400 uppercase tracking-widest pl-3" style="display:none">
+                <div class="flex gap-2">
+                    <div style="width:140px">Category</div>
+                    <div style="width:152px">Item</div>
+                    <div style="width:152px">Sub-item</div>
+                    <div style="width:140px">Source</div>
+                    <div style="width:120px">Condition</div>
+                    <div style="width:100px">Serialized</div>
+                    <div style="width:72px">Qty</div>
+                </div>
+            </div>
+
             <form action="{{ route('assets.import.template') }}" method="POST">
                 @csrf
-                <div id="customRowsContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6 empty:hidden mb-10"></div>
+                <div id="csvRowsContainer" class="space-y-2 mb-8 overflow-x-auto pb-2">
+                    <div id="csvEmptyMsg" class="text-center py-10 text-slate-400 text-sm font-semibold italic">
+                        No rows yet &mdash; click <strong class="text-slate-600">"+ Add Row"</strong> to start building your template.
+                    </div>
+                </div>
                 <div class="flex justify-center border-t border-slate-50 pt-8">
                     <button class="bg-slate-800 hover:bg-slate-900 text-white px-10 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition shadow-xl flex items-center gap-3">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
@@ -245,51 +275,397 @@
             </form>
         </div>
 
+        @else
+
+        {{-- 4. CSV PREVIEW TABLE (Appears after processing) --}}
+        <div class="card-premium p-10 mb-8 animate-fade-in-up">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
+                <div>
+                    <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic mb-1 flex items-center gap-3">
+                        <span class="h-8 w-8 bg-emerald-100 text-emerald-600 flex items-center justify-center rounded-xl">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                        </span>
+                        Ready for Import
+                    </h2>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Review your {{ count($csvRows) - 1 }} assets before confirming</p>
+                </div>
+                
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <button onclick="window.location.href='{{ route('assets.import') }}'" class="w-full md:w-auto px-6 py-4 bg-white border border-slate-200 text-slate-400 hover:text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:border-slate-300 transition-all shadow-sm">
+                        Cancel
+                    </button>
+                    
+                    <form action="{{ route('assets.import.confirm') }}" method="POST" class="w-full md:w-auto">
+                        @csrf
+                        <button type="submit" class="w-full md:w-auto bg-deped hover:bg-red-800 text-white px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl hover:shadow-red-200 flex items-center justify-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Confirm Import
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-100 rounded-[2.5rem] p-3 shadow-inner">
+                <div class="overflow-x-auto rounded-[2rem] bg-white border border-slate-100 custom-scroll relative z-10 backdrop-blur-xl">
+                    <table class="w-full text-left border-collapse min-w-[900px]">
+                        <thead>
+                            <tr class="bg-slate-100/50">
+                                @foreach(array_slice($csvRows[0], 0, 7) as $header)
+                                    <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{{ $header }}</th>
+                                @endforeach
+                                <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Acquired</th>
+                                <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Serialized</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            @foreach(array_slice($csvRows, 1, 50) as $index => $row)
+                                <tr class="hover:bg-red-50/20 transition-colors group">
+                                    <td class="p-5 text-xs font-bold text-slate-700">{{ $row[0] ?? '-' }}</td>
+                                    <td class="p-5 text-xs font-black text-deped">{{ $row[1] ?? '-' }}</td>
+                                    <td class="p-5 text-xs font-bold text-slate-500">{{ $row[2] ?? '-' }}</td>
+                                    <td class="p-5">
+                                        <span class="px-2.5 py-1 bg-slate-100 text-slate-600 font-black text-xs rounded-lg">{{ $row[3] ?? '1' }}</span>
+                                    </td>
+                                    <td class="p-5">
+                                        <span class="px-3 py-1.5 text-[9px] uppercase tracking-widest font-black rounded-full shadow-sm 
+                                            {{ strtolower($row[4] ?? '') == 'for repair' ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200' }}">
+                                            {{ $row[4] ?? 'Serviceable' }}
+                                        </span>
+                                    </td>
+                                    <td class="p-5 text-xs font-bold text-slate-600 truncate max-w-[150px] group-hover:text-slate-900 transition-colors">{{ $row[5] ?? '-' }}</td>
+                                    <td class="p-5 text-[11px] text-slate-400 font-mono font-bold">{{ $row[6] ?? '0.00' }}</td>
+                                    <td class="p-5 text-[11px] text-slate-400 font-bold uppercase">{{ $row[7] ?? '-' }}</td>
+                                    <td class="p-5">
+                                        @if(strtolower($row[8] ?? 'no') === 'yes')
+                                            <span class="px-3 py-1 bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-widest rounded-lg border border-blue-100">Yes</span>
+                                        @else
+                                            <span class="px-3 py-1 bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-widest rounded-lg border border-slate-200">No</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            @if(count($csvRows) > 51)
+                <div class="mt-6 flex justify-center">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-slate-200">
+                        <svg class="animate-spin h-3 w-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Showing first 50 rows of {{ count($csvRows) - 1 }}
+                    </div>
+                </div>
+            @endif
+        </div>
+
         @endif
     </main>
 </div>
 
-{{-- JS ROW TEMPLATE --}}
-<template id="rowTemplate">
-    <div class="custom-row bg-slate-50 p-6 rounded-[2.5rem] border border-slate-100 animate-fade-in-up relative group">
-        <button type="button" onclick="this.closest('.custom-row').remove()" class="absolute -top-2 -right-2 bg-white shadow-md text-slate-400 hover:text-red-500 w-8 h-8 rounded-full border transition-all z-10 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-        </button>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Item Name</label>
-                <input type="text" name="rows[__INDEX__][item_name]" placeholder="Ex: Laptop" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold outline-none focus:border-deped transition">
-            </div>
-            <div>
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Category</label>
-                <input type="text" name="rows[__INDEX__][category]" placeholder="Category" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold outline-none focus:border-deped">
-            </div>
-            <div>
-                <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block">Qty</label>
-                <input type="number" name="rows[__INDEX__][quantity]" placeholder="1" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs font-bold outline-none focus:border-deped">
-            </div>
-        </div>
-    </div>
-</template>
-
 <script>
+// ── Data from PHP ─────────────────────────────────────────────────────────────
+const rawCategories = @json($categories->values() ?? []);
+const rawItemsMap   = @json($itemsMap ?? []);    // { catName: [itemName, …] }
+const rawSubMap     = @json($subItemsMap ?? []); // { itemName: [subName, …] }
+const rawSources    = @json($sources->values() ?? []);
+
 let rowIndex = 0;
 
-function scrollToBuilder() {
-    const builderSection = document.getElementById('csv-builder-section');
-    builderSection.scrollIntoView({ behavior: 'smooth' });
-    // Flash effect to show user where they landed
-    builderSection.classList.add('ring-4', 'ring-deped/20');
-    setTimeout(() => builderSection.classList.remove('ring-4', 'ring-deped/20'), 2000);
+// ── Add / Remove row ─────────────────────────────────────────────────────────
+function addCsvRow() {
+    const idx = rowIndex++;
+    document.getElementById('csvEmptyMsg').style.display = 'none';
+    const lbl = document.getElementById('csvColLabels');
+    lbl.style.display = 'block';
+
+    const fieldCls = 'w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-red-400 transition';
+    const disabledCls = ' opacity-40 cursor-not-allowed';
+
+    const row = document.createElement('div');
+    row.className = 'csv-custom-row flex items-end gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-100';
+    row.style.width = 'max-content';
+    row.innerHTML = `
+        <!-- Category -->
+        <div class="flex-shrink-0" style="width:140px">
+            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Category</label>
+            <div class="relative">
+                <input type="text" id="cat_${idx}" name="rows[${idx}][category]"
+                    placeholder="Browse / type new..."
+                    class="${fieldCls}"
+                    oninput="csvFilterCat(${idx})" onfocus="csvFilterCat(${idx})" autocomplete="off">
+                <div id="catDrop_${idx}" class="hidden absolute z-40 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-52 overflow-y-auto custom-scroll" style="min-width:180px"></div>
+            </div>
+        </div>
+        <!-- Item -->
+        <div class="flex-shrink-0" style="width:152px">
+            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Item</label>
+            <div class="relative">
+                <input type="text" id="item_${idx}" name="rows[${idx}][item_name]"
+                    placeholder="Pick category first..."
+                    class="${fieldCls}${disabledCls}" disabled
+                    oninput="csvFilterItem(${idx})" onfocus="csvFilterItem(${idx})" autocomplete="off">
+                <div id="itemDrop_${idx}" class="hidden absolute z-40 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-52 overflow-y-auto custom-scroll" style="min-width:190px"></div>
+            </div>
+        </div>
+        <!-- Sub-item -->
+        <div class="flex-shrink-0" style="width:152px">
+            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Sub-item</label>
+            <div class="relative">
+                <input type="text" id="sub_${idx}" name="rows[${idx}][sub_item_name]"
+                    placeholder="Pick item first..."
+                    class="${fieldCls}${disabledCls}" disabled
+                    oninput="csvFilterSub(${idx})" onfocus="csvFilterSub(${idx})" autocomplete="off">
+                <div id="subDrop_${idx}" class="hidden absolute z-40 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-52 overflow-y-auto custom-scroll" style="min-width:190px"></div>
+            </div>
+        </div>
+        <!-- Source -->
+        <div class="flex-shrink-0" style="width:140px">
+            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Source</label>
+            <div class="relative">
+                <input type="text" id="src_${idx}" name="rows[${idx}][source]"
+                    placeholder="Browse / type new..."
+                    class="${fieldCls}"
+                    oninput="csvFilterSrc(${idx})" onfocus="csvFilterSrc(${idx})" autocomplete="off">
+                <div id="srcDrop_${idx}" class="hidden absolute z-40 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-52 overflow-y-auto custom-scroll" style="min-width:180px"></div>
+            </div>
+        </div>
+        <!-- Condition -->
+        <div class="flex-shrink-0" style="width:120px">
+            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Condition</label>
+            <select name="rows[${idx}][condition]" class="${fieldCls}">
+                <option value="Serviceable">Serviceable</option>
+                <option value="For Repair">For Repair</option>
+            </select>
+        </div>
+        <!-- Is Serialized -->
+        <div class="flex-shrink-0" style="width:100px">
+            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Serialized</label>
+            <select name="rows[${idx}][is_serialized]" class="${fieldCls}">
+                <option value="no">No</option>
+                <option value="yes">Yes</option>
+            </select>
+        </div>
+        <!-- Qty -->
+        <div class="flex-shrink-0" style="width:72px">
+            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Qty</label>
+            <input type="number" name="rows[${idx}][quantity]" value="1" min="1" class="${fieldCls}">
+        </div>
+        <!-- Delete -->
+        <button type="button" onclick="removeCsvRow(this)"
+            class="h-8 w-8 rounded-full bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 flex items-center justify-center shadow-sm transition-all shrink-0 mb-0.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+        </button>
+    `;
+    document.getElementById('csvRowsContainer').appendChild(row);
 }
 
-function handleFileSelect(input){
+function removeCsvRow(btn) {
+    btn.closest('.csv-custom-row')?.remove();
+    if (!document.querySelector('.csv-custom-row')) {
+        document.getElementById('csvEmptyMsg').style.display = '';
+        document.getElementById('csvColLabels').style.display = 'none';
+    }
+}
+
+// ── Shared helpers ────────────────────────────────────────────────────────────
+function csvShow(dropId, html) {
+    const el = document.getElementById(dropId);
+    if (!el) return;
+    el.innerHTML = html || `<div class="px-4 py-3 text-xs text-slate-400 italic">No options</div>`;
+    el.classList.remove('hidden');
+}
+function csvHide(dropId) { document.getElementById(dropId)?.classList.add('hidden'); }
+
+// ── Category ──────────────────────────────────────────────────────────────────
+function csvFilterCat(idx) {
+    const input = document.getElementById(`cat_${idx}`);
+    if (!input) return;
+    const val = input.value.toLowerCase().trim();
+    const results = val ? rawCategories.filter(c => c.toLowerCase().includes(val)) : rawCategories;
+
+    let html = results.length
+        ? `<div class="px-3 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Categories</div>` +
+          results.slice(0, 30).map(c =>
+            `<div onmousedown="csvSelectCat(${idx},'${c.replace(/'/g,"\\'")}')"
+                class="px-4 py-2 text-xs font-bold hover:bg-red-50 hover:text-red-600 cursor-pointer border-b border-slate-50 last:border-0">${c}</div>`
+          ).join('')
+        : '';
+
+    if (val && !rawCategories.find(c => c.toLowerCase() === val))
+        html += `<div onmousedown="csvSelectCat(${idx},'${input.value.replace(/'/g,"\\'")}')"
+            class="px-4 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer border-t border-slate-100 flex items-center justify-between">
+            <span>+ Create New: <strong>${input.value}</strong></span>
+            <span class="text-[8px] bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded-full uppercase font-black ml-2">NEW</span>
+        </div>`;
+
+    if (!html) html = `<div class="px-4 py-3 text-xs text-slate-400 italic">No categories found</div>`;
+    csvShow(`catDrop_${idx}`, html);
+}
+
+function csvSelectCat(idx, name) {
+    const input   = document.getElementById(`cat_${idx}`);
+    const itemInp = document.getElementById(`item_${idx}`);
+    const subInp  = document.getElementById(`sub_${idx}`);
+    if (input) input.value = name;
+    csvHide(`catDrop_${idx}`);
+    if (itemInp) {
+        itemInp.disabled = false;
+        itemInp.classList.remove('opacity-40','cursor-not-allowed');
+        itemInp.value = '';
+        itemInp.placeholder = (rawItemsMap[name]?.length ? 'Browse / type new...' : 'Type item name...');
+    }
+    if (subInp) {
+        subInp.disabled = true;
+        subInp.classList.add('opacity-40','cursor-not-allowed');
+        subInp.value = '';
+        subInp.placeholder = 'Pick item first...';
+    }
+    csvHide(`itemDrop_${idx}`); csvHide(`subDrop_${idx}`);
+}
+
+// ── Item ──────────────────────────────────────────────────────────────────────
+function csvFilterItem(idx) {
+    const catInput = document.getElementById(`cat_${idx}`);
+    const input    = document.getElementById(`item_${idx}`);
+    if (!input || input.disabled) return;
+    const catName = catInput?.value || '';
+    const val     = input.value.toLowerCase().trim();
+    const pool    = rawItemsMap[catName] || [];
+    const results = val ? pool.filter(i => i.toLowerCase().includes(val)) : pool;
+
+    let html = results.length
+        ? `<div class="px-3 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Items under ${catName || 'category'}</div>` +
+          results.slice(0, 30).map(i =>
+            `<div onmousedown="csvSelectItem(${idx},'${i.replace(/'/g,"\\'")}')"
+                class="px-4 py-2 text-xs font-bold hover:bg-red-50 hover:text-red-600 cursor-pointer border-b border-slate-50 last:border-0">${i}</div>`
+          ).join('')
+        : '';
+
+    if (val && !pool.find(i => i.toLowerCase() === val))
+        html += `<div onmousedown="csvSelectItem(${idx},'${input.value.replace(/'/g,"\\'")}')"
+            class="px-4 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer border-t border-slate-100 flex items-center justify-between">
+            <span>+ Create New: <strong>${input.value}</strong></span>
+            <span class="text-[8px] bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded-full uppercase font-black ml-2">NEW</span>
+        </div>`;
+
+    if (!html) html = `<div class="px-4 py-3 text-xs text-slate-400 italic">${catName ? 'No items under '+catName : 'Select a category first'}</div>`;
+    csvShow(`itemDrop_${idx}`, html);
+}
+
+function csvSelectItem(idx, name) {
+    const input  = document.getElementById(`item_${idx}`);
+    const subInp = document.getElementById(`sub_${idx}`);
+    if (input) input.value = name;
+    csvHide(`itemDrop_${idx}`);
+    if (subInp) {
+        subInp.disabled = false;
+        subInp.classList.remove('opacity-40','cursor-not-allowed');
+        subInp.value = '';
+        subInp.placeholder = (rawSubMap[name]?.length ? 'Browse / type new...' : 'Type sub-item name...');
+    }
+    csvHide(`subDrop_${idx}`);
+}
+
+// ── Sub-item ──────────────────────────────────────────────────────────────────
+function csvFilterSub(idx) {
+    const itemInput = document.getElementById(`item_${idx}`);
+    const input     = document.getElementById(`sub_${idx}`);
+    if (!input || input.disabled) return;
+    const itemName = itemInput?.value || '';
+    const val      = input.value.toLowerCase().trim();
+    const pool     = rawSubMap[itemName] || [];
+    const results  = val ? pool.filter(s => s.toLowerCase().includes(val)) : pool;
+
+    let html = results.length
+        ? `<div class="px-3 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Sub-items under ${itemName || 'item'}</div>` +
+          results.slice(0, 30).map(s =>
+            `<div onmousedown="csvSelectSub(${idx},'${s.replace(/'/g,"\\'")}')"
+                class="px-4 py-2 text-xs font-bold hover:bg-red-50 hover:text-red-600 cursor-pointer border-b border-slate-50 last:border-0">${s}</div>`
+          ).join('')
+        : '';
+
+    if (val && !pool.find(s => s.toLowerCase() === val))
+        html += `<div onmousedown="csvSelectSub(${idx},'${input.value.replace(/'/g,"\\'")}')"
+            class="px-4 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer border-t border-slate-100 flex items-center justify-between">
+            <span>+ Create New: <strong>${input.value}</strong></span>
+            <span class="text-[8px] bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded-full uppercase font-black ml-2">NEW</span>
+        </div>`;
+
+    if (!html) html = `<div class="px-4 py-3 text-xs text-slate-400 italic">${itemName ? 'No sub-items under '+itemName : 'Select an item first'}</div>`;
+    csvShow(`subDrop_${idx}`, html);
+}
+
+function csvSelectSub(idx, name) {
+    const input = document.getElementById(`sub_${idx}`);
+    if (input) input.value = name;
+    csvHide(`subDrop_${idx}`);
+}
+
+// ── Source ────────────────────────────────────────────────────────────────────
+function csvFilterSrc(idx) {
+    const input = document.getElementById(`src_${idx}`);
+    if (!input) return;
+    const val = input.value.toLowerCase().trim();
+    const results = val ? rawSources.filter(s => s.toLowerCase().includes(val)) : rawSources;
+
+    let html = results.length
+        ? `<div class="px-3 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Existing Sources</div>` +
+          results.slice(0, 30).map(s =>
+            `<div onmousedown="csvSelectSrc(${idx},'${s.replace(/'/g,"\\'")}')"
+                class="px-4 py-2 text-xs font-bold hover:bg-red-50 hover:text-red-600 cursor-pointer border-b border-slate-50 last:border-0 flex items-center justify-between">
+                <span>${s}</span>
+                <span class="text-[8px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full uppercase font-black ml-2 shrink-0">EXISTS</span>
+            </div>`
+          ).join('')
+        : '';
+
+    if (val && !rawSources.find(s => s.toLowerCase() === val))
+        html += `<div onmousedown="csvSelectSrc(${idx},'${input.value.replace(/'/g,"\\'")}')"
+            class="px-4 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer border-t border-slate-100 flex items-center justify-between">
+            <span>+ Register as New: <strong>${input.value}</strong></span>
+            <span class="text-[8px] bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded-full uppercase font-black ml-2">NEW</span>
+        </div>`;
+
+    if (!html) html = `<div class="px-4 py-3 text-xs text-slate-400 italic">No existing sources — type to register new</div>`;
+    csvShow(`srcDrop_${idx}`, html);
+}
+
+function csvSelectSrc(idx, name) {
+    const input = document.getElementById(`src_${idx}`);
+    if (input) input.value = name;
+    csvHide(`srcDrop_${idx}`);
+}
+
+// ── Close all dropdowns on outside click ──────────────────────────────────────
+document.addEventListener('click', function(e) {
+    ['catDrop_','itemDrop_','subDrop_','srcDrop_'].forEach(prefix => {
+        document.querySelectorAll(`[id^="${prefix}"]`).forEach(drop => {
+            if (!drop.closest('.relative')?.contains(e.target)) drop.classList.add('hidden');
+        });
+    });
+});
+
+// ── Scroll to builder ─────────────────────────────────────────────────────────
+function scrollToBuilder() {
+    const el = document.getElementById('csv-builder-section');
+    el.scrollIntoView({ behavior: 'smooth' });
+    el.classList.add('ring-4', 'ring-deped/20');
+    setTimeout(() => el.classList.remove('ring-4', 'ring-deped/20'), 2000);
+}
+
+// ── File select handler ───────────────────────────────────────────────────────
+function handleFileSelect(input) {
     const badge = document.getElementById('file_badge');
-    const name = document.getElementById('file_name');
-    const btn = document.getElementById('processBtn');
-    if(input.files[0]){
+    const name  = document.getElementById('file_name');
+    const btn   = document.getElementById('processBtn');
+    if (input.files[0]) {
         name.textContent = input.files[0].name;
         badge.classList.remove('hidden'); badge.classList.add('flex');
         btn.disabled = false;
@@ -298,22 +674,16 @@ function handleFileSelect(input){
     }
 }
 
-function addCustomRow() {
-    const container = document.getElementById('customRowsContainer');
-    const template = document.getElementById('rowTemplate').innerHTML;
-    const rendered = template.replace(/__INDEX__/g, rowIndex++);
-    container.insertAdjacentHTML('beforeend', rendered);
-}
-
+// ── Drag & Drop ───────────────────────────────────────────────────────────────
 const dropZone = document.getElementById('dropZone');
 if (dropZone) {
-    ['dragenter', 'dragover'].forEach(e => dropZone.addEventListener(e, (evt) => {
-        evt.preventDefault(); dropZone.classList.add('border-deped', 'bg-red-50/30');
+    ['dragenter','dragover'].forEach(ev => dropZone.addEventListener(ev, e => {
+        e.preventDefault(); dropZone.classList.add('border-deped','bg-red-50/30');
     }));
-    ['dragleave', 'drop'].forEach(e => dropZone.addEventListener(e, (evt) => {
-        evt.preventDefault(); dropZone.classList.remove('border-deped', 'bg-red-50/30');
+    ['dragleave','drop'].forEach(ev => dropZone.addEventListener(ev, e => {
+        e.preventDefault(); dropZone.classList.remove('border-deped','bg-red-50/30');
     }));
-    dropZone.addEventListener('drop', (e) => {
+    dropZone.addEventListener('drop', e => {
         const files = e.dataTransfer.files;
         if (files.length > 0) {
             document.getElementById('csv_input').files = files;

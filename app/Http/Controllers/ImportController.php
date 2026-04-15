@@ -61,7 +61,7 @@ class ImportController extends Controller
                         $r['condition'] ?? 'Serviceable',
                         $r['source'] ?? '',
                         '', // unit_price
-                        '', // date_acquired
+                        now()->toDateString(), // date_acquired — auto-set to today
                         $r['is_serialized'] ?? 'no',
                         '', // property_number
                         ''  // serial_number
@@ -105,6 +105,11 @@ class ImportController extends Controller
             return back()->withErrors(['csv_file' => 'The CSV file must contain at least a header row and one data row.']);
         }
 
+        // Strip UTF-8 BOM from the first cell if present
+        if (!empty($csvRows[0][0])) {
+            $csvRows[0][0] = preg_replace('/^\xEF\xBB\xBF/', '', $csvRows[0][0]);
+        }
+
         // Validate headers
         $expectedHeaders = ['category', 'item_name', 'sub_item_name', 'quantity', 'condition', 'source', 'unit_price', 'date_acquired', 'is_serialized', 'property_number', 'serial_number'];
         $actualHeaders = array_map('strtolower', array_map('trim', $csvRows[0]));
@@ -117,7 +122,23 @@ class ImportController extends Controller
         // Store CSV data in session for the confirmation step
         session(['csv_import_data' => $csvRows]);
 
-        return view('partials.import', ['csvRows' => $csvRows]);
+        // The view always needs these variables for the JS builder data layer
+        $categories = DB::table('categories')->orderBy('name')->pluck('name');
+        $itemsMap   = DB::table('items')
+            ->join('categories', 'items.category_id', '=', 'categories.id')
+            ->select('items.name as item_name', 'categories.name as cat_name')
+            ->get()->groupBy('cat_name')
+            ->map(fn($rows) => $rows->pluck('item_name')->unique()->values());
+        $subItemsMap = DB::table('sub_items')
+            ->join('items', 'sub_items.item_id', '=', 'items.id')
+            ->select('sub_items.name as sub_name', 'items.name as item_name')
+            ->get()->groupBy('item_name')
+            ->map(fn($rows) => $rows->pluck('sub_name')->unique()->values());
+        $sources = DB::table('stakeholders')
+            ->where('type', 'Distributor')->whereNull('parent_id')
+            ->orderBy('name')->pluck('name');
+
+        return view('partials.import', compact('csvRows', 'categories', 'itemsMap', 'subItemsMap', 'sources'));
     }
 
     /**
@@ -208,13 +229,14 @@ class ImportController extends Controller
                     if ($existingDist) {
                         $distributorId = $existingDist->id;
                     } else {
+                        // New source: register with name only; all classification fields null
                         $distributorId = DB::table('stakeholders')->insertGetId([
-                            'name' => $sourceName,
-                            'type' => 'Distributor',
-                            'entity_type' => 'External',
-                            'status' => 'Active',
+                            'name'       => $sourceName,
+                            'type'       => 'Distributor',
+                            'status'     => 'Active',
                             'created_at' => now(),
                             'updated_at' => now(),
+                            // entity_type, parent_id, school_id, position, person_name intentionally left null
                         ]);
                         DB::table('system_logs')->insert([
                             'user' => $userName,

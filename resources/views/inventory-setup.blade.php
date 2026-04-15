@@ -192,7 +192,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        let history = [1];
+        let stepHistory = [1];
         let currentMode = '';
         let currentModule = '';
 
@@ -274,14 +274,14 @@
     document.getElementById('step' + step).classList.add('active');
     
     // Track history for the back button
-    history.push(step);
+    stepHistory.push(step);
     updateBackButton();
 }
 
         function goBack() {
-            if (history.length > 1) {
-                history.pop();
-                const prevStep = history[history.length - 1];
+            if (stepHistory.length > 1) {
+                stepHistory.pop();
+                const prevStep = stepHistory[stepHistory.length - 1];
                 document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
                 document.getElementById('step' + prevStep).classList.add('active');
                 updateBackButton();
@@ -290,7 +290,7 @@
 
         function updateBackButton() {
             const btn = document.getElementById('backBtn');
-            btn.classList.toggle('hidden', history[history.length - 1] === 1);
+            btn.classList.toggle('hidden', stepHistory[stepHistory.length - 1] === 1);
         }
 
         function filterQuadrants() {
@@ -604,7 +604,10 @@
 
                                 <div id="distExternalBox" class="hidden space-y-2">
                                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">External Office / Organization <span class="text-red-500">*</span></label>
-                                    <input type="text" id="distExternalInput" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700 transition-all focus:border-[#c00000] focus:ring-4 focus:ring-red-100" placeholder="e.g. City Health Office, Private Contractor...">
+                                    <div class="relative">
+                                        <input type="text" id="distExternalInput" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700 transition-all focus:border-[#c00000] focus:ring-4 focus:ring-red-100" placeholder="Click to browse or type a new office..." oninput="distFilterExternal()" onfocus="distFilterExternal()" autocomplete="off">
+                                        <div id="distExternalDropdown" class="hidden absolute z-20 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-52 overflow-y-auto custom-scroll"></div>
+                                    </div>
                                 </div>
 
                                 <div id="distPersonnelSection" class="hidden pt-6 border-t border-slate-100 space-y-4">
@@ -614,7 +617,10 @@
                                     </div>
 
                                     <div class="flex flex-col sm:flex-row gap-3 p-4 bg-slate-50/50 rounded-3xl border border-slate-100">
-                                        <input type="text" id="distPersonnelName" placeholder="Personnel Name" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700 text-sm transition-all focus:border-[#c00000]">
+                                        <div class="relative flex-grow">
+                                            <input type="text" id="distPersonnelName" placeholder="Click to browse or type a new name..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700 text-sm transition-all focus:border-[#c00000]" oninput="distFilterPersonnel()" onfocus="distFilterPersonnel()" autocomplete="off">
+                                            <div id="distPersonnelDropdown" class="hidden absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-48 overflow-y-auto custom-scroll"></div>
+                                        </div>
                                         <input type="text" id="distPersonnelPosition" placeholder="Job Title / Position" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-bold text-slate-700 text-sm transition-all focus:border-[#c00000]">
                                     </div>
 
@@ -2582,6 +2588,7 @@
 
         let distRecipientCount = 0;
         let distAddedIds = []; // tracks stakeholder IDs already in the list
+        let distRecipientsCache = {}; // { id: { displayName, subLabel } } — survives rawStakeholders gap for NEW entries
 
         function distToggleSource() {
             const type = document.getElementById('distSourceType')?.value;
@@ -2687,6 +2694,9 @@
                 distAddedIds.push(data.id);
                 distRecipientCount++;
 
+                // Cache display data so distGoBackToRegistry can restore cards for NEW stakeholders
+                distRecipientsCache[data.id] = { displayName: data.display_name, subLabel: data.sub_label };
+
                 // Build card
                 const newBadge = data.is_new
                     ? `<span class="text-[8px] font-black bg-emerald-400/20 text-emerald-400 px-2 py-0.5 rounded-full uppercase tracking-widest ml-1">NEW</span>`
@@ -2748,8 +2758,265 @@
                 Swal.fire('No Recipients', 'Add at least one recipient before proceeding.', 'warning');
                 return;
             }
-            Swal.fire({ title: 'Coming Soon', text: 'Asset assignment workflow will be wired in the next phase.', icon: 'info', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+
+            // Build preSelectedSchools from the recipient list cards
+            preSelectedSchools = [];
+            const cards = document.querySelectorAll('#distActiveList [data-stakeholder-id]');
+            cards.forEach(card => {
+                const id = parseInt(card.dataset.stakeholderId);
+                const st = rawStakeholders.find(s => s.id === id);
+                const nameEl = card.querySelector('p.text-white');
+                const displayName = nameEl ? nameEl.textContent.trim() : (st ? (st.person_name || st.name) : 'Recipient');
+                preSelectedSchools.push({
+                    id: id,
+                    school_id: st ? st.school_id : null,
+                    name: displayName,
+                    uid: Date.now() + Math.random()
+                });
+            });
+
+            if (preSelectedSchools.length === 0) {
+                Swal.fire('Error', 'Could not read recipient list. Please try again.', 'error');
+                return;
+            }
+
+            // Initialize distTabsData for the tabs phase
+            distTabsData = preSelectedSchools.map((r, i) => ({
+                tabIndex: i,
+                recipient_id: r.id,
+                school_id: r.school_id,
+                recipient_name: r.name,
+                category_id: null,
+                item_id: null,
+                subItemsSelected: []
+            }));
+
+            // Replace the distribution form content with the tabs interface
+            const container = document.getElementById('formContent');
+            const parentWrap = container.parentElement;
+            parentWrap.classList.remove('max-w-5xl', 'max-w-4xl');
+            parentWrap.classList.add('max-w-6xl');
+
+            container.innerHTML = `
+                <div class="mb-8 flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <h4 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Assign Assets</h4>
+                        <p class="text-slate-400 text-xs font-bold uppercase mt-1 tracking-widest">Allocating to ${preSelectedSchools.length} recipient${preSelectedSchools.length > 1 ? 's' : ''}</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button type="button" onclick="distGoBackToRegistry()" class="px-5 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold text-xs hover:bg-slate-200 transition-all">← Back to Registry</button>
+                        <button type="button" id="distributeAllBtn" onclick="confirmDistributeAll()" class="px-6 py-3 bg-[#c00000] text-white rounded-2xl font-bold text-xs shadow-lg hover:bg-red-700 transition-all opacity-40 cursor-not-allowed" disabled>Distribute All</button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-12 gap-6">
+                    <div id="distTabsHeader" class="col-span-3 space-y-2 overflow-y-auto custom-scroll" style="max-height:620px;"></div>
+                    <div id="distTabsContentContainer" class="col-span-9"></div>
+                </div>
+            `;
+
+            renderTabsUI();
+            switchTab(0);
         }
+
+        function distGoBackToRegistry() {
+            // Rebuild the registry view, preserving the existing recipient list
+            const savedIds = [...distAddedIds];
+            const savedCount = distRecipientCount;
+
+            const container = document.getElementById('formContent');
+            const parentWrap = container.parentElement;
+            parentWrap.classList.remove('max-w-6xl');
+            parentWrap.classList.add('max-w-5xl'); // restore distribution mode width
+
+            currentModule = 'distribution';
+            renderForm();
+
+            // Restore recipient cards from distRecipientsCache (works for NEW stakeholders not in rawStakeholders)
+            setTimeout(() => {
+                savedIds.forEach(id => {
+                    // Prefer cache (always has data). Fallback to rawStakeholders for pre-existing ones
+                    const cached = distRecipientsCache[id];
+                    const st = !cached ? rawStakeholders.find(s => s.id === id) : null;
+
+                    const displayName = cached
+                        ? cached.displayName
+                        : (st ? (st.person_name || st.name) : null);
+                    const subLabel = cached
+                        ? cached.subLabel
+                        : (st ? [st.position, st.name].filter(Boolean).join(' • ') : null);
+
+                    if (!displayName) return; // skip if nothing to show
+
+                    const card = document.createElement('div');
+                    card.className = 'bg-white/5 border border-white/10 p-4 rounded-2xl flex justify-between items-center';
+                    card.dataset.stakeholderId = id;
+                    card.innerHTML = `
+                        <div class="overflow-hidden flex-1">
+                            <p class="text-white font-bold text-xs truncate">${displayName}</p>
+                            <p class="text-slate-500 text-[9px] uppercase font-black tracking-widest truncate mt-0.5">${subLabel}</p>
+                        </div>
+                        <button onclick="distRemoveRecipient(this, ${id})" class="text-slate-600 hover:text-red-400 transition-colors ml-3 shrink-0">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>`;
+                    const activeList = document.getElementById('distActiveList');
+                    if (activeList) activeList.appendChild(card);
+                });
+
+                if (savedIds.length > 0) {
+                    distAddedIds = savedIds;
+                    distRecipientCount = savedCount;
+                    document.getElementById('distEmptyState')?.classList.add('hidden');
+                    document.getElementById('distListFooter')?.classList.remove('hidden');
+                    distUpdateCount();
+                }
+            }, 50);
+        }
+
+        // ─── External Office dropdown (shows all on focus, filters on type) ────
+        function distFilterExternal() {
+            const input    = document.getElementById('distExternalInput');
+            const dropdown = document.getElementById('distExternalDropdown');
+            if (!input || !dropdown) return;
+
+            const val = input.value.toLowerCase().trim();
+
+            // All existing external org-level stakeholders, filtered by val if present
+            const all = rawStakeholders.filter(s => s.entity_type === 'External' && !s.person_name && s.name);
+            const results = val ? all.filter(s => s.name.toLowerCase().includes(val)).slice(0, 20) : all.slice(0, 30);
+
+            let html = '';
+
+            if (results.length > 0) {
+                html += `<div class="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Existing Offices</div>`;
+                html += results.map(s =>
+                    `<div onmousedown="distSelectExternal('${s.name.replace(/'/g, "\\'")}')" class="px-5 py-3 hover:bg-red-50 hover:text-[#c00000] cursor-pointer border-b border-slate-50 last:border-0 flex items-center justify-between">
+                        <span class="font-bold text-sm">${s.name}</span>
+                        <span class="text-[9px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full uppercase tracking-widest ml-2 shrink-0">EXISTS</span>
+                    </div>`
+                ).join('');
+            }
+
+            // Show "create new" option if typed value doesn't exactly match any existing
+            const exactMatch = all.find(s => s.name.toLowerCase() === val);
+            if (val && !exactMatch) {
+                html += `<div onmousedown="distSelectExternal('${input.value.replace(/'/g, "\\'")}')" class="px-5 py-3 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer border-t border-slate-100 flex items-center gap-3">
+                    <span class="text-sm font-bold text-emerald-600">+ Create New:</span>
+                    <span class="text-sm font-bold">${input.value}</span>
+                    <span class="text-[9px] font-black bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full uppercase tracking-widest ml-auto">NEW</span>
+                </div>`;
+            }
+
+            if (!html) {
+                html = `<div class="px-5 py-4 text-slate-400 text-xs font-semibold italic text-center">No external offices yet — type a name to create one</div>`;
+            }
+
+            dropdown.innerHTML = html;
+            dropdown.classList.remove('hidden');
+        }
+
+        function distSelectExternal(name) {
+            const input    = document.getElementById('distExternalInput');
+            const dropdown = document.getElementById('distExternalDropdown');
+            if (input)    input.value = name;
+            if (dropdown) dropdown.classList.add('hidden');
+            // Reset personnel when office changes
+            const pName = document.getElementById('distPersonnelName');
+            const pPos  = document.getElementById('distPersonnelPosition');
+            if (pName) pName.value = '';
+            if (pPos)  pPos.value  = '';
+            document.getElementById('distPersonnelDropdown')?.classList.add('hidden');
+        }
+
+        // ─── Personnel dropdown (scoped to selected parent, shows all on focus) ─
+        function distFilterPersonnel() {
+            const input    = document.getElementById('distPersonnelName');
+            const dropdown = document.getElementById('distPersonnelDropdown');
+            if (!input || !dropdown) return;
+
+            const val         = input.value.toLowerCase().trim();
+            const type        = document.getElementById('distSourceType')?.value;
+            const schoolInput = document.getElementById('distSchoolInput');
+            const schoolId    = parseInt(schoolInput?.dataset?.schoolId || '0') || null;
+            const extInput    = document.getElementById('distExternalInput');
+            const extName     = extInput?.value?.trim().toLowerCase() || '';
+
+            let pool = [];
+            let parentLabel = '';
+
+            if (type === 'school') {
+                if (!schoolId) {
+                    dropdown.innerHTML = `<div class="px-5 py-4 text-slate-400 text-xs font-semibold italic text-center">Select a school first to see existing personnel</div>`;
+                    dropdown.classList.remove('hidden');
+                    return;
+                }
+                pool = rawStakeholders.filter(s => s.school_id === schoolId && s.person_name);
+                parentLabel = schoolInput?.value || 'this school';
+
+            } else if (type === 'external') {
+                if (!extName) {
+                    dropdown.innerHTML = `<div class="px-5 py-4 text-slate-400 text-xs font-semibold italic text-center">Enter the external office name first to see existing personnel</div>`;
+                    dropdown.classList.remove('hidden');
+                    return;
+                }
+                const parent = rawStakeholders.find(s =>
+                    s.entity_type === 'External' && !s.person_name && s.name && s.name.toLowerCase() === extName
+                );
+                if (parent) {
+                    pool = rawStakeholders.filter(s => s.parent_id === parent.id && s.person_name);
+                }
+                parentLabel = extInput?.value || 'this office';
+            }
+
+            const matches = val ? pool.filter(s => s.person_name.toLowerCase().includes(val)).slice(0, 15) : pool.slice(0, 20);
+
+            let html = '';
+
+            if (matches.length > 0) {
+                html += `<div class="px-4 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Personnel under ${parentLabel}</div>`;
+                html += matches.map(s => {
+                    const pos = s.position || '';
+                    const posBadge = pos ? `<span class="text-[9px] bg-slate-100 text-slate-500 ml-1.5 px-1.5 py-0.5 rounded uppercase tracking-widest">${pos}</span>` : '';
+                    return `<div onmousedown="distSelectPersonnel('${s.person_name.replace(/'/g, "\\'")}', '${pos.replace(/'/g, "\\'")}')" class="px-5 py-3 hover:bg-red-50 hover:text-[#c00000] cursor-pointer border-b border-slate-50 last:border-0 flex items-center justify-between">
+                        <span class="font-bold text-sm flex items-center">${s.person_name}${posBadge}</span>
+                        <span class="text-[9px] font-black bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full uppercase tracking-widest ml-2 shrink-0">EXISTS</span>
+                    </div>`;
+                }).join('');
+            }
+
+            // "Create new" if typed name doesn't match existing
+            const exactMatch = pool.find(s => s.person_name.toLowerCase() === val);
+            if (val && !exactMatch) {
+                html += `<div onmousedown="distSelectPersonnel('${input.value.replace(/'/g, "\\'")}', '')" class="px-5 py-3 hover:bg-emerald-50 cursor-pointer border-t border-slate-100 flex items-center gap-3">
+                    <span class="text-sm font-bold text-emerald-600">+ Add New:</span>
+                    <span class="text-sm font-bold">${input.value}</span>
+                    <span class="text-[9px] font-black bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full uppercase tracking-widest ml-auto">NEW</span>
+                </div>`;
+            }
+
+            if (!html) {
+                html = `<div class="px-5 py-4 text-slate-400 text-xs font-semibold italic text-center">No personnel registered under ${parentLabel} yet</div>`;
+            }
+
+            dropdown.innerHTML = html;
+            dropdown.classList.remove('hidden');
+        }
+
+        function distSelectPersonnel(name, position) {
+            const nameIn   = document.getElementById('distPersonnelName');
+            const posIn    = document.getElementById('distPersonnelPosition');
+            const dropdown = document.getElementById('distPersonnelDropdown');
+            if (nameIn) nameIn.value = name;
+            if (posIn && position) posIn.value = position;
+            if (dropdown) dropdown.classList.add('hidden');
+        }
+
+        // ─── Close dropdowns when clicking outside ────────────────────────────
+        document.addEventListener('click', function(e) {
+            const extWrap  = document.getElementById('distExternalInput')?.closest('.relative');
+            const persWrap = document.getElementById('distPersonnelName')?.closest('.relative');
+            if (extWrap  && !extWrap.contains(e.target))  document.getElementById('distExternalDropdown')?.classList.add('hidden');
+            if (persWrap && !persWrap.contains(e.target)) document.getElementById('distPersonnelDropdown')?.classList.add('hidden');
+        });
 
 </script>
 </body>
