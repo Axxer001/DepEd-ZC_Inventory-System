@@ -165,6 +165,7 @@
                                     <tr>
                                         <th class="p-6 text-[9px] font-black text-slate-500 uppercase italic tracking-[0.2em]">Specifications / Materials</th>
                                         <th class="p-6 text-[9px] font-black text-slate-500 uppercase italic tracking-[0.2em]">Unit Price</th>
+                                        <th class="p-6 text-[9px] font-black text-slate-500 uppercase italic tracking-[0.2em]">Quantity</th>
                                         <th class="p-6 text-[9px] font-black text-slate-500 uppercase italic text-right tracking-[0.2em]">Identifier</th>
                                     </tr>
                                 </thead>
@@ -246,6 +247,12 @@
                         <div class="lg:col-span-3 space-y-2">
                             <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1 italic">₱ Unit Price</label>
                             <input type="number" placeholder="0.00" class="price-val w-full p-4 bg-white border border-slate-100 rounded-2xl font-bold text-sm outline-none shadow-sm transition-all">
+                        </div>
+
+                       
+                        <div class="lg:col-span-3 space-y-2">
+                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1 italic">Quantity</label>
+                            <input type="number" placeholder="0" class="qty-val w-15 p-4 bg-white border border-slate-100 rounded-2xl font-bold text-sm outline-none shadow-sm transition-all">
                         </div>
                         <div class="lg:col-span-4 flex gap-3">
                              <div class="flex-grow space-y-2">
