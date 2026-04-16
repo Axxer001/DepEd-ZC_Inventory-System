@@ -370,8 +370,19 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/register-item', function () {
-    return view('register-item');
-});
+        set_time_limit(300);
+        $categories = DB::table('categories')->orderBy('name')->get();
+        $items = DB::table('items')->orderBy('name')->get();
+        $subItems = DB::table('sub_items')
+            ->leftJoin('stakeholders', 'sub_items.distributor_id', '=', 'stakeholders.id')
+            ->select('sub_items.id', 'sub_items.name', 'sub_items.item_id', 'sub_items.quantity', 'sub_items.distributor_id', 'stakeholders.name as distributor_name')
+            ->orderBy('sub_items.name')->get();
+        $stakeholders = DB::table('stakeholders')->orderBy('name')->get();
+        $allSchools = DB::table('schools')->select('id', 'school_id', 'name')->orderBy('name')->get();
+        return view('register-item', compact('categories', 'items', 'subItems', 'stakeholders', 'allSchools'));
+    })->name('register.item');
+
+    Route::post('/register-item', [InventorySetupController::class, 'storeItem'])->name('register.item.store');
 
     Route::post('/api/recipients/add', [\App\Http\Controllers\RecipientRegistryController::class, 'add'])->name('recipients.add');
 

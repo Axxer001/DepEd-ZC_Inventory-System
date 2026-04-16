@@ -265,6 +265,12 @@
             return;
         }
 
+        // Redirect to dedicated Register Item page for Add > Inventory Items
+        if (currentMode === 'add' && value === 'item') {
+            window.location.href = '/register-item';
+            return;
+        }
+
         currentModule = value;
         renderForm();
     }

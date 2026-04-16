@@ -135,9 +135,9 @@ class InventorySetupController extends Controller
             'category_id' => 'nullable|exists:categories,id',
             'category_name' => 'nullable|string|max:255',
             'item_name' => 'required|string|max:255',
-            'sub_items' => 'required|array|min:1|max:10',
+            'sub_items' => 'required|array|min:1|max:30',
             'sub_items.*' => 'required|string|max:255',
-            'sub_item_quantities' => 'required|array|min:1|max:10',
+            'sub_item_quantities' => 'required|array|min:1|max:30',
             'sub_item_quantities.*' => 'required|integer|min:1',
         ]);
 
@@ -145,11 +145,83 @@ class InventorySetupController extends Controller
         $existingItemId = $request->existing_item_id;
         $itemName = trim($request->item_name);
         
+        $messages = [];
+
+        // Global Source Extraction
+        $sourceType = $request->input('source_entity_type');
+        $providerId = $request->input('provider_id');
+        $providerName = trim($request->input('provider_name'));
+        $personnelName = trim($request->input('personnel_name'));
+        $personnelPosition = trim($request->input('personnel_position'));
+
+        $globalDistributorId = null;
+
+        // 1. Process Provider (External logic)
+        if ($sourceType === 'external') {
+            if ($providerId) {
+                $globalDistributorId = clone (object)['id' => (int) $providerId]->id; // ensure int
+            } else if ($providerName) {
+                $globalDistributorId = DB::table('stakeholders')->insertGetId([
+                    'name' => $providerName,
+                    'type' => 'Distributor',
+                    'entity_type' => 'External',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                $messages[] = "Registered new Provider: '{$providerName}'";
+                DB::table('system_logs')->insert([
+                    'user' => $userName,
+                    'activity' => "Registered new External Provider: {$providerName}",
+                    'module' => 'Stakeholders',
+                    'action_type' => 'Create',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+
+        // 2. Process Personnel
+        if ($personnelName) {
+            $existingPerson = DB::table('stakeholders')
+                ->where('type', 'Distributor')
+                ->where(function($q) use ($personnelName) {
+                    $q->whereRaw('LOWER(name) = ?', [strtolower($personnelName)])
+                      ->orWhereRaw('LOWER(person_name) = ?', [strtolower($personnelName)]);
+                })
+                ->first();
+                
+            if (!$existingPerson) {
+                $pData = [
+                    'name' => $personnelName,
+                    'person_name' => $personnelName,
+                    'position' => $personnelPosition,
+                    'type' => 'Distributor',
+                    'entity_type' => 'Individual',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+                if ($sourceType === 'external' && $globalDistributorId) {
+                    $pData['parent_id'] = $globalDistributorId;
+                } else if ($sourceType === 'school' && $providerId) {
+                    $pData['school_id'] = $providerId;
+                }
+                
+                DB::table('stakeholders')->insert($pData);
+                $messages[] = "Registered new Personnel: '{$personnelName}'";
+                DB::table('system_logs')->insert([
+                    'user' => $userName,
+                    'activity' => "Registered new Personnel: {$personnelName}",
+                    'module' => 'Stakeholders',
+                    'action_type' => 'Create',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
+        
         $subItemsInput = $request->input('sub_items', []);
         $subItemQuantities = $request->input('sub_item_quantities', []);
         $subItemConditions = $request->input('sub_item_conditions', []);
-        $subItemDistributors = $request->input('sub_item_distributors', []);
-        
         $subItemPrices = $request->input('sub_item_prices', []);
         $subItemDates = $request->input('sub_item_dates', []);
         $subItemSerialized = $request->input('sub_item_serialized', []);
@@ -162,20 +234,18 @@ class InventorySetupController extends Controller
             $name = trim($name);
             if (!empty($name) && isset($subItemQuantities[$index])) {
                 $qty = (int) $subItemQuantities[$index];
-                // Enforce serialized logic
                 $isSerialized = isset($subItemSerialized[$index]) && $subItemSerialized[$index] === '1';
                 if ($isSerialized) {
-                    $qty = 1; // Strictly enforce qty 1 for serialized items
+                    $qty = 1;
                 }
 
                 if ($qty > 0) {
                     $condition = $subItemConditions[$index] ?? 'Serviceable';
-                    $distributorId = !empty($subItemDistributors[$index]) ? (int) $subItemDistributors[$index] : null;
                     $validSubItems[] = [
                         'name' => $name, 
                         'quantity' => $qty, 
                         'condition' => $condition, 
-                        'distributor_id' => $distributorId,
+                        'distributor_id' => $globalDistributorId,
                         'unit_price' => !empty($subItemPrices[$index]) ? (float) $subItemPrices[$index] : null,
                         'date_acquired' => !empty($subItemDates[$index]) ? $subItemDates[$index] : null,
                         'is_serialized' => $isSerialized,
@@ -193,7 +263,6 @@ class InventorySetupController extends Controller
 
         $categoryId = $request->category_id;
         $categoryName = trim($request->category_name);
-        $messages = [];
 
         // Resolve category
         if (!$categoryId) {
