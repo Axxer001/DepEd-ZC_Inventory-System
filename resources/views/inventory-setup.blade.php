@@ -386,191 +386,86 @@
                             <button type="button" onclick="confirmCategorySubmit()" class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">${modeText} Category</button>
                         </form>`;
             } else if (currentModule === 'item' && currentMode === 'edit') {
-                // ===== EDIT MODE: UPDATE / DELETE ITEMS =====
+                // ===== EDIT MODE: UPDATE / DELETE ITEMS (Static Design) =====
                 html += `
-                    <p id="editModeDesc" class="text-slate-400 text-xs font-semibold mb-6 -mt-4">Choose an action, then select the record type and target.</p>
+                    <p class="text-slate-400 text-xs font-semibold mb-6 -mt-4 italic text-center">Update / Delete Item (Placeholder Design)</p>
 
-                    {{-- Action Mode Selector --}}
-                    <div class="flex gap-3 mb-6">
-                        <button type="button" id="editModeUpdateBtn" onclick="setEditAction('update')" class="flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-[#c00000] bg-red-50 text-[#c00000]">
-                            ✏️ Update / Rename
-                        </button>
-                        <button type="button" id="editModeDeleteBtn" onclick="setEditAction('delete')" class="flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-slate-200 bg-white text-slate-400 hover:border-red-300 hover:text-red-400">
-                            🗑️ Delete
-                        </button>
+                    <div class="flex gap-3 mb-6 opacity-60">
+                        <div class="flex-1 py-4 rounded-2xl font-bold text-sm text-center border-2 border-slate-200 bg-white text-slate-400">✏️ Update / Rename</div>
+                        <div class="flex-1 py-4 rounded-2xl font-bold text-sm text-center border-2 border-slate-200 bg-white text-slate-400">🗑️ Delete</div>
                     </div>
 
-                    {{-- Type Selector --}}
-                    <div class="space-y-2 mb-6">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Record Type <span class="text-red-500">*</span></label>
-                        <select id="renameType" onchange="onRenameTypeChange()" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold focus:ring-2 focus:ring-red-100 transition-all cursor-pointer">
-                            <option value="">-- Select record type --</option>
-                            <option value="category">Category</option>
-                            <option value="item">Item</option>
-                            <option value="sub_item">Sub-Item</option>
-                        </select>
+                    <div class="space-y-2 mb-6 opacity-60">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Record Type</label>
+                        <div class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-semibold text-slate-400">Select record type</div>
                     </div>
 
-                    {{-- Cascading Dropdowns Row --}}
-                    <div id="renameCascadeRow" class="hidden flex flex-col sm:flex-row gap-3 mb-6">
-                        <div id="renameCatWrap" class="flex-1 space-y-2 hidden">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Category <span class="text-red-500">*</span></label>
-                            <select id="renameCatSelect" onchange="onRenameCatChange()" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold focus:ring-2 focus:ring-red-100 transition-all cursor-pointer">
-                                <option value="">-- Choose Category --</option>
-                                ${rawCategories.map(c => `<option value="${c.id}" data-name="${c.name.replace(/"/g,'&quot;')}">${c.name}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div id="renameItemWrap" class="flex-1 space-y-2 hidden">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Item <span class="text-red-500">*</span></label>
-                            <select id="renameItemSelect" onchange="onRenameItemChange()" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold focus:ring-2 focus:ring-red-100 transition-all cursor-pointer disabled:opacity-50">
-                                <option value="">-- Choose Item --</option>
-                            </select>
-                        </div>
-                        <div id="renameSubWrap" class="flex-1 space-y-2 hidden">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Sub-Item <span class="text-red-500">*</span></label>
-                            <select id="renameSubSelect" onchange="onRenameSubChange()" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold focus:ring-2 focus:ring-red-100 transition-all cursor-pointer disabled:opacity-50">
-                                <option value="">-- Choose Sub-Item --</option>
-                            </select>
-                        </div>
+                    <div class="p-8 border-2 border-dashed border-slate-100 rounded-[2rem] text-center">
+                        <p class="text-slate-300 text-sm font-bold uppercase tracking-widest">Replacement Panel for Update/Delete</p>
                     </div>
-
-                    {{-- Rename Input Box (UPDATE mode only) --}}
-                    <div id="renameInputWrap" class="hidden space-y-2 mb-6">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">New Name <span class="text-red-500">*</span></label>
-                        <input type="text" id="renameNewName" placeholder="Enter new name..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold transition-all focus:ring-2 focus:ring-red-100">
-                        <p id="renameCurrentHint" class="text-xs font-semibold text-slate-400 ml-1"></p>
-                    </div>
-
-                    {{-- Delete Warning (DELETE mode only) --}}
-                    <div id="deleteWarningWrap" class="hidden mb-6">
-                        <p id="deleteCurrentHint" class="text-xs font-semibold text-slate-500 ml-1 mb-2"></p>
-                        <div id="deleteImpactBox" class="hidden p-4 bg-red-50 border border-red-200 rounded-2xl space-y-1">
-                            <p class="text-xs font-black text-red-600 uppercase tracking-widest mb-2">⚠ Deletion Impact</p>
-                            <p id="deleteImpactDetails" class="text-sm font-semibold text-red-700 leading-relaxed"></p>
-                        </div>
-                    </div>
-
-                    <button type="button" id="renameSubmitBtn" onclick="submitRename()" class="hidden w-full py-5 bg-[#c00000] hover:bg-red-700 shadow-red-100 text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">
-                        Rename Record
-                    </button>
-                    <button type="button" id="deleteSubmitBtn" onclick="submitDelete()" class="hidden w-full py-5 bg-red-600 hover:bg-red-800 shadow-red-200 text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">
-                        🗑️ Permanently Delete Record
-                    </button>
                 `;
             } else if (currentModule === 'item') {
-                // ===== MODULE 1: MASTER REGISTRY (Inventory Items) — ADD MODE =====
-                html += `<form id="itemForm" action="{{ route('inventory.setup.item') }}" method="POST" class="space-y-6">
-                            @csrf
-                            <input type="hidden" name="existing_item_id" id="existingItemId" value="">
-
+                // ===== MODULE 1: MASTER REGISTRY (Inventory Items) — ADD MODE (Static Design) =====
+                html += `
+                    <div class="space-y-6">
+                        <h4 class="text-2xl font-black text-slate-800 mb-8 uppercase tracking-tight italic">Register Item</h4>
+                        
+                        <div class="space-y-6">
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category <span class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <div class="flex">
-                                        <input type="hidden" name="category_id" id="itemCategoryId" value="">
-                                        <input type="text" name="category_name" id="itemCategoryName" placeholder="e.g. Electronics" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-l-2xl outline-none font-semibold transition-all" required autocomplete="off" oninput="filterItemCategory()">
-                                        <button type="button" onclick="toggleItemCategoryDropdown()" id="itemCategoryDropdownBtn" class="px-4 bg-slate-50 border border-l-0 border-slate-100 rounded-r-2xl text-slate-400 hover:text-[#c00000] hover:bg-red-50 transition-all" title="Select existing category">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                                        </button>
-                                    </div>
-                                    <div id="itemCategoryDropdownList" class="hidden absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll"></div>
-                                </div>
-                                <p id="itemCategoryExistingHint" class="hidden text-xs font-semibold text-emerald-600 ml-1">✓ Using existing category.</p>
-                                <p id="itemCategoryNewHint" class="hidden text-xs font-semibold text-blue-600 ml-1">✦ Creating new category.</p>
+                                <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl font-semibold text-slate-400">e.g. Electronics</div>
                             </div>
 
                             <div class="space-y-2">
                                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item Name <span class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <div class="flex">
-                                        <input type="text" name="item_name" id="itemName" placeholder="e.g. Smart TV" class="flex-grow p-4 bg-slate-50 border border-slate-100 rounded-l-2xl outline-none font-semibold transition-all" required oninput="checkItemDuplicate()">
-                                        <button type="button" onclick="toggleItemDropdown()" id="itemDropdownBtn" class="px-4 bg-slate-50 border border-l-0 border-slate-100 rounded-r-2xl text-slate-400 hover:text-[#c00000] hover:bg-red-50 transition-all" title="Select existing item">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
-                                        </button>
-                                    </div>
-                                    <div id="itemDropdownList" class="hidden absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll">
-                                        <div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest">Select existing item</div>
-                                    </div>
-                                </div>
-                                <p id="itemExistingHint" class="hidden text-xs font-semibold text-emerald-600 ml-1">✓ Using existing item — no duplicate will be created.</p>
-                                <p id="itemNewHint" class="hidden text-xs font-semibold text-blue-600 ml-1">✦ Creating new item.</p>
-                                <p id="itemDuplicateWarning" class="hidden text-xs font-semibold text-red-600 ml-1">⚠ This item already exists in the system. Please use the dropdown to select it instead.</p>
+                                <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl font-semibold text-slate-400">e.g. Smart TV</div>
                             </div>
 
                             <div class="space-y-4 pt-4 border-t border-slate-100">
-                                <div class="space-y-3">
-                                    <div class="flex justify-between items-center ml-1">
-                                    <div class="flex flex-col">
-                                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Initial Specification (Sub-Item) <span class="text-red-500">*</span></label>
-                                        <span class="text-[10px] text-slate-400 font-medium">Add spec & quantity. Required for initial stock.</span>
-                                    </div>
-                                </div>
-                                
-                                <div id="existingSubItemBlock" class="hidden mt-4 bg-emerald-50/50 p-4 border border-emerald-100 rounded-[1.5rem]">
-                                    <label class="block text-[10px] font-bold text-emerald-700 uppercase tracking-widest mb-3">Add Stock to Existing Specs</label>
-                                    <div class="relative">
-                                         <input type="text" id="existingSubItemSearch" placeholder="Search existing sub-items..." class="w-full p-4 bg-white border border-emerald-200 rounded-2xl outline-none font-bold text-slate-700 transition-all text-sm focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100" autocomplete="off" oninput="filterExistingSubItems()" onfocus="filterExistingSubItems()">
-                                         <div id="existingSubItemDropdownList" class="hidden absolute z-30 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-[200px] overflow-y-auto custom-scroll text-left"></div>
-                                    </div>
-                                    <div id="existingSubItemCardsContainer" class="flex flex-col gap-2 mt-3 empty:hidden"></div>
+                                <div class="flex flex-col">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Initial Specification (Sub-Item) <span class="text-red-500">*</span></label>
+                                    <span class="text-[10px] text-slate-400 font-medium">Add spec & quantity. Required for initial stock.</span>
                                 </div>
 
                                 <div class="mt-4">
                                     <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 ml-1">Specification Details</label>
-                                    <div id="subItemContainer" class="space-y-3 overflow-y-auto pr-2 custom-scroll">
-                                        <div class="flex flex-col gap-1 group sub-item-row relative border border-slate-100 rounded-2xl p-3 bg-slate-50/50">
-                                            <div class="flex gap-2">
-                                                <select name="sub_item_distributors[]" class="w-40 p-3 flex-shrink-0 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs cursor-pointer" title="Distributor">
-                                                    ${getDistributorOptionsHtml()}
-                                                </select>
-                                                <input type="text" name="sub_items[]" placeholder="e.g. Default/General or RAM 8GB" class="w-full p-3 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-sm flex-1" required autocomplete="off" oninput="checkSubItemDuplicate(this)">
-                                                <input type="number" name="sub_item_quantities[]" placeholder="Qty" min="1" step="1" class="w-20 p-3 flex-shrink-0 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-sm text-center" required>
-                                                <select name="sub_item_conditions[]" class="w-34 p-3 flex-shrink-0 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs cursor-pointer" title="Condition">
-                                                    <option value="Serviceable" selected>Serviceable</option>
-                                                    <option value="Unserviceable">Unserviceable</option>
-                                                    <option value="For Repair">For Repair</option>
-                                                </select>
+                                    <div class="space-y-3">
+                                        <div class="flex flex-col gap-1 border border-slate-100 rounded-2xl p-3 bg-slate-50/50">
+                                            <div class="flex flex-wrap gap-2 text-xs font-semibold text-slate-400 italic">
+                                                <div class="w-40 p-3 bg-white border border-slate-100 rounded-xl">-- Distributor --</div>
+                                                <div class="flex-grow min-w-[150px] p-3 bg-white border border-slate-100 rounded-xl">e.g. Default/General</div>
+                                                <div class="w-20 p-3 bg-white border border-slate-100 rounded-xl text-center">Qty</div>
+                                                <div class="w-34 p-3 bg-white border border-slate-100 rounded-xl">Serviceable</div>
                                             </div>
-                                            <div class="flex gap-2 items-center">
+                                            <div class="flex flex-wrap gap-2 items-center">
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">₱ Price</span>
-                                                    <input type="number" name="sub_item_prices[]" placeholder="Unit price" min="0" step="0.01" class="w-28 p-2.5 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs text-center">
+                                                    <div class="w-28 p-2.5 bg-white border border-slate-100 rounded-xl text-[10px] text-slate-400 text-center">Unit price</div>
                                                 </div>
                                                 <div class="flex items-center gap-1.5">
                                                     <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">📅 Acquired</span>
-                                                    <input type="date" name="sub_item_dates[]" class="p-2.5 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs">
+                                                    <div class="p-2.5 bg-white border border-slate-100 rounded-xl text-[10px] text-slate-400">mm/dd/yyyy</div>
                                                 </div>
-                                                <button type="button" onclick="toggleSerialPanel(this)" class="ml-auto px-3 py-1.5 text-[10px] font-black bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-100 hover:text-[#c00000] transition-all uppercase tracking-wider">⚙ Serial Info</button>
-                                            </div>
-                                            <div class="serial-panel hidden flex gap-2 pt-2 border-t border-slate-100">
-                                                <input type="hidden" name="sub_item_serialized[]" class="serialized-flag" value="0">
-                                                <label class="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
-                                                    <input type="checkbox" class="w-4 h-4 accent-[#c00000]" onchange="toggleSerializedFields(this)"> Serialized Asset (Qty locked to 1)
-                                                </label>
-                                                <input type="text" name="sub_item_property_numbers[]" placeholder="Property No." class="serial-field hidden flex-1 p-2.5 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs">
-                                                <input type="text" name="sub_item_serial_numbers[]" placeholder="Serial No." class="serial-field hidden flex-1 p-2.5 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs">
+                                                <button type="button" class="ml-auto px-3 py-1.5 text-[10px] font-black bg-white border border-slate-200 text-slate-500 rounded-xl uppercase tracking-wider">⚙ Serial Info</button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                </div>
                             </div>
 
-                            <!-- Rapid Registration Toggle & Scanned Tag -->
-                            <div class="flex items-center justify-between bg-slate-50 border border-slate-100 p-4 rounded-2xl">
+                            <div class="flex items-center justify-between bg-slate-50 border border-slate-100 p-4 rounded-2xl opacity-60">
                                 <div class="flex flex-col">
                                     <span class="text-xs font-bold text-slate-700">⚡ Rapid Registration Mode</span>
                                     <span class="text-[10px] text-slate-400 font-medium tracking-wide">Save details to quickly scan and register the next item.</span>
                                 </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="rapidRegisterToggle" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#c00000]"></div>
-                                </label>
+                                <div class="w-11 h-6 bg-slate-200 rounded-full relative">
+                                    <div class="absolute top-[2px] left-[2px] bg-white w-5 h-5 rounded-full border border-gray-300"></div>
+                                </div>
                             </div>
-                            <input type="hidden" name="scanned_tag" id="scannedTagInput" value="">
-                            
-                            <button type="button" onclick="confirmMasterItemSubmit()" class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">${modeText} Item</button>
-                        </form>`;
+
+                            <button type="button" class="w-full py-5 bg-[#c00000] text-white rounded-3xl font-bold shadow-xl opacity-90 cursor-default">Register Item</button>
+                        </div>
+                    </div>`;
 
 
             } else if (currentModule === 'distribution') {
@@ -661,11 +556,6 @@
             }   // <-- closes else if (currentModule === 'distribution')
 
             container.innerHTML = html;
-            if (currentModule === 'item' && currentMode !== 'edit') {
-                document.getElementById('itemDropdownList').classList.add('hidden');
-                document.getElementById('itemName').readOnly = false;
-                document.getElementById('itemName').classList.remove('bg-emerald-50', 'border-emerald-200', 'bg-blue-50', 'border-blue-400');
-            }
         }
 
 
@@ -707,110 +597,6 @@
             }
         }
 
-        function addSubItemField() {
-            if (getTotalSubItemRows() >= 10) {
-                document.getElementById('subItemLimitWarning').classList.remove('hidden');
-                document.getElementById('addSpecBtn').classList.add('opacity-50', 'cursor-not-allowed');
-                return;
-            }
-            document.getElementById('subItemLimitWarning').classList.add('hidden');
-            const container = document.getElementById('subItemContainer');
-            const div = document.createElement('div');
-            div.className = "flex flex-col gap-1 group animate-in fade-in slide-in-from-top-2 duration-300 sub-item-row relative border border-slate-100 rounded-2xl p-3 bg-slate-50/50";
-            div.innerHTML = `
-                <div class="flex gap-2">
-                    <select name="sub_item_distributors[]" class="w-40 p-3 flex-shrink-0 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs cursor-pointer" title="Distributor">
-                        ${getDistributorOptionsHtml()}
-                    </select>
-                    <input type="text" name="sub_items[]" placeholder="Enter specification" class="w-full p-3 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-sm flex-1" required autocomplete="off" oninput="checkSubItemDuplicate(this)">
-                    <input type="number" name="sub_item_quantities[]" placeholder="Qty" min="1" step="1" class="w-20 p-3 flex-shrink-0 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-sm text-center" required>
-                    <select name="sub_item_conditions[]" class="w-34 p-3 flex-shrink-0 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs cursor-pointer" title="Condition">
-                        <option value="Serviceable" selected>Serviceable</option>
-                        <option value="Unserviceable">Unserviceable</option>
-                        <option value="For Repair">For Repair</option>
-                    </select>
-                    <button type="button" onclick="removeSubItemField(this)" class="px-3 text-slate-300 hover:text-red-500 font-bold transition-colors">✕</button>
-                </div>
-                <div class="flex gap-2 items-center">
-                    <div class="flex items-center gap-1.5">
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">₱ Price</span>
-                        <input type="number" name="sub_item_prices[]" placeholder="Unit price" min="0" step="0.01" class="w-28 p-2.5 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs text-center">
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">📅 Acquired</span>
-                        <input type="date" name="sub_item_dates[]" class="p-2.5 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs">
-                    </div>
-                    <button type="button" onclick="toggleSerialPanel(this)" class="ml-auto px-3 py-1.5 text-[10px] font-black bg-white border border-slate-200 text-slate-500 rounded-xl hover:bg-slate-100 hover:text-[#c00000] transition-all uppercase tracking-wider">⚙ Serial Info</button>
-                </div>
-                <div class="serial-panel hidden flex gap-2 pt-2 border-t border-slate-100">
-                    <input type="hidden" name="sub_item_serialized[]" class="serialized-flag" value="0">
-                    <label class="flex items-center gap-2 text-xs font-bold text-slate-600 cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 accent-[#c00000]" onchange="toggleSerializedFields(this)"> Serialized Asset (Qty locked to 1)
-                    </label>
-                    <input type="text" name="sub_item_property_numbers[]" placeholder="Property No." class="serial-field hidden flex-1 p-2.5 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs">
-                    <input type="text" name="sub_item_serial_numbers[]" placeholder="Serial No." class="serial-field hidden flex-1 p-2.5 bg-white border border-slate-100 rounded-xl outline-none font-semibold text-xs">
-                </div>
-            `;
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
-            updateSubItemRowStates();
-        }
-
-        function removeSubItemField(btnEl) {
-            btnEl.closest('.sub-item-row').remove();
-            updateSubItemRowStates();
-        }
-
-        function getTotalSubItemRows() {
-            return document.querySelectorAll('#existingSubItemCardsContainer .sub-item-row').length + document.querySelectorAll('#subItemContainer .sub-item-row').length;
-        }
-
-        function updateSubItemRowStates() {
-            const total = getTotalSubItemRows();
-            const warning = document.getElementById('subItemLimitWarning');
-            const btn = document.getElementById('addSpecBtn');
-            const search = document.getElementById('existingSubItemSearch');
-            if (total >= 10) {
-                warning.classList.remove('hidden');
-                btn.classList.add('opacity-50', 'cursor-not-allowed');
-                if(search) search.disabled = true;
-            } else {
-                warning.classList.add('hidden');
-                btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                if(search) search.disabled = false;
-            }
-        }
-
-        function toggleSerialPanel(btnEl) {
-            const row = btnEl.closest('.sub-item-row');
-            const panel = row.querySelector('.serial-panel');
-            panel.classList.toggle('hidden');
-        }
-
-        function toggleSerializedFields(checkboxEl) {
-            const row = checkboxEl.closest('.sub-item-row');
-            const fields = row.querySelectorAll('.serial-field');
-            const qtyInput = row.querySelector('input[name="sub_item_quantities[]"]');
-            const flagInput = row.querySelector('.serialized-flag');
-            
-            if (checkboxEl.checked) {
-                flagInput.value = '1';
-                fields.forEach(f => {
-                    f.classList.remove('hidden');
-                });
-                qtyInput.value = 1;
-                qtyInput.readOnly = true;
-                qtyInput.classList.add('bg-slate-100', 'text-slate-400');
-            } else {
-                flagInput.value = '0';
-                fields.forEach(f => {
-                    f.classList.add('hidden');
-                    f.value = '';
-                });
-                qtyInput.readOnly = false;
-                qtyInput.classList.remove('bg-slate-100', 'text-slate-400');
-            }
-        }
 
         function confirmSchoolSubmit() {
             const form = document.getElementById('schoolForm');
@@ -960,427 +746,6 @@
             }
         }
 
-        function rebuildItemCategoryDropdown() {
-            const dropdown = document.getElementById('itemCategoryDropdownList');
-            const query = document.getElementById('itemCategoryName').value.toLowerCase();
-            
-            const filtered = rawCategories.filter(c => c.name.toLowerCase().includes(query));
-
-            let html = '<div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50 w-full mb-1">Select existing category</div>';
-            
-            if (filtered.length === 0) {
-                html += '<div class="px-4 py-3 text-sm text-slate-400 italic">No matching categories</div>';
-            } else {
-                filtered.forEach(c => {
-                    html += `<div onclick="selectItemCategory(${c.id}, '${c.name.replace(/'/g, "\\'")}')"
-                                 class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer transition-colors border-b border-slate-50 last:border-0 truncate">${c.name}</div>`;
-                });
-            }
-            html += `<div onclick="clearItemCategorySelection()" class="px-4 py-3 text-xs font-bold text-slate-400 hover:bg-slate-50 cursor-pointer border-t border-slate-100 transition-colors">✕ Clear selection (type new category)</div>`;
-            dropdown.innerHTML = html;
-        }
-
-        function filterItemCategory() {
-            rebuildItemCategoryDropdown();
-            document.getElementById('itemCategoryDropdownList').classList.remove('hidden');
-            
-            const input = document.getElementById('itemCategoryName');
-            const existingId = document.getElementById('itemCategoryId').value;
-            const name = input.value.trim().toLowerCase();
-            
-            if (existingId) {
-                 document.getElementById('itemCategoryId').value = '';
-                 input.classList.remove('bg-emerald-50', 'border-emerald-200');
-            }
-
-            const exactMatch = rawCategories.find(c => c.name.toLowerCase() === name);
-            if (name && exactMatch) {
-               document.getElementById('itemCategoryExistingHint').classList.remove('hidden');
-               document.getElementById('itemCategoryNewHint').classList.add('hidden');
-               input.classList.remove('border-blue-400', 'bg-blue-50');
-            } else if (name && !exactMatch){
-               document.getElementById('itemCategoryExistingHint').classList.add('hidden');
-               document.getElementById('itemCategoryNewHint').classList.remove('hidden');
-               input.classList.add('border-blue-400', 'bg-blue-50');
-            } else {
-               document.getElementById('itemCategoryExistingHint').classList.add('hidden');
-               document.getElementById('itemCategoryNewHint').classList.add('hidden');
-               input.classList.remove('border-blue-400', 'bg-blue-50');
-            }
-            
-            onCategoryChange(); 
-        }
-
-        function toggleItemCategoryDropdown() {
-            const dropdown = document.getElementById('itemCategoryDropdownList');
-            rebuildItemCategoryDropdown();
-            dropdown.classList.toggle('hidden');
-        }
-
-        function selectItemCategory(id, name) {
-            document.getElementById('itemCategoryId').value = id;
-            document.getElementById('itemCategoryName').value = name;
-            
-            const input = document.getElementById('itemCategoryName');
-            input.classList.add('bg-emerald-50', 'border-emerald-200');
-            input.classList.remove('bg-blue-50', 'border-blue-400');
-            
-            document.getElementById('itemCategoryExistingHint').classList.remove('hidden');
-            document.getElementById('itemCategoryNewHint').classList.add('hidden');
-            document.getElementById('itemCategoryDropdownList').classList.add('hidden');
-            
-            onCategoryChange();
-        }
-
-        function clearItemCategorySelection() {
-            document.getElementById('itemCategoryId').value = '';
-            document.getElementById('itemCategoryName').value = '';
-            
-            const input = document.getElementById('itemCategoryName');
-            input.classList.remove('bg-emerald-50', 'border-emerald-200', 'bg-blue-50', 'border-blue-400');
-            
-            document.getElementById('itemCategoryExistingHint').classList.add('hidden');
-            document.getElementById('itemCategoryNewHint').classList.add('hidden');
-            document.getElementById('itemCategoryDropdownList').classList.add('hidden');
-            document.getElementById('itemCategoryName').focus();
-            
-            onCategoryChange();
-        }
-
-        function onCategoryChange() {
-            const catId = document.getElementById('itemCategoryId').value;
-            const dropdown = document.getElementById('itemDropdownList');
-            // Reset item selection
-            document.getElementById('existingItemId').value = '';
-            document.getElementById('itemName').value = '';
-            document.getElementById('itemName').readOnly = false;
-            document.getElementById('itemName').classList.remove('bg-emerald-50', 'border-emerald-200', 'bg-blue-50', 'border-blue-400');
-            document.getElementById('itemExistingHint').classList.add('hidden');
-            const newHint = document.getElementById('itemNewHint');
-            if(newHint) newHint.classList.add('hidden');
-            const warning = document.getElementById('itemDuplicateWarning');
-            if(warning) warning.classList.add('hidden');
-            // Rebuild dropdown items filtered by category
-            rebuildItemDropdown(catId);
-        }
-
-        function rebuildItemDropdown(catId) {
-            const dropdown = document.getElementById('itemDropdownList');
-            const filtered = catId ? rawItems.filter(i => i.category_id == catId) : [];
-            let html = '<div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest">Select existing item</div>';
-            if (filtered.length === 0) {
-                html += '<div class="px-4 py-3 text-sm text-slate-400 italic">No existing items in this category</div>';
-            } else {
-                filtered.forEach(i => {
-                    html += `<div onclick="selectExistingItem(${i.id}, '${i.name.replace(/'/g, "\\'")}')"
-                                 class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors">${i.name}</div>`;
-                });
-            }
-            html += `<div onclick="clearItemSelection()" class="px-4 py-3 text-xs font-bold text-slate-400 hover:bg-slate-50 cursor-pointer border-t border-slate-100 transition-colors">✕ Clear selection (type new item)</div>`;
-            dropdown.innerHTML = html;
-        }
-
-        function toggleItemDropdown() {
-            const catId = document.getElementById('itemCategoryId').value;
-            const catName = document.getElementById('itemCategoryName').value.trim();
-            if (!catId && !catName) {
-                Swal.fire({ title: 'Category Required', text: 'Please choose or type a category before selecting an item.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-            const dropdown = document.getElementById('itemDropdownList');
-            rebuildItemDropdown(catId);
-            dropdown.classList.toggle('hidden');
-        }
-
-        let selectedExistingSpecs = [];
-
-        function toggleExistingSpecBlock(itemId) {
-            const block = document.getElementById('existingSubItemBlock');
-            if (!itemId) {
-                block.classList.add('hidden');
-                return;
-            }
-            const available = rawSubItems.filter(s => s.item_id == itemId);
-            if (available.length > 0) {
-                block.classList.remove('hidden');
-            } else {
-                block.classList.add('hidden');
-            }
-            // Clear selections when switching item
-            selectedExistingSpecs = [];
-            document.getElementById('existingSubItemCardsContainer').innerHTML = '';
-            document.getElementById('existingSubItemSearch').value = '';
-            updateSubItemRowStates();
-        }
-
-        function filterExistingSubItems() {
-            const dropdown = document.getElementById('existingSubItemDropdownList');
-            const q = document.getElementById('existingSubItemSearch').value.trim().toLowerCase();
-            const existingId = document.getElementById('existingItemId').value;
-            const itemName = document.getElementById('itemName').value.trim().toLowerCase();
-            const exactItemMatch = rawItems.find(i => i.name.toLowerCase() === itemName);
-            const resolvedItemId = existingId || (exactItemMatch ? exactItemMatch.id : null);
-            
-            if(!resolvedItemId) {
-                dropdown.classList.add('hidden');
-                return;
-            }
-
-            const available = rawSubItems.filter(s => s.item_id == resolvedItemId && !selectedExistingSpecs.includes(s.id));
-            const filtered = q ? available.filter(s => s.name.toLowerCase().includes(q)) : available;
-
-            dropdown.classList.remove('hidden');
-            let html = '<div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Select spec</div>';
-            if (filtered.length === 0) {
-                html += '<div class="px-4 py-3 text-sm text-slate-400 italic">No exact matches left.</div>';
-            } else {
-                filtered.forEach(s => {
-                    html += `<div onclick="selectExistingSpecCard(${s.id}, '${s.name.replace(/'/g, "\\'")}', ${s.quantity})" class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 cursor-pointer transition-colors border-b border-slate-50 truncate">${s.name} <span class="text-xs font-bold text-slate-400 ml-2">(${s.quantity} in stock)</span></div>`;
-                });
-            }
-            html += `<div onclick="closeExistingSpecDropdown()" class="px-4 py-3 text-xs font-bold text-slate-400 hover:bg-slate-50 cursor-pointer transition-colors text-center border-t border-slate-100">✕ Close</div>`;
-            dropdown.innerHTML = html;
-        }
-
-        function closeExistingSpecDropdown() {
-            const drp = document.getElementById('existingSubItemDropdownList');
-            if(drp) drp.classList.add('hidden');
-        }
-
-        function selectExistingSpecCard(id, name, stock) {
-            if (getTotalSubItemRows() >= 10) {
-                document.getElementById('subItemLimitWarning').classList.remove('hidden');
-                return;
-            }
-
-            selectedExistingSpecs.push(id);
-            document.getElementById('existingSubItemSearch').value = '';
-            closeExistingSpecDropdown();
-
-            const container = document.getElementById('existingSubItemCardsContainer');
-            const div = document.createElement('div');
-            div.className = "flex items-center justify-between p-4 bg-white border border-slate-200 rounded-2xl shadow-sm animate-in fade-in zoom-in duration-300 sub-item-row";
-            div.innerHTML = `
-                <div class="flex flex-col">
-                    <span class="font-bold text-sm text-slate-800">${name}</span>
-                    <span class="text-[10px] font-black uppercase tracking-widest text-emerald-600">${stock} IN STOCK</span>
-                </div>
-                <div class="flex items-center gap-3">
-                    <input type="hidden" name="sub_items[]" value="${name}">
-                    <select name="sub_item_distributors[]" class="w-36 p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-semibold text-sm cursor-pointer" title="Distributor">
-                        ${getDistributorOptionsHtml()}
-                    </select>
-                    <input type="number" name="sub_item_quantities[]" placeholder="Qty" min="1" step="1" class="w-20 p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-sm text-center focus:border-emerald-400" required>
-                    <select name="sub_item_conditions[]" class="w-36 p-3 bg-slate-50 border border-slate-100 rounded-xl outline-none font-semibold text-sm cursor-pointer" title="Condition">
-                        <option value="Serviceable" selected>Serviceable</option>
-                        <option value="Unserviceable">Unserviceable</option>
-                        <option value="For Repair">For Repair</option>
-                    </select>
-                    <button type="button" onclick="removeExistingSpecCard(this, ${id})" class="text-slate-300 hover:text-red-500 font-bold p-2 transition-colors">✕</button>
-                </div>
-            `;
-            container.appendChild(div);
-            updateSubItemRowStates();
-            
-            Array.from(document.querySelectorAll('#subItemContainer input[name="sub_items[]"]')).forEach(i => checkSubItemDuplicate(i));
-        }
-
-        function removeExistingSpecCard(btn, id) {
-            selectedExistingSpecs = selectedExistingSpecs.filter(i => i !== id);
-            btn.closest('.sub-item-row').remove();
-            updateSubItemRowStates();
-            Array.from(document.querySelectorAll('#subItemContainer input[name="sub_items[]"]')).forEach(i => checkSubItemDuplicate(i));
-        }
-
-        function checkSubItemDuplicate(inputEl) {
-            const val = inputEl.value.trim().toLowerCase();
-            const itemId = document.getElementById('existingItemId').value; 
-            const itemName = document.getElementById('itemName').value.trim().toLowerCase();
-            const exactItemMatch = rawItems.find(i => i.name.toLowerCase() === itemName);
-            const resolvedItemId = itemId || (exactItemMatch ? exactItemMatch.id : null);
-
-            let isDuplicate = false;
-            if (resolvedItemId && val) {
-                 isDuplicate = rawSubItems.some(s => s.item_id == resolvedItemId && s.name.toLowerCase() === val);
-            }
-
-            if (isDuplicate) {
-                 inputEl.classList.add('border-red-400', 'bg-red-50', 'text-red-700');
-                 inputEl.setAttribute('title', 'Spec already exists for this Item. Use the Existing Selection tool above.');
-            } else {
-                 inputEl.classList.remove('border-red-400', 'bg-red-50', 'text-red-700');
-                 inputEl.removeAttribute('title');
-            }
-        }
-
-        function selectExistingItem(id, name) {
-            document.getElementById('existingItemId').value = id;
-            document.getElementById('itemName').value = name;
-            document.getElementById('itemName').readOnly = true;
-            document.getElementById('itemName').classList.add('bg-emerald-50', 'border-emerald-200');
-            document.getElementById('itemName').classList.remove('bg-blue-50', 'border-blue-400');
-            document.getElementById('itemExistingHint').classList.remove('hidden');
-            const newHint = document.getElementById('itemNewHint');
-            if(newHint) newHint.classList.add('hidden');
-            document.getElementById('itemDropdownList').classList.add('hidden');
-            toggleExistingSpecBlock(id);
-        }
-
-        function clearItemSelection() {
-            document.getElementById('existingItemId').value = '';
-            document.getElementById('itemName').value = '';
-            document.getElementById('itemName').readOnly = false;
-            document.getElementById('itemName').classList.remove('bg-emerald-50', 'border-emerald-200', 'bg-blue-50', 'border-blue-400');
-            document.getElementById('itemExistingHint').classList.add('hidden');
-            const newHint = document.getElementById('itemNewHint');
-            if(newHint) newHint.classList.add('hidden');
-            const warning = document.getElementById('itemDuplicateWarning');
-            if(warning) warning.classList.add('hidden');
-            document.getElementById('itemDropdownList').classList.add('hidden');
-            document.getElementById('itemName').focus();
-            toggleExistingSpecBlock(null);
-        }
-
-        let itemDuplicateBlocked = false;
-
-        function checkItemDuplicate() {
-            const input = document.getElementById('itemName');
-            const warning = document.getElementById('itemDuplicateWarning');
-            const newHint = document.getElementById('itemNewHint');
-            const existingId = document.getElementById('existingItemId').value;
-            const name = input.value.trim().toLowerCase();
-
-            // Skip check if user selected an existing item from dropdown
-            if (existingId) {
-                warning.classList.add('hidden');
-                if(newHint) newHint.classList.add('hidden');
-                itemDuplicateBlocked = false;
-                input.classList.remove('border-red-400', 'bg-red-50', 'border-blue-400', 'bg-blue-50');
-                toggleExistingSpecBlock(existingId);
-                return;
-            }
-
-            const exactMatch = rawItems.find(i => i.name.toLowerCase() === name);
-            if (name && exactMatch) {
-                warning.classList.remove('hidden');
-                if(newHint) newHint.classList.add('hidden');
-                itemDuplicateBlocked = true;
-                input.classList.add('border-red-400', 'bg-red-50');
-                input.classList.remove('border-blue-400', 'bg-blue-50');
-                toggleExistingSpecBlock(exactMatch.id);
-            } else if (name) {
-                warning.classList.add('hidden');
-                if(newHint) newHint.classList.remove('hidden');
-                itemDuplicateBlocked = false;
-                input.classList.remove('border-red-400', 'bg-red-50');
-                input.classList.add('border-blue-400', 'bg-blue-50');
-                toggleExistingSpecBlock(null);
-            } else {
-                warning.classList.add('hidden');
-                if(newHint) newHint.classList.add('hidden');
-                itemDuplicateBlocked = false;
-                input.classList.remove('border-red-400', 'bg-red-50', 'border-blue-400', 'bg-blue-50');
-                toggleExistingSpecBlock(null);
-            }
-        }
-
-        function confirmMasterItemSubmit() {
-            const form = document.getElementById('itemForm');
-            const itemName = document.getElementById('itemName').value.trim();
-            const categoryId = document.getElementById('itemCategoryId').value;
-            const categoryName = document.getElementById('itemCategoryName').value.trim();
-            const existingId = document.getElementById('existingItemId').value;
-
-            if (!categoryId && !categoryName) {
-                Swal.fire({ title: 'Category Required', text: 'Please select or type a main category.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-            if (!itemName) {
-                Swal.fire({ title: 'Item Name Required', text: 'Please enter an item name or select an existing one.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-            if (itemDuplicateBlocked && !existingId) {
-                Swal.fire({ title: 'Duplicate Item', text: `"${itemName}" already exists. Use the dropdown to select it.`, icon: 'error', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-
-            const existingRows = Array.from(document.querySelectorAll('#existingSubItemCardsContainer .sub-item-row'));
-            const newRows = Array.from(document.querySelectorAll('#subItemContainer .sub-item-row'));
-            const allSubRows = existingRows.concat(newRows);
-
-            if (allSubRows.length === 0) {
-                Swal.fire({ title: 'Sub-Item Required', text: 'Please add at least one specification with its quantity.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-            
-            let totalQty = 0;
-            let validSubCount = 0;
-            let hasError = false;
-
-            allSubRows.forEach(row => {
-                const nameInput = row.querySelector('input[name="sub_items[]"]').value.trim();
-                const qtyInput = row.querySelector('input[name="sub_item_quantities[]"]').value;
-                if (!nameInput || !qtyInput || parseInt(qtyInput) < 1) {
-                    hasError = true;
-                } else {
-                    validSubCount++;
-                    totalQty += parseInt(qtyInput);
-                }
-            });
-
-            if (hasError || validSubCount === 0) {
-                Swal.fire({ title: 'Invalid Sub-Items', text: 'Please ensure all specifications have a name and a valid quantity of at least 1.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-
-            let msg = existingId
-                ? `Update existing item "${itemName}" by adding ${totalQty} unit(s)`
-                : `Register new item "${itemName}" with total quantity of ${totalQty} unit(s)`;
-            msg += ` across ${validSubCount} specification(s)?`;
-
-            Swal.fire({
-                title: 'Confirm Registration', text: msg, icon: 'question',
-                showCancelButton: true, confirmButtonColor: '#c00000', cancelButtonColor: '#94a3b8',
-                confirmButtonText: 'Yes, register it!',
-                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
-            }).then((result) => { 
-                if (result.isConfirmed) {
-                    // Check Rapid Registration toggle
-                    const toggle = document.getElementById('rapidRegisterToggle');
-                    if (toggle && toggle.checked) {
-                        try {
-                            const mainCategory = document.getElementById('itemCategoryName').value.trim();
-                            const itemName = document.getElementById('itemName').value.trim();
-                            const subRow = document.querySelector('#subItemContainer .sub-item-row');
-                            let distributorId = '';
-                            let unitPrice = '';
-                            let condition = 'Serviceable';
-                            let subItemName = '';
-                            
-                            if (subRow) {
-                                subItemName = subRow.querySelector('input[name="sub_items[]"]').value;
-                                distributorId = subRow.querySelector('select[name="sub_item_distributors[]"]').value;
-                                unitPrice = subRow.querySelector('input[name="sub_item_prices[]"]').value;
-                                condition = subRow.querySelector('select[name="sub_item_conditions[]"]').value;
-                            }
-                            
-                            sessionStorage.setItem('rapidRegistrationData', JSON.stringify({
-                                categoryName: mainCategory,
-                                itemName: itemName,
-                                subItemName: subItemName,
-                                distributorId: distributorId,
-                                unitPrice: unitPrice,
-                                condition: condition
-                            }));
-                        } catch(e) { console.error("Could not save to session storage"); }
-                    } else {
-                        sessionStorage.removeItem('rapidRegistrationData');
-                    }
-                    
-                    form.submit(); 
-                }
-            });
-        }
 
         // =============================================
         // ASSET DISTRIBUTION MODULE
@@ -2481,105 +1846,7 @@
             });
         });
     
-    function toggleSerialPanel(btn) {
-        const panel = btn.parentElement.nextElementSibling;
-        if (panel.classList.contains('hidden')) {
-            panel.classList.remove('hidden');
-            btn.classList.add('bg-slate-100', 'text-[#c00000]');
-            btn.classList.remove('bg-white', 'text-slate-500');
-        } else {
-            panel.classList.add('hidden');
-            btn.classList.remove('bg-slate-100', 'text-[#c00000]');
-            btn.classList.add('bg-white', 'text-slate-500');
-        }
-    }
 
-    function toggleSerializedFields(checkbox) {
-        const fields = checkbox.closest('.serial-panel').querySelectorAll('.serial-field');
-        const qtyInput = checkbox.closest('.sub-item-row').querySelector('input[name="sub_item_quantities[]"]');
-        if (checkbox.checked) {
-            fields.forEach(f => {
-                f.classList.remove('hidden');
-            });
-            if (qtyInput) {
-                qtyInput.value = 1;
-                qtyInput.readOnly = true;
-                qtyInput.classList.add('bg-slate-200', 'text-slate-400');
-            }
-        } else {
-            fields.forEach(f => {
-                f.classList.add('hidden');
-                f.value = '';
-            });
-            if (qtyInput) {
-                qtyInput.readOnly = false;
-                qtyInput.classList.remove('bg-slate-200', 'text-slate-400');
-            }
-        }
-    }
-
-    // --- RAPID REGISTRATION LOGIC ---
-    document.addEventListener('DOMContentLoaded', () => {
-        const params = new URLSearchParams(window.location.search);
-        const scannedTag = params.get('scanned_tag');
-        
-        let shouldOpenItemMode = false;
-
-        // If there's a scanned tag, populate it
-        if (scannedTag) {
-            // Wait for dynamic DOM render
-            setTimeout(() => {
-                const tagInput = document.getElementById('scannedTagInput');
-                if (tagInput) tagInput.value = scannedTag;
-                
-                // Force Serialized fields to be open if we are creating a unique QR 
-                const serialToggle = document.querySelector('.serial-panel input[type="checkbox"]');
-                if (serialToggle) {
-                    serialToggle.checked = true;
-                    toggleSerializedFields(serialToggle);
-                    const panel = serialToggle.closest('.serial-panel');
-                    panel.classList.remove('hidden');
-                }
-            }, 500); // short delay since switchMode('item') may need a tick
-            shouldOpenItemMode = true;
-        }
-
-        // Check if there is data from previous registration
-        const savedDataJson = sessionStorage.getItem('rapidRegistrationData');
-        if (savedDataJson) {
-            try {
-                const data = JSON.parse(savedDataJson);
-                setTimeout(() => {
-                    const toggle = document.getElementById('rapidRegisterToggle');
-                    if (toggle) toggle.checked = true;
-
-                    if (data.categoryName) document.getElementById('itemCategoryName').value = data.categoryName;
-                    if (data.itemName) document.getElementById('itemName').value = data.itemName;
-                    
-                    const subRow = document.querySelector('#subItemContainer .sub-item-row');
-                    if (subRow) {
-                        subRow.querySelector('input[name="sub_items[]"]').value = data.subItemName || '';
-                        subRow.querySelector('select[name="sub_item_distributors[]"]').value = data.distributorId || '';
-                        subRow.querySelector('input[name="sub_item_prices[]"]').value = data.unitPrice || '';
-                        subRow.querySelector('select[name="sub_item_conditions[]"]').value = data.condition || 'Serviceable';
-                    }
-
-                    // Optional: Call validation methods manually if needed
-                    if (data.itemName) {
-                        const evt = new Event('input');
-                        document.getElementById('itemName').dispatchEvent(evt);
-                    }
-                }, 600);
-            } catch(e) {};
-            shouldOpenItemMode = true;
-        }
-
-        // If we found any reason to jump into item registration mode, do it immediately
-        if (shouldOpenItemMode && window.location.search.includes('mode=add')) {
-            // Already handled by existing parameter check, but just to be sure we're on 'item'
-            switchMode('item');
-        }
-    });
 
 
         // ============================================================
