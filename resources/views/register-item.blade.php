@@ -750,9 +750,10 @@ function addSubItemField() {
             <div id="serial-panel-${id}" class="hidden mt-8 pt-8 border-t-2 border-dashed border-slate-100 animate-fade">
                 <div class="flex flex-col md:flex-row gap-8 items-center bg-white p-6 rounded-3xl border border-slate-100 shadow-inner">
                     <label class="flex items-center gap-4 cursor-pointer min-w-[180px] group">
-                        <input type="checkbox" name="sub_item_serialized[]" value="1"
+                        <input type="hidden" name="sub_item_serialized[]" value="0" id="serial-flag-${id}">
+                        <input type="checkbox" value="1"
                             class="w-6 h-6 rounded-lg border-slate-200 accent-[#c00000] transition-all transform group-hover:scale-110"
-                            onchange="handleSerializedChange(this, ${id})">
+                            onchange="document.getElementById('serial-flag-${id}').value = this.checked ? '1' : '0'; handleSerializedChange(this, ${id})">
                         <div class="flex flex-col">
                             <span class="text-[10px] font-black uppercase text-slate-700 leading-none">Serialized?</span>
                             <span class="text-[8px] font-bold text-slate-400 uppercase mt-1 italic tracking-tight">Locks Qty to 1</span>
