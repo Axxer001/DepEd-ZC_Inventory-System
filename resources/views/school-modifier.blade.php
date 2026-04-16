@@ -72,26 +72,26 @@
                 </div>
             @endif
 
-            @if(session('success'))
-                <div class="max-w-xl mx-auto mb-6 bg-green-50 text-green-700 p-6 font-bold rounded-3xl shadow-sm border border-green-100 flex items-start gap-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-8 h-8 text-green-500 shrink-0">
-                        <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clip-rule="evenodd" />
-                    </svg>
-                    <div class="mt-1 flex-1">
-                        {{ session('success') }}
-                    </div>
-                </div>
-            @endif
-
             <div class="max-w-2xl mx-auto bg-white p-10 rounded-[3rem] shadow-2xl border border-slate-50 relative overflow-visible">
                 <h4 class="text-2xl font-black text-slate-800 mb-8 uppercase tracking-tight italic">Modify School</h4>
-
+                
                 <div class="flex gap-4 mb-8">
-                    <button type="button" id="editModeUpdateBtn" onclick="setEditAction('update')" class="flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-[#c00000] bg-red-50 text-[#c00000]">
-                        ✏️ Update / Rename
+                    <button type="button" id="editModeUpdateBtn" onclick="setEditAction('update')" class="flex items-center justify-center gap-2 flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-[#c00000] bg-red-50 text-[#c00000]">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                        Update / Rename
                     </button>
-                    <button type="button" id="editModeDeleteBtn" onclick="setEditAction('delete')" class="flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-slate-200 bg-white text-slate-400 hover:border-red-300 hover:text-red-400">
-                        🗑️ Delete
+
+                    <button type="button" id="editModeDeleteBtn" onclick="setEditAction('delete')" class="flex items-center justify-center gap-2 flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-slate-200 bg-white text-slate-400 hover:border-red-300 hover:text-red-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                        Delete
                     </button>
                 </div>
 
@@ -119,7 +119,7 @@
                     </div>
 
                     <div id="deleteWarningWrap" class="hidden mt-6">
-                        <div id="deleteImpactBox" class="bg-red-50 border border-red-200 p-6 rounded-3xl hidden transition-all">
+                        <div id="deleteImpactBox" class="bg-red-50 border border-red-200 p-6 rounded-3xl transition-all">
                             <h5 class="text-red-600 font-black text-xs uppercase tracking-widest flex items-center gap-2 mb-3">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                                 DELETION IMPACT
@@ -148,25 +148,43 @@
             currentEditAction = action;
             const updateBtn = document.getElementById('editModeUpdateBtn');
             const deleteBtn = document.getElementById('editModeDeleteBtn');
+            
+            if (action === 'update') {
+                // Update button active style
+                updateBtn.classList.add('border-[#c00000]', 'bg-red-50', 'text-[#c00000]');
+                updateBtn.classList.remove('border-slate-200', 'bg-white', 'text-slate-400');
+                
+                // Delete button inactive style
+                deleteBtn.classList.remove('border-red-600', 'text-red-600');
+                deleteBtn.classList.add('border-slate-200', 'bg-white', 'text-slate-400');
+            } else {
+                // Delete button active style
+                deleteBtn.classList.add('border-red-600', 'bg-red-50', 'text-red-600');
+                deleteBtn.classList.remove('border-slate-200', 'bg-white', 'text-slate-400');
+                
+                // Update button inactive style
+                updateBtn.classList.remove('border-[#c00000]', 'bg-red-50', 'text-[#c00000]');
+                updateBtn.classList.add('border-slate-200', 'bg-white', 'text-slate-400');
+            }
+
+            triggerActionUI();
+        }
+
+        function triggerActionUI() {
             const renameSec = document.getElementById('renameSection');
             const warnWrap  = document.getElementById('deleteWarningWrap');
             const submitBtn = document.getElementById('submitBtn');
             const delBtn    = document.getElementById('deleteSubmitBtn');
 
-            if (action === 'update') {
-                updateBtn.className = 'flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-[#c00000] bg-red-50 text-[#c00000]';
-                deleteBtn.className = 'flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-slate-200 bg-white text-slate-400 hover:border-red-300 hover:text-red-400';
-                
+            if (currentEditAction === 'update') {
                 renameSec.classList.remove('hidden');
                 submitBtn.classList.remove('hidden');
                 warnWrap.classList.add('hidden');
                 delBtn.classList.add('hidden');
             } else {
-                updateBtn.className = 'flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-slate-200 bg-white text-slate-400 hover:border-red-300 hover:text-red-400';
-                deleteBtn.className = 'flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-red-600 bg-red-50 text-red-600';
-                
                 renameSec.classList.add('hidden');
                 submitBtn.classList.add('hidden');
+                
                 if (selectedSchool) {
                     warnWrap.classList.remove('hidden');
                     delBtn.classList.remove('hidden');
@@ -175,29 +193,10 @@
             }
         }
 
-        function triggerActionUI() {
-            if (currentEditAction === 'update') {
-                document.getElementById('renameSection').classList.remove('hidden');
-                document.getElementById('submitBtn').classList.remove('hidden');
-                document.getElementById('deleteWarningWrap').classList.add('hidden');
-                document.getElementById('deleteSubmitBtn').classList.add('hidden');
-            } else {
-                document.getElementById('renameSection').classList.add('hidden');
-                document.getElementById('submitBtn').classList.add('hidden');
-                document.getElementById('deleteWarningWrap').classList.remove('hidden');
-                document.getElementById('deleteSubmitBtn').classList.remove('hidden');
-                previewDeleteImpact();
-            }
-        }
-
         function filterSchools() {
             const query = document.getElementById('schoolSearchDropdown').value.toLowerCase();
             const list = document.getElementById('schoolDropdownList');
-            
-            if (!query) {
-                list.classList.add('hidden');
-                return;
-            }
+            if (!query) { list.classList.add('hidden'); return; }
 
             const filtered = allSchools.filter(s => 
                 s.name.toLowerCase().includes(query) || 
@@ -208,7 +207,7 @@
                 list.innerHTML = filtered.map(s => `
                     <div onclick="selectSchool(${s.id}, '${s.school_id.replace(/'/g, "\\'")}', '${s.name.replace(/'/g, "\\'")}')" class="px-5 py-3 hover:bg-red-50 cursor-pointer border-b border-slate-50 last:border-0 transition-colors">
                         <div class="font-bold text-sm text-slate-800">${s.name}</div>
-                        <div class="text-[10px] font-black text-slate-400 tracking-wider">ID: ${s.school_id} • ${s.district_name || 'N/A'}</div>
+                        <div class="text-[10px] font-black text-slate-400 tracking-wider">ID: ${s.school_id}</div>
                     </div>
                 `).join('');
                 list.classList.remove('hidden');
@@ -222,7 +221,6 @@
             selectedSchool = { id, schoolId, name };
             document.getElementById('schoolSearchDropdown').value = name;
             document.getElementById('schoolDropdownList').classList.add('hidden');
-            
             document.getElementById('schoolIdInput').value = id;
             
             const newIdInput = document.getElementById('newSchoolIdInput');
@@ -232,54 +230,35 @@
 
             newIdInput.value = schoolId;
             newNameInput.value = name;
-
             newIdInput.disabled = false;
             newNameInput.disabled = false;
             submitBtn.disabled = false;
 
             section.classList.remove('opacity-50');
-            submitBtn.classList.remove('bg-slate-200', 'text-slate-400', 'shadow-none', 'disabled:cursor-not-allowed');
-            submitBtn.classList.add('bg-[#c00000]', 'hover:bg-red-700', 'text-white', 'shadow-lg', 'shadow-red-100', 'hover:-translate-y-1', 'active:scale-95');
+            submitBtn.classList.remove('bg-slate-200', 'text-slate-400');
+            submitBtn.classList.add('bg-[#c00000]', 'text-white', 'shadow-lg');
 
             triggerActionUI();
         }
 
         async function previewDeleteImpact() {
             if (!selectedSchool) return;
-
-            const impactBox = document.getElementById('deleteImpactBox');
             const impactTxt = document.getElementById('deleteImpactDetails');
-            
-            impactBox.classList.remove('hidden');
             impactTxt.innerHTML = '<span class="text-slate-500 animate-pulse">Calculating impact...</span>';
             
             try {
                 const res = await fetch("{{ route('inventory.setup.preview_delete') }}", {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ type: 'school', id: selectedSchool.id })
                 });
                 const data = await res.json();
-                if (res.ok && data.success) {
-                    const i = data.impact;
-                    let msgs = [];
-                    if (i.ownerships > 0) msgs.push(`• <b>${i.ownerships}</b> distributed asset(s) will be recovered`);
-                    
-                    if (msgs.length === 0) {
-                        impactTxt.innerHTML = '<span class="text-emerald-600 font-bold">Safe to delete: This school currently owns no assets.</span>';
-                        impactBox.classList.replace('bg-red-50', 'bg-emerald-50');
-                        impactBox.classList.replace('border-red-200', 'border-emerald-200');
-                    } else {
-                        impactTxt.innerHTML = `This action will instantly delete the school <b>"${selectedSchool.name}"</b> AND all its <b>distributed assets</b> will be returned to the Master Registry as available stock:<br>` + msgs.join('<br>');
-                        impactBox.classList.replace('bg-emerald-50', 'bg-red-50');
-                        impactBox.classList.replace('border-emerald-200', 'border-red-200');
-                    }
-                } else {
-                    impactTxt.innerHTML = '<span class="text-slate-500">Failed to calculate impact.</span>';
+                if (data.success) {
+                    impactTxt.innerHTML = data.impact.ownerships > 0 
+                        ? `This will delete <b>"${selectedSchool.name}"</b> and recover <b>${data.impact.ownerships}</b> assets.`
+                        : '<span class="text-emerald-600 font-bold">Safe to delete: No assets owned.</span>';
                 }
-            } catch (e) {
-                impactTxt.innerHTML = '<span class="text-slate-500">Failed to calculate impact.</span>';
-            }
+            } catch (e) { impactTxt.innerHTML = 'Error calculating impact.'; }
         }
 
         async function submitDelete() {
