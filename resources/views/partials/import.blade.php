@@ -186,6 +186,21 @@
                     </p>
                 </div>
             </div>
+
+            {{-- 05: Source Type --}}
+            <div class="flex gap-4">
+                <div class="h-8 w-8 rounded-xl bg-white/10 flex items-center justify-center shrink-0 font-black text-[#c00000] border border-white/10 text-xs">05</div>
+                <div>
+                    <p class="text-sm font-bold text-white uppercase tracking-wide">Source Type</p>
+                    <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                        The <span class="text-white font-bold">source_type</span> column must be one of exactly three values:
+                        <span class="text-amber-400 font-bold">School</span>,
+                        <span class="text-amber-400 font-bold">External</span>, or
+                        <span class="text-amber-400 font-bold">Individual</span>.
+                        Any other value will reject the entire import.
+                    </p>
+                </div>
+            </div>
         </div>
 
         {{-- Scroll-to-Builder CTA --}}
@@ -215,6 +230,7 @@
                         'category' => 'Main inventory group', 'item_name' => 'General item title',
                         'sub_item_name' => 'Specific model/specs', 'quantity' => 'Total units (Integer)',
                         'unit_price' => 'Cost (Numbers only)', 'condition' => 'Serviceable / Repair',
+                        'source' => 'Distributor / origin name', 'source_type' => 'School / External / Individual',
                         'is_serialized' => 'yes / no', 'serial_number' => 'Required if yes',
                         'date_acquired' => 'YYYY-MM-DD'
                     ];
@@ -251,6 +267,7 @@
                     <div style="width:152px">Item</div>
                     <div style="width:152px">Sub-item</div>
                     <div style="width:140px">Source</div>
+                    <div style="width:130px">Source Type</div>
                     <div style="width:120px">Condition</div>
                     <div style="width:100px">Serialized</div>
                     <div style="width:72px">Qty</div>
@@ -314,33 +331,48 @@
                     <table class="w-full text-left border-collapse min-w-[900px]">
                         <thead>
                             <tr class="bg-slate-100/50">
-                                @foreach(array_slice($csvRows[0], 0, 7) as $header)
+                                @foreach($csvRows[0] as $header)
                                     <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{{ $header }}</th>
                                 @endforeach
-                                <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Acquired</th>
-                                <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Serialized</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
                             @foreach(array_slice($csvRows, 1, 50) as $index => $row)
+                                @php
+                                    // Build a header-keyed map for safe access
+                                    $hdr = array_map('strtolower', array_map('trim', $csvRows[0]));
+                                    $map = [];
+                                    foreach ($hdr as $ci => $cn) { $map[$cn] = $row[$ci] ?? ''; }
+                                @endphp
                                 <tr class="hover:bg-red-50/20 transition-colors group">
-                                    <td class="p-5 text-xs font-bold text-slate-700">{{ $row[0] ?? '-' }}</td>
-                                    <td class="p-5 text-xs font-black text-deped">{{ $row[1] ?? '-' }}</td>
-                                    <td class="p-5 text-xs font-bold text-slate-500">{{ $row[2] ?? '-' }}</td>
+                                    <td class="p-5 text-xs font-bold text-slate-700">{{ $map['category'] ?? '-' }}</td>
+                                    <td class="p-5 text-xs font-black text-deped">{{ $map['item_name'] ?? '-' }}</td>
+                                    <td class="p-5 text-xs font-bold text-slate-500">{{ $map['sub_item_name'] ?? '-' }}</td>
                                     <td class="p-5">
-                                        <span class="px-2.5 py-1 bg-slate-100 text-slate-600 font-black text-xs rounded-lg">{{ $row[3] ?? '1' }}</span>
+                                        <span class="px-2.5 py-1 bg-slate-100 text-slate-600 font-black text-xs rounded-lg">{{ $map['quantity'] ?? '1' }}</span>
                                     </td>
                                     <td class="p-5">
                                         <span class="px-3 py-1.5 text-[9px] uppercase tracking-widest font-black rounded-full shadow-sm 
-                                            {{ strtolower($row[4] ?? '') == 'for repair' ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200' }}">
-                                            {{ $row[4] ?? 'Serviceable' }}
+                                            {{ strtolower($map['condition'] ?? '') == 'for repair' ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200' }}">
+                                            {{ $map['condition'] ?? 'Serviceable' }}
                                         </span>
                                     </td>
-                                    <td class="p-5 text-xs font-bold text-slate-600 truncate max-w-[150px] group-hover:text-slate-900 transition-colors">{{ $row[5] ?? '-' }}</td>
-                                    <td class="p-5 text-[11px] text-slate-400 font-mono font-bold">{{ $row[6] ?? '0.00' }}</td>
-                                    <td class="p-5 text-[11px] text-slate-400 font-bold uppercase">{{ $row[7] ?? '-' }}</td>
+                                    <td class="p-5 text-xs font-bold text-slate-600 truncate max-w-[150px] group-hover:text-slate-900 transition-colors">{{ $map['source'] ?? '-' }}</td>
                                     <td class="p-5">
-                                        @if(strtolower($row[8] ?? 'no') === 'yes')
+                                        @php $st = $map['source_type'] ?? ''; @endphp
+                                        @if($st)
+                                            <span class="px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg border
+                                                {{ $st === 'School' ? 'bg-blue-50 text-blue-600 border-blue-100' : ($st === 'External' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-orange-50 text-orange-600 border-orange-100') }}">
+                                                {{ $st }}
+                                            </span>
+                                        @else
+                                            <span class="text-slate-300 text-xs">—</span>
+                                        @endif
+                                    </td>
+                                    <td class="p-5 text-[11px] text-slate-400 font-mono font-bold">{{ $map['unit_price'] ?? '0.00' }}</td>
+                                    <td class="p-5 text-[11px] text-slate-400 font-bold uppercase">{{ $map['date_acquired'] ?? '-' }}</td>
+                                    <td class="p-5">
+                                        @if(strtolower($map['is_serialized'] ?? 'no') === 'yes')
                                             <span class="px-3 py-1 bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-widest rounded-lg border border-blue-100">Yes</span>
                                         @else
                                             <span class="px-3 py-1 bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-widest rounded-lg border border-slate-200">No</span>
@@ -433,6 +465,15 @@ function addCsvRow() {
                     oninput="csvFilterSrc(${idx})" onfocus="csvFilterSrc(${idx})" autocomplete="off">
                 <div id="srcDrop_${idx}" class="hidden absolute z-40 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-52 overflow-y-auto custom-scroll" style="min-width:180px"></div>
             </div>
+        </div>
+        <!-- Source Type -->
+        <div class="flex-shrink-0" style="width:130px">
+            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Source Type</label>
+            <select id="srcType_${idx}" name="rows[${idx}][source_type]" class="${fieldCls}">
+                <option value="School">School</option>
+                <option value="External">External</option>
+                <option value="Individual">Individual</option>
+            </select>
         </div>
         <!-- Condition -->
         <div class="flex-shrink-0" style="width:120px">
@@ -609,24 +650,45 @@ function csvSelectSub(idx, name) {
 }
 
 // ── Source ────────────────────────────────────────────────────────────────────
+const srcTypeBadgeColors = {
+    'School':     'bg-blue-100 text-blue-600',
+    'External':   'bg-purple-100 text-purple-600',
+    'Individual': 'bg-orange-100 text-orange-600',
+};
+
 function csvFilterSrc(idx) {
     const input = document.getElementById(`src_${idx}`);
     if (!input) return;
+
+    // If user edits the field after an existing source was locked, unlock first
+    csvUnlockSrcType(idx);
+
     const val = input.value.toLowerCase().trim();
-    const results = val ? rawSources.filter(s => s.toLowerCase().includes(val)) : rawSources;
+    // rawSources is now [{name, entity_type}, ...]
+    const results = val
+        ? rawSources.filter(s => s.name.toLowerCase().includes(val))
+        : rawSources;
 
     let html = results.length
         ? `<div class="px-3 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Existing Sources</div>` +
-          results.slice(0, 30).map(s =>
-            `<div onmousedown="csvSelectSrc(${idx},'${s.replace(/'/g,"\\'")}')"
-                class="px-4 py-2 text-xs font-bold hover:bg-red-50 hover:text-red-600 cursor-pointer border-b border-slate-50 last:border-0 flex items-center justify-between">
-                <span>${s}</span>
-                <span class="text-[8px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full uppercase font-black ml-2 shrink-0">EXISTS</span>
-            </div>`
-          ).join('')
+          results.slice(0, 30).map(s => {
+              const typeLabel = s.entity_type || '';
+              const badgeCls  = srcTypeBadgeColors[typeLabel] || 'bg-slate-100 text-slate-500';
+              const typeBadge = typeLabel
+                  ? `<span class="text-[8px] ${badgeCls} px-1.5 py-0.5 rounded-full uppercase font-black ml-1.5 shrink-0">${typeLabel}</span>`
+                  : '';
+              return `<div onmousedown="csvSelectSrc(${idx},'${s.name.replace(/'/g,"\\'")}','${typeLabel}')"
+                  class="px-4 py-2 text-xs font-bold hover:bg-red-50 hover:text-red-600 cursor-pointer border-b border-slate-50 last:border-0 flex items-center justify-between">
+                  <span class="truncate">${s.name}</span>
+                  <div class="flex items-center gap-1 shrink-0 ml-2">
+                      ${typeBadge}
+                      <span class="text-[8px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full uppercase font-black">EXISTS</span>
+                  </div>
+              </div>`;
+          }).join('')
         : '';
 
-    if (val && !rawSources.find(s => s.toLowerCase() === val))
+    if (val && !rawSources.find(s => s.name.toLowerCase() === val))
         html += `<div onmousedown="csvSelectSrc(${idx},'${input.value.replace(/'/g,"\\'")}')"
             class="px-4 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer border-t border-slate-100 flex items-center justify-between">
             <span>+ Register as New: <strong>${input.value}</strong></span>
@@ -637,11 +699,35 @@ function csvFilterSrc(idx) {
     csvShow(`srcDrop_${idx}`, html);
 }
 
-function csvSelectSrc(idx, name) {
+function csvSelectSrc(idx, name, entityType = null) {
     const input = document.getElementById(`src_${idx}`);
     if (input) input.value = name;
     csvHide(`srcDrop_${idx}`);
+
+    if (entityType) {
+        csvLockSrcType(idx, entityType);
+    } else {
+        csvUnlockSrcType(idx);
+    }
 }
+
+function csvLockSrcType(idx, entityType) {
+    const sel = document.getElementById(`srcType_${idx}`);
+    if (!sel) return;
+    sel.value    = entityType;
+    sel.disabled = true;
+    sel.classList.add('opacity-60', 'cursor-not-allowed', 'bg-slate-100');
+    sel.title    = `Locked — this source is registered as "${entityType}" in the system`;
+}
+
+function csvUnlockSrcType(idx) {
+    const sel = document.getElementById(`srcType_${idx}`);
+    if (!sel) return;
+    sel.disabled = false;
+    sel.classList.remove('opacity-60', 'cursor-not-allowed', 'bg-slate-100');
+    sel.title    = '';
+}
+
 
 // ── Close all dropdowns on outside click ──────────────────────────────────────
 document.addEventListener('click', function(e) {

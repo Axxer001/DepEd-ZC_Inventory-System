@@ -33,7 +33,8 @@ class ImportController extends Controller
             ->where('type', 'Distributor')
             ->whereNull('parent_id')
             ->orderBy('name')
-            ->pluck('name');
+            ->select('name', 'entity_type')
+            ->get();
 
         return view('partials.import', compact('categories', 'itemsMap', 'subItemsMap', 'sources'));
     }
@@ -44,7 +45,7 @@ class ImportController extends Controller
      */
     public function downloadTemplate(Request $request)
     {
-        $headers = ['category', 'item_name', 'sub_item_name', 'quantity', 'condition', 'source', 'unit_price', 'date_acquired', 'is_serialized', 'property_number', 'serial_number'];
+        $headers = ['category', 'item_name', 'sub_item_name', 'quantity', 'condition', 'source', 'source_type', 'unit_price', 'date_acquired', 'is_serialized', 'property_number', 'serial_number'];
         
         $callback = function () use ($headers, $request) {
             $file = fopen('php://output', 'w');
@@ -60,6 +61,7 @@ class ImportController extends Controller
                         $r['quantity'] ?? '1',
                         $r['condition'] ?? 'Serviceable',
                         $r['source'] ?? '',
+                        $r['source_type'] ?? 'School',
                         '', // unit_price
                         now()->toDateString(), // date_acquired — auto-set to today
                         $r['is_serialized'] ?? 'no',
@@ -111,7 +113,7 @@ class ImportController extends Controller
         }
 
         // Validate headers
-        $expectedHeaders = ['category', 'item_name', 'sub_item_name', 'quantity', 'condition', 'source', 'unit_price', 'date_acquired', 'is_serialized', 'property_number', 'serial_number'];
+        $expectedHeaders = ['category', 'item_name', 'sub_item_name', 'quantity', 'condition', 'source', 'source_type', 'unit_price', 'date_acquired', 'is_serialized', 'property_number', 'serial_number'];
         $actualHeaders = array_map('strtolower', array_map('trim', $csvRows[0]));
 
         $missingHeaders = array_diff($expectedHeaders, $actualHeaders);
@@ -136,7 +138,7 @@ class ImportController extends Controller
             ->map(fn($rows) => $rows->pluck('sub_name')->unique()->values());
         $sources = DB::table('stakeholders')
             ->where('type', 'Distributor')->whereNull('parent_id')
-            ->orderBy('name')->pluck('name');
+            ->orderBy('name')->select('name', 'entity_type')->get();
 
         return view('partials.import', compact('csvRows', 'categories', 'itemsMap', 'subItemsMap', 'sources'));
     }
@@ -181,8 +183,29 @@ class ImportController extends Controller
                 $quantity = max(1, (int)($data['quantity'] ?? 1));
                 $condition = !empty($data['condition']) ? $data['condition'] : 'Serviceable';
                 $sourceName = $data['source'] ?? '';
-                $unitPrice = !empty($data['unit_price']) ? (float)$data['unit_price'] : null;
-                $dateAcquired = !empty($data['date_acquired']) ? $data['date_acquired'] : now()->toDateString();
+                $sourceType = $data['source_type'] ?? '';
+
+                // Validate source_type — must be one of the 3 allowed values
+                $allowedSourceTypes = ['School', 'External', 'Individual'];
+                if (!empty($sourceType) && !in_array($sourceType, $allowedSourceTypes, true)) {
+                    throw new \Exception(
+                        "Invalid source_type value '" . $sourceType . "' on row " . ($rowIndex + 2) .
+                        ". Allowed values: School, External, Individual."
+                    );
+                }
+                $unitPriceRaw = !empty($data['unit_price']) ? str_replace(',', '', $data['unit_price']) : null;
+                $unitPrice = $unitPriceRaw !== null ? (float)$unitPriceRaw : null;
+
+                $dateAcquiredRaw = !empty($data['date_acquired']) ? trim($data['date_acquired']) : '';
+                $dateAcquired = now()->toDateString();
+                if (!empty($dateAcquiredRaw)) {
+                    try {
+                        $dateAcquired = \Carbon\Carbon::parse($dateAcquiredRaw)->toDateString();
+                    } catch (\Exception $e) {
+                        // Keep the default now() if parsing fails
+                    }
+                }
+
                 $isSerialized = in_array(strtolower($data['is_serialized'] ?? ''), ['yes', '1', 'true']);
                 $propertyNumber = $data['property_number'] ?? null;
                 $serialNumber = $data['serial_number'] ?? null;
@@ -229,14 +252,14 @@ class ImportController extends Controller
                     if ($existingDist) {
                         $distributorId = $existingDist->id;
                     } else {
-                        // New source: register with name only; all classification fields null
                         $distributorId = DB::table('stakeholders')->insertGetId([
-                            'name'       => $sourceName,
-                            'type'       => 'Distributor',
-                            'status'     => 'Active',
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                            // entity_type, parent_id, school_id, position, person_name intentionally left null
+                            'name'        => $sourceName,
+                            'type'        => 'Distributor',
+                            'entity_type' => !empty($sourceType) ? $sourceType : null,
+                            'status'      => 'Active',
+                            'created_at'  => now(),
+                            'updated_at'  => now(),
+                            // parent_id, school_id, position, person_name intentionally left null
                         ]);
                         DB::table('system_logs')->insert([
                             'user' => $userName,
