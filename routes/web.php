@@ -365,8 +365,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/partials/import', [\App\Http\Controllers\ImportController::class, 'process'])->name('assets.import.process');
     Route::post('/partials/import/confirm', [\App\Http\Controllers\ImportController::class, 'confirm'])->name('assets.import.confirm');
 
-Route::get('/register-distributions', function () {
+    Route::get('/register-distributions', function () {
     return view('register-distributions');
+    });
+
+    Route::get('/register-item', function () {
+    return view('register-item');
 });
 
     Route::post('/api/recipients/add', [\App\Http\Controllers\RecipientRegistryController::class, 'add'])->name('recipients.add');
