@@ -84,10 +84,6 @@
         {{-- Header Section --}}
         <div class="flex justify-between items-center mb-16 px-2">
             <div>
-                <div class="flex items-center gap-2 mb-2">
-                    <div class="w-2.5 h-2.5 rounded-full bg-[#c00000] animate-pulse"></div>
-                    <span class="text-[10px] font-black text-[#c00000] uppercase tracking-[0.3em]">System Live</span>
-                </div>
                 <h2 class="text-3xl font-black text-slate-800 uppercase italic leading-none">Register new Inventory Item</h2>
                 <p class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mt-2">Department of Education • Zamboanga City</p>
             </div>
@@ -169,12 +165,14 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex justify-end">
-                    <button id="step1-next" onclick="goToStep(2)" disabled class="group px-14 py-6 bg-slate-200 text-slate-400 rounded-[2.5rem] font-black uppercase tracking-widest text-xs transition-all flex items-center gap-4 cursor-not-allowed">
-                        Next Step
-                        <svg class="w-5 h-5 transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
-                    </button>
-                </div>
+                <div class="flex justify-end pb-12"> {{-- Added pb-12 for a generous gap --}}
+    <button id="step1-next" onclick="goToStep(2)" disabled class="group px-14 py-6 bg-slate-200 text-slate-400 rounded-[2.5rem] font-black uppercase tracking-widest text-xs transition-all flex items-center gap-4 cursor-not-allowed shadow-sm">
+        Next Step
+        <svg class="w-5 h-5 transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+        </svg>
+    </button>
+</div>
             </div>
 
             {{-- ============================== --}}
@@ -190,10 +188,22 @@
                     <input type="hidden" name="personnel_name" id="hiddenPersonnelName">
                     <input type="hidden" name="personnel_position" id="hiddenPersonnelPosition">
 
-                    <div class="bg-white border border-slate-100 rounded-[3.5rem] p-12 shadow-sm">
-                        <div class="flex justify-between items-center mb-10">
-                            <h3 class="text-2xl font-black text-slate-800 uppercase italic">02. Asset Details</h3>
-                        </div>
+                  <div class="bg-white border border-slate-100 rounded-[3.5rem] p-12 shadow-sm">
+    {{-- Header Section --}}
+    <div class="flex justify-between items-center mb-10">
+        <h3 class="text-2xl font-black text-slate-800 uppercase italic leading-none">02. Asset Details</h3>
+        
+        {{-- Add Button positioned at the top right of the card --}}
+        <button type="button" onclick="addSubItemField()" 
+            class="group bg-red-50 text-[#c00000] border border-red-100 px-6 py-3 rounded-2xl font-black text-[10px] uppercase hover:bg-[#c00000] hover:text-white transition-all flex items-center gap-2 shadow-sm active:scale-95">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 transition-transform group-hover:rotate-90">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            Add New Specification
+        </button>
+    </div>
+
+   
 
                         {{-- Category & Item Name with autocomplete --}}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
@@ -227,16 +237,25 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-between">
-                        <button type="button" onclick="goToStep(1)" class="group px-10 py-6 bg-white border border-slate-200 text-slate-600 rounded-[2.5rem] font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all flex items-center gap-4 italic">
-                            <svg class="w-5 h-5 transition-transform group-hover:-translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path></svg>
-                            Source
-                        </button>
-                        <button type="button" onclick="goToStep(3)" class="group px-14 py-6 bg-[#c00000] text-white rounded-[2.5rem] font-black uppercase tracking-widest text-xs shadow-xl shadow-red-100 hover:scale-105 transition-all flex items-center gap-4 italic">
-                            Final Review
-                            <svg class="w-5 h-5 transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
-                        </button>
-                    </div>
+                    <div class="flex justify-between my- py-6"> {{-- Idinagdag ang my-12 para sa gap sa taas/baba at py-6 para sa inner padding --}}
+    
+    {{-- Back Button --}}
+    <button type="button" onclick="goToStep(1)" class="group px-10 py-6 bg-white border border-slate-200 text-slate-600 rounded-[2.5rem] font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all flex items-center gap-4 italic shadow-sm active:scale-95">
+        <svg class="w-5 h-5 transition-transform group-hover:-translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M11 17l-5-5m0 0l5-5m-5 5h12"></path>
+        </svg>
+        Source
+    </button>
+
+    {{-- Next Button --}}
+    <button type="button" onclick="goToStep(3)" class="group px-14 py-6 bg-[#c00000] text-white rounded-[2.5rem] font-black uppercase tracking-widest text-xs shadow-xl shadow-red-100 hover:scale-105 hover:bg-red-700 transition-all flex items-center gap-4 italic">
+        Final Review
+        <svg class="w-5 h-5 transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+        </svg>
+    </button>
+
+</div>
                 </form>
             </div>
 
@@ -668,83 +687,93 @@
             }
         }
 
-        // =============================================
-        // STEP 2 — ADD SUB-ITEM ROW (single row only)
-        // =============================================
-        function addSubItemField() {
-            const container = document.getElementById('subItemContainer');
-            const id = Date.now();
+       // =============================================
+// STEP 2 — ADD SUB-ITEM ROW (single row only)
+// =============================================
+function addSubItemField() {
+    const container = document.getElementById('subItemContainer');
+    const id = Date.now();
 
-            const html = `
-                <div id="row-${id}" class="row-container p-10 bg-slate-50 border border-slate-100 rounded-[3.5rem] animate-fade relative group shadow-sm transition-all hover:border-[#c00000]/30 hover:bg-white">
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-end">
+    const html = `
+        <div id="row-${id}" class="row-container p-8 bg-slate-50 border border-slate-100 rounded-[2.5rem] animate-fade relative group shadow-sm transition-all hover:border-[#c00000]/30 hover:bg-white">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
 
-                        <div class="lg:col-span-7 space-y-2 relative">
-                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1 italic">Specifications / Materials / Dimensions <span class="text-red-500">*</span></label>
-                            <input type="text" name="sub_items[]" placeholder="e.g. Core i7, 4ft Steel Frame" required
-                                autocomplete="off" oninput="filterSpecInput(this, ${id})" onfocus="filterSpecInput(this, ${id})"
-                                class="spec-val w-full p-4 bg-white border border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-red-200 shadow-sm transition-all">
-                            <div id="specDropdown-${id}" class="autocomplete-dropdown hidden custom-scroll"></div>
-                            <p id="specExistingHint-${id}" class="hidden text-[10px] font-semibold text-emerald-600 ml-2 mt-1">✓ Updating existing specification stock</p>
-                            <p id="specNewHint-${id}" class="hidden text-[10px] font-semibold text-blue-600 ml-2 mt-1">✦ New specification under this item</p>
-                        </div>
+                <div class="lg:col-span-5 space-y-2 relative">
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1 italic">Specifications / Materials <span class="text-red-500">*</span></label>
+                    <input type="text" name="sub_items[]" placeholder="e.g. Core i7, 4ft Steel Frame" required
+                        autocomplete="off" oninput="filterSpecInput(this, ${id})" onfocus="filterSpecInput(this, ${id})"
+                        class="spec-val w-full p-4 bg-white border border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-red-200 shadow-sm transition-all">
+                    <div id="specDropdown-${id}" class="autocomplete-dropdown hidden custom-scroll"></div>
+                    <p id="specExistingHint-${id}" class="hidden text-[9px] font-semibold text-emerald-600 ml-2 mt-1 italic">✓ Existing spec found</p>
+                    <p id="specNewHint-${id}" class="hidden text-[9px] font-semibold text-blue-600 ml-2 mt-1 italic">✦ New spec entry</p>
+                </div>
 
-                        <div class="lg:col-span-2 space-y-2">
-                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1 italic">Condition</label>
-                            <select name="sub_item_conditions[]" class="cond-val w-full p-4 bg-white border border-slate-100 rounded-2xl font-bold text-xs outline-none shadow-sm cursor-pointer">
-                                <option value="Serviceable">Serviceable</option>
-                                <option value="Unserviceable">Unserviceable</option>
-                            </select>
-                        </div>
+                <div class="lg:col-span-2 space-y-2">
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1 italic">Condition</label>
+                    <select name="sub_item_conditions[]" class="cond-val w-full p-4 bg-white border border-slate-100 rounded-2xl font-bold text-xs outline-none shadow-sm cursor-pointer transition-all focus:border-red-200">
+                        <option value="Serviceable">Serviceable</option>
+                        <option value="Unserviceable">Unserviceable</option>
+                    </select>
+                </div>
 
-                        <div class="lg:col-span-2 space-y-2">
-                            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1 italic">Quantity <span class="text-red-500">*</span></label>
-                            <input type="number" name="sub_item_quantities[]" placeholder="0" min="1" required
-                                class="qty-val w-full p-4 bg-white border border-slate-100 rounded-2xl font-bold text-sm outline-none shadow-sm transition-all">
-                        </div>
+                <div class="lg:col-span-2 space-y-2">
+                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block text-center italic">Qty <span class="text-red-500">*</span></label>
+                    <input type="number" name="sub_item_quantities[]" id="qty-${id}" placeholder="0" min="1" required
+                        class="qty-val w-full p-4 bg-white border border-slate-100 rounded-2xl font-bold text-sm text-center outline-none shadow-sm transition-all focus:border-red-200">
+                </div>
 
-                        <div class="lg:col-span-1 flex items-end">
-                            <button type="button" onclick="toggleSerial(${id})"
-                                class="p-4 bg-white border border-slate-200 text-slate-500 rounded-2xl text-[9px] font-black uppercase italic tracking-tighter hover:bg-slate-900 hover:text-white transition-all shadow-sm w-full">
-                                ⚙ Serial
-                            </button>
-                        </div>
+                <div class="lg:col-span-3">
+                    <button type="button" onclick="toggleSerial(${id})"
+                        class="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-md flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        Serial Info
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6 pt-6 border-t border-slate-100/50">
+                <div class="space-y-2">
+                    <label class="text-[9px] font-black text-[#c00000] uppercase tracking-widest block ml-1 italic underline underline-offset-4">₱ Unit Price</label>
+                    <div class="relative flex items-center">
+                        <span class="absolute left-4 text-xs font-black text-slate-400 italic">₱</span>
+                        <input type="number" name="sub_item_prices[]" placeholder="0.00" step="0.01" min="0"
+                            class="price-val w-full pl-8 p-4 bg-white border border-red-50 rounded-2xl font-bold text-sm outline-none shadow-sm transition-all focus:ring-4 focus:ring-red-50">
                     </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[9px] font-black text-[#c00000] uppercase tracking-widest block ml-1 italic underline underline-offset-4">📅 Date Acquired</label>
+                    <input type="date" name="sub_item_dates[]"
+                        class="date-val w-full p-4 bg-white border border-red-50 rounded-2xl font-bold text-sm outline-none shadow-sm transition-all focus:ring-4 focus:ring-red-50 uppercase text-slate-500">
+                </div>
+            </div>
 
-                    {{-- Row 2: Price / Date --}}
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                        <div class="space-y-2">
-                            <label class="text-[9px] font-black text-[#c00000] uppercase tracking-widest block ml-1 italic underline">₱ Unit Price</label>
-                            <input type="number" name="sub_item_prices[]" placeholder="0.00" step="0.01" min="0"
-                                class="price-val w-full p-4 bg-white border border-red-50 rounded-2xl font-bold text-sm outline-none shadow-sm transition-all">
+            <div id="serial-panel-${id}" class="hidden mt-8 pt-8 border-t-2 border-dashed border-slate-100 animate-fade">
+                <div class="flex flex-col md:flex-row gap-8 items-center bg-white p-6 rounded-3xl border border-slate-100 shadow-inner">
+                    <label class="flex items-center gap-4 cursor-pointer min-w-[180px] group">
+                        <input type="checkbox" name="sub_item_serialized[]" value="1"
+                            class="w-6 h-6 rounded-lg border-slate-200 accent-[#c00000] transition-all transform group-hover:scale-110"
+                            onchange="handleSerializedChange(this, ${id})">
+                        <div class="flex flex-col">
+                            <span class="text-[10px] font-black uppercase text-slate-700 leading-none">Serialized?</span>
+                            <span class="text-[8px] font-bold text-slate-400 uppercase mt-1 italic tracking-tight">Locks Qty to 1</span>
                         </div>
-                        <div class="space-y-2">
-                            <label class="text-[9px] font-black text-[#c00000] uppercase tracking-widest block ml-1 italic underline">📅 Date Acquired</label>
-                            <input type="date" name="sub_item_dates[]"
-                                class="date-val w-full p-4 bg-white border border-red-50 rounded-2xl font-black text-xs outline-none shadow-sm transition-all">
-                        </div>
+                    </label>
+                    <div class="flex gap-4 w-full">
+                        <input type="text" name="sub_item_property_numbers[]" placeholder="Property No. (e.g. 2026-ICT-001)" disabled
+                            class="prop-val flex-1 p-4 bg-slate-100 border border-slate-100 rounded-xl font-bold text-[11px] outline-none shadow-sm italic placeholder:text-slate-300 transition-all">
+                        <input type="text" name="sub_item_serial_numbers[]" placeholder="Serial No. (e.g. SN-88920-X)" disabled
+                            class="sn-val flex-1 p-4 bg-slate-100 border border-slate-100 rounded-xl font-bold text-[11px] outline-none shadow-sm italic placeholder:text-slate-300 transition-all">
                     </div>
+                </div>
+            </div>
 
-                    {{-- Serial Panel --}}
-                    <div id="serial-panel-${id}" class="hidden mt-8 pt-8 border-t border-slate-200 animate-fade">
-                        <div class="flex flex-col md:flex-row gap-6 items-center">
-                            <label class="flex items-center gap-3 cursor-pointer min-w-[160px] italic font-black uppercase text-[10px] text-slate-700">
-                                <input type="checkbox" name="sub_item_serialized[]" value="1"
-                                    class="w-6 h-6 rounded-lg border-slate-200 accent-[#c00000]"
-                                    onchange="handleSerializedChange(this, ${id})">
-                                Serialized?
-                            </label>
-                            <div class="flex gap-6 w-full">
-                                <input type="text" name="sub_item_property_numbers[]" placeholder="Property No." disabled
-                                    class="prop-val flex-1 p-4 bg-slate-100 border border-slate-100 rounded-xl font-bold text-[10px] outline-none shadow-sm italic placeholder:text-slate-300">
-                                <input type="text" name="sub_item_serial_numbers[]" placeholder="Serial No." disabled
-                                    class="sn-val flex-1 p-4 bg-slate-100 border border-slate-100 rounded-xl font-bold text-[10px] outline-none shadow-sm italic placeholder:text-slate-300">
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-            container.insertAdjacentHTML('beforeend', html);
-        }
+            <button type="button" onclick="document.getElementById('row-${id}').remove()" 
+                class="absolute -top-3 -right-3 w-10 h-10 bg-white border border-slate-100 text-slate-300 rounded-full hover:text-red-500 shadow-md flex items-center justify-center font-bold transition-all hover:scale-110 active:scale-95 italic">
+                ✕
+            </button>
+        </div>`;
+    container.insertAdjacentHTML('beforeend', html);
+}
 
         function toggleSerial(id) {
             document.getElementById(`serial-panel-${id}`).classList.toggle('hidden');
