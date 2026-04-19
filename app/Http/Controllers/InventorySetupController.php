@@ -261,6 +261,32 @@ class InventorySetupController extends Controller
              return back()->withErrors(['sub_items' => 'You must provide at least one valid sub-item with a quantity greater than zero.'])->withInput();
         }
 
+        // Validate serial/property uniqueness before ANY database changes
+        $seenProps = [];
+        $seenSerials = [];
+        foreach ($validSubItems as $sub) {
+            if ($sub['is_serialized']) {
+                $p = $sub['property_number'];
+                $s = $sub['serial_number'];
+                
+                if (!empty($p)) {
+                    if (in_array(strtolower($p), $seenProps)) return back()->withErrors(['sub_items' => "Duplicate property number '{$p}' found within your form submission."])->withInput();
+                    $seenProps[] = strtolower($p);
+                    if (DB::table('sub_items')->where('property_number', $p)->exists()) {
+                        return back()->withErrors(['sub_items' => "Property number '{$p}' is already registered in the system."])->withInput();
+                    }
+                }
+                
+                if (!empty($s)) {
+                    if (in_array(strtolower($s), $seenSerials)) return back()->withErrors(['sub_items' => "Duplicate serial number '{$s}' found within your form submission."])->withInput();
+                    $seenSerials[] = strtolower($s);
+                    if (DB::table('sub_items')->where('serial_number', $s)->exists()) {
+                        return back()->withErrors(['sub_items' => "Serial number '{$s}' is already registered in the system."])->withInput();
+                    }
+                }
+            }
+        }
+
         $categoryId = $request->category_id;
         $categoryName = trim($request->category_name);
 

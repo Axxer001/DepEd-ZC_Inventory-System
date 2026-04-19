@@ -6,6 +6,7 @@
     <title>Import Assets | DepEd Zamboanga City</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
@@ -37,6 +38,20 @@
 </head>
 
 <body class="bg-slate-50 min-h-screen flex text-slate-800 overflow-x-hidden">
+
+@if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            Swal.fire({
+                title: 'Import Successful!',
+                text: @json(session('success')),
+                icon: 'success',
+                confirmButtonColor: '#c00000',
+                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
+            });
+        });
+    </script>
+@endif
 
 @include('partials.sidebar')
 
@@ -295,7 +310,8 @@
         @else
 
         {{-- 4. CSV PREVIEW TABLE (Appears after processing) --}}
-        <div class="card-premium p-10 mb-8 animate-fade-in-up">
+        <form action="{{ route('assets.import.confirm') }}" method="POST" class="card-premium p-10 mb-8 animate-fade-in-up block">
+            @csrf
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
                 <div>
                     <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic mb-1 flex items-center gap-3">
@@ -306,23 +322,20 @@
                         </span>
                         Ready for Import
                     </h2>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Review your {{ count($csvRows) - 1 }} assets before confirming</p>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Review your <span id="previewRowCount">{{ count($csvRows) - 1 }}</span> assets before confirming</p>
                 </div>
                 
                 <div class="flex items-center gap-3 w-full md:w-auto">
-                    <button onclick="window.location.href='{{ route('assets.import') }}'" class="w-full md:w-auto px-6 py-4 bg-white border border-slate-200 text-slate-400 hover:text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:border-slate-300 transition-all shadow-sm">
+                    <button type="button" onclick="window.location.href='{{ route('assets.import') }}'" class="w-full md:w-auto px-6 py-4 bg-white border border-slate-200 text-slate-400 hover:text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:border-slate-300 transition-all shadow-sm">
                         Cancel
                     </button>
                     
-                    <form action="{{ route('assets.import.confirm') }}" method="POST" class="w-full md:w-auto">
-                        @csrf
-                        <button type="submit" class="w-full md:w-auto bg-deped hover:bg-red-800 text-white px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl hover:shadow-red-200 flex items-center justify-center gap-3">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Confirm Import
-                        </button>
-                    </form>
+                    <button type="submit" class="w-full md:w-auto bg-deped hover:bg-red-800 text-white px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl hover:shadow-red-200 flex items-center justify-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Confirm Import
+                    </button>
                 </div>
             </div>
 
@@ -331,69 +344,95 @@
                     <table class="w-full text-left border-collapse min-w-[900px]">
                         <thead>
                             <tr class="bg-slate-100/50">
+                                <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap w-12 text-center text-center">Drop</th>
                                 @foreach($csvRows[0] as $header)
                                     <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{{ $header }}</th>
                                 @endforeach
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
-                            @foreach(array_slice($csvRows, 1, 50) as $index => $row)
+                            @foreach(array_slice($csvRows, 1) as $index => $row)
                                 @php
-                                    // Build a header-keyed map for safe access
                                     $hdr = array_map('strtolower', array_map('trim', $csvRows[0]));
                                     $map = [];
                                     foreach ($hdr as $ci => $cn) { $map[$cn] = $row[$ci] ?? ''; }
+                                    $fieldCls = "w-full p-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-xs text-slate-600 outline-none focus:ring-2 focus:ring-red-100 transition shadow-inner";
+                                    $idxStr = 'p_' . $index;
                                 @endphp
                                 <tr class="hover:bg-red-50/20 transition-colors group">
-                                    <td class="p-5 text-xs font-bold text-slate-700">{{ $map['category'] ?? '-' }}</td>
-                                    <td class="p-5 text-xs font-black text-deped">{{ $map['item_name'] ?? '-' }}</td>
-                                    <td class="p-5 text-xs font-bold text-slate-500">{{ $map['sub_item_name'] ?? '-' }}</td>
-                                    <td class="p-5">
-                                        <span class="px-2.5 py-1 bg-slate-100 text-slate-600 font-black text-xs rounded-lg">{{ $map['quantity'] ?? '1' }}</span>
+                                    <td class="p-3 text-center align-middle border-r border-slate-100/50 min-w-[50px]">
+                                        <button type="button" onclick="dropPreviewRow(this)" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-all" title="Drop row">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 mx-auto">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                            </svg>
+                                        </button>
                                     </td>
-                                    <td class="p-5">
-                                        <span class="px-3 py-1.5 text-[9px] uppercase tracking-widest font-black rounded-full shadow-sm 
-                                            {{ strtolower($map['condition'] ?? '') == 'for repair' ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-emerald-100 text-emerald-700 border border-emerald-200' }}">
-                                            {{ $map['condition'] ?? 'Serviceable' }}
-                                        </span>
-                                    </td>
-                                    <td class="p-5 text-xs font-bold text-slate-600 truncate max-w-[150px] group-hover:text-slate-900 transition-colors">{{ $map['source'] ?? '-' }}</td>
-                                    <td class="p-5">
-                                        @php $st = $map['source_type'] ?? ''; @endphp
-                                        @if($st)
-                                            <span class="px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg border
-                                                {{ $st === 'School' ? 'bg-blue-50 text-blue-600 border-blue-100' : ($st === 'External' ? 'bg-purple-50 text-purple-600 border-purple-100' : 'bg-orange-50 text-orange-600 border-orange-100') }}">
-                                                {{ $st }}
-                                            </span>
+                                    @foreach($hdr as $hVal)
+                                    <td class="p-3 align-top relative min-w-[120px]">
+                                        @if($hVal === 'category')
+                                        <input type="text" name="rows[{{ $index }}][category]" id="cat_{{ $idxStr }}" value="{{ $map['category'] ?? '' }}" class="{{ $fieldCls }}" oninput="csvFilterCat('{{ $idxStr }}')" onfocus="csvFilterCat('{{ $idxStr }}')" autocomplete="off" onblur="setTimeout(()=>csvHide('catDrop_{{ $idxStr }}'),200)">
+                                        <div id="catDrop_{{ $idxStr }}" class="hidden bg-white border border-slate-200 rounded-2xl shadow-xl overflow-y-auto max-h-[220px] custom-scroll z-50"></div>
+                                        
+                                        @elseif($hVal === 'item_name')
+                                        <input type="text" name="rows[{{ $index }}][item_name]" id="item_{{ $idxStr }}" value="{{ $map['item_name'] ?? '' }}" class="{{ $fieldCls }}" oninput="csvFilterItem('{{ $idxStr }}')" onfocus="csvFilterItem('{{ $idxStr }}')" autocomplete="off" onblur="setTimeout(()=>csvHide('itemDrop_{{ $idxStr }}'),200)">
+                                        <div id="itemDrop_{{ $idxStr }}" class="hidden bg-white border border-slate-200 rounded-2xl shadow-xl overflow-y-auto max-h-[220px] custom-scroll z-50"></div>
+                                        
+                                        @elseif($hVal === 'sub_item_name')
+                                        <input type="text" name="rows[{{ $index }}][sub_item_name]" id="sub_{{ $idxStr }}" value="{{ $map['sub_item_name'] ?? '' }}" class="{{ $fieldCls }}" oninput="csvFilterSub('{{ $idxStr }}')" onfocus="csvFilterSub('{{ $idxStr }}')" autocomplete="off" onblur="setTimeout(()=>csvHide('subDrop_{{ $idxStr }}'),200)">
+                                        <div id="subDrop_{{ $idxStr }}" class="hidden bg-white border border-slate-200 rounded-2xl shadow-xl overflow-y-auto max-h-[220px] custom-scroll z-50"></div>
+                                        
+                                        @elseif($hVal === 'source')
+                                        <input type="text" name="rows[{{ $index }}][source]" id="src_{{ $idxStr }}" value="{{ $map['source'] ?? '' }}" class="{{ $fieldCls }}" oninput="csvFilterSrc('{{ $idxStr }}')" onfocus="csvFilterSrc('{{ $idxStr }}')" autocomplete="off" onblur="setTimeout(()=>csvHide('srcDrop_{{ $idxStr }}'),200)">
+                                        <div id="srcDrop_{{ $idxStr }}" class="hidden bg-white border border-slate-200 rounded-2xl shadow-xl overflow-y-auto max-h-[220px] custom-scroll z-50"></div>
+                                        
+                                        @elseif($hVal === 'quantity')
+                                        <input type="number" name="rows[{{ $index }}][quantity]" value="{{ $map['quantity'] ?? '1' }}" min="1" class="{{ $fieldCls }}">
+                                        
+                                        @elseif($hVal === 'condition')
+                                        <select name="rows[{{ $index }}][condition]" class="{{ $fieldCls }}">
+                                            <option value="Serviceable" {{ strtolower($map['condition'] ?? '') === 'serviceable' ? 'selected' : '' }}>Serviceable</option>
+                                            <option value="Unserviceable" {{ strtolower($map['condition'] ?? '') === 'unserviceable' ? 'selected' : '' }}>Unserviceable</option>
+                                            <option value="For Repair" {{ strtolower($map['condition'] ?? '') === 'for repair' ? 'selected' : '' }}>For Repair</option>
+                                        </select>
+                                        
+                                        @elseif($hVal === 'source_type')
+                                        <select name="rows[{{ $index }}][source_type]" id="stype_{{ $idxStr }}" class="{{ $fieldCls }}">
+                                            <option value="School" {{ strtolower($map['source_type'] ?? '') === 'school' ? 'selected' : '' }}>School</option>
+                                            <option value="External" {{ strtolower($map['source_type'] ?? '') === 'external' ? 'selected' : '' }}>External</option>
+                                            <option value="Individual" {{ strtolower($map['source_type'] ?? '') === 'individual' ? 'selected' : '' }}>Individual</option>
+                                        </select>
+                                        
+                                        @elseif($hVal === 'unit_price')
+                                        <input type="number" step="0.01" name="rows[{{ $index }}][unit_price]" value="{{ $map['unit_price'] ?? '' }}" class="{{ $fieldCls }}">
+                                        
+                                        @elseif($hVal === 'date_acquired')
+                                        <input type="date" name="rows[{{ $index }}][date_acquired]" value="{{ $map['date_acquired'] ?? now()->toDateString() }}" class="{{ $fieldCls }}">
+                                        
+                                        @elseif($hVal === 'is_serialized')
+                                        <select name="rows[{{ $index }}][is_serialized]" class="{{ $fieldCls }}">
+                                            <option value="no" {{ strtolower($map['is_serialized'] ?? 'no') === 'no' ? 'selected' : '' }}>No</option>
+                                            <option value="yes" {{ strtolower($map['is_serialized'] ?? 'no') === 'yes' ? 'selected' : '' }}>Yes</option>
+                                        </select>
+                                        
+                                        @elseif($hVal === 'property_number')
+                                        <input type="text" name="rows[{{ $index }}][property_number]" value="{{ $map['property_number'] ?? '' }}" class="{{ $fieldCls }}">
+                                        
+                                        @elseif($hVal === 'serial_number')
+                                        <input type="text" name="rows[{{ $index }}][serial_number]" value="{{ $map['serial_number'] ?? '' }}" class="{{ $fieldCls }}">
+                                        
                                         @else
-                                            <span class="text-slate-300 text-xs">—</span>
+                                        {{-- Fallback for unregistered columns --}}
+                                        <input type="text" name="rows[{{ $index }}][{{ $hVal }}]" value="{{ $map[$hVal] ?? '' }}" class="{{ $fieldCls }}">
                                         @endif
                                     </td>
-                                    <td class="p-5 text-[11px] text-slate-400 font-mono font-bold">{{ $map['unit_price'] ?? '0.00' }}</td>
-                                    <td class="p-5 text-[11px] text-slate-400 font-bold uppercase">{{ $map['date_acquired'] ?? '-' }}</td>
-                                    <td class="p-5">
-                                        @if(strtolower($map['is_serialized'] ?? 'no') === 'yes')
-                                            <span class="px-3 py-1 bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-widest rounded-lg border border-blue-100">Yes</span>
-                                        @else
-                                            <span class="px-3 py-1 bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-widest rounded-lg border border-slate-200">No</span>
-                                        @endif
-                                    </td>
+                                    @endforeach
                                 </tr>
                             @endforeach
                         </tbody>
                     </table>
                 </div>
             </div>
-
-            @if(count($csvRows) > 51)
-                <div class="mt-6 flex justify-center">
-                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-slate-200">
-                        <svg class="animate-spin h-3 w-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        Showing first 50 rows of {{ count($csvRows) - 1 }}
-                    </div>
-                </div>
-            @endif
-        </div>
+        </form>
 
         @endif
     </main>
@@ -407,6 +446,34 @@ const rawSubMap     = @json($subItemsMap ?? []); // { itemName: [subName, …] }
 const rawSources    = @json($sources->values() ?? []);
 
 let rowIndex = 0;
+
+// ── Drop Preview Row ─────────────────────────────────────────────────────────
+function dropPreviewRow(btn) {
+    Swal.fire({
+        title: 'Drop this asset?',
+        text: "This asset will be excluded from the bulk import. You cannot undo this action.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: 'Yes, drop it!',
+        cancelButtonText: 'Keep asset',
+        customClass: {
+            popup: 'rounded-3xl shadow-2xl',
+            confirmButton: 'rounded-xl tracking-widest font-bold uppercase',
+            cancelButton: 'rounded-xl tracking-widest font-bold uppercase text-slate-500'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            btn.closest('tr').remove();
+            let counter = document.getElementById('previewRowCount');
+            if(counter) {
+                let current = parseInt(counter.innerText) || 0;
+                if(current > 0) counter.innerText = (current - 1);
+            }
+        }
+    });
+}
 
 // ── Add / Remove row ─────────────────────────────────────────────────────────
 function addCsvRow() {
@@ -520,6 +587,33 @@ function csvShow(dropId, html) {
     const el = document.getElementById(dropId);
     if (!el) return;
     el.innerHTML = html || `<div class="px-4 py-3 text-xs text-slate-400 italic">No options</div>`;
+    
+    // Use fixed positioning to prevent clipping by overflow-x-auto containers
+    const parts = dropId.split('Drop_');
+    if (parts.length === 2) {
+        const input = document.getElementById(`${parts[0]}_${parts[1]}`);
+        if (input) {
+            const rect = input.getBoundingClientRect();
+            el.style.position = 'fixed';
+            el.style.zIndex = '99999';
+            el.style.width = Math.max(180, input.offsetWidth) + 'px';
+            el.style.left = rect.left + 'px';
+            
+            // Pop upwards if space is constrained
+            if (rect.bottom + 220 > window.innerHeight) {
+                el.style.top = 'auto';
+                el.style.bottom = (window.innerHeight - rect.top) + 'px';
+                el.style.marginTop = '0';
+                el.style.marginBottom = '4px';
+            } else {
+                el.style.bottom = 'auto';
+                el.style.top = rect.bottom + 'px';
+                el.style.marginTop = '4px';
+                el.style.marginBottom = '0';
+            }
+        }
+    }
+    
     el.classList.remove('hidden');
 }
 function csvHide(dropId) { document.getElementById(dropId)?.classList.add('hidden'); }
@@ -729,7 +823,7 @@ function csvUnlockSrcType(idx) {
 }
 
 
-// ── Close all dropdowns on outside click ──────────────────────────────────────
+// ── Close all dropdowns on outside click or scroll ────────────────────────────
 document.addEventListener('click', function(e) {
     ['catDrop_','itemDrop_','subDrop_','srcDrop_'].forEach(prefix => {
         document.querySelectorAll(`[id^="${prefix}"]`).forEach(drop => {
@@ -737,6 +831,15 @@ document.addEventListener('click', function(e) {
         });
     });
 });
+
+document.addEventListener('scroll', function(e) {
+    // Ignore internal scrolling inside the dropdowns themselves
+    if (e.target && e.target.id && e.target.id.includes('Drop_')) return;
+    
+    ['catDrop_','itemDrop_','subDrop_','srcDrop_'].forEach(prefix => {
+        document.querySelectorAll(`[id^="${prefix}"]`).forEach(drop => drop.classList.add('hidden'));
+    });
+}, true);
 
 // ── Scroll to builder ─────────────────────────────────────────────────────────
 function scrollToBuilder() {

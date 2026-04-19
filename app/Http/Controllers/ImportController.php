@@ -148,15 +148,13 @@ class ImportController extends Controller
      */
     public function confirm(Request $request)
     {
-        $csvRows = session('csv_import_data');
+        $dataRows = $request->input('rows');
 
-        if (!$csvRows || count($csvRows) < 2) {
-            return redirect()->route('assets.import')->withErrors(['csv_file' => 'No import data found. Please upload a CSV file first.']);
+        if (!$dataRows || count($dataRows) === 0) {
+            return redirect()->route('assets.import')->withErrors(['csv_file' => 'No import data found in submission block. Please preview your import before confirming.']);
         }
 
         $userName = auth()->user() ? auth()->user()->name : 'System';
-        $headers = array_map('strtolower', array_map('trim', $csvRows[0]));
-        $dataRows = array_slice($csvRows, 1);
 
         $totalImported = 0;
         $totalSkipped = 0;
@@ -164,12 +162,7 @@ class ImportController extends Controller
 
         DB::beginTransaction();
         try {
-            foreach ($dataRows as $rowIndex => $row) {
-                // Map columns by header position
-                $data = [];
-                foreach ($headers as $i => $header) {
-                    $data[$header] = isset($row[$i]) ? trim($row[$i]) : '';
-                }
+            foreach ($dataRows as $rowIndex => $data) {
 
                 // Skip completely empty rows
                 if (empty($data['item_name']) && empty($data['sub_item_name'])) {
@@ -210,9 +203,20 @@ class ImportController extends Controller
                 $propertyNumber = $data['property_number'] ?? null;
                 $serialNumber = $data['serial_number'] ?? null;
 
-                // Enforce serialized logic
+                // Enforce serialized logic and uniqueness checks
                 if ($isSerialized) {
                     $quantity = 1;
+                    
+                    if (!empty($propertyNumber)) {
+                        if (DB::table('sub_items')->where('property_number', $propertyNumber)->exists()) {
+                            throw new \Exception("Row " . ($rowIndex + 1) . " failed: Property number '{$propertyNumber}' is already registered in the system.");
+                        }
+                    }
+                    if (!empty($serialNumber)) {
+                        if (DB::table('sub_items')->where('serial_number', $serialNumber)->exists()) {
+                            throw new \Exception("Row " . ($rowIndex + 1) . " failed: Serial number '{$serialNumber}' is already registered in the system.");
+                        }
+                    }
                 }
 
                 // --- Resolve Category (firstOrCreate) ---
