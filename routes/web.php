@@ -360,6 +360,10 @@ Route::middleware('auth')->group(function () {
         })->name('recipients.history');
     });
 
+    Route::get('/stakeholders', function () {
+    return view('stakeholders'); // Siguraduhin na stakeholders.blade.php ang file name
+})->name('stakeholders.index');
+
     Route::match(['get', 'post'], '/partials/import/template', [\App\Http\Controllers\ImportController::class, 'downloadTemplate'])->name('assets.import.template');
     Route::get('/partials/import', [\App\Http\Controllers\ImportController::class, 'show'])->name('assets.import');
     Route::post('/partials/import', [\App\Http\Controllers\ImportController::class, 'process'])->name('assets.import.process');
