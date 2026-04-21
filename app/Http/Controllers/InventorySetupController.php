@@ -156,10 +156,11 @@ class InventorySetupController extends Controller
 
         $globalDistributorId = null;
 
-        // 1. Process Provider (External logic)
+        // 1. Process Provider
         if ($sourceType === 'external') {
+            // External: use the chosen provider's stakeholder ID directly
             if ($providerId) {
-                $globalDistributorId = clone (object)['id' => (int) $providerId]->id; // ensure int
+                $globalDistributorId = (int) $providerId;
             } else if ($providerName) {
                 $globalDistributorId = DB::table('stakeholders')->insertGetId([
                     'name' => $providerName,
@@ -177,6 +178,39 @@ class InventorySetupController extends Controller
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+            }
+        } else if ($sourceType === 'school') {
+            // School: resolve the school's matching Distributor stakeholder by school_id
+            if ($providerId) {
+                $schoolDistributor = DB::table('stakeholders')
+                    ->where('type', 'Distributor')
+                    ->where('school_id', $providerId)
+                    ->first();
+
+                if ($schoolDistributor) {
+                    $globalDistributorId = $schoolDistributor->id;
+                } else {
+                    // School doesn't have a Distributor stakeholder yet — create one
+                    $school = DB::table('schools')->where('id', $providerId)->first();
+                    $schoolName = $school ? $school->name : $providerName;
+                    $globalDistributorId = DB::table('stakeholders')->insertGetId([
+                        'name'        => $schoolName,
+                        'type'        => 'Distributor',
+                        'entity_type' => 'School',
+                        'school_id'   => $providerId,
+                        'created_at'  => now(),
+                        'updated_at'  => now(),
+                    ]);
+                    $messages[] = "Registered school '{$schoolName}' as a Distributor source.";
+                    DB::table('system_logs')->insert([
+                        'user'        => $userName,
+                        'activity'    => "Auto-registered school '{$schoolName}' as Distributor stakeholder",
+                        'module'      => 'Stakeholders',
+                        'action_type' => 'Create',
+                        'created_at'  => now(),
+                        'updated_at'  => now(),
+                    ]);
+                }
             }
         }
 
