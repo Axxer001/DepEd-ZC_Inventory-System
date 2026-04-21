@@ -266,13 +266,22 @@
                     <h4 class="text-2xl font-black text-slate-800 italic uppercase leading-none">CSV Builder</h4>
                     <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Manual Template Generator &mdash; <span class="text-emerald-600">date_acquired</span> is auto-set to today on download</p>
                 </div>
-                <button type="button" onclick="addCsvRow()"
-                    class="bg-deped text-white px-6 py-3 rounded-2xl font-black uppercase text-xs shadow-lg shadow-red-100 hover:scale-105 transition-all flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Add Row
-                </button>
+                <div class="flex gap-3">
+                    <button type="button" onclick="openBulkAddModal()"
+                        class="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-black uppercase text-xs shadow-lg shadow-emerald-100 hover:scale-105 transition-all flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Bulk add
+                    </button>
+                    <button type="button" onclick="addCsvRow()"
+                        class="bg-deped text-white px-6 py-3 rounded-2xl font-black uppercase text-xs shadow-lg shadow-red-100 hover:scale-105 transition-all flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Add Row
+                    </button>
+                </div>
             </div>
 
             {{-- Column header labels --}}
@@ -308,85 +317,60 @@
         </div>
 
         @else
-
-        {{-- 4. CSV PREVIEW TABLE (Appears after processing) --}}
-        <form action="{{ route('assets.import.confirm') }}" method="POST" class="card-premium p-10 mb-8 animate-fade-in-up block">
+        
+        {{-- PREVIEW MODE --}}
+        <form action="{{ route('assets.import.store') }}" method="POST">
             @csrf
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
-                <div>
-                    <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic mb-1 flex items-center gap-3">
-                        <span class="h-8 w-8 bg-emerald-100 text-emerald-600 flex items-center justify-center rounded-xl">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                            </svg>
-                        </span>
-                        Ready for Import
-                    </h2>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Review your <span id="previewRowCount">{{ count($csvRows) - 1 }}</span> assets before confirming</p>
+            <div class="card-premium overflow-hidden">
+                <div class="bg-slate-900 p-8 flex justify-between items-center text-white">
+                    <div>
+                        <h4 class="text-2xl font-black italic uppercase tracking-tight">Import Preview</h4>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Review asset data before final system entry</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <button type="button" onclick="window.location.reload()" class="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all">Cancel</button>
+                        <button class="px-8 py-3 bg-deped hover:bg-red-700 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-2xl shadow-red-500/20 transition-all">Confirm Import</button>
+                    </div>
                 </div>
-                
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <button type="button" onclick="window.location.href='{{ route('assets.import') }}'" class="w-full md:w-auto px-6 py-4 bg-white border border-slate-200 text-slate-400 hover:text-slate-600 rounded-2xl text-xs font-black uppercase tracking-widest hover:border-slate-300 transition-all shadow-sm">
-                        Cancel
-                    </button>
-                    
-                    <button type="submit" class="w-full md:w-auto bg-deped hover:bg-red-800 text-white px-8 py-4 rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-xl hover:shadow-red-200 flex items-center justify-center gap-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Confirm Import
-                    </button>
-                </div>
-            </div>
 
-            <div class="bg-slate-50 border border-slate-100 rounded-[2.5rem] p-3 shadow-inner">
-                <div class="overflow-x-auto rounded-[2rem] bg-white border border-slate-100 custom-scroll relative z-10 backdrop-blur-xl">
-                    <table class="w-full text-left border-collapse min-w-[900px]">
+                <div class="overflow-x-auto custom-scroll">
+                    <table class="w-full text-left border-collapse min-w-[1200px]">
                         <thead>
-                            <tr class="bg-slate-100/50">
-                                <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap w-12 text-center text-center">Drop</th>
-                                @foreach($csvRows[0] as $header)
-                                    <th class="p-5 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{{ $header }}</th>
+                            <tr class="bg-slate-50 border-b border-slate-100">
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                                @foreach($headers as $h)
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ str_replace('_', ' ', $h) }}</th>
                                 @endforeach
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
-                            @foreach(array_slice($csvRows, 1) as $index => $row)
-                                @php
-                                    $hdr = array_map('strtolower', array_map('trim', $csvRows[0]));
-                                    $map = [];
-                                    foreach ($hdr as $ci => $cn) { $map[$cn] = $row[$ci] ?? ''; }
-                                    $fieldCls = "w-full p-2.5 bg-slate-50 border border-slate-100 rounded-xl font-bold text-xs text-slate-600 outline-none focus:ring-2 focus:ring-red-100 transition shadow-inner";
-                                    $idxStr = 'p_' . $index;
-                                @endphp
-                                <tr class="hover:bg-red-50/20 transition-colors group">
-                                    <td class="p-3 text-center align-middle border-r border-slate-100/50 min-w-[50px]">
-                                        <button type="button" onclick="dropPreviewRow(this)" class="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-xl transition-all" title="Drop row">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 mx-auto">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
+                            @foreach($csvRows as $index => $map)
+                                <tr class="hover:bg-slate-50/50 transition-colors group">
+                                    <td class="p-6">
+                                        <button type="button" onclick="dropPreviewRow(this)" class="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                         </button>
                                     </td>
-                                    @foreach($hdr as $hVal)
-                                    <td class="p-3 align-top relative min-w-[120px]">
+                                    @foreach($headers as $hVal)
+                                    @php 
+                                        $fieldCls = "w-full bg-transparent border-0 focus:ring-0 p-0 text-xs font-bold text-slate-700 placeholder:text-slate-300";
+                                        $idxStr = $index."_".$hVal;
+                                    @endphp
+                                    <td class="p-6">
                                         @if($hVal === 'category')
-                                        <input type="text" name="rows[{{ $index }}][category]" id="cat_{{ $idxStr }}" value="{{ $map['category'] ?? '' }}" class="{{ $fieldCls }}" oninput="csvFilterCat('{{ $idxStr }}')" onfocus="csvFilterCat('{{ $idxStr }}')" autocomplete="off" onblur="setTimeout(()=>csvHide('catDrop_{{ $idxStr }}'),200)">
-                                        <div id="catDrop_{{ $idxStr }}" class="hidden bg-white border border-slate-200 rounded-2xl shadow-xl overflow-y-auto max-h-[220px] custom-scroll z-50"></div>
+                                        <input type="text" name="rows[{{ $index }}][category]" value="{{ $map['category'] ?? '' }}" class="{{ $fieldCls }}">
                                         
                                         @elseif($hVal === 'item_name')
-                                        <input type="text" name="rows[{{ $index }}][item_name]" id="item_{{ $idxStr }}" value="{{ $map['item_name'] ?? '' }}" class="{{ $fieldCls }}" oninput="csvFilterItem('{{ $idxStr }}')" onfocus="csvFilterItem('{{ $idxStr }}')" autocomplete="off" onblur="setTimeout(()=>csvHide('itemDrop_{{ $idxStr }}'),200)">
-                                        <div id="itemDrop_{{ $idxStr }}" class="hidden bg-white border border-slate-200 rounded-2xl shadow-xl overflow-y-auto max-h-[220px] custom-scroll z-50"></div>
+                                        <input type="text" name="rows[{{ $index }}][item_name]" value="{{ $map['item_name'] ?? '' }}" class="{{ $fieldCls }}">
                                         
                                         @elseif($hVal === 'sub_item_name')
-                                        <input type="text" name="rows[{{ $index }}][sub_item_name]" id="sub_{{ $idxStr }}" value="{{ $map['sub_item_name'] ?? '' }}" class="{{ $fieldCls }}" oninput="csvFilterSub('{{ $idxStr }}')" onfocus="csvFilterSub('{{ $idxStr }}')" autocomplete="off" onblur="setTimeout(()=>csvHide('subDrop_{{ $idxStr }}'),200)">
-                                        <div id="subDrop_{{ $idxStr }}" class="hidden bg-white border border-slate-200 rounded-2xl shadow-xl overflow-y-auto max-h-[220px] custom-scroll z-50"></div>
-                                        
-                                        @elseif($hVal === 'source')
-                                        <input type="text" name="rows[{{ $index }}][source]" id="src_{{ $idxStr }}" value="{{ $map['source'] ?? '' }}" class="{{ $fieldCls }}" oninput="csvFilterSrc('{{ $idxStr }}')" onfocus="csvFilterSrc('{{ $idxStr }}')" autocomplete="off" onblur="setTimeout(()=>csvHide('srcDrop_{{ $idxStr }}'),200)">
-                                        <div id="srcDrop_{{ $idxStr }}" class="hidden bg-white border border-slate-200 rounded-2xl shadow-xl overflow-y-auto max-h-[220px] custom-scroll z-50"></div>
+                                        <input type="text" name="rows[{{ $index }}][sub_item_name]" value="{{ $map['sub_item_name'] ?? '' }}" class="{{ $fieldCls }}">
                                         
                                         @elseif($hVal === 'quantity')
-                                        <input type="number" name="rows[{{ $index }}][quantity]" value="{{ $map['quantity'] ?? '1' }}" min="1" class="{{ $fieldCls }}">
+                                        <input type="number" name="rows[{{ $index }}][quantity]" value="{{ $map['quantity'] ?? '' }}" class="{{ $fieldCls }}">
+                                        
+                                        @elseif($hVal === 'source')
+                                        <input type="text" name="rows[{{ $index }}][source]" value="{{ $map['source'] ?? '' }}" class="{{ $fieldCls }}">
                                         
                                         @elseif($hVal === 'condition')
                                         <select name="rows[{{ $index }}][condition]" class="{{ $fieldCls }}">
@@ -438,6 +422,107 @@
     </main>
 </div>
 
+<!-- Bulk Add Modal -->
+<div id="bulkAddModal" class="fixed inset-0 z-[100] hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeBulkAddModal()"></div>
+        
+        <div class="relative bg-white rounded-[3rem] shadow-2xl w-full max-w-4xl overflow-hidden animate-fade-in-up">
+            <div class="bg-slate-900 p-8 flex justify-between items-center text-white">
+                <div>
+                    <h3 class="text-2xl font-black uppercase italic tracking-tight">Bulk Add Window</h3>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Configure global values for multiple rows</p>
+                </div>
+                <button onclick="closeBulkAddModal()" class="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="p-10 space-y-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Category -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Global Category</label>
+                        <select id="bulk_category" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:border-red-400 transition-all">
+                            <option value="">-- Select Category --</option>
+                            @foreach($categories as $cat)
+                                <option value="{{ is_string($cat) ? $cat : $cat->name }}">{{ is_string($cat) ? $cat : $cat->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Item -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Global Item Name</label>
+                        <input type="text" id="bulk_item" placeholder="Type item name..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:border-red-400 transition-all">
+                    </div>
+
+                    <!-- Source -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Global Source</label>
+                        <input type="text" id="bulk_source" placeholder="Type source name..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:border-red-400 transition-all">
+                    </div>
+
+                    <!-- Source Type -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Global Source Type</label>
+                        <select id="bulk_source_type" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:border-red-400 transition-all">
+                            <option value="">-- Select Type --</option>
+                            <option value="School">School</option>
+                            <option value="External">External</option>
+                            <option value="Individual">Individual</option>
+                        </select>
+                    </div>
+
+                    <!-- Condition -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Global Condition</label>
+                        <select id="bulk_condition" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:border-red-400 transition-all">
+                            <option value="Serviceable" selected>Serviceable</option>
+                            <option value="For Repair">For Repair</option>
+                            <option value="Unserviceable">Unserviceable</option>
+                        </select>
+                    </div>
+
+                    <!-- Serialized -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Is Serialized?</label>
+                        <select id="bulk_serialized" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:border-red-400 transition-all">
+                            <option value="no" selected>No</option>
+                            <option value="yes">Yes</option>
+                        </select>
+                    </div>
+
+                    <!-- Quantity per Row -->
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity per Row</label>
+                        <input type="number" id="bulk_row_qty" value="1" min="1" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:border-red-400 transition-all">
+                    </div>
+                </div>
+
+                <div class="pt-8 border-t border-slate-100 flex items-center justify-between gap-8">
+                    <div class="flex-grow max-w-xs">
+                        <label class="text-[10px] font-black text-[#c00000] uppercase tracking-widest ml-1 italic">Number of Rows to Generate</label>
+                        <div class="flex items-center gap-3 mt-2">
+                            <input type="number" id="bulk_qty" value="5" min="1" max="100" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-center focus:outline-none focus:border-red-400 transition-all">
+                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Sets</span>
+                        </div>
+                    </div>
+                    
+                    <button type="button" onclick="confirmBulkAdd()" class="bg-[#c00000] text-white px-12 py-5 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-red-200 hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center gap-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        Apply Bulk Add
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // ── Data from PHP ─────────────────────────────────────────────────────────────
 const rawCategories = @json($categories->values() ?? []);
@@ -475,12 +560,89 @@ function dropPreviewRow(btn) {
     });
 }
 
+// ── Bulk Add Logic ────────────────────────────────────────────────────────────
+function openBulkAddModal() {
+    document.getElementById('bulkAddModal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeBulkAddModal() {
+    document.getElementById('bulkAddModal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+}
+
+function confirmBulkAdd() {
+    const qty = parseInt(document.getElementById('bulk_qty').value) || 0;
+    if (qty <= 0) {
+        Swal.fire('Error', 'Please enter a valid number of rows.', 'error');
+        return;
+    }
+
+    Swal.fire({
+        title: 'Confirm Bulk Add?',
+        text: `You are about to generate ${qty} asset rows in the builder.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#c00000',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: 'Yes, add them!',
+        cancelButtonText: 'Cancel',
+        customClass: {
+            popup: 'rounded-[3rem] shadow-2xl',
+            confirmButton: 'rounded-xl tracking-widest font-bold uppercase py-3 px-6',
+            cancelButton: 'rounded-xl tracking-widest font-bold uppercase py-3 px-6'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            executeBulkAdd();
+        }
+    });
+}
+
+function executeBulkAdd() {
+    const qty = parseInt(document.getElementById('bulk_qty').value) || 0;
+    const cat = document.getElementById('bulk_category').value;
+    const item = document.getElementById('bulk_item').value;
+    const src = document.getElementById('bulk_source').value;
+    const srcType = document.getElementById('bulk_source_type').value;
+    const cond = document.getElementById('bulk_condition').value;
+    const ser = document.getElementById('bulk_serialized').value;
+    const rowQty = document.getElementById('bulk_row_qty').value;
+
+    for (let i = 0; i < qty; i++) {
+        addCsvRow({
+            category: cat,
+            item: item,
+            source: src,
+            source_type: srcType,
+            condition: cond,
+            serialized: ser,
+            quantity: rowQty
+        });
+    }
+
+    closeBulkAddModal();
+    scrollToBuilder();
+
+    Swal.fire({
+        title: 'Rows Generated!',
+        text: `Successfully added ${qty} rows to your template builder.`,
+        icon: 'success',
+        timer: 2000,
+        showConfirmButton: false,
+        customClass: { popup: 'rounded-[3.5rem] shadow-2xl border-0' }
+    });
+}
+
 // ── Add / Remove row ─────────────────────────────────────────────────────────
-function addCsvRow() {
+function addCsvRow(initialData = null) {
     const idx = rowIndex++;
-    document.getElementById('csvEmptyMsg').style.display = 'none';
+    const container = document.getElementById('csvRowsContainer');
+    const emptyMsg = document.getElementById('csvEmptyMsg');
     const lbl = document.getElementById('csvColLabels');
-    lbl.style.display = 'block';
+    
+    if (emptyMsg) emptyMsg.style.display = 'none';
+    if (lbl) lbl.style.display = 'block';
 
     const fieldCls = 'w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-bold outline-none focus:border-red-400 transition';
     const disabledCls = ' opacity-40 cursor-not-allowed';
@@ -496,6 +658,7 @@ function addCsvRow() {
                 <input type="text" id="cat_${idx}" name="rows[${idx}][category]"
                     placeholder="Browse / type new..."
                     class="${fieldCls}"
+                    value="${initialData?.category || ''}"
                     oninput="csvFilterCat(${idx})" onfocus="csvFilterCat(${idx})" autocomplete="off">
                 <div id="catDrop_${idx}" class="hidden absolute z-40 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-52 overflow-y-auto custom-scroll" style="min-width:180px"></div>
             </div>
@@ -505,8 +668,9 @@ function addCsvRow() {
             <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Item</label>
             <div class="relative">
                 <input type="text" id="item_${idx}" name="rows[${idx}][item_name]"
-                    placeholder="Pick category first..."
-                    class="${fieldCls}${disabledCls}" disabled
+                    placeholder="${initialData?.item ? 'Type item name...' : 'Pick category first...'}"
+                    class="${fieldCls}${(!initialData?.item && !initialData?.category) ? disabledCls : ''}" ${(!initialData?.item && !initialData?.category) ? 'disabled' : ''}
+                    value="${initialData?.item || ''}"
                     oninput="csvFilterItem(${idx})" onfocus="csvFilterItem(${idx})" autocomplete="off">
                 <div id="itemDrop_${idx}" class="hidden absolute z-40 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-52 overflow-y-auto custom-scroll" style="min-width:190px"></div>
             </div>
@@ -517,7 +681,7 @@ function addCsvRow() {
             <div class="relative">
                 <input type="text" id="sub_${idx}" name="rows[${idx}][sub_item_name]"
                     placeholder="Pick item first..."
-                    class="${fieldCls}${disabledCls}" disabled
+                    class="${fieldCls}${!initialData?.item ? disabledCls : ''}" ${!initialData?.item ? 'disabled' : ''}
                     oninput="csvFilterSub(${idx})" onfocus="csvFilterSub(${idx})" autocomplete="off">
                 <div id="subDrop_${idx}" class="hidden absolute z-40 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-52 overflow-y-auto custom-scroll" style="min-width:190px"></div>
             </div>
@@ -529,6 +693,7 @@ function addCsvRow() {
                 <input type="text" id="src_${idx}" name="rows[${idx}][source]"
                     placeholder="Browse / type new..."
                     class="${fieldCls}"
+                    value="${initialData?.source || ''}"
                     oninput="csvFilterSrc(${idx})" onfocus="csvFilterSrc(${idx})" autocomplete="off">
                 <div id="srcDrop_${idx}" class="hidden absolute z-40 mt-1 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-52 overflow-y-auto custom-scroll" style="min-width:180px"></div>
             </div>
@@ -537,31 +702,32 @@ function addCsvRow() {
         <div class="flex-shrink-0" style="width:130px">
             <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Source Type</label>
             <select id="srcType_${idx}" name="rows[${idx}][source_type]" class="${fieldCls}">
-                <option value="School">School</option>
-                <option value="External">External</option>
-                <option value="Individual">Individual</option>
+                <option value="School" ${initialData?.source_type === 'School' ? 'selected' : ''}>School</option>
+                <option value="External" ${initialData?.source_type === 'External' ? 'selected' : ''}>External</option>
+                <option value="Individual" ${initialData?.source_type === 'Individual' ? 'selected' : ''}>Individual</option>
             </select>
         </div>
         <!-- Condition -->
         <div class="flex-shrink-0" style="width:120px">
             <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Condition</label>
             <select name="rows[${idx}][condition]" class="${fieldCls}">
-                <option value="Serviceable">Serviceable</option>
-                <option value="For Repair">For Repair</option>
+                <option value="Serviceable" ${initialData?.condition === 'Serviceable' ? 'selected' : ''}>Serviceable</option>
+                <option value="For Repair" ${initialData?.condition === 'For Repair' ? 'selected' : ''}>For Repair</option>
+                <option value="Unserviceable" ${initialData?.condition === 'Unserviceable' ? 'selected' : ''}>Unserviceable</option>
             </select>
         </div>
         <!-- Is Serialized -->
         <div class="flex-shrink-0" style="width:100px">
             <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Serialized</label>
             <select name="rows[${idx}][is_serialized]" class="${fieldCls}">
-                <option value="no">No</option>
-                <option value="yes">Yes</option>
+                <option value="no" ${initialData?.serialized === 'no' ? 'selected' : ''}>No</option>
+                <option value="yes" ${initialData?.serialized === 'yes' ? 'selected' : ''}>Yes</option>
             </select>
         </div>
         <!-- Qty -->
         <div class="flex-shrink-0" style="width:72px">
             <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Qty</label>
-            <input type="number" name="rows[${idx}][quantity]" value="1" min="1" class="${fieldCls}">
+            <input type="number" name="rows[${idx}][quantity]" value="${initialData?.quantity || 1}" min="1" class="${fieldCls}">
         </div>
         <!-- Delete -->
         <button type="button" onclick="removeCsvRow(this)"
@@ -576,7 +742,7 @@ function addCsvRow() {
 
 function removeCsvRow(btn) {
     btn.closest('.csv-custom-row')?.remove();
-    if (!document.querySelector('.csv-custom-row')) {
+    if (!document.querySelectorAll('.csv-custom-row').length) {
         document.getElementById('csvEmptyMsg').style.display = '';
         document.getElementById('csvColLabels').style.display = 'none';
     }
@@ -623,17 +789,17 @@ function csvFilterCat(idx) {
     const input = document.getElementById(`cat_${idx}`);
     if (!input) return;
     const val = input.value.toLowerCase().trim();
-    const results = val ? rawCategories.filter(c => c.toLowerCase().includes(val)) : rawCategories;
+    const results = val ? rawCategories.filter(c => c.name.toLowerCase().includes(val)) : rawCategories;
 
     let html = results.length
         ? `<div class="px-3 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Categories</div>` +
           results.slice(0, 30).map(c =>
-            `<div onmousedown="csvSelectCat(${idx},'${c.replace(/'/g,"\\'")}')"
-                class="px-4 py-2 text-xs font-bold hover:bg-red-50 hover:text-red-600 cursor-pointer border-b border-slate-50 last:border-0">${c}</div>`
+            `<div onmousedown="csvSelectCat(${idx},'${c.name.replace(/'/g,"\\'")}')"
+                class="px-4 py-2 text-xs font-bold hover:bg-red-50 hover:text-red-600 cursor-pointer border-b border-slate-50 last:border-0">${c.name}</div>`
           ).join('')
         : '';
 
-    if (val && !rawCategories.find(c => c.toLowerCase() === val))
+    if (val && !rawCategories.find(c => c.name.toLowerCase() === val))
         html += `<div onmousedown="csvSelectCat(${idx},'${input.value.replace(/'/g,"\\'")}')"
             class="px-4 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer border-t border-slate-100 flex items-center justify-between">
             <span>+ Create New: <strong>${input.value}</strong></span>
@@ -758,7 +924,6 @@ function csvFilterSrc(idx) {
     csvUnlockSrcType(idx);
 
     const val = input.value.toLowerCase().trim();
-    // rawSources is now [{name, entity_type}, ...]
     const results = val
         ? rawSources.filter(s => s.name.toLowerCase().includes(val))
         : rawSources;
