@@ -125,116 +125,133 @@
             </div>
 
            {{-- 2. DYNAMIC SOURCE BREAKDOWN --}}
-            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-12">
-                @if(isset($sourceBreakdown) && $sourceBreakdown->count() > 0)
-                    @foreach($sourceBreakdown as $source)
-                    <div class="group bg-white p-4 rounded-3xl shadow-sm border border-slate-100 transition-all hover:border-red-200">
-                        <div class="flex items-center gap-2 mb-2">
-                            <div class="w-1.5 h-5 bg-[#c00000] rounded-full"></div>
-                            <h4 class="text-[9px] font-black text-slate-400 uppercase tracking-wider truncate">
+            <div class="mb-12 relative">
+                <div class="flex items-center justify-between mb-4 px-2">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] italic">Fund Source Portfolio</h4>
+                </div>
+                
+                <div class="flex overflow-x-auto gap-6 pb-6 custom-scroll -mx-2 px-2 snap-x">
+                    @forelse($sourceBreakdown as $source)
+                    <div class="group bg-white p-6 rounded-[2rem] shadow-lg shadow-slate-200/40 border border-slate-50 transition-all hover:border-red-200 min-w-[240px] flex-shrink-0 snap-start">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-1.5 h-6 bg-[#c00000] rounded-full group-hover:scale-y-125 transition-transform"></div>
+                            <h4 class="text-[11px] font-black text-slate-500 uppercase tracking-wider truncate max-w-[180px]" title="{{ $source->source_name }}">
                                 {{ $source->source_name ?? 'Unknown Source' }}
                             </h4>
                         </div>
-                        <div class="pl-3">
-                            <p class="text-xl font-black text-slate-800 tracking-tighter leading-none">
-                                {{ number_format($source->total_qty) }}
+                        <div class="pl-4">
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 italic">Source Asset Value</p>
+                            <p class="text-2xl font-black text-slate-800 tracking-tighter leading-none mb-2">
+                                ₱{{ number_format($source->total_amount, 2) }}
                             </p>
-                            <p class="text-[9px] font-bold text-slate-400 mt-1 italic">
-                                ₱{{ number_format($source->total_amount, 0) }}
-                            </p>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[9px] font-bold italic">{{ number_format($source->total_qty) }} Items</span>
+                            </div>
                         </div>
                     </div>
-                    @endforeach
-                @else
-                    <div class="col-span-full py-4 text-center border-2 border-dashed border-slate-200 rounded-[2rem]">
-                        <p class="text-slate-400 text-xs font-bold uppercase italic tracking-widest">No fund sources registered yet</p>
+                    @empty
+                    <div class="w-full py-10 text-center border-2 border-dashed border-slate-200 rounded-[2.5rem] bg-white/50">
+                        <p class="text-slate-400 text-[10px] font-bold uppercase italic tracking-[0.3em]">No fund sources registered yet</p>
                     </div>
-                @endif
+                    @endforelse
+                </div>
             </div>
 
-            {{-- 3. QUICK ASSET ENTRY --}}
+            {{-- 3. QUICK ASSET ENTRY (SIMPLIFIED SINGLE RECIPIENT) --}}
             <section class="mb-12">
-                <div class="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-50 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-8 opacity-5">
-                        <svg class="w-32 h-32 text-slate-900" fill="currentColor" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                    </div>
-                    
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div class="bg-white p-10 rounded-[3rem] shadow-2xl shadow-slate-200/50 border border-slate-50 relative overflow-hidden">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
                         <div>
-                            <h3 class="text-xl font-extrabold text-slate-800 flex items-center gap-2 italic uppercase">
-                                <span class="bg-red-100 text-[#c00000] p-2 rounded-xl text-sm italic">New</span>
-                                Quick Asset Entry
+                            <h3 class="text-2xl font-black text-slate-800 flex items-center gap-3 italic uppercase leading-none">
+                                <span class="bg-[#c00000] text-white px-2 py-1 rounded-lg text-xs font-black italic shadow-md">QUICK</span>
+                                Asset Entry
                             </h3>
-                            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Directly assign assets to schools</p>
-                        </div>
-                        
-                        <div class="relative w-full md:w-72 group" id="searchContainer">
-                            <input type="text" id="schoolSearch" placeholder="Search school..." autocomplete="off" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-sm focus:outline-none focus:ring-4 focus:ring-red-50 transition-all font-semibold relative z-20">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 absolute left-4 top-3.5 text-slate-300 group-focus-within:text-[#c00000] transition-colors z-20">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                            </svg>
-                            <ul id="searchResults" class="absolute z-30 w-full bg-white border border-slate-100 rounded-2xl shadow-xl mt-2 max-h-60 overflow-y-auto hidden custom-scroll"></ul>
+                            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-2 ml-1">Direct distribution shortcut</p>
                         </div>
                     </div>
 
-                    <form action="{{ route('inventory.dashboard.store') }}" method="POST" class="grid grid-cols-1 md:grid-cols-6 gap-6">
-                        @csrf
-                        <div class="space-y-2 relative">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Assigned School</label>
-                            <select name="school_id" id="schoolSelect" required class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all relative z-10">
-                                <option value="">Select a School</option>
-                                @foreach($schools as $school)
-                                    <option value="{{ $school->id }}">{{ $school->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Main Category</label>
-                            <select name="category_id" id="categorySelect" required class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none focus:border-red-200 cursor-pointer transition-all">
-                                <option value="">Select Category</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="space-y-2 flex-grow">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item</label>
-                            <select id="itemSelect" name="item_id" disabled class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none transition-all disabled:opacity-50">
-                                <option value="">Select Item</option>
-                                @foreach($items as $item)
-                                    <option value="{{ $item->id }}" data-category="{{ $item->category_id }}" data-avail="{{ $item->available_stock }}">{{ $item->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sub-Item</label>
-                            <select name="sub_item_id" id="subItemSelect" disabled class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none transition-all disabled:opacity-50">
-                                <option value="">Select Sub-Item</option>
-                                @foreach($subItems as $sub)
-                                    <option value="{{ $sub->id }}" data-item="{{ $sub->item_id }}">{{ $sub->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="space-y-2">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Condition</label>
-                            <select name="condition" class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold focus:outline-none transition-all">
-                                <option value="Serviceable" selected>Serviceable</option>
-                                <option value="Unserviceable">Unserviceable</option>
-                                <option value="For Repair">For Repair</option>
-                            </select>
-                        </div>
-                        <div class="flex items-end gap-3">
-                            <div class="space-y-2 flex-grow">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity</label>
-                                <input type="number" name="quantity" id="quantityInput" value="1" min="1" required class="w-full px-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-center">
+                    <div class="space-y-10">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-10">
+                            {{-- Entity Type --}}
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-black text-[#c00000] uppercase tracking-widest ml-1 italic underline underline-offset-4 decoration-2">Entity Type <span class="text-red-500">*</span></label>
+                                <select id="quickEntityType" onchange="handleQuickEntityTypeChange()" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-black text-slate-700 text-sm outline-none focus:ring-4 focus:ring-red-50 transition-all cursor-pointer appearance-none">
+                                    <option value="" selected disabled>-- Select Entity Type --</option>
+                                    <option value="school">School (Internal)</option>
+                                    <option value="external">External (Offices / Orgs)</option>
+                                </select>
                             </div>
-                            <button type="submit" class="p-4 bg-[#c00000] text-white rounded-2xl font-bold hover:bg-red-700 shadow-lg shadow-red-200 transition-all hover:-translate-y-1 active:scale-95 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-6 h-6">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                </svg>
-                            </button>
+                            {{-- Recipient Dropdown --}}
+                            <div class="space-y-3">
+                                <label id="quickRecipientLabel" class="text-[10px] font-black text-slate-300 uppercase tracking-widest ml-1 italic">Target Recipient <span class="text-red-500">*</span></label>
+                                <select id="quickRecipientSelect" disabled onchange="handleQuickRecipientChange()" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 text-sm outline-none focus:ring-4 focus:ring-red-50 transition-all cursor-pointer disabled:opacity-50 appearance-none">
+                                    <option value="">Select type first...</option>
+                                </select>
+                            </div>
+                            {{-- Authorized Receiver --}}
+                            <div class="space-y-3">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Authorized Receiver <span class="text-slate-400 text-[9px] font-medium lowercase italic">(optional)</span></label>
+                                <select id="quickPersonnelSelect" disabled class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 text-sm outline-none focus:ring-4 focus:ring-red-50 transition-all cursor-pointer disabled:opacity-50 appearance-none">
+                                    <option value="">No personnel found...</option>
+                                </select>
+                            </div>
                         </div>
-                    </form>
+
+                        {{-- ASSET SPECS --}}
+                        <div id="quickAssetSpecs" class="hidden pt-10 border-t-2 border-dashed border-slate-100 space-y-8 animate-fade-in">
+                            <div>
+                                <h4 class="text-xl font-black text-[#c00000] uppercase tracking-tight italic">Distribution Specifications</h4>
+                                <p class="text-slate-400 text-[10px] font-bold uppercase mt-1 tracking-widest italic">Define the items for the recipient selected above</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div class="space-y-2">
+                                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 italic">Main Category</label>
+                                    <select id="quickCategorySelect" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 text-sm outline-none focus:border-[#c00000] transition-all">
+                                        <option value="">Select Category</option>
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 italic">Item Name</label>
+                                    <select id="quickItemSelect" disabled class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 text-sm outline-none disabled:opacity-50">
+                                        <option value="">Select Item</option>
+                                        @foreach($items as $item)
+                                            <option value="{{ $item->id }}" data-category="{{ $item->category_id }}">{{ $item->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 italic">Model / Specifications</label>
+                                    <select id="quickSubItemSelect" disabled class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 text-sm outline-none disabled:opacity-50">
+                                        <option value="">Select Sub-Item</option>
+                                        @foreach($subItems as $sub)
+                                            <option value="{{ $sub->id }}" data-item="{{ $sub->item_id }}">{{ $sub->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 italic">Quantity</label>
+                                    <input type="number" id="quickQuantity" value="1" min="1" class="w-full p-5 bg-white border-2 border-slate-100 rounded-2xl font-black text-slate-800 text-center text-lg outline-none focus:border-[#c00000]">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 italic">Condition</label>
+                                    <select id="quickCondition" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 text-sm outline-none">
+                                        <option value="Serviceable">Serviceable</option>
+                                        <option value="Unserviceable">Unserviceable</option>
+                                        <option value="For Repair">For Repair</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-end">
+                                    <button type="button" onclick="submitQuickEntry()" class="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all active:scale-95 italic text-sm shadow-2xl">
+                                        REGISTER TO RECIPIENT ⚡
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
@@ -347,56 +364,129 @@
 
     {{-- SCRIPTS --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- SCHOOL SEARCH LOGIC ---
-            const searchInput = document.getElementById('schoolSearch');
-            const searchResults = document.getElementById('searchResults');
-            const schoolSelect = document.getElementById('schoolSelect');
-            
-            if (searchInput && schoolSelect && searchResults) {
-                const schools = Array.from(schoolSelect.options)
-                    .filter(opt => opt.value !== "")
-                    .map(opt => ({ id: opt.value, name: opt.textContent }));
+        // Data passed from Laravel
+        const stakeholders = @json($stakeholders);
+        const allItems = @json($items);
+        const allSubItems = @json($subItems);
+        const schools = @json($schools);
 
-                searchInput.addEventListener('input', function() {
-                    const query = this.value.toLowerCase().trim();
-                    searchResults.innerHTML = '';
-                    if (query.length === 0) { searchResults.classList.add('hidden'); return; }
+        let selectedEntityType = null;
 
-                    const filtered = schools.filter(s => s.name.toLowerCase().includes(query));
-                    if (filtered.length > 0) {
-                        filtered.forEach(s => {
-                            const li = document.createElement('li');
-                            li.className = 'px-4 py-3 hover:bg-red-50 cursor-pointer text-sm font-semibold text-slate-800 transition-colors border-b border-slate-50 last:border-0';
-                            li.textContent = s.name;
-                            li.addEventListener('click', () => {
-                                searchInput.value = s.name;
-                                schoolSelect.value = s.id;
-                                searchResults.classList.add('hidden');
-                            });
-                            searchResults.appendChild(li);
-                        });
-                    } else {
-                        const li = document.createElement('li');
-                        li.className = 'px-4 py-3 text-sm font-semibold text-slate-400 italic pointer-events-none';
-                        li.textContent = 'No matching schools found';
-                        searchResults.appendChild(li);
-                    }
-                    searchResults.classList.remove('hidden');
-                });
+        function handleQuickEntityTypeChange() {
+            const type = document.getElementById('quickEntityType').value;
+            const recipientSelect = document.getElementById('quickRecipientSelect');
+            const label = document.getElementById('quickRecipientLabel');
+            const personnelSelect = document.getElementById('quickPersonnelSelect');
+            const specsSection = document.getElementById('quickAssetSpecs');
 
-                document.addEventListener('click', (e) => {
-                    if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) searchResults.classList.add('hidden');
-                });
+            selectedEntityType = type;
+            recipientSelect.disabled = false;
+            recipientSelect.innerHTML = '<option value="" selected disabled>-- Select Recipient --</option>';
+            personnelSelect.disabled = true;
+            personnelSelect.innerHTML = '<option value="">No personnel found...</option>';
+            specsSection.classList.add('hidden');
+
+            label.classList.add('text-[#c00000]');
+            label.classList.remove('text-slate-300');
+            label.innerText = type === 'school' ? 'TARGET SCHOOL / OFFICE *' : 'EXTERNAL OFFICE / ORG *';
+
+            let list = [];
+            if (type === 'school') {
+                list = schools;
+            } else {
+                list = stakeholders.filter(s => s.type === 'Recipient' && s.entity_type !== 'School' && s.entity_type !== 'Individual');
             }
 
-            // --- CASCADING DROPDOWNS ---
-            const categorySelect = document.getElementById('categorySelect');
-            const itemSelect = document.getElementById('itemSelect');
-            const subItemSelect = document.getElementById('subItemSelect');
+            list.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.name;
+                recipientSelect.appendChild(opt);
+            });
+        }
+
+        function handleQuickRecipientChange() {
+            const recipientId = document.getElementById('quickRecipientSelect').value;
+            const personnelSelect = document.getElementById('quickPersonnelSelect');
+            const specsSection = document.getElementById('quickAssetSpecs');
+
+            if (!recipientId) {
+                specsSection.classList.add('hidden');
+                personnelSelect.disabled = true;
+                return;
+            }
+
+            // Reveal Specs immediately
+            specsSection.classList.remove('hidden');
+
+            // Load Personnel
+            const selectedS = stakeholders.find(s => s.id == recipientId) || schools.find(s => s.id == recipientId);
+            let relatedPeople = [];
+
+            if (selectedEntityType === 'school') {
+                relatedPeople = stakeholders.filter(s => s.entity_type === 'Individual' && s.school_id == selectedS.id);
+            } else {
+                relatedPeople = stakeholders.filter(s => s.entity_type === 'Individual' && s.parent_id == recipientId);
+            }
+
+            if (relatedPeople.length > 0) {
+                personnelSelect.disabled = false;
+                personnelSelect.innerHTML = '<option value="">-- No Personnel Selected (Direct to Office) --</option>';
+                relatedPeople.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.name + (p.position ? ` (${p.position})` : '');
+                    personnelSelect.appendChild(opt);
+                });
+            } else {
+                personnelSelect.disabled = true;
+                personnelSelect.innerHTML = '<option value="">No personnel registered</option>';
+            }
+        }
+
+        function submitQuickEntry() {
+            const orgId = document.getElementById('quickRecipientSelect').value;
+            const personnelId = document.getElementById('quickPersonnelSelect').value;
+            const recipientId = personnelId || orgId;
+
+            const itemId = document.getElementById('quickItemSelect').value;
+            const subItemId = document.getElementById('quickSubItemSelect').value;
+            const quantity = document.getElementById('quickQuantity').value;
+            const condition = document.getElementById('quickCondition').value;
+
+            if (!recipientId || !itemId || !subItemId || !quantity) {
+                alert('Please complete all required specifications.');
+                return;
+            }
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{{ route('inventory.dashboard.store') }}";
             
-            const allItems = Array.from(itemSelect.querySelectorAll('option[data-category]'));
-            const allSubItems = Array.from(subItemSelect.querySelectorAll('option[data-item]'));
+            const csrf = document.createElement('input');
+            csrf.type = 'hidden';
+            csrf.name = '_token';
+            csrf.value = "{{ csrf_token() }}";
+            form.appendChild(csrf);
+
+            const fields = { recipient_id: recipientId, item_id: itemId, sub_item_id: subItemId, quantity, condition };
+            for (const [key, value] of Object.entries(fields)) {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = key;
+                input.value = value;
+                form.appendChild(input);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- CASCADING DROPDOWNS ---
+            const categorySelect = document.getElementById('quickCategorySelect');
+            const itemSelect = document.getElementById('quickItemSelect');
+            const subItemSelect = document.getElementById('quickSubItemSelect');
 
             function resetDropdown(el, txt) { el.innerHTML = `<option value="">${txt}</option>`; el.disabled = true; }
 
@@ -405,11 +495,12 @@
                 resetDropdown(itemSelect, 'Select Item');
                 resetDropdown(subItemSelect, 'Select Sub-Item');
                 if (catId) {
-                    const filtered = allItems.filter(opt => opt.getAttribute('data-category') === catId);
-                    filtered.forEach(opt => {
-                        const clone = opt.cloneNode(true);
-                        clone.textContent = `${clone.textContent} (Avail: ${clone.getAttribute('data-avail')})`;
-                        itemSelect.appendChild(clone);
+                    const filtered = allItems.filter(i => i.category_id == catId);
+                    filtered.forEach(i => {
+                        const opt = document.createElement('option');
+                        opt.value = i.id;
+                        opt.textContent = `${i.name} (Avail: ${i.available_stock})`;
+                        itemSelect.appendChild(opt);
                     });
                     itemSelect.disabled = (filtered.length === 0);
                 }
@@ -419,23 +510,15 @@
                 const itemId = this.value;
                 resetDropdown(subItemSelect, 'Select Sub-Item');
                 if (itemId) {
-                    const filtered = allSubItems.filter(opt => opt.getAttribute('data-item') === itemId);
-                    filtered.forEach(opt => subItemSelect.appendChild(opt.cloneNode(true)));
+                    const filtered = allSubItems.filter(s => s.item_id == itemId);
+                    filtered.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id;
+                        opt.textContent = `${s.name} (Stock: ${s.quantity})`;
+                        subItemSelect.appendChild(opt);
+                    });
                     subItemSelect.disabled = (filtered.length === 0);
                     if (filtered.length === 0) subItemSelect.innerHTML = '<option value="">No sub-items</option>';
-                }
-            });
-
-            // --- FORM VALIDATION ---
-            document.querySelector('form[action*="dashboard.store"]')?.addEventListener('submit', function(e) {
-                const qtyInput = document.getElementById('quantityInput');
-                const selectedItem = itemSelect.options[itemSelect.selectedIndex];
-                const avail = parseFloat(selectedItem?.getAttribute('data-avail') || 0);
-                const qty = parseFloat(qtyInput.value);
-
-                if (qty > avail) {
-                    e.preventDefault();
-                    alert(`Not enough stock! Available: ${avail}`);
                 }
             });
         });
