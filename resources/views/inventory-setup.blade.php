@@ -132,7 +132,7 @@
 <div id="step2" class="step-content">
     <h3 id="step2Title" class="text-lg font-black text-slate-400 uppercase tracking-[0.3em] text-center mb-6 -mt-6">Select Category</h3>
     
-<div class="grid grid-cols-2 gap-6 max-w-3xl mx-auto px-4 mb-8">        
+<div id="categoryGrid" class="grid grid-cols-2 gap-6 max-w-3xl mx-auto px-4 mb-8">        
         {{-- Schools --}}
         <div onclick="nextStep(3, 'school')" class="bg-white p-8 w-full rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
             <div class="w-16 h-16 bg-red-50 text-[#c00000] rounded-[1.5rem] flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform shrink-0">
@@ -161,7 +161,7 @@
         </div>
 
         {{-- Stakeholders --}}
-<div onclick= "window.location.href='/stakeholders'" class="bg-white p-8 w-full rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
+<div id="stakeholderCard" onclick= "window.location.href='/stakeholders'" class="bg-white p-8 w-full rounded-[2.5rem] shadow-xl border border-slate-100 hover:border-[#c00000] hover:-translate-y-2 transition-all cursor-pointer group text-center flex flex-col items-center justify-center">
     <div class="w-16 h-16 bg-purple-50 text-purple-600 rounded-[1.5rem] flex items-center justify-center mb-4 group-hover:rotate-12 transition-transform shrink-0">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8">
             <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.998 5.998 0 00-4.03-5.754m-4.44 1.158A7.012 7.012 0 005.432 19m12.738-1.486a9.03 9.03 0 00-4.682-2.72m0 0a4.5 4.5 0 11-8.962 0m8.962 0a4.5 4.5 0 00-8.962 0m6.5 2.25l-3-3m3 3l3-3" />
@@ -264,7 +264,21 @@
             }
         });
 
+        // HANDLE STAKEHOLDERS CARD VISIBILITY & GRID LAYOUT
+        const stakeholderCard = document.getElementById('stakeholderCard');
+        const categoryGrid = document.getElementById('categoryGrid');
 
+        if (currentMode === 'add') {
+            stakeholderCard.classList.add('hidden');
+            // Change to 3-column layout for "Add New"
+            categoryGrid.classList.remove('grid-cols-2', 'max-w-3xl');
+            categoryGrid.classList.add('grid-cols-3', 'max-w-4xl');
+        } else {
+            stakeholderCard.classList.remove('hidden');
+            // Keep 2x2 grid (4 cards total) for "Edit/Update"
+            categoryGrid.classList.remove('grid-cols-3', 'max-w-4xl');
+            categoryGrid.classList.add('grid-cols-2', 'max-w-3xl');
+        }
     }
 
     if (step === 3) {
