@@ -294,6 +294,9 @@
                     <div style="width:130px">Source Type</div>
                     <div style="width:120px">Condition</div>
                     <div style="width:100px">Serialized</div>
+                    <div style="width:100px">Unit Price</div>
+                    <div style="width:130px">Property No.</div>
+                    <div style="width:130px">Serial No.</div>
                     <div style="width:72px">Qty</div>
                 </div>
             </div>
@@ -367,7 +370,7 @@
                                         <input type="text" name="rows[{{ $index }}][sub_item_name]" value="{{ $map['sub_item_name'] ?? '' }}" class="{{ $fieldCls }}">
                                         
                                         @elseif($hVal === 'quantity')
-                                        <input type="number" name="rows[{{ $index }}][quantity]" value="{{ $map['quantity'] ?? '' }}" class="{{ $fieldCls }}">
+                                        <input type="number" id="prev_qty_{{ $index }}" name="rows[{{ $index }}][quantity]" value="{{ strtolower($map['is_serialized'] ?? 'no') === 'yes' ? 1 : ($map['quantity'] ?? '') }}" class="{{ $fieldCls }} {{ strtolower($map['is_serialized'] ?? 'no') === 'yes' ? 'opacity-50 cursor-not-allowed' : '' }}" {{ strtolower($map['is_serialized'] ?? 'no') === 'yes' ? 'readonly' : '' }}>
                                         
                                         @elseif($hVal === 'source')
                                         <input type="text" name="rows[{{ $index }}][source]" value="{{ $map['source'] ?? '' }}" class="{{ $fieldCls }}">
@@ -393,7 +396,7 @@
                                         <input type="date" name="rows[{{ $index }}][date_acquired]" value="{{ $map['date_acquired'] ?? now()->toDateString() }}" class="{{ $fieldCls }}">
                                         
                                         @elseif($hVal === 'is_serialized')
-                                        <select name="rows[{{ $index }}][is_serialized]" class="{{ $fieldCls }}">
+                                        <select name="rows[{{ $index }}][is_serialized]" class="{{ $fieldCls }}" onchange="togglePreviewSerialized(this, {{ $index }})">
                                             <option value="no" {{ strtolower($map['is_serialized'] ?? 'no') === 'no' ? 'selected' : '' }}>No</option>
                                             <option value="yes" {{ strtolower($map['is_serialized'] ?? 'no') === 'yes' ? 'selected' : '' }}>Yes</option>
                                         </select>
@@ -526,6 +529,18 @@ function executeBulkAdd() {
 
 // ── Add / Remove row ─────────────────────────────────────────────────────────
 function addCsvRow(initialData = null) {
+    const currentRows = document.querySelectorAll('.csv-custom-row').length;
+    if (currentRows >= 10) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Row Limit Reached',
+            text: 'You can only add up to 10 rows at a time for the custom template.',
+            confirmButtonColor: '#c00000',
+            customClass: { popup: 'rounded-[2rem]' }
+        });
+        return;
+    }
+
     const idx = rowIndex++;
     const container = document.getElementById('csvRowsContainer');
     const emptyMsg = document.getElementById('csvEmptyMsg');
@@ -609,15 +624,30 @@ function addCsvRow(initialData = null) {
         <!-- Is Serialized -->
         <div class="flex-shrink-0" style="width:100px">
             <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Serialized</label>
-            <select name="rows[${idx}][is_serialized]" class="${fieldCls}">
+            <select name="rows[${idx}][is_serialized]" class="${fieldCls}" onchange="toggleRowSerialized(this, ${idx})">
                 <option value="no" ${initialData?.serialized === 'no' ? 'selected' : ''}>No</option>
                 <option value="yes" ${initialData?.serialized === 'yes' ? 'selected' : ''}>Yes</option>
             </select>
         </div>
+        <!-- Unit Price -->
+        <div class="flex-shrink-0" style="width:100px">
+            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Unit Price</label>
+            <input type="number" step="0.01" name="rows[${idx}][unit_price]" value="${initialData?.unit_price || ''}" class="${fieldCls}">
+        </div>
+        <!-- Property Number -->
+        <div class="flex-shrink-0" style="width:130px">
+            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Property No.</label>
+            <input type="text" name="rows[${idx}][property_number]" value="${initialData?.property_number || ''}" class="${fieldCls}">
+        </div>
+        <!-- Serial Number -->
+        <div class="flex-shrink-0" style="width:130px">
+            <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Serial No.</label>
+            <input type="text" name="rows[${idx}][serial_number]" value="${initialData?.serial_number || ''}" class="${fieldCls}">
+        </div>
         <!-- Qty -->
         <div class="flex-shrink-0" style="width:72px">
             <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1">Qty</label>
-            <input type="number" name="rows[${idx}][quantity]" value="${initialData?.quantity || 1}" min="1" class="${fieldCls}">
+            <input type="number" id="qty_${idx}" name="rows[${idx}][quantity]" value="${initialData?.serialized === 'yes' ? 1 : (initialData?.quantity || 1)}" min="1" class="${fieldCls} ${initialData?.serialized === 'yes' ? 'opacity-50 cursor-not-allowed' : ''}" ${initialData?.serialized === 'yes' ? 'readonly' : ''}>
         </div>
         <!-- Delete -->
         <button type="button" onclick="removeCsvRow(this)"
@@ -980,7 +1010,10 @@ function bulkFilterItem() {
     const input = document.getElementById('bulkItemInput');
     const dd    = document.getElementById('bulkItemDrop');
     const val   = input.value.toLowerCase().trim();
-    const pool  = (cat && rawItemsMap[cat]) ? rawItemsMap[cat] : Object.values(rawItemsMap).flat();
+    
+    // If category is selected, strictly use its items (or empty array). Otherwise, use all items.
+    const pool  = cat ? (rawItemsMap[cat] || []) : Object.values(rawItemsMap).flat();
+    
     const results = val ? pool.filter(i => i.toLowerCase().includes(val)) : pool;
     const unique  = [...new Set(results)].slice(0, 30);
 
@@ -1024,7 +1057,7 @@ function bulkFilterSrc() {
               const typeLabel = s.entity_type || '';
               const badgeCls = srcTypeBadgeColors[typeLabel] || 'bg-slate-100 text-slate-500';
               const badge = typeLabel ? `<span class="text-[8px] ${badgeCls} px-1.5 py-0.5 rounded-full uppercase font-black ml-1.5">${typeLabel}</span>` : '';
-              return `<div onmousedown="bulkSelectSrc('${s.name.replace(/'/g,\"\\'\")}','${typeLabel}')"
+              return `<div onmousedown="bulkSelectSrc('${s.name.replace(/'/g,"\\'")}','${typeLabel}')"
                   class="px-4 py-2 text-xs font-bold hover:bg-red-50 hover:text-red-600 cursor-pointer border-b border-slate-50 last:border-0 flex items-center justify-between">
                   <span class="truncate">${s.name}</span>
                   <div class="flex items-center gap-1 shrink-0 ml-2">${badge}<span class="text-[8px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full uppercase font-black">EXISTS</span></div>
@@ -1055,18 +1088,40 @@ function bulkSelectSrc(name, entityType = null) {
 }
 
 function applyBulkAdd() {
+    const currentRows = document.querySelectorAll('.csv-custom-row').length;
+    const availableSlots = 10 - currentRows;
+
+    if (availableSlots <= 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Row Limit Reached',
+            text: 'You cannot add more rows. The limit is 10 rows.',
+            confirmButtonColor: '#c00000',
+            customClass: { popup: 'rounded-[2rem]' }
+        });
+        return;
+    }
+
     const cat        = document.getElementById('bulkCat').value;
     const item       = document.getElementById('bulkItemInput').value.trim();
     const src        = document.getElementById('bulkSrcInput').value.trim();
     const srcType    = document.getElementById('bulkSrcType').value;
     const condition  = document.getElementById('bulkCondition').value;
     const serialized = document.getElementById('bulkSerialized').value;
+    const unitPrice  = document.getElementById('bulkUnitPrice')?.value || '';
     const qty        = document.getElementById('bulkQty').value || '1';
-    const count      = Math.max(1, Math.min(100, parseInt(document.getElementById('bulkCount').value) || 1));
+    
+    let count = Math.max(1, parseInt(document.getElementById('bulkCount').value) || 1);
+    let trimmed = false;
+    
+    if (count > availableSlots) {
+        count = availableSlots;
+        trimmed = true;
+    }
 
     for (let i = 0; i < count; i++) {
         const capturedIdx = rowIndex;
-        addCsvRow();
+        addCsvRow({ unit_price: unitPrice });
 
         // --- Category ---
         if (cat) {
@@ -1126,10 +1181,10 @@ function applyBulkAdd() {
 
     Swal.fire({
         title: `${count} row(s) added!`,
-        text: 'Bulk rows have been pre-filled and added to the builder.',
-        icon: 'success',
+        text: trimmed ? `Only ${count} rows were added to stay within the 10-row limit.` : 'Bulk rows have been pre-filled and added to the builder.',
+        icon: trimmed ? 'info' : 'success',
         confirmButtonColor: '#c00000',
-        timer: 1800,
+        timer: trimmed ? 3000 : 1800,
         showConfirmButton: false,
         customClass: { popup: 'rounded-[2rem]' }
     });
@@ -1140,6 +1195,51 @@ document.addEventListener('click', function(e) {
     const modal = document.getElementById('bulkAddModal');
     if (modal && e.target === modal) closeBulkAddModal();
 });
+
+function bulkCategoryChanged() {
+    const input = document.getElementById('bulkItemInput');
+    if (input) input.value = '';
+    bulkFilterItem();
+}
+
+function toggleBulkSerialized(val) {
+    const qtyInput = document.getElementById('bulkQty');
+    if (!qtyInput) return;
+    if (val === 'yes') {
+        qtyInput.value = 1;
+        qtyInput.readOnly = true;
+        qtyInput.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+        qtyInput.readOnly = false;
+        qtyInput.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+}
+
+function toggleRowSerialized(selectEl, idx) {
+    const qtyInput = document.getElementById(`qty_${idx}`);
+    if (!qtyInput) return;
+    if (selectEl.value === 'yes') {
+        qtyInput.value = 1;
+        qtyInput.readOnly = true;
+        qtyInput.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+        qtyInput.readOnly = false;
+        qtyInput.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+}
+
+function togglePreviewSerialized(selectEl, idx) {
+    const qtyInput = document.getElementById(`prev_qty_${idx}`);
+    if (!qtyInput) return;
+    if (selectEl.value === 'yes') {
+        qtyInput.value = 1;
+        qtyInput.readOnly = true;
+        qtyInput.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+        qtyInput.readOnly = false;
+        qtyInput.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+}
 </script>
 
 {{-- ── BULK ADD MODAL ──────────────────────────────────────────────────────── --}}
@@ -1166,7 +1266,7 @@ document.addEventListener('click', function(e) {
                 {{-- Global Category --}}
                 <div class="space-y-2">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Global Category</label>
-                    <select id="bulkCat" onchange="bulkFilterItem()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs text-slate-700 outline-none focus:ring-2 focus:ring-red-100 transition">
+                    <select id="bulkCat" onchange="bulkCategoryChanged()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs text-slate-700 outline-none focus:ring-2 focus:ring-red-100 transition">
                         <option value="">-- Select Category --</option>
                     </select>
                 </div>
@@ -1213,10 +1313,16 @@ document.addEventListener('click', function(e) {
                 {{-- Is Serialized? --}}
                 <div class="space-y-2">
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Is Serialized?</label>
-                    <select id="bulkSerialized" class="w-full p-3 bg-slate-50 border border-[#c00000]/30 rounded-2xl font-bold text-xs text-slate-700 outline-none focus:ring-2 focus:ring-red-100 transition">
+                    <select id="bulkSerialized" onchange="toggleBulkSerialized(this.value)" class="w-full p-3 bg-slate-50 border border-[#c00000]/30 rounded-2xl font-bold text-xs text-slate-700 outline-none focus:ring-2 focus:ring-red-100 transition">
                         <option value="no">No</option>
                         <option value="yes">Yes</option>
                     </select>
+                </div>
+
+                {{-- Global Unit Price --}}
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Global Unit Price</label>
+                    <input type="number" step="0.01" id="bulkUnitPrice" placeholder="0.00" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs text-slate-700 outline-none focus:ring-2 focus:ring-red-100 transition">
                 </div>
 
             </div>
