@@ -333,9 +333,10 @@ class ImportController extends Controller
                         'condition' => $condition,
                         'updated_at' => now(),
                     ]);
+                    $finalSubId = $existingSub->id;
                 } else {
                     // Insert new sub-item
-                    DB::table('sub_items')->insert([
+                    $finalSubId = DB::table('sub_items')->insertGetId([
                         'name' => $subItemName,
                         'item_id' => $itemId,
                         'distributor_id' => $distributorId,
@@ -351,6 +352,19 @@ class ImportController extends Controller
                         'updated_at' => now(),
                     ]);
                 }
+
+                // RECORD TRANSACTION: Stock-in via CSV
+                DB::table('asset_transactions')->insert([
+                    'type' => 'STOCK_IN',
+                    'sub_item_id' => $finalSubId,
+                    'quantity_affected' => $quantity,
+                    'condition_before' => $condition,
+                    'condition_after' => $condition,
+                    'processed_by' => $userName,
+                    'notes' => '[CSV Import] Batch addition from uploaded file',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
 
                 $totalImported++;
             }

@@ -268,11 +268,11 @@
                 </div>
                 <div class="flex gap-3">
                     <button type="button" onclick="openBulkAddModal()"
-                        class="bg-emerald-600 text-white px-6 py-3 rounded-2xl font-black uppercase text-xs shadow-lg shadow-emerald-100 hover:scale-105 transition-all flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-3 rounded-2xl font-black uppercase text-xs shadow-lg transition-all flex items-center gap-2 hover:scale-105">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
                         </svg>
-                        Bulk add
+                        Bulk Add
                     </button>
                     <button type="button" onclick="addCsvRow()"
                         class="bg-deped text-white px-6 py-3 rounded-2xl font-black uppercase text-xs shadow-lg shadow-red-100 hover:scale-105 transition-all flex items-center gap-2">
@@ -319,7 +319,7 @@
         @else
         
         {{-- PREVIEW MODE --}}
-        <form action="{{ route('assets.import.store') }}" method="POST">
+        <form action="{{ route('assets.import.confirm') }}" method="POST">
             @csrf
             <div class="card-premium overflow-hidden">
                 <div class="bg-slate-900 p-8 flex justify-between items-center text-white">
@@ -422,107 +422,6 @@
     </main>
 </div>
 
-<!-- Bulk Add Modal -->
-<div id="bulkAddModal" class="fixed inset-0 z-[100] hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onclick="closeBulkAddModal()"></div>
-        
-        <div class="relative bg-white rounded-[3rem] shadow-2xl w-full max-w-4xl overflow-hidden animate-fade-in-up">
-            <div class="bg-slate-900 p-8 flex justify-between items-center text-white">
-                <div>
-                    <h3 class="text-2xl font-black uppercase italic tracking-tight">Bulk Add Window</h3>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Configure global values for multiple rows</p>
-                </div>
-                <button onclick="closeBulkAddModal()" class="p-2 hover:bg-white/10 rounded-xl transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-
-            <div class="p-10 space-y-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- Category -->
-                    <div class="space-y-2">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Global Category</label>
-                        <select id="bulk_category" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:border-red-400 transition-all">
-                            <option value="">-- Select Category --</option>
-                            @foreach($categories as $cat)
-                                <option value="{{ is_string($cat) ? $cat : $cat->name }}">{{ is_string($cat) ? $cat : $cat->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Item -->
-                    <div class="space-y-2">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Global Item Name</label>
-                        <input type="text" id="bulk_item" placeholder="Type item name..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:border-red-400 transition-all">
-                    </div>
-
-                    <!-- Source -->
-                    <div class="space-y-2">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Global Source</label>
-                        <input type="text" id="bulk_source" placeholder="Type source name..." class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:border-red-400 transition-all">
-                    </div>
-
-                    <!-- Source Type -->
-                    <div class="space-y-2">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Global Source Type</label>
-                        <select id="bulk_source_type" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:border-red-400 transition-all">
-                            <option value="">-- Select Type --</option>
-                            <option value="School">School</option>
-                            <option value="External">External</option>
-                            <option value="Individual">Individual</option>
-                        </select>
-                    </div>
-
-                    <!-- Condition -->
-                    <div class="space-y-2">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Global Condition</label>
-                        <select id="bulk_condition" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:border-red-400 transition-all">
-                            <option value="Serviceable" selected>Serviceable</option>
-                            <option value="For Repair">For Repair</option>
-                            <option value="Unserviceable">Unserviceable</option>
-                        </select>
-                    </div>
-
-                    <!-- Serialized -->
-                    <div class="space-y-2">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Is Serialized?</label>
-                        <select id="bulk_serialized" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:border-red-400 transition-all">
-                            <option value="no" selected>No</option>
-                            <option value="yes">Yes</option>
-                        </select>
-                    </div>
-
-                    <!-- Quantity per Row -->
-                    <div class="space-y-2">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Quantity per Row</label>
-                        <input type="number" id="bulk_row_qty" value="1" min="1" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-sm focus:outline-none focus:border-red-400 transition-all">
-                    </div>
-                </div>
-
-                <div class="pt-8 border-t border-slate-100 flex items-center justify-between gap-8">
-                    <div class="flex-grow max-w-xs">
-                        <label class="text-[10px] font-black text-[#c00000] uppercase tracking-widest ml-1 italic">Number of Rows to Generate</label>
-                        <div class="flex items-center gap-3 mt-2">
-                            <input type="number" id="bulk_qty" value="5" min="1" max="100" class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-black text-center focus:outline-none focus:border-red-400 transition-all">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Sets</span>
-                        </div>
-                    </div>
-                    
-                    <button type="button" onclick="confirmBulkAdd()" class="bg-[#c00000] text-white px-12 py-5 rounded-[2rem] font-black uppercase tracking-[0.2em] shadow-2xl shadow-red-200 hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center gap-3">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                        </svg>
-                        Apply Bulk Add
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
 // ── Data from PHP ─────────────────────────────────────────────────────────────
 const rawCategories = @json($categories->values() ?? []);
@@ -560,16 +459,7 @@ function dropPreviewRow(btn) {
     });
 }
 
-// ── Bulk Add Logic ────────────────────────────────────────────────────────────
-function openBulkAddModal() {
-    document.getElementById('bulkAddModal').classList.remove('hidden');
-    document.body.classList.add('overflow-hidden');
-}
-
-function closeBulkAddModal() {
-    document.getElementById('bulkAddModal').classList.add('hidden');
-    document.body.classList.remove('overflow-hidden');
-}
+// closeBulkAddModal is defined below (authoritative version)
 
 function confirmBulkAdd() {
     const qty = parseInt(document.getElementById('bulk_qty').value) || 0;
@@ -785,21 +675,27 @@ function csvShow(dropId, html) {
 function csvHide(dropId) { document.getElementById(dropId)?.classList.add('hidden'); }
 
 // ── Category ──────────────────────────────────────────────────────────────────
+// rawCategories may be an array of strings OR objects with .name — handle both
+function getCatName(c) { return typeof c === 'object' && c !== null ? c.name : c; }
+
 function csvFilterCat(idx) {
     const input = document.getElementById(`cat_${idx}`);
     if (!input) return;
     const val = input.value.toLowerCase().trim();
-    const results = val ? rawCategories.filter(c => c.name.toLowerCase().includes(val)) : rawCategories;
+    const results = val
+        ? rawCategories.filter(c => getCatName(c).toLowerCase().includes(val))
+        : rawCategories;
 
     let html = results.length
         ? `<div class="px-3 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Categories</div>` +
-          results.slice(0, 30).map(c =>
-            `<div onmousedown="csvSelectCat(${idx},'${c.name.replace(/'/g,"\\'")}')"
-                class="px-4 py-2 text-xs font-bold hover:bg-red-50 hover:text-red-600 cursor-pointer border-b border-slate-50 last:border-0">${c.name}</div>`
-          ).join('')
+          results.slice(0, 30).map(c => {
+            const n = getCatName(c);
+            return `<div onmousedown="csvSelectCat(${idx},'${n.replace(/'/g,"\\'")}')"
+                class="px-4 py-2 text-xs font-bold hover:bg-red-50 hover:text-red-600 cursor-pointer border-b border-slate-50 last:border-0">${n}</div>`;
+          }).join('')
         : '';
 
-    if (val && !rawCategories.find(c => c.name.toLowerCase() === val))
+    if (val && !rawCategories.find(c => getCatName(c).toLowerCase() === val))
         html += `<div onmousedown="csvSelectCat(${idx},'${input.value.replace(/'/g,"\\'")}')"
             class="px-4 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer border-t border-slate-100 flex items-center justify-between">
             <span>+ Create New: <strong>${input.value}</strong></span>
@@ -1045,7 +941,313 @@ if (dropZone) {
         }
     });
 }
+
+// ── Bulk Add Modal ────────────────────────────────────────────────────────────
+let bulkSelectedSrcType = null;
+
+function openBulkAddModal() {
+    // Reset fields
+    document.getElementById('bulkItemInput').value = '';
+    document.getElementById('bulkSrcInput').value = '';
+    bulkSelectedSrcType = null;
+    const srcTypeSel = document.getElementById('bulkSrcType');
+    srcTypeSel.disabled = false;
+    srcTypeSel.value = '';
+    srcTypeSel.classList.remove('opacity-60','cursor-not-allowed','bg-slate-100');
+
+    // Populate Category select from rawCategories
+    const catSel = document.getElementById('bulkCat');
+    catSel.innerHTML = '<option value="">-- Select Category --</option>';
+    rawCategories.forEach(c => {
+        const name = typeof c === 'object' ? c.name : c;
+        catSel.innerHTML += `<option value="${name}">${name}</option>`;
+    });
+
+    document.getElementById('bulkAddModal').classList.remove('hidden');
+    document.getElementById('bulkAddModal').classList.add('flex');
+}
+
+function closeBulkAddModal() {
+    document.getElementById('bulkAddModal').classList.add('hidden');
+    document.getElementById('bulkAddModal').classList.remove('flex');
+    // Hide any open dropdowns
+    ['bulkItemDrop','bulkSrcDrop'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+}
+
+// ── Bulk Item Autocomplete ───────────────────────────────────────────────────
+function bulkFilterItem() {
+    const cat   = document.getElementById('bulkCat').value;
+    const input = document.getElementById('bulkItemInput');
+    const dd    = document.getElementById('bulkItemDrop');
+    const val   = input.value.toLowerCase().trim();
+    const pool  = (cat && rawItemsMap[cat]) ? rawItemsMap[cat] : Object.values(rawItemsMap).flat();
+    const results = val ? pool.filter(i => i.toLowerCase().includes(val)) : pool;
+    const unique  = [...new Set(results)].slice(0, 30);
+
+    if (unique.length === 0 && !val) { dd.classList.add('hidden'); return; }
+    let html = unique.length
+        ? `<div class="px-3 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Items${cat ? ' under ' + cat : ''}</div>` +
+          unique.map(i => `<div onmousedown="bulkSelectItem('${i.replace(/'/g,"\\'")}')"
+              class="px-4 py-2 text-xs font-bold hover:bg-red-50 hover:text-red-600 cursor-pointer border-b border-slate-50 last:border-0">${i}</div>`).join('')
+        : '';
+    if (val && !pool.find(i => i.toLowerCase() === val))
+        html += `<div onmousedown="bulkSelectItem('${input.value.replace(/'/g,"\\'")}')"
+            class="px-4 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer border-t border-slate-100 flex items-center justify-between">
+            <span>+ New: <strong>${input.value}</strong></span>
+            <span class="text-[8px] bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded-full uppercase font-black ml-2">NEW</span>
+        </div>`;
+    if (!html) html = `<div class="px-4 py-3 text-xs text-slate-400 italic">No items found</div>`;
+    dd.innerHTML = html;
+    dd.classList.remove('hidden');
+}
+function bulkSelectItem(name) {
+    document.getElementById('bulkItemInput').value = name;
+    document.getElementById('bulkItemDrop').classList.add('hidden');
+}
+
+// ── Bulk Source Autocomplete ─────────────────────────────────────────────────
+function bulkFilterSrc() {
+    const input = document.getElementById('bulkSrcInput');
+    const dd    = document.getElementById('bulkSrcDrop');
+    const val   = input.value.toLowerCase().trim();
+    const results = val ? rawSources.filter(s => s.name.toLowerCase().includes(val)) : rawSources;
+
+    // Reset source type lock when typing
+    bulkSelectedSrcType = null;
+    const srcTypeSel = document.getElementById('bulkSrcType');
+    srcTypeSel.disabled = false;
+    srcTypeSel.classList.remove('opacity-60','cursor-not-allowed','bg-slate-100');
+
+    let html = results.length
+        ? `<div class="px-3 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest sticky top-0 bg-white border-b border-slate-50">Existing Sources</div>` +
+          results.slice(0,30).map(s => {
+              const typeLabel = s.entity_type || '';
+              const badgeCls = srcTypeBadgeColors[typeLabel] || 'bg-slate-100 text-slate-500';
+              const badge = typeLabel ? `<span class="text-[8px] ${badgeCls} px-1.5 py-0.5 rounded-full uppercase font-black ml-1.5">${typeLabel}</span>` : '';
+              return `<div onmousedown="bulkSelectSrc('${s.name.replace(/'/g,\"\\'\")}','${typeLabel}')"
+                  class="px-4 py-2 text-xs font-bold hover:bg-red-50 hover:text-red-600 cursor-pointer border-b border-slate-50 last:border-0 flex items-center justify-between">
+                  <span class="truncate">${s.name}</span>
+                  <div class="flex items-center gap-1 shrink-0 ml-2">${badge}<span class="text-[8px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full uppercase font-black">EXISTS</span></div>
+              </div>`;
+          }).join('')
+        : '';
+    if (val && !rawSources.find(s => s.name.toLowerCase() === val))
+        html += `<div onmousedown="bulkSelectSrc('${input.value.replace(/'/g,"\\'")}')"
+            class="px-4 py-2 text-xs font-bold text-emerald-600 hover:bg-emerald-50 cursor-pointer border-t border-slate-100 flex items-center justify-between">
+            <span>+ Register as New: <strong>${input.value}</strong></span>
+            <span class="text-[8px] bg-emerald-100 text-emerald-600 px-1.5 py-0.5 rounded-full uppercase font-black ml-2">NEW</span>
+        </div>`;
+    if (!html) html = `<div class="px-4 py-3 text-xs text-slate-400 italic">No existing sources — type to register new</div>`;
+    dd.innerHTML = html;
+    dd.classList.remove('hidden');
+}
+function bulkSelectSrc(name, entityType = null) {
+    document.getElementById('bulkSrcInput').value = name;
+    document.getElementById('bulkSrcDrop').classList.add('hidden');
+    const srcTypeSel = document.getElementById('bulkSrcType');
+    if (entityType) {
+        bulkSelectedSrcType = entityType;
+        srcTypeSel.value = entityType;
+        srcTypeSel.disabled = true;
+        srcTypeSel.classList.add('opacity-60','cursor-not-allowed','bg-slate-100');
+        srcTypeSel.title = `Locked — registered as "${entityType}"`;
+    }
+}
+
+function applyBulkAdd() {
+    const cat        = document.getElementById('bulkCat').value;
+    const item       = document.getElementById('bulkItemInput').value.trim();
+    const src        = document.getElementById('bulkSrcInput').value.trim();
+    const srcType    = document.getElementById('bulkSrcType').value;
+    const condition  = document.getElementById('bulkCondition').value;
+    const serialized = document.getElementById('bulkSerialized').value;
+    const qty        = document.getElementById('bulkQty').value || '1';
+    const count      = Math.max(1, Math.min(100, parseInt(document.getElementById('bulkCount').value) || 1));
+
+    for (let i = 0; i < count; i++) {
+        const capturedIdx = rowIndex;
+        addCsvRow();
+
+        // --- Category ---
+        if (cat) {
+            const catInp = document.getElementById(`cat_${capturedIdx}`);
+            if (catInp) {
+                catInp.value = cat;
+                const itemInp = document.getElementById(`item_${capturedIdx}`);
+                if (itemInp) {
+                    itemInp.disabled = false;
+                    itemInp.classList.remove('opacity-40', 'cursor-not-allowed');
+                    itemInp.placeholder = rawItemsMap[cat]?.length ? 'Browse / type new...' : 'Type item name...';
+                }
+            }
+        }
+
+        // --- Item ---
+        if (item) {
+            const itemInp = document.getElementById(`item_${capturedIdx}`);
+            if (itemInp) {
+                itemInp.value = item;
+                itemInp.disabled = false;
+                itemInp.classList.remove('opacity-40', 'cursor-not-allowed');
+                // Unlock sub-item field
+                const subInp = document.getElementById(`sub_${capturedIdx}`);
+                if (subInp) {
+                    subInp.disabled = false;
+                    subInp.classList.remove('opacity-40', 'cursor-not-allowed');
+                    subInp.placeholder = rawSubMap[item]?.length ? 'Browse / type new...' : 'Type sub-item name...';
+                }
+            }
+        }
+
+        // --- Source ---
+        if (src) {
+            const srcInp = document.getElementById(`src_${capturedIdx}`);
+            if (srcInp) srcInp.value = src;
+        }
+
+        // --- Source Type ---
+        if (srcType) {
+            const srcTypeSel = document.getElementById(`srcType_${capturedIdx}`);
+            if (srcTypeSel) srcTypeSel.value = srcType;
+        }
+
+        // --- Condition, Serialized, Quantity (by name attribute) ---
+        const condSel = document.querySelector(`select[name="rows[${capturedIdx}][condition]"]`);
+        if (condSel && condition) condSel.value = condition;
+
+        const serSel = document.querySelector(`select[name="rows[${capturedIdx}][is_serialized]"]`);
+        if (serSel && serialized) serSel.value = serialized;
+
+        const qtyInp = document.querySelector(`input[name="rows[${capturedIdx}][quantity]"]`);
+        if (qtyInp) qtyInp.value = qty;
+    }
+
+    closeBulkAddModal();
+
+    Swal.fire({
+        title: `${count} row(s) added!`,
+        text: 'Bulk rows have been pre-filled and added to the builder.',
+        icon: 'success',
+        confirmButtonColor: '#c00000',
+        timer: 1800,
+        showConfirmButton: false,
+        customClass: { popup: 'rounded-[2rem]' }
+    });
+}
+
+// Close modal on backdrop click
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('bulkAddModal');
+    if (modal && e.target === modal) closeBulkAddModal();
+});
 </script>
+
+{{-- ── BULK ADD MODAL ──────────────────────────────────────────────────────── --}}
+<div id="bulkAddModal" class="fixed inset-0 z-[9999] hidden items-center justify-center p-4" style="background:rgba(15,23,42,0.7);backdrop-filter:blur(4px);">
+    <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden" style="max-height:90vh;overflow-y:auto;">
+
+        {{-- Header --}}
+        <div class="bg-slate-900 px-10 py-7 flex items-start justify-between sticky top-0 z-10">
+            <div>
+                <h3 class="text-xl font-black text-white uppercase italic tracking-tight">Bulk Add Window</h3>
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Configure global values for multiple rows</p>
+            </div>
+            <button onclick="closeBulkAddModal()" class="text-slate-500 hover:text-white transition-colors mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+
+        {{-- Body --}}
+        <div class="px-10 py-8 space-y-5">
+            <div class="grid grid-cols-2 gap-5">
+
+                {{-- Global Category --}}
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Global Category</label>
+                    <select id="bulkCat" onchange="bulkFilterItem()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs text-slate-700 outline-none focus:ring-2 focus:ring-red-100 transition">
+                        <option value="">-- Select Category --</option>
+                    </select>
+                </div>
+
+                {{-- Global Item Name (autocomplete) --}}
+                <div class="space-y-2 relative">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Global Item Name</label>
+                    <input type="text" id="bulkItemInput" placeholder="Type or pick item..." autocomplete="off"
+                        oninput="bulkFilterItem()" onfocus="bulkFilterItem()"
+                        class="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs text-slate-700 outline-none focus:ring-2 focus:ring-red-100 transition">
+                    <div id="bulkItemDrop" class="hidden absolute z-50 w-full bg-white border border-slate-200 rounded-2xl shadow-xl max-h-48 overflow-y-auto custom-scroll" style="top:calc(100% + 4px);"></div>
+                </div>
+
+                {{-- Global Source (autocomplete) --}}
+                <div class="space-y-2 relative">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Global Source</label>
+                    <input type="text" id="bulkSrcInput" placeholder="Type or pick source..." autocomplete="off"
+                        oninput="bulkFilterSrc()" onfocus="bulkFilterSrc()"
+                        class="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs text-slate-700 outline-none focus:ring-2 focus:ring-red-100 transition">
+                    <div id="bulkSrcDrop" class="hidden absolute z-50 w-full bg-white border border-slate-200 rounded-2xl shadow-xl max-h-48 overflow-y-auto custom-scroll" style="top:calc(100% + 4px);"></div>
+                </div>
+
+                {{-- Global Source Type --}}
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Global Source Type</label>
+                    <select id="bulkSrcType" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs text-slate-700 outline-none focus:ring-2 focus:ring-red-100 transition">
+                        <option value="">-- Select Type --</option>
+                        <option value="School">School</option>
+                        <option value="External">External</option>
+                        <option value="Individual">Individual</option>
+                    </select>
+                </div>
+
+                {{-- Global Condition --}}
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Global Condition</label>
+                    <select id="bulkCondition" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs text-slate-700 outline-none focus:ring-2 focus:ring-red-100 transition">
+                        <option value="Serviceable">Serviceable</option>
+                        <option value="For Repair">For Repair</option>
+                        <option value="Unserviceable">Unserviceable</option>
+                    </select>
+                </div>
+
+                {{-- Is Serialized? --}}
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Is Serialized?</label>
+                    <select id="bulkSerialized" class="w-full p-3 bg-slate-50 border border-[#c00000]/30 rounded-2xl font-bold text-xs text-slate-700 outline-none focus:ring-2 focus:ring-red-100 transition">
+                        <option value="no">No</option>
+                        <option value="yes">Yes</option>
+                    </select>
+                </div>
+
+            </div>
+
+            {{-- Quantity per Row --}}
+            <div class="space-y-2">
+                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Quantity per Row</label>
+                <input type="number" id="bulkQty" value="1" min="1" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-xs text-slate-700 outline-none focus:ring-2 focus:ring-red-100 transition">
+            </div>
+
+            {{-- Number of Rows --}}
+            <div class="space-y-2 border-t border-slate-100 pt-5">
+                <label class="text-[10px] font-black text-[#c00000] uppercase tracking-widest block">Number of Rows to Generate</label>
+                <div class="flex items-center gap-3">
+                    <input type="number" id="bulkCount" value="4" min="1" max="100" class="flex-1 p-3 bg-slate-50 border border-slate-200 rounded-2xl font-black text-sm text-slate-800 outline-none focus:ring-2 focus:ring-red-100 transition">
+                    <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Sets</span>
+                </div>
+            </div>
+        </div>
+
+        {{-- Footer --}}
+        <div class="px-10 pb-8">
+            <button type="button" onclick="applyBulkAdd()" class="w-full py-4 bg-[#c00000] hover:bg-red-800 text-white rounded-2xl font-black uppercase tracking-widest text-sm transition-all shadow-xl hover:shadow-red-200 flex items-center justify-center gap-3">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                + Apply Bulk Add
+            </button>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>

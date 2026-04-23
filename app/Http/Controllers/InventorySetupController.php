@@ -416,6 +416,7 @@ class InventorySetupController extends Controller
                     ->first();
             }
 
+            $finalSubId = null;
             if ($existingSub) {
                 // Update the existing sub-item's quantity and condition
                 $updateData = [
@@ -427,6 +428,7 @@ class InventorySetupController extends Controller
                     $updateData['distributor_id'] = $sub['distributor_id'];
                 }
                 DB::table('sub_items')->where('id', $existingSub->id)->update($updateData);
+                $finalSubId = $existingSub->id;
                 DB::table('system_logs')->insert([
                     'user' => $userName,
                     'activity' => "Updated sub-item '{$subItemName}' quantity by +{$subQty} (Condition: {$subCondition}) under item '{$itemName}'",
@@ -438,7 +440,7 @@ class InventorySetupController extends Controller
                 $messages[] = "Sub-item '{$subItemName}' quantity updated by +{$subQty}";
             } else {
                 // Insert a brand-new sub-item
-                DB::table('sub_items')->insertGetId([
+                $finalSubId = DB::table('sub_items')->insertGetId([
                     'name' => $subItemName,
                     'item_id' => $itemId,
                     'quantity' => $subQty,
@@ -463,6 +465,21 @@ class InventorySetupController extends Controller
                     'updated_at' => now(),
                 ]);
                 $messages[] = "Sub-item '{$subItemName}' (Qty: {$subQty}) added";
+            }
+
+            // RECORD TRANSACTION: Manual Stock-in
+            if ($finalSubId) {
+                DB::table('asset_transactions')->insert([
+                    'type' => 'STOCK_IN',
+                    'sub_item_id' => $finalSubId,
+                    'quantity_affected' => $subQty,
+                    'condition_before' => $subCondition,
+                    'condition_after' => $subCondition,
+                    'processed_by' => $userName,
+                    'notes' => 'Manual inventory registration via Setup',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             }
         }
 

@@ -49,18 +49,31 @@ class DashboardController extends Controller
         // 4. Total System Assets (Sum of all tracked conditions)
         $totalAssets = $serviceableCount + $unserviceableCount + $forRepairCount;
 
-        // 4. Source Breakdown (All Distributors)
-        // This calculates the total value of existing sub-items in the warehouse grouped by distributor
-        $sourceBreakdown = \Illuminate\Support\Facades\DB::table('stakeholders')
-            ->whereIn('stakeholders.type', ['Distributor', 'System'])
-            ->leftJoin('sub_items', 'stakeholders.id', '=', 'sub_items.distributor_id')
+        // 4. Source Breakdown (Non-Individual Distributors + sum of their individual children)
+        // This calculates the total value of existing sub-items in the warehouse grouped by distributor,
+        // aggregating items from "Individual" distributors into their parent entities.
+        $sourceBreakdown = \Illuminate\Support\Facades\DB::table('stakeholders as s')
+            ->whereIn('s.type', ['Distributor', 'System'])
+            ->where('s.entity_type', '!=', 'Individual')
+            ->leftJoin(\Illuminate\Support\Facades\DB::raw('(
+                SELECT 
+                    CASE 
+                        WHEN child.entity_type = "Individual" AND child.parent_id IS NOT NULL 
+                        THEN child.parent_id 
+                        ELSE child.id 
+                    END as effective_id,
+                    SUM(COALESCE(si.quantity, 0)) as total_qty,
+                    SUM(COALESCE(si.quantity * si.unit_price, 0)) as total_amount
+                FROM sub_items si
+                JOIN stakeholders child ON si.distributor_id = child.id
+                GROUP BY effective_id
+            ) as summary'), 's.id', '=', 'summary.effective_id')
             ->select(
-                'stakeholders.name as source_name',
-                \Illuminate\Support\Facades\DB::raw('SUM(COALESCE(sub_items.quantity, 0)) as total_qty'),
-                \Illuminate\Support\Facades\DB::raw('SUM(COALESCE(sub_items.quantity * sub_items.unit_price, 0)) as total_amount')
+                's.name as source_name',
+                \Illuminate\Support\Facades\DB::raw('COALESCE(summary.total_qty, 0) as total_qty'),
+                \Illuminate\Support\Facades\DB::raw('COALESCE(summary.total_amount, 0) as total_amount')
             )
-            ->groupBy('stakeholders.id', 'stakeholders.name')
-            ->orderBy('stakeholders.name')
+            ->orderBy('s.name')
             ->get();
 
         // 5. Per-Quadrant Totals
@@ -77,8 +90,8 @@ class DashboardController extends Controller
             $quadrantTotals[$qd->quadrant_id] = $qd->total_qty;
         }
 
-        // 6. Recently Added Items
-        $recentOwnerships = \Illuminate\Support\Facades\DB::table('ownerships')
+        // 6. Recently Added Items (UNION of Distributions and Warehouse Additions)
+        $deployments = \Illuminate\Support\Facades\DB::table('ownerships')
             ->join('schools', 'ownerships.school_id', '=', 'schools.id')
             ->join('districts', 'schools.district_id', '=', 'districts.id')
             ->join('items', 'ownerships.item_id', '=', 'items.id')
@@ -92,9 +105,27 @@ class DashboardController extends Controller
                 'sub_items.name as sub_item_name',
                 'ownerships.quantity',
                 'ownerships.created_at',
-                \Illuminate\Support\Facades\DB::raw('(SELECT user FROM system_logs WHERE module = "Items" AND activity LIKE CONCAT("%", items.name, "%") ORDER BY created_at DESC LIMIT 1) as added_by')
-            )
-            ->orderByDesc('ownerships.created_at')
+                \Illuminate\Support\Facades\DB::raw('(SELECT user FROM system_logs WHERE (module = "Items" OR module = "Distribution") AND activity LIKE CONCAT("%", items.name, "%") ORDER BY created_at DESC LIMIT 1) as added_by')
+            );
+
+        $warehouse = \Illuminate\Support\Facades\DB::table('asset_transactions')
+            ->where('asset_transactions.type', 'STOCK_IN')
+            ->join('sub_items', 'asset_transactions.sub_item_id', '=', 'sub_items.id')
+            ->join('items', 'sub_items.item_id', '=', 'items.id')
+            ->join('categories', 'items.category_id', '=', 'categories.id')
+            ->select(
+                \Illuminate\Support\Facades\DB::raw("'CENTRAL WAREHOUSE' as school_name"),
+                \Illuminate\Support\Facades\DB::raw("'Stock Entry' as district_name"),
+                'categories.name as category_name',
+                'items.name as item_name',
+                'sub_items.name as sub_item_name',
+                'asset_transactions.quantity_affected as quantity',
+                'asset_transactions.created_at',
+                'asset_transactions.processed_by as added_by'
+            );
+
+        $recentOwnerships = $deployments->union($warehouse)
+            ->orderByDesc('created_at')
             ->limit(10)
             ->get();
 
