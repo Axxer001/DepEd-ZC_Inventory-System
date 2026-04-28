@@ -57,15 +57,35 @@ class DashboardController extends Controller
             ->where('s.entity_type', '!=', 'Individual')
             ->leftJoin(\Illuminate\Support\Facades\DB::raw('(
                 SELECT 
-                    CASE 
-                        WHEN child.entity_type = "Individual" AND child.parent_id IS NOT NULL 
-                        THEN child.parent_id 
-                        ELSE child.id 
-                    END as effective_id,
-                    SUM(COALESCE(si.quantity, 0)) as total_qty,
-                    SUM(COALESCE(si.quantity * si.unit_price, 0)) as total_amount
-                FROM sub_items si
-                JOIN stakeholders child ON si.distributor_id = child.id
+                    effective_id,
+                    SUM(qty) as total_qty,
+                    SUM(amount) as total_amount
+                FROM (
+                    SELECT 
+                        CASE 
+                            WHEN child.entity_type = "Individual" AND child.parent_id IS NOT NULL 
+                            THEN child.parent_id 
+                            ELSE child.id 
+                        END as effective_id,
+                        si.quantity as qty,
+                        (si.quantity * COALESCE(si.unit_price, 0)) as amount
+                    FROM sub_items si
+                    JOIN stakeholders child ON si.distributor_id = child.id
+
+                    UNION ALL
+
+                    SELECT 
+                        CASE 
+                            WHEN child.entity_type = "Individual" AND child.parent_id IS NOT NULL 
+                            THEN child.parent_id 
+                            ELSE child.id 
+                        END as effective_id,
+                        o.quantity as qty,
+                        (o.quantity * COALESCE(si.unit_price, 0)) as amount
+                    FROM ownerships o
+                    JOIN sub_items si ON o.sub_item_id = si.id
+                    JOIN stakeholders child ON o.distributor_id = child.id
+                ) combined
                 GROUP BY effective_id
             ) as summary'), 's.id', '=', 'summary.effective_id')
             ->select(
@@ -174,12 +194,19 @@ class DashboardController extends Controller
             'item_id' => 'required|exists:items,id',
             'quantity' => 'required|integer|min:1',
             'sub_item_id' => 'required|exists:sub_items,id',
+            'is_serialized' => 'nullable|boolean',
+            'property_number' => 'nullable|string',
+            'serial_number' => 'nullable|string',
         ]);
 
         $subItemId = $request->input('sub_item_id');
         $condition = $request->input('condition', 'Serviceable');
         $recipientId = $request->input('recipient_id');
         $quantity = (int) $request->quantity;
+        
+        $isSerialized = $request->input('is_serialized', false);
+        $propertyNumber = $request->input('property_number');
+        $serialNumber = $request->input('serial_number');
 
         \Illuminate\Support\Facades\DB::beginTransaction();
         try {
@@ -215,6 +242,9 @@ class DashboardController extends Controller
                 'sub_item_id' => $subItemId,
                 'quantity' => $quantity,
                 'condition' => $condition,
+                'is_serialized' => $isSerialized,
+                'property_number' => $propertyNumber,
+                'serial_number' => $serialNumber,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -225,7 +255,7 @@ class DashboardController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        $logMessage = "Quick Entry: Assigned {$quantity} unit(s) to recipient '{$recipient->name}'.";
+        $logMessage = "Quick Entry: Assigned {$quantity} unit(s) to recipient '{$recipient->name}'" . ($isSerialized ? " [S/N: {$serialNumber}, P/N: {$propertyNumber}]" : "") . ".";
         $userName = \Illuminate\Support\Facades\Auth::check() ? \Illuminate\Support\Facades\Auth::user()->name : 'System';
 
         \Illuminate\Support\Facades\DB::table('system_logs')->insert([

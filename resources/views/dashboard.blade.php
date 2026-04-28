@@ -238,13 +238,30 @@
                                 </div>
                                 <div class="space-y-2">
                                     <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 italic">Condition</label>
-                                    <select id="quickCondition" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 text-sm outline-none">
+                                    <select id="quickCondition" class="w-full p-5 bg-slate-50 border-slate-100 rounded-2xl font-bold text-slate-700 text-sm outline-none">
                                         <option value="Serviceable">Serviceable</option>
                                         <option value="Unserviceable">Unserviceable</option>
                                         <option value="For Repair">For Repair</option>
                                     </select>
                                 </div>
-                                <div class="flex items-end">
+                                <div class="flex items-center gap-4 px-2">
+                                    <div class="flex items-center gap-3 bg-slate-50 p-4 rounded-2xl border border-slate-100 w-full cursor-pointer hover:bg-slate-100 transition-colors group" onclick="document.getElementById('quickIsSerialized').click()">
+                                        <input type="checkbox" id="quickIsSerialized" onchange="toggleSerializationFields()" class="w-5 h-5 accent-[#c00000] cursor-pointer">
+                                        <label for="quickIsSerialized" class="text-[10px] font-black text-slate-600 uppercase tracking-widest cursor-pointer group-hover:text-[#c00000] transition-colors">Serialized Item</label>
+                                    </div>
+                                </div>
+
+                                {{-- Serialized Fields --}}
+                                <div class="space-y-2">
+                                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 italic">Property Number</label>
+                                    <input type="text" id="quickPropertyNumber" placeholder="Enter Property #" disabled class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 text-sm outline-none focus:border-[#c00000] disabled:opacity-50 transition-all uppercase">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 italic">Serial Number</label>
+                                    <input type="text" id="quickSerialNumber" placeholder="Enter Serial #" disabled class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 text-sm outline-none focus:border-[#c00000] disabled:opacity-50 transition-all uppercase">
+                                </div>
+                                
+                                <div class="flex items-end md:col-span-1">
                                     <button type="button" onclick="submitQuickEntry()" class="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all active:scale-95 italic text-sm shadow-2xl">
                                         REGISTER TO RECIPIENT ⚡
                                     </button>
@@ -444,6 +461,26 @@
             }
         }
 
+        function toggleSerializationFields() {
+            const isChecked = document.getElementById('quickIsSerialized').checked;
+            const propInput = document.getElementById('quickPropertyNumber');
+            const serialInput = document.getElementById('quickSerialNumber');
+            const qtyInput = document.getElementById('quickQuantity');
+
+            propInput.disabled = !isChecked;
+            serialInput.disabled = !isChecked;
+            
+            if (isChecked) {
+                qtyInput.value = 1;
+                qtyInput.readOnly = true;
+                qtyInput.classList.add('bg-slate-50', 'text-slate-400');
+                propInput.focus();
+            } else {
+                qtyInput.readOnly = false;
+                qtyInput.classList.remove('bg-slate-50', 'text-slate-400');
+            }
+        }
+
         function submitQuickEntry() {
             const orgId = document.getElementById('quickRecipientSelect').value;
             const personnelId = document.getElementById('quickPersonnelSelect').value;
@@ -453,9 +490,18 @@
             const subItemId = document.getElementById('quickSubItemSelect').value;
             const quantity = document.getElementById('quickQuantity').value;
             const condition = document.getElementById('quickCondition').value;
+            
+            const isSerialized = document.getElementById('quickIsSerialized').checked;
+            const propertyNumber = document.getElementById('quickPropertyNumber').value;
+            const serialNumber = document.getElementById('quickSerialNumber').value;
 
             if (!recipientId || !itemId || !subItemId || !quantity) {
                 alert('Please complete all required specifications.');
+                return;
+            }
+            
+            if (isSerialized && (!propertyNumber && !serialNumber)) {
+                alert('Please provide at least a Property Number or Serial Number for serialized items.');
                 return;
             }
 
@@ -469,7 +515,16 @@
             csrf.value = "{{ csrf_token() }}";
             form.appendChild(csrf);
 
-            const fields = { recipient_id: recipientId, item_id: itemId, sub_item_id: subItemId, quantity, condition };
+            const fields = { 
+                recipient_id: recipientId, 
+                item_id: itemId, 
+                sub_item_id: subItemId, 
+                quantity, 
+                condition,
+                is_serialized: isSerialized ? 1 : 0,
+                property_number: propertyNumber,
+                serial_number: serialNumber
+            };
             for (const [key, value] of Object.entries(fields)) {
                 const input = document.createElement('input');
                 input.type = 'hidden';
