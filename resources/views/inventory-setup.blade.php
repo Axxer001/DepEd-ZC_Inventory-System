@@ -419,24 +419,203 @@
                             <button type="button" onclick="confirmCategorySubmit()" class="w-full py-5 ${btnColor} text-white rounded-3xl font-bold shadow-xl transition-all hover:-translate-y-1 active:scale-95">${modeText} Category</button>
                         </form>`;
             } else if (currentModule === 'item' && currentMode === 'edit') {
-                // ===== EDIT MODE: UPDATE / DELETE ITEMS (Static Design) =====
+                // ===== EDIT MODE: UPDATE / DELETE ITEMS (Full Implementation) =====
+                const distOnlyStakeholders = rawStakeholders.filter(s => s.type === 'Distributor');
+
+                const distOptHtml = distOnlyStakeholders.map(s =>
+                    `<option value="${s.id}">${s.name}</option>`
+                ).join('');
+
                 html += `
-                    <p class="text-slate-400 text-xs font-semibold mb-6 -mt-4 italic text-center">Update / Delete Item (Placeholder Design)</p>
+                    <p class="text-slate-400 text-xs font-semibold mb-5 -mt-4 italic text-center">Select a mode, then make your selections below.</p>
 
-                    <div class="flex gap-3 mb-6 opacity-60">
-                        <div class="flex-1 py-4 rounded-2xl font-bold text-sm text-center border-2 border-slate-200 bg-white text-slate-400">✏️ Update / Rename</div>
-                        <div class="flex-1 py-4 rounded-2xl font-bold text-sm text-center border-2 border-slate-200 bg-white text-slate-400">🗑️ Delete</div>
+                    {{-- Mode Toggle Buttons --}}
+                    <div class="flex gap-3 mb-7" id="updateItemModeToggle">
+                        <button type="button" id="btnModeUpdate"
+                            onclick="switchUpdateItemMode('update')"
+                            class="flex-1 py-3.5 rounded-2xl font-black text-sm text-center border-2 border-[#c00000] bg-red-50 text-[#c00000] transition-all">
+                            ✏️ Update / Rename
+                        </button>
+                        <button type="button" id="btnModeDelete"
+                            onclick="switchUpdateItemMode('delete')"
+                            class="flex-1 py-3.5 rounded-2xl font-black text-sm text-center border-2 border-slate-200 bg-white text-slate-400 transition-all hover:border-slate-300">
+                            🗑️ Delete
+                        </button>
                     </div>
 
-                    <div class="space-y-2 mb-6 opacity-60">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Record Type</label>
-                        <div class="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl font-semibold text-slate-400">Select record type</div>
+                    {{-- ===================== UPDATE / RENAME PANEL ===================== --}}
+                    <div id="panelUpdate" class="space-y-5">
+
+                        <div class="grid grid-cols-2 gap-3 items-center">
+                            {{-- Row 1: Category --}}
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
+                                <select id="uCategoryDd"
+                                    onchange="uOnCategoryChange()"
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all">
+                                    <option value="">-- Select Category --</option>
+                                    ${rawCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rename Category To</label>
+                                <input type="text" id="uCategoryRename" placeholder="Leave blank to keep current name"
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 transition-all">
+                            </div>
+
+                            {{-- Row 2: Item --}}
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item</label>
+                                <select id="uItemDd"
+                                    onchange="uOnItemChange()"
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all"
+                                    disabled>
+                                    <option value="">-- Select Item --</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rename Item To</label>
+                                <input type="text" id="uItemRename" placeholder="Leave blank to keep current name"
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 transition-all"
+                                    disabled>
+                            </div>
+
+                            {{-- Row 3: Sub-item --}}
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sub-item</label>
+                                <select id="uSubItemDd"
+                                    onchange="uOnSubItemChange()"
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all"
+                                    disabled>
+                                    <option value="">-- Select Sub-item --</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rename Sub-item To</label>
+                                <input type="text" id="uSubItemRename" placeholder="Leave blank to keep current name"
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 transition-all"
+                                    disabled>
+                            </div>
+                        </div>
+
+                        {{-- Distributor Transfer Row --}}
+                        <div class="pt-4 border-t border-slate-100">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-2">Transfer Distributor Ownership</label>
+                            <p class="text-[10px] text-slate-400 font-medium ml-1 mb-3">Select a sub-item above first. The left shows the current distributor; pick a new one on the right to transfer ownership.</p>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Distributor</label>
+                                    <select id="uCurrentDist" disabled
+                                        class="w-full p-3.5 bg-slate-100 border border-slate-200 rounded-2xl outline-none font-semibold text-slate-500 text-sm cursor-not-allowed">
+                                        <option value="">-- No Sub-item Selected --</option>
+                                        ${distOptHtml}
+                                    </select>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Transfer To</label>
+                                    <select id="uNewDist" disabled
+                                        class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all">
+                                        <option value="">-- Select New Distributor --</option>
+                                        ${distOptHtml}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Update Panel Action Buttons --}}
+                        <div class="flex gap-3 pt-2">
+                            <button type="button" onclick="uClearAll()"
+                                class="flex-1 py-4 rounded-2xl font-black text-sm border-2 border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50 transition-all active:scale-95">
+                                Clear
+                            </button>
+                            <button type="button" onclick="uSaveChanges()"
+                                class="flex-[2] py-4 rounded-2xl font-black text-sm bg-[#c00000] hover:bg-red-700 text-white shadow-lg shadow-red-100 transition-all hover:-translate-y-0.5 active:scale-95">
+                                Save Changes
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="p-8 border-2 border-dashed border-slate-100 rounded-[2rem] text-center">
-                        <p class="text-slate-300 text-sm font-bold uppercase tracking-widest">Replacement Panel for Update/Delete</p>
+                    {{-- ===================== DELETE PANEL ===================== --}}
+                    <div id="panelDelete" class="space-y-5 hidden">
+
+                        <div class="grid grid-cols-2 gap-3 items-start">
+                            {{-- Row 1: Category --}}
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
+                                <select id="dCategoryDd"
+                                    onchange="dOnCategoryChange()"
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all">
+                                    <option value="">-- Select Category --</option>
+                                    ${rawCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="flex flex-col justify-end space-y-1 pb-0.5">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 invisible">Label</label>
+                                <label class="flex items-center gap-3 p-3.5 bg-red-50 border border-red-100 rounded-2xl cursor-pointer group">
+                                    <input type="checkbox" id="dCategoryChk" onchange="dOnCategoryChkChange()"
+                                        class="w-4 h-4 rounded accent-[#c00000] cursor-pointer">
+                                    <span class="text-sm font-black text-red-700">Delete Category</span>
+                                </label>
+                                <p id="dCategoryWarn" class="hidden text-[10px] font-bold text-red-600 ml-1 leading-tight mt-1">
+                                    ⚠️ All items and sub-items under this category will also be deleted.
+                                </p>
+                            </div>
+
+                            {{-- Row 2: Item --}}
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item</label>
+                                <select id="dItemDd"
+                                    onchange="dOnItemChange()"
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all"
+                                    disabled>
+                                    <option value="">-- Select Item --</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col justify-end space-y-1 pb-0.5">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 invisible">Label</label>
+                                <label class="flex items-center gap-3 p-3.5 bg-red-50 border border-red-100 rounded-2xl cursor-pointer group" id="dItemChkWrap">
+                                    <input type="checkbox" id="dItemChk" onchange="dOnItemChkChange()"
+                                        class="w-4 h-4 rounded accent-[#c00000] cursor-pointer" disabled>
+                                    <span class="text-sm font-black text-red-700">Delete Item</span>
+                                </label>
+                                <p id="dItemWarn" class="hidden text-[10px] font-bold text-red-600 ml-1 leading-tight mt-1">
+                                    ⚠️ All sub-items under this item will also be deleted.
+                                </p>
+                            </div>
+
+                            {{-- Row 3: Sub-item --}}
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sub-item</label>
+                                <select id="dSubItemDd"
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all"
+                                    disabled>
+                                    <option value="">-- Select Sub-item --</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col justify-end space-y-1 pb-0.5">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 invisible">Label</label>
+                                <label class="flex items-center gap-3 p-3.5 bg-red-50 border border-red-100 rounded-2xl cursor-pointer group" id="dSubItemChkWrap">
+                                    <input type="checkbox" id="dSubItemChk"
+                                        class="w-4 h-4 rounded accent-[#c00000] cursor-pointer" disabled>
+                                    <span class="text-sm font-black text-red-700">Delete Sub-item</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {{-- Delete Panel Action Buttons --}}
+                        <div class="flex gap-3 pt-2">
+                            <button type="button" onclick="dClearAll()"
+                                class="flex-1 py-4 rounded-2xl font-black text-sm border-2 border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50 transition-all active:scale-95">
+                                Clear
+                            </button>
+                            <button type="button" onclick="dSaveChanges()"
+                                class="flex-[2] py-4 rounded-2xl font-black text-sm bg-[#c00000] hover:bg-red-700 text-white shadow-lg shadow-red-100 transition-all hover:-translate-y-0.5 active:scale-95">
+                                Confirm Delete
+                            </button>
+                        </div>
                     </div>
                 `;
+
             } else if (currentModule === 'item') {
                 // ===== MODULE 1: MASTER REGISTRY (Inventory Items) — ADD MODE (Static Design) =====
                 html += `
@@ -779,6 +958,440 @@
             }
         }
 
+
+        // =============================================
+        // UPDATE ITEM: PANEL TOGGLE
+        // =============================================
+        function switchUpdateItemMode(mode) {
+            const panelUpdate = document.getElementById('panelUpdate');
+            const panelDelete = document.getElementById('panelDelete');
+            const btnUpdate   = document.getElementById('btnModeUpdate');
+            const btnDelete   = document.getElementById('btnModeDelete');
+            if (!panelUpdate || !panelDelete) return;
+
+            if (mode === 'update') {
+                panelUpdate.classList.remove('hidden');
+                panelDelete.classList.add('hidden');
+                btnUpdate.className = 'flex-1 py-3.5 rounded-2xl font-black text-sm text-center border-2 border-[#c00000] bg-red-50 text-[#c00000] transition-all';
+                btnDelete.className  = 'flex-1 py-3.5 rounded-2xl font-black text-sm text-center border-2 border-slate-200 bg-white text-slate-400 transition-all hover:border-slate-300';
+            } else {
+                panelUpdate.classList.add('hidden');
+                panelDelete.classList.remove('hidden');
+                btnDelete.className  = 'flex-1 py-3.5 rounded-2xl font-black text-sm text-center border-2 border-[#c00000] bg-red-50 text-[#c00000] transition-all';
+                btnUpdate.className = 'flex-1 py-3.5 rounded-2xl font-black text-sm text-center border-2 border-slate-200 bg-white text-slate-400 transition-all hover:border-slate-300';
+            }
+        }
+
+        // =============================================
+        // UPDATE / RENAME PANEL LOGIC
+        // =============================================
+
+        function uOnCategoryChange() {
+            const catId = document.getElementById('uCategoryDd').value;
+            const itemDd = document.getElementById('uItemDd');
+            const itemRename = document.getElementById('uItemRename');
+
+            // Reset downstream
+            itemDd.innerHTML = '<option value="">-- Select Item --</option>';
+            itemDd.disabled = !catId;
+            if (itemRename) { itemRename.value = ''; itemRename.disabled = !catId; }
+            uResetSubItem();
+
+            if (catId) {
+                const filtered = rawItems.filter(i => String(i.category_id) === String(catId));
+                filtered.forEach(i => {
+                    itemDd.innerHTML += `<option value="${i.id}">${i.name}</option>`;
+                });
+            }
+            uResetDistributor();
+        }
+
+        function uOnItemChange() {
+            const itemId = document.getElementById('uItemDd').value;
+            const subDd  = document.getElementById('uSubItemDd');
+            const subRename = document.getElementById('uSubItemRename');
+
+            subDd.innerHTML = '<option value="">-- Select Sub-item --</option>';
+            subDd.disabled = !itemId;
+            if (subRename) { subRename.value = ''; subRename.disabled = !itemId; }
+            uResetDistributor();
+
+            if (itemId) {
+                const filtered = rawSubItems.filter(s => String(s.item_id) === String(itemId));
+                filtered.forEach(s => {
+                    subDd.innerHTML += `<option value="${s.id}">${s.name}</option>`;
+                });
+            }
+        }
+
+        function uOnSubItemChange() {
+            const subId  = document.getElementById('uSubItemDd').value;
+            const curDist = document.getElementById('uCurrentDist');
+            const newDist = document.getElementById('uNewDist');
+
+            if (!subId) {
+                uResetDistributor();
+                return;
+            }
+
+            // Enable new-distributor dropdown
+            newDist.disabled = false;
+            newDist.classList.remove('cursor-not-allowed', 'bg-slate-100', 'text-slate-400');
+            newDist.classList.add('cursor-pointer', 'bg-slate-50', 'text-slate-700');
+
+            // Auto-fill current distributor
+            const sub = rawSubItems.find(s => String(s.id) === String(subId));
+            if (sub && sub.distributor_id) {
+                curDist.value = String(sub.distributor_id);
+            } else {
+                curDist.value = '';
+            }
+        }
+
+        function uResetSubItem() {
+            const subDd = document.getElementById('uSubItemDd');
+            const subRename = document.getElementById('uSubItemRename');
+            if (subDd) { subDd.innerHTML = '<option value="">-- Select Sub-item --</option>'; subDd.disabled = true; }
+            if (subRename) { subRename.value = ''; subRename.disabled = true; }
+            uResetDistributor();
+        }
+
+        function uResetDistributor() {
+            const curDist = document.getElementById('uCurrentDist');
+            const newDist = document.getElementById('uNewDist');
+            if (curDist) { curDist.value = ''; }
+            if (newDist) {
+                newDist.value = '';
+                newDist.disabled = true;
+                newDist.classList.remove('cursor-pointer', 'bg-slate-50', 'text-slate-700');
+                newDist.classList.add('cursor-not-allowed', 'bg-slate-100', 'text-slate-500');
+            }
+        }
+
+        function uClearAll() {
+            const dd = (id) => document.getElementById(id);
+            if (dd('uCategoryDd'))  { dd('uCategoryDd').value = ''; }
+            if (dd('uCategoryRename')) { dd('uCategoryRename').value = ''; }
+            if (dd('uItemDd'))      { dd('uItemDd').innerHTML = '<option value="">-- Select Item --</option>'; dd('uItemDd').disabled = true; }
+            if (dd('uItemRename'))  { dd('uItemRename').value = ''; dd('uItemRename').disabled = true; }
+            uResetSubItem();
+        }
+
+        async function uSaveChanges() {
+            const catId       = document.getElementById('uCategoryDd')?.value;
+            const catRename   = document.getElementById('uCategoryRename')?.value.trim();
+            const itemId      = document.getElementById('uItemDd')?.value;
+            const itemRename  = document.getElementById('uItemRename')?.value.trim();
+            const subId       = document.getElementById('uSubItemDd')?.value;
+            const subRename   = document.getElementById('uSubItemRename')?.value.trim();
+            const curDistId   = document.getElementById('uCurrentDist')?.value;
+            const newDistId   = document.getElementById('uNewDist')?.value;
+
+            // Build a summary of changes
+            const changes = [];
+            if (catId && catRename)  changes.push(`Rename category to "${catRename}"`);
+            if (itemId && itemRename) changes.push(`Rename item to "${itemRename}"`);
+            if (subId && subRename)  changes.push(`Rename sub-item to "${subRename}"`);
+            if (subId && newDistId && newDistId !== curDistId) changes.push(`Transfer sub-item distributor`);
+
+            if (changes.length === 0) {
+                Swal.fire({
+                    title: 'Nothing to Save',
+                    text: 'Please make a selection and fill in at least one rename field or select a new distributor.',
+                    icon: 'info',
+                    confirmButtonColor: '#c00000',
+                    customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
+                });
+                return;
+            }
+
+            const result = await Swal.fire({
+                title: 'Confirm Changes',
+                html: `<div class="text-left text-sm space-y-1">${changes.map(c => `<div class="flex gap-2"><span class="text-emerald-500">✓</span><span>${c}</span></div>`).join('')}</div>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#c00000',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Save Changes',
+                cancelButtonText: 'Cancel',
+                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
+            });
+
+            if (!result.isConfirmed) return;
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            const errors = [];
+            const successes = [];
+
+            // --- Rename calls ---
+            const renameTasks = [];
+            if (catId && catRename)   renameTasks.push({ type: 'category', id: catId, new_name: catRename });
+            if (itemId && itemRename) renameTasks.push({ type: 'item',     id: itemId, new_name: itemRename });
+            if (subId && subRename)   renameTasks.push({ type: 'sub_item', id: subId,  new_name: subRename });
+
+            for (const task of renameTasks) {
+                try {
+                    const res = await fetch('/inventory-setup/rename', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                        body: JSON.stringify(task)
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        successes.push(data.message);
+                        // Update local rawData so re-renders reflect changes instantly
+                        if (task.type === 'category') { const c = rawCategories.find(x => String(x.id) === String(task.id)); if (c) c.name = task.new_name; }
+                        if (task.type === 'item')     { const i = rawItems.find(x => String(x.id) === String(task.id));     if (i) i.name = task.new_name; }
+                        if (task.type === 'sub_item') { const s = rawSubItems.find(x => String(x.id) === String(task.id));  if (s) s.name = task.new_name; }
+                    } else {
+                        errors.push(data.message);
+                    }
+                } catch (e) {
+                    errors.push('Network error during rename.');
+                }
+            }
+
+            // --- Transfer distributor call ---
+            if (subId && newDistId && newDistId !== curDistId) {
+                try {
+                    const res = await fetch('/inventory-setup/transfer-distributor', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                        body: JSON.stringify({ sub_item_id: subId, new_distributor_id: newDistId })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        successes.push(data.message);
+                        // Update local rawSubItems distributor reference
+                        const s = rawSubItems.find(x => String(x.id) === String(subId));
+                        if (s) { s.distributor_id = newDistId; const nd = rawStakeholders.find(x => String(x.id) === String(newDistId)); if (nd) s.distributor_name = nd.name; }
+                    } else {
+                        errors.push(data.message);
+                    }
+                } catch (e) {
+                    errors.push('Network error during distributor transfer.');
+                }
+            }
+
+            if (errors.length > 0) {
+                Swal.fire({
+                    title: 'Some Changes Failed',
+                    html: `<div class="text-left text-sm space-y-1">
+                        ${successes.map(m => `<div class="text-emerald-600">✓ ${m}</div>`).join('')}
+                        ${errors.map(m => `<div class="text-red-600">✗ ${m}</div>`).join('')}
+                    </div>`,
+                    icon: 'warning',
+                    confirmButtonColor: '#c00000',
+                    customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
+                });
+            } else {
+                Swal.fire({
+                    title: 'Changes Saved!',
+                    text: successes.join(' '),
+                    icon: 'success',
+                    confirmButtonColor: '#10b981',
+                    customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
+                });
+                uClearAll();
+            }
+        }
+
+        // =============================================
+        // DELETE PANEL LOGIC
+        // =============================================
+
+        function dOnCategoryChange() {
+            const catId = document.getElementById('dCategoryDd').value;
+            const itemDd = document.getElementById('dItemDd');
+            const itemChk = document.getElementById('dItemChk');
+
+            // Reset item+subitem downstream
+            itemDd.innerHTML = '<option value="">-- Select Item --</option>';
+            itemDd.disabled  = !catId || document.getElementById('dCategoryChk').checked;
+            if (itemChk) { itemChk.checked = false; itemChk.disabled = !catId || document.getElementById('dCategoryChk').checked; }
+            dResetSubItem();
+
+            if (catId) {
+                const filtered = rawItems.filter(i => String(i.category_id) === String(catId));
+                filtered.forEach(i => { itemDd.innerHTML += `<option value="${i.id}">${i.name}</option>`; });
+            }
+        }
+
+        function dOnItemChange() {
+            const itemId = document.getElementById('dItemDd').value;
+            const subDd  = document.getElementById('dSubItemDd');
+            const subChk = document.getElementById('dSubItemChk');
+
+            subDd.innerHTML = '<option value="">-- Select Sub-item --</option>';
+            subDd.disabled  = !itemId || document.getElementById('dItemChk').checked;
+            if (subChk) { subChk.checked = false; subChk.disabled = !itemId || document.getElementById('dItemChk').checked; }
+
+            if (itemId) {
+                const filtered = rawSubItems.filter(s => String(s.item_id) === String(itemId));
+                filtered.forEach(s => { subDd.innerHTML += `<option value="${s.id}">${s.name}</option>`; });
+            }
+        }
+
+        function dOnCategoryChkChange() {
+            const chk    = document.getElementById('dCategoryChk');
+            const warn   = document.getElementById('dCategoryWarn');
+            const itemDd = document.getElementById('dItemDd');
+            const itemChk = document.getElementById('dItemChk');
+            const subDd  = document.getElementById('dSubItemDd');
+            const subChk = document.getElementById('dSubItemChk');
+            const itemWarn = document.getElementById('dItemWarn');
+
+            if (chk.checked) {
+                warn.classList.remove('hidden');
+                itemDd.disabled = true;
+                subDd.disabled  = true;
+                if (itemChk) { itemChk.checked = false; itemChk.disabled = true; }
+                if (subChk)  { subChk.checked  = false; subChk.disabled  = true; }
+                if (itemWarn) itemWarn.classList.add('hidden');
+            } else {
+                warn.classList.add('hidden');
+                const catId = document.getElementById('dCategoryDd').value;
+                itemDd.disabled  = !catId;
+                if (itemChk) itemChk.disabled = !catId;
+                // Sub-item stays disabled until item is chosen
+                subDd.disabled = true;
+                if (subChk) subChk.disabled = true;
+            }
+        }
+
+        function dOnItemChkChange() {
+            const chk   = document.getElementById('dItemChk');
+            const warn  = document.getElementById('dItemWarn');
+            const subDd = document.getElementById('dSubItemDd');
+            const subChk = document.getElementById('dSubItemChk');
+
+            if (chk.checked) {
+                warn.classList.remove('hidden');
+                subDd.disabled = true;
+                if (subChk) { subChk.checked = false; subChk.disabled = true; }
+            } else {
+                warn.classList.add('hidden');
+                const itemId = document.getElementById('dItemDd').value;
+                subDd.disabled = !itemId;
+                if (subChk) subChk.disabled = !itemId;
+            }
+        }
+
+        function dResetSubItem() {
+            const subDd  = document.getElementById('dSubItemDd');
+            const subChk = document.getElementById('dSubItemChk');
+            if (subDd)  { subDd.innerHTML = '<option value="">-- Select Sub-item --</option>'; subDd.disabled = true; }
+            if (subChk) { subChk.checked = false; subChk.disabled = true; }
+        }
+
+        function dClearAll() {
+            const dd = (id) => document.getElementById(id);
+            if (dd('dCategoryDd'))  { dd('dCategoryDd').value = ''; }
+            if (dd('dCategoryChk')) { dd('dCategoryChk').checked = false; }
+            if (dd('dCategoryWarn')) dd('dCategoryWarn').classList.add('hidden');
+            if (dd('dItemDd'))      { dd('dItemDd').innerHTML = '<option value="">-- Select Item --</option>'; dd('dItemDd').disabled = true; }
+            if (dd('dItemChk'))     { dd('dItemChk').checked = false; dd('dItemChk').disabled = true; }
+            if (dd('dItemWarn'))    dd('dItemWarn').classList.add('hidden');
+            dResetSubItem();
+        }
+
+        async function dSaveChanges() {
+            const catChk    = document.getElementById('dCategoryChk');
+            const itemChk   = document.getElementById('dItemChk');
+            const subChk    = document.getElementById('dSubItemChk');
+            const catId     = document.getElementById('dCategoryDd')?.value;
+            const itemId    = document.getElementById('dItemDd')?.value;
+            const subId     = document.getElementById('dSubItemDd')?.value;
+
+            let deleteType = null;
+            let deleteId   = null;
+            let confirmMsg = '';
+
+            if (catChk?.checked && catId) {
+                deleteType = 'category';
+                deleteId   = catId;
+                const catName = document.getElementById('dCategoryDd').options[document.getElementById('dCategoryDd').selectedIndex]?.text || 'this category';
+                confirmMsg = `Delete category "<b>${catName}</b>" and ALL its items, sub-items, and ownership records?`;
+            } else if (itemChk?.checked && itemId) {
+                deleteType = 'item';
+                deleteId   = itemId;
+                const itemName = document.getElementById('dItemDd').options[document.getElementById('dItemDd').selectedIndex]?.text || 'this item';
+                confirmMsg = `Delete item "<b>${itemName}</b>" and ALL its sub-items and ownership records?`;
+            } else if (subChk?.checked && subId) {
+                deleteType = 'sub_item';
+                deleteId   = subId;
+                const subName = document.getElementById('dSubItemDd').options[document.getElementById('dSubItemDd').selectedIndex]?.text || 'this sub-item';
+                confirmMsg = `Delete sub-item "<b>${subName}</b>" and all its ownership records?`;
+            }
+
+            if (!deleteType || !deleteId) {
+                Swal.fire({
+                    title: 'Nothing to Delete',
+                    text: 'Please select a record and check the corresponding Delete checkbox.',
+                    icon: 'info',
+                    confirmButtonColor: '#c00000',
+                    customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
+                });
+                return;
+            }
+
+            const result = await Swal.fire({
+                title: 'Confirm Deletion',
+                html: `<div class="text-sm text-slate-700">${confirmMsg}</div><div class="text-xs text-red-500 font-bold mt-3">⚠️ This action cannot be undone.</div>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#c00000',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Yes, Delete',
+                cancelButtonText: 'Cancel',
+                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
+            });
+
+            if (!result.isConfirmed) return;
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            try {
+                const res = await fetch('/inventory-setup/delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                    body: JSON.stringify({ type: deleteType, id: deleteId })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    // Remove deleted records from local JS arrays for instant UI refresh
+                    if (deleteType === 'category') {
+                        const itemIds = rawItems.filter(i => String(i.category_id) === String(deleteId)).map(i => i.id);
+                        rawItems.splice(0, rawItems.length, ...rawItems.filter(i => String(i.category_id) !== String(deleteId)));
+                        rawSubItems.splice(0, rawSubItems.length, ...rawSubItems.filter(s => !itemIds.map(String).includes(String(s.item_id))));
+                        rawCategories.splice(0, rawCategories.length, ...rawCategories.filter(c => String(c.id) !== String(deleteId)));
+                    } else if (deleteType === 'item') {
+                        rawSubItems.splice(0, rawSubItems.length, ...rawSubItems.filter(s => String(s.item_id) !== String(deleteId)));
+                        rawItems.splice(0, rawItems.length, ...rawItems.filter(i => String(i.id) !== String(deleteId)));
+                    } else if (deleteType === 'sub_item') {
+                        rawSubItems.splice(0, rawSubItems.length, ...rawSubItems.filter(s => String(s.id) !== String(deleteId)));
+                    }
+
+                    Swal.fire({
+                        title: 'Deleted!',
+                        text: data.message,
+                        icon: 'success',
+                        confirmButtonColor: '#10b981',
+                        customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
+                    });
+                    dClearAll();
+                } else {
+                    Swal.fire({
+                        title: 'Delete Failed',
+                        text: data.message,
+                        icon: 'error',
+                        confirmButtonColor: '#c00000',
+                        customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
+                    });
+                }
+            } catch (e) {
+                Swal.fire({ title: 'Network Error', text: 'Could not reach the server.', icon: 'error', confirmButtonColor: '#c00000' });
+            }
+        }
 
         // =============================================
         // ASSET DISTRIBUTION MODULE

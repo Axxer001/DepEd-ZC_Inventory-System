@@ -817,6 +817,61 @@ class InventorySetupController extends Controller
     }
 
     /**
+     * TRANSFER DISTRIBUTOR: Transfer a sub-item's distributor to a new one.
+     */
+    public function transferDistributor(Request $request)
+    {
+        $request->validate([
+            'sub_item_id'        => 'required|integer|exists:sub_items,id',
+            'new_distributor_id' => 'required|integer|exists:stakeholders,id',
+        ]);
+
+        $userName  = auth()->user() ? auth()->user()->name : 'System';
+        $subItemId = $request->sub_item_id;
+        $newDistId = $request->new_distributor_id;
+
+        $subItem   = DB::table('sub_items')->where('id', $subItemId)->first();
+        if (!$subItem) {
+            return response()->json(['success' => false, 'message' => 'Sub-item not found.'], 404);
+        }
+
+        $oldDistId = $subItem->distributor_id;
+
+        if ($oldDistId == $newDistId) {
+            return response()->json(['success' => true, 'message' => 'Distributor is already set to the selected value — no changes made.']);
+        }
+
+        DB::beginTransaction();
+        try {
+            // 1. Update sub_item distributor
+            DB::table('sub_items')->where('id', $subItemId)
+                ->update(['distributor_id' => $newDistId, 'updated_at' => now()]);
+
+            // 2. Update ownerships referencing this sub-item
+            DB::table('ownerships')->where('sub_item_id', $subItemId)
+                ->update(['distributor_id' => $newDistId, 'updated_at' => now()]);
+
+            // 3. Log
+            $oldDist = DB::table('stakeholders')->where('id', $oldDistId)->first();
+            $newDist = DB::table('stakeholders')->where('id', $newDistId)->first();
+            DB::table('system_logs')->insert([
+                'user'        => $userName,
+                'activity'    => "Transferred sub-item \"{$subItem->name}\" distributor: \"" . ($oldDist?->name ?? 'None') . "\" → \"{$newDist?->name}\"",
+                'module'      => 'Items',
+                'action_type' => 'Update',
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => "Distributor transferred to \"{$newDist->name}\" successfully."]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
      * MODULE 2 (MODIFIER): ASSET DISTRIBUTION (EDIT / UPDATE)
      */
     public function updateDistribution(Request $request)

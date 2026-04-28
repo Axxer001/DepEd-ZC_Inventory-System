@@ -156,6 +156,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/inventory-setup/rename', [InventorySetupController::class, 'renameRecord'])->name('inventory.setup.rename');
     Route::post('/inventory-setup/delete', [InventorySetupController::class, 'deleteRecord'])->name('inventory.setup.delete');
     Route::post('/inventory-setup/preview-delete', [InventorySetupController::class, 'previewDelete'])->name('inventory.setup.preview_delete');
+    Route::post('/inventory-setup/transfer-distributor', [InventorySetupController::class, 'transferDistributor'])->name('inventory.setup.transfer_distributor');
 
     // --- Stakeholder Management Routes ---
     Route::get('/admin/stakeholders', [StakeholderController::class, 'index'])->name('admin.stakeholders');
