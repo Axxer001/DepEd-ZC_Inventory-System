@@ -899,15 +899,95 @@ function addSubItemField() {
         // =============================================
         // SUBMISSION WITH SWEETALERT CONFIRM
         // =============================================
+
+        /** Highlight a field red, scroll it into view, and auto-remove the highlight after 3s */
+        function highlightField(el) {
+            el.classList.add('ring-4', 'ring-red-400', 'border-red-400');
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => {
+                el.classList.remove('ring-4', 'ring-red-400', 'border-red-400');
+            }, 3000);
+        }
+
         function confirmSubmit() {
             const itemName = document.getElementById('itemName').value.trim();
             const catName  = document.getElementById('categoryName').value.trim();
 
-            if (!itemName || !catName) {
-                Swal.fire({ title: 'Incomplete', text: 'Please fill in the Item Name and Category before submitting.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+            // ── Step-2 header fields ──────────────────────────────────────────────
+            if (!catName) {
+                goToStep(2);
+                setTimeout(() => highlightField(document.getElementById('categoryName')), 150);
+                Swal.fire({ title: 'Missing Category', text: 'Please fill in the Main Category before submitting.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                return;
+            }
+            if (!itemName) {
+                goToStep(2);
+                setTimeout(() => highlightField(document.getElementById('itemName')), 150);
+                Swal.fire({ title: 'Missing Item Name', text: 'Please fill in the Item Name before submitting.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
                 return;
             }
 
+            // ── Sub-item rows ─────────────────────────────────────────────────────
+            const rows = document.querySelectorAll('.row-container');
+            if (rows.length === 0) {
+                goToStep(2);
+                Swal.fire({ title: 'No Specifications', text: 'Please add at least one specification / sub-item row before submitting.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                return;
+            }
+
+            let firstError = null;
+            let errorMessages = [];
+
+            rows.forEach((row, rowIndex) => {
+                const rowNum = rowIndex + 1;
+                const specEl  = row.querySelector('.spec-val');
+                const qtyEl   = row.querySelector('.qty-val');
+                const priceEl = row.querySelector('.price-val');
+                const dateEl  = row.querySelector('.date-val');
+
+                const spec  = specEl  ? specEl.value.trim()   : '';
+                const qty   = qtyEl   ? parseFloat(qtyEl.value)  : 0;
+                const price = priceEl ? priceEl.value.trim()  : '';
+                const date  = dateEl  ? dateEl.value.trim()   : '';
+
+                if (!spec) {
+                    errorMessages.push(`Row ${rowNum}: Specification / Material name is required.`);
+                    if (!firstError) firstError = specEl;
+                }
+                if (!qty || qty <= 0) {
+                    errorMessages.push(`Row ${rowNum}: Quantity must be greater than zero.`);
+                    if (!firstError) firstError = qtyEl;
+                }
+                if (!price || parseFloat(price) <= 0) {
+                    errorMessages.push(`Row ${rowNum}: Unit Price is required and must be greater than ₱0.00.`);
+                    if (!firstError) firstError = priceEl;
+                }
+                if (!date) {
+                    errorMessages.push(`Row ${rowNum}: Date Acquired is required.`);
+                    if (!firstError) firstError = dateEl;
+                }
+            });
+
+            if (errorMessages.length > 0) {
+                // Navigate back to step 2 WITHOUT clearing data
+                goToStep(2);
+                // Highlight the first offending field after transition
+                if (firstError) {
+                    setTimeout(() => highlightField(firstError), 150);
+                }
+                Swal.fire({
+                    title: 'Incomplete Specification Data',
+                    html: '<ul style="text-align:left;font-size:0.8rem;line-height:1.8;">' +
+                          errorMessages.map(m => `<li>⚠ ${m}</li>`).join('') +
+                          '</ul>',
+                    icon: 'warning',
+                    confirmButtonColor: '#c00000',
+                    customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
+                });
+                return;
+            }
+
+            // ── All good — show final confirm ─────────────────────────────────────
             Swal.fire({
                 title: 'Register to Masterlist?',
                 html: `<strong>${itemName}</strong> under <em>${catName}</em> will be added to the inventory.`,

@@ -140,7 +140,20 @@ class ImportController extends Controller
             ->where('type', 'Distributor')->whereNull('parent_id')
             ->orderBy('name')->select('name', 'entity_type')->get();
 
-        return view('partials.import', compact('csvRows', 'categories', 'itemsMap', 'subItemsMap', 'sources'));
+        // Extract the header row and build associative rows for the preview view
+        $headers = $actualHeaders; // already trimmed/lowercased from validation above
+        $rawDataRows = array_slice($csvRows, 1); // slice off the header row first
+        $previewRows = [];
+        foreach ($rawDataRows as $rawRow) {
+            $map = [];
+            foreach ($headers as $i => $col) {
+                $map[$col] = isset($rawRow[$i]) ? trim($rawRow[$i]) : '';
+            }
+            $previewRows[] = $map;
+        }
+        $csvRows = $previewRows; // alias for the view compact
+
+        return view('partials.import', compact('csvRows', 'headers', 'categories', 'itemsMap', 'subItemsMap', 'sources'));
     }
 
     /**

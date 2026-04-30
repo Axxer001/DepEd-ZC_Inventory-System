@@ -325,91 +325,142 @@
         <form action="{{ route('assets.import.confirm') }}" method="POST">
             @csrf
             <div class="card-premium overflow-hidden">
-                <div class="bg-slate-900 p-8 flex justify-between items-center text-white">
-                    <div>
-                        <h4 class="text-2xl font-black italic uppercase tracking-tight">Import Preview</h4>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Review asset data before final system entry</p>
+                {{-- Header bar --}}
+                <div class="bg-slate-900 px-8 py-6 flex justify-between items-center text-white rounded-t-[2.5rem]">
+                    <div class="flex items-center gap-5">
+                        <div>
+                            <h4 class="text-2xl font-black italic uppercase tracking-tight leading-none">Import Preview</h4>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">Review &amp; edit each field before confirming</p>
+                        </div>
+                        <span class="bg-white/10 border border-white/10 text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest whitespace-nowrap">
+                            {{ count($csvRows) }} {{ \Illuminate\Support\Str::plural('row', count($csvRows)) }}
+                        </span>
                     </div>
-                    <div class="flex gap-4">
-                        <button type="button" onclick="window.location.reload()" class="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all">Cancel</button>
-                        <button class="px-8 py-3 bg-deped hover:bg-red-700 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-2xl shadow-red-500/20 transition-all">Confirm Import</button>
+                    <div class="flex gap-3">
+                        <button type="button" onclick="window.location.href=window.location.pathname"
+                                class="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all border border-white/10">
+                            ✕ Cancel
+                        </button>
+                        <button class="px-8 py-3 bg-[#c00000] hover:bg-red-700 rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-red-900/40 transition-all flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            Confirm Import
+                        </button>
                     </div>
                 </div>
 
                 <div class="overflow-x-auto custom-scroll">
-                    <table class="w-full text-left border-collapse min-w-[1200px]">
+                    @php
+                        $colWidths = [
+                            'category'        => '160px',
+                            'item_name'       => '200px',
+                            'sub_item_name'   => '220px',
+                            'quantity'        => '90px',
+                            'condition'       => '140px',
+                            'source'          => '180px',
+                            'source_type'     => '130px',
+                            'unit_price'      => '120px',
+                            'date_acquired'   => '155px',
+                            'is_serialized'   => '110px',
+                            'property_number' => '175px',
+                            'serial_number'   => '175px',
+                        ];
+                        $colIcons = [
+                            'category'        => '📁',
+                            'item_name'       => '📦',
+                            'sub_item_name'   => '🔩',
+                            'quantity'        => '#',
+                            'condition'       => '🔧',
+                            'source'          => '🏫',
+                            'source_type'     => '🏷',
+                            'unit_price'      => '₱',
+                            'date_acquired'   => '📅',
+                            'is_serialized'   => '🔢',
+                            'property_number' => '🪪',
+                            'serial_number'   => '🔖',
+                        ];
+                    @endphp
+                    <table class="w-full text-left border-collapse" style="min-width:1600px;">
                         <thead>
-                            <tr class="bg-slate-50 border-b border-slate-100">
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                            <tr class="bg-slate-800 text-white">
+                                <th class="px-5 py-4 text-[9px] font-black uppercase tracking-[0.2em] w-14">Drop</th>
                                 @foreach($headers as $h)
-                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ str_replace('_', ' ', $h) }}</th>
+                                <th class="px-5 py-4 text-[9px] font-black uppercase tracking-[0.2em] whitespace-nowrap"
+                                    style="min-width:{{ $colWidths[$h] ?? '140px' }}">
+                                    <span class="opacity-60 mr-1">{{ $colIcons[$h] ?? '' }}</span>{{ str_replace('_', ' ', $h) }}
+                                </th>
                                 @endforeach
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-50">
+                        <tbody>
                             @foreach($csvRows as $index => $map)
-                                <tr class="hover:bg-slate-50/50 transition-colors group">
-                                    <td class="p-6">
-                                        <button type="button" onclick="dropPreviewRow(this)" class="p-2 text-slate-300 hover:text-red-500 transition-colors">
-                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                @php
+                                    $isSer = strtolower($map['is_serialized'] ?? 'no') === 'yes';
+                                    $rowBg = $index % 2 === 0 ? 'bg-white' : 'bg-slate-50/60';
+                                    $inp = 'w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-[#c00000] focus:ring-2 focus:ring-red-100 transition-all placeholder:text-slate-300 shadow-sm';
+                                    $sel = 'w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-800 outline-none focus:border-[#c00000] focus:ring-2 focus:ring-red-100 transition-all cursor-pointer shadow-sm';
+                                    $ro  = 'w-full px-3 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-semibold text-slate-400 outline-none cursor-not-allowed shadow-inner';
+                                @endphp
+                                <tr class="{{ $rowBg }} border-b border-slate-100 hover:bg-red-50/20 transition-colors group">
+                                    <td class="px-4 py-3 text-center">
+                                        <button type="button" onclick="dropPreviewRow(this)"
+                                                class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-red-50 text-red-400 border border-red-100 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all opacity-40 group-hover:opacity-100">
+                                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                                         </button>
                                     </td>
                                     @foreach($headers as $hVal)
-                                    @php 
-                                        $fieldCls = "w-full bg-transparent border-0 focus:ring-0 p-0 text-xs font-bold text-slate-700 placeholder:text-slate-300";
-                                        $idxStr = $index."_".$hVal;
-                                    @endphp
-                                    <td class="p-6">
+                                    @php $idxStr = $index.'_'.$hVal; @endphp
+                                    <td class="px-4 py-3">
                                         @if($hVal === 'category')
-                                        <input type="text" name="rows[{{ $index }}][category]" value="{{ $map['category'] ?? '' }}" class="{{ $fieldCls }}">
-                                        
+                                            <input type="text" name="rows[{{ $index }}][category]" value="{{ $map['category'] ?? '' }}" placeholder="e.g. ICT" class="{{ $inp }}">
+
                                         @elseif($hVal === 'item_name')
-                                        <input type="text" name="rows[{{ $index }}][item_name]" value="{{ $map['item_name'] ?? '' }}" class="{{ $fieldCls }}">
-                                        
+                                            <input type="text" name="rows[{{ $index }}][item_name]" value="{{ $map['item_name'] ?? '' }}" placeholder="e.g. Laptop" class="{{ $inp }}">
+
                                         @elseif($hVal === 'sub_item_name')
-                                        <input type="text" name="rows[{{ $index }}][sub_item_name]" value="{{ $map['sub_item_name'] ?? '' }}" class="{{ $fieldCls }}">
-                                        
+                                            <input type="text" name="rows[{{ $index }}][sub_item_name]" value="{{ $map['sub_item_name'] ?? '' }}" placeholder="e.g. Core i7 16GB" class="{{ $inp }}">
+
                                         @elseif($hVal === 'quantity')
-                                        <input type="number" id="prev_qty_{{ $index }}" name="rows[{{ $index }}][quantity]" value="{{ strtolower($map['is_serialized'] ?? 'no') === 'yes' ? 1 : ($map['quantity'] ?? '') }}" class="{{ $fieldCls }} {{ strtolower($map['is_serialized'] ?? 'no') === 'yes' ? 'opacity-50 cursor-not-allowed' : '' }}" {{ strtolower($map['is_serialized'] ?? 'no') === 'yes' ? 'readonly' : '' }}>
-                                        
+                                            <input type="number" id="prev_qty_{{ $index }}" name="rows[{{ $index }}][quantity]"
+                                                   value="{{ $isSer ? 1 : ($map['quantity'] ?? '') }}" min="1" placeholder="0"
+                                                   class="{{ $isSer ? $ro : $inp }}" {{ $isSer ? 'readonly' : '' }}>
+
                                         @elseif($hVal === 'source')
-                                        <input type="text" name="rows[{{ $index }}][source]" value="{{ $map['source'] ?? '' }}" class="{{ $fieldCls }}">
-                                        
+                                            <input type="text" name="rows[{{ $index }}][source]" value="{{ $map['source'] ?? '' }}" placeholder="Provider name" class="{{ $inp }}">
+
                                         @elseif($hVal === 'condition')
-                                        <select name="rows[{{ $index }}][condition]" class="{{ $fieldCls }}">
-                                            <option value="Serviceable" {{ strtolower($map['condition'] ?? '') === 'serviceable' ? 'selected' : '' }}>Serviceable</option>
-                                            <option value="Unserviceable" {{ strtolower($map['condition'] ?? '') === 'unserviceable' ? 'selected' : '' }}>Unserviceable</option>
-                                            <option value="For Repair" {{ strtolower($map['condition'] ?? '') === 'for repair' ? 'selected' : '' }}>For Repair</option>
-                                        </select>
-                                        
+                                            <select name="rows[{{ $index }}][condition]" class="{{ $sel }}">
+                                                <option value="Serviceable"   {{ strtolower($map['condition'] ?? '') === 'serviceable'   ? 'selected' : '' }}>Serviceable</option>
+                                                <option value="Unserviceable" {{ strtolower($map['condition'] ?? '') === 'unserviceable' ? 'selected' : '' }}>Unserviceable</option>
+                                                <option value="For Repair"    {{ strtolower($map['condition'] ?? '') === 'for repair'    ? 'selected' : '' }}>For Repair</option>
+                                            </select>
+
                                         @elseif($hVal === 'source_type')
-                                        <select name="rows[{{ $index }}][source_type]" id="stype_{{ $idxStr }}" class="{{ $fieldCls }}">
-                                            <option value="School" {{ strtolower($map['source_type'] ?? '') === 'school' ? 'selected' : '' }}>School</option>
-                                            <option value="External" {{ strtolower($map['source_type'] ?? '') === 'external' ? 'selected' : '' }}>External</option>
-                                            <option value="Individual" {{ strtolower($map['source_type'] ?? '') === 'individual' ? 'selected' : '' }}>Individual</option>
-                                        </select>
-                                        
+                                            <select name="rows[{{ $index }}][source_type]" id="stype_{{ $idxStr }}" class="{{ $sel }}">
+                                                <option value="School"     {{ strtolower($map['source_type'] ?? '') === 'school'     ? 'selected' : '' }}>School</option>
+                                                <option value="External"   {{ strtolower($map['source_type'] ?? '') === 'external'   ? 'selected' : '' }}>External</option>
+                                                <option value="Individual" {{ strtolower($map['source_type'] ?? '') === 'individual' ? 'selected' : '' }}>Individual</option>
+                                            </select>
+
                                         @elseif($hVal === 'unit_price')
-                                        <input type="number" step="0.01" name="rows[{{ $index }}][unit_price]" value="{{ $map['unit_price'] ?? '' }}" class="{{ $fieldCls }}">
-                                        
+                                            <input type="number" step="0.01" min="0" name="rows[{{ $index }}][unit_price]" value="{{ $map['unit_price'] ?? '' }}" placeholder="0.00" class="{{ $inp }}">
+
                                         @elseif($hVal === 'date_acquired')
-                                        <input type="date" name="rows[{{ $index }}][date_acquired]" value="{{ $map['date_acquired'] ?? now()->toDateString() }}" class="{{ $fieldCls }}">
-                                        
+                                            <input type="date" name="rows[{{ $index }}][date_acquired]" value="{{ $map['date_acquired'] ?? now()->toDateString() }}" class="{{ $inp }}">
+
                                         @elseif($hVal === 'is_serialized')
-                                        <select name="rows[{{ $index }}][is_serialized]" class="{{ $fieldCls }}" onchange="togglePreviewSerialized(this, {{ $index }})">
-                                            <option value="no" {{ strtolower($map['is_serialized'] ?? 'no') === 'no' ? 'selected' : '' }}>No</option>
-                                            <option value="yes" {{ strtolower($map['is_serialized'] ?? 'no') === 'yes' ? 'selected' : '' }}>Yes</option>
-                                        </select>
-                                        
+                                            <select name="rows[{{ $index }}][is_serialized]" class="{{ $sel }}" onchange="togglePreviewSerialized(this, {{ $index }})">
+                                                <option value="no"  {{ strtolower($map['is_serialized'] ?? 'no') !== 'yes' ? 'selected' : '' }}>No</option>
+                                                <option value="yes" {{ strtolower($map['is_serialized'] ?? 'no') === 'yes' ? 'selected' : '' }}>Yes</option>
+                                            </select>
+
                                         @elseif($hVal === 'property_number')
-                                        <input type="text" name="rows[{{ $index }}][property_number]" value="{{ $map['property_number'] ?? '' }}" class="{{ $fieldCls }}">
-                                        
+                                            <input type="text" name="rows[{{ $index }}][property_number]" value="{{ $map['property_number'] ?? '' }}" placeholder="e.g. 2026-ICT-001" class="{{ $inp }}">
+
                                         @elseif($hVal === 'serial_number')
-                                        <input type="text" name="rows[{{ $index }}][serial_number]" value="{{ $map['serial_number'] ?? '' }}" class="{{ $fieldCls }}">
-                                        
+                                            <input type="text" name="rows[{{ $index }}][serial_number]" value="{{ $map['serial_number'] ?? '' }}" placeholder="e.g. SN-88920-X" class="{{ $inp }}">
+
                                         @else
-                                        {{-- Fallback for unregistered columns --}}
-                                        <input type="text" name="rows[{{ $index }}][{{ $hVal }}]" value="{{ $map[$hVal] ?? '' }}" class="{{ $fieldCls }}">
+                                            <input type="text" name="rows[{{ $index }}][{{ $hVal }}]" value="{{ $map[$hVal] ?? '' }}" class="{{ $inp }}">
                                         @endif
                                     </td>
                                     @endforeach
@@ -417,6 +468,14 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+
+                {{-- Footer --}}
+                <div class="px-8 py-4 bg-slate-50 border-t border-slate-100 flex justify-between items-center rounded-b-[2.5rem]">
+                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                        {{ count($csvRows) }} {{ \Illuminate\Support\Str::plural('row', count($csvRows)) }} ready to import
+                    </span>
+                    <span class="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic">All fields are editable before confirming</span>
                 </div>
             </div>
         </form>
