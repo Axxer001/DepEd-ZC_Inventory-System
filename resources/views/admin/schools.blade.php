@@ -17,7 +17,84 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
         .table-row-transition { transition: all 0.2s ease-in-out; }
         [x-cloak] { display: none !important; }
-        .laravel-pagination-wrapper nav div:first-child { display: none !important; }
+        
+        /* Premium Pagination Override */
+        .laravel-pagination-wrapper nav { 
+            display: flex !important; 
+            justify-content: center !important; 
+            align-items: center !important;
+            width: 100% !important;
+        }
+        
+        /* Hide the bulky Laravel default "Showing X to Y" text blocks */
+        .laravel-pagination-wrapper nav div:first-child,
+        .laravel-pagination-wrapper nav p.text-sm.text-gray-700 { 
+            display: none !important; 
+        }
+
+        /* Ensure the pagination buttons container is a single clean row */
+        .laravel-pagination-wrapper nav > div:last-child,
+        .laravel-pagination-wrapper nav .relative.inline-flex { 
+            display: flex !important; 
+            flex-direction: row !important;
+            gap: 0.4rem !important; 
+            box-shadow: none !important; 
+            border: none !important; 
+            background: transparent !important;
+        }
+
+        /* Refined Button Styling */
+        .laravel-pagination-wrapper nav span, 
+        .laravel-pagination-wrapper nav a {
+            display: flex !important; 
+            align-items: center !important; 
+            justify-content: center !important;
+            min-width: 38px !important; 
+            height: 38px !important; 
+            border-radius: 12px !important;
+            font-size: 0.75rem !important; 
+            font-weight: 800 !important; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; 
+            border: 1px solid #f1f5f9 !important;
+            background: white !important; 
+            color: #64748b !important; 
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        }
+
+        /* Active Page State */
+        .laravel-pagination-wrapper nav span[aria-current="page"] span {
+            background: #c00000 !important; 
+            color: white !important; 
+            border-color: #c00000 !important;
+            box-shadow: 0 8px 15px -3px rgba(192, 0, 0, 0.3) !important; 
+            transform: scale(1.05); 
+            z-index: 10;
+        }
+
+        /* Hover State */
+        .laravel-pagination-wrapper nav a:hover {
+            color: #c00000 !important; 
+            border-color: #fecaca !important; 
+            background: #fff1f2 !important;
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+        }
+
+        /* Disabled State */
+        .laravel-pagination-wrapper nav span[aria-disabled="true"] span {
+            background: #f8fafc !important; 
+            color: #cbd5e1 !important; 
+            opacity: 0.5 !important;
+            border-color: #f1f5f9 !important;
+        }
+
+        /* Icon Fixes */
+        .laravel-pagination-wrapper svg { 
+            width: 1.25rem !important; 
+            height: 1.25rem !important; 
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex animate-fade-in text-slate-800 overflow-x-hidden"
