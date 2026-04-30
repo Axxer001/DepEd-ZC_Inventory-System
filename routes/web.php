@@ -11,8 +11,6 @@ use App\Http\Controllers\InventorySetupController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\StakeholderController;
 
-Route::get('/view-assets', [AssetController::class, 'index'])->name('assets.view');
-
 // --- Public Routes ---
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
 Route::post('/login', [AuthController::class, 'login'])->name('login');
@@ -85,10 +83,9 @@ Route::middleware('auth')->group(function () {
         return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'subItems', 'allSchools', 'stakeholderOwnerships', 'stakeholders'));
     })->name('inventory.setup');
 
-    // --- NEW: Dedicated Route for the Editor (Asset Modifier) ---
+    // --- Editor (Asset Modifier) Routes ---
     Route::get('/inventory-modifier', function () {
-        set_time_limit(300); // Prevent timeouts due to high latency remote database queries
-        
+        set_time_limit(300);
         $districts = DB::table('districts')
             ->join('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
             ->select('districts.id', 'districts.name', 'quadrants.legislative_district_id', 'quadrants.name as quadrant_name')
@@ -129,28 +126,21 @@ Route::middleware('auth')->group(function () {
         return view('inventory-modifier', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'subItems', 'allSchools', 'schoolOwnerships'));
     })->name('inventory.modifier');
 
-    // --- NEW: Dedicated Route for the School Modifier ---
     Route::get('/inventory-modifier/school', function () {
-        set_time_limit(300); // Prevent timeouts due to high latency remote database queries
-        
+        set_time_limit(300);
         $allSchools = DB::table('schools')
             ->join('districts', 'schools.district_id', '=', 'districts.id')
             ->select('schools.id', 'schools.school_id', 'schools.name', 'schools.district_id', 'districts.name as district_name')
             ->orderBy('schools.name')
             ->get();
-            
         return view('school-modifier', compact('allSchools'));
     })->name('inventory.modifier.school');
-    // --- END NEW ROUTE ---
-    // --- END NEW ROUTE ---
 
-    // Process form submissions from Setup
+    // Process form submissions
     Route::post('/inventory-setup/school', [InventorySetupController::class, 'storeSchool'])->name('inventory.setup.school');
     Route::post('/inventory-setup/category', [InventorySetupController::class, 'storeCategory'])->name('inventory.setup.category');
     Route::post('/inventory-setup/item', [InventorySetupController::class, 'storeItem'])->name('inventory.setup.item');
     Route::post('/inventory-setup/distribution', [InventorySetupController::class, 'storeDistribution'])->name('inventory.setup.distribution');
-    
-    // Dedicated processors for the Modifier forms
     Route::post('/inventory-modifier/distribution', [InventorySetupController::class, 'updateDistribution'])->name('inventory.modifier.distribution');
     Route::post('/inventory-modifier/school', [InventorySetupController::class, 'updateSchool'])->name('inventory.modifier.school');
     Route::post('/inventory-setup/rename', [InventorySetupController::class, 'renameRecord'])->name('inventory.setup.rename');
@@ -165,7 +155,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/admin/stakeholders/{id}', [StakeholderController::class, 'update'])->name('admin.stakeholders.update');
     Route::delete('/admin/stakeholders/{id}', [StakeholderController::class, 'destroy'])->name('admin.stakeholders.destroy');
 
-
+    // --- Schools Registry with Quadrant/LD Filters ---
     Route::get('/admin/schools', function (Request $request) {
         $search = $request->query('search');
         $districtFilter = $request->query('districts');
@@ -198,15 +188,10 @@ Route::middleware('auth')->group(function () {
         }
 
         $schools = $query->orderBy('schools.name')->paginate(20);
-        
-        // Fetch all schools for the autocomplete dropdown search
         $allSchools = DB::table('schools')->select('id', 'school_id', 'name')->orderBy('name')->get();
-        
-        // Fetch arrays for the filter UI
         $allDistricts = DB::table('districts')->select('name')->orderBy('name')->pluck('name')->toArray();
         $allQuadrants = DB::table('quadrants')->select('name')->orderBy('name')->pluck('name')->toArray();
         
-        // Fetch mapping of district to quadrant for dynamic UI disabling
         $districtQuadrantMapping = DB::table('districts')
             ->join('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
             ->select('districts.name as district', 'quadrants.name as quadrant')
@@ -222,142 +207,71 @@ Route::middleware('auth')->group(function () {
         return view('admin.schools', compact('schools', 'search', 'allSchools', 'allDistricts', 'allQuadrants', 'districtQuadrantMapping', 'legislativeDistricts', 'quadrantsByLD'));
     })->name('admin.schools');
 
-    // Route to delete a school from the registry
     Route::delete('/admin/schools/{id}', function ($id) {
         try {
             DB::table('schools')->where('id', $id)->delete();
-            return redirect()->route('admin.schools')->with('success', 'School successfully deleted from the system.');
+            return redirect()->route('admin.schools')->with('success', 'School successfully deleted.');
         } catch (\Exception $e) {
-            return redirect()->route('admin.schools')->with('error', 'Failed to delete school. It may have existing dependencies.');
+            return redirect()->route('admin.schools')->with('error', 'Failed to delete school.');
         }
     })->name('admin.schools.destroy');
 
-    // --- SYSTEM LOGS ROUTE (ONE VERSION ONLY) ---
+    // --- System Logs ---
     Route::get('/admin/logs', function (Request $request) {
-        // 1. Capture the action from the dropdown, default to 'All Actions'
         $action = $request->query('action', 'All Actions');
-        
         $query = DB::table('system_logs');
-
-        // 2. Filter logic
         if ($action !== 'All Actions') {
-            // Filter by action_type (Create, Update, Delete)
             $actionTypes = ['Create', 'Update', 'Delete', 'Others'];
-            if (in_array($action, $actionTypes)) {
-                $query->where('action_type', $action);
-            } else {
-                // Filter by module name
-                $query->where('module', $action);
-            }
+            if (in_array($action, $actionTypes)) { $query->where('action_type', $action); }
+            else { $query->where('module', $action); }
         }
-
         $logs = $query->orderBy('created_at', 'desc')->paginate(20);
-
-        // 3. Convert to Philippines Time (Asia/Manila)
         $logs->getCollection()->transform(function ($log) {
             $log->ph_time = Carbon::parse($log->created_at)->timezone('Asia/Manila');
             return $log;
         });
-
-        // 4. Pass variables to view
         return view('admin.logs', compact('action', 'logs'));
     })->name('admin.logs');
 
-    // Quadrants — fetch districts & schools from database
-    $quadrantHandler = function ($quadrantId, $view) {
-        return function () use ($quadrantId, $view) {
-            $districts = DB::table('districts')->where('quadrant_id', $quadrantId)->orderBy('name')->get();
-            $schools = DB::table('schools')->whereIn('district_id', $districts->pluck('id'))->orderBy('name')->get();
-            $schoolsByDistrict = [];
-            foreach ($districts as $district) {
-                $schoolsByDistrict[$district->id] = $schools->where('district_id', $district->id)->map(function($s) {
-                    return ['id' => $s->id, 'name' => $s->name];
-                })->values()->toArray();
-            }
-            $allSchools = $schools->map(function ($s) {
-                return ['id' => $s->id, 'name' => $s->name, 'school_id' => $s->school_id, 'district_id' => $s->district_id];
-            })->values()->toArray();
-            return view($view, compact('districts', 'schoolsByDistrict', 'allSchools'));
-        };
+    // --- Asset Viewing & Explorer ---
+    Route::get('/view-assets', function () { return view('assets.view-assets'); })->name('assets.view');
+    Route::get('/view-all-assets', [AssetController::class, 'viewAll'])->name('assets.view_all');
+    Route::get('/api/schools/{id}/assets', [AssetController::class, 'getSchoolAssets'])->name('api.schools.assets');
+    Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('assets.history');
+    Route::get('/asset-explorer', [AssetController::class, 'explorer'])->name('assets.explorer');
 
-        
-    };
+    // --- QR & Tags ---
+    Route::get('/assets/print-tags', function (Illuminate\Http\Request $request) {
+        $count = $request->query('count', 24);
+        $tags = [];
+        for ($i = 0; $i < $count; $i++) { $tags[] = (string) Illuminate\Support\Str::uuid(); }
+        return view('assets.print-tags', compact('tags'));
+    })->name('assets.print_tags');
 
-// Route para sa main selection (yung 2 big buttons)
-Route::get('/view-assets', function () {
-    return view('assets.view-assets');
-})->name('assets.view');
+    Route::get('/scan', function (Illuminate\Http\Request $request) {
+        $tag = $request->query('tag');
+        if (!$tag) { return redirect('/dashboard')->withErrors(['scan' => 'No QR tag sequence found.']); }
+        return redirect()->route('inventory.setup', ['mode' => 'add', 'scanned_tag' => $tag]);
+    })->name('assets.scan');
 
-// Route para sa Master List
-Route::get('/view-all-assets', [AssetController::class, 'viewAll'])->name('assets.view_all');
-
-// Route para sa isang school's assets
-Route::get('/api/schools/{id}/assets', [AssetController::class, 'getSchoolAssets'])->name('api.schools.assets');
-
-// Sa routes/web.php mo
-Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('assets.history');
-
-// Route para sa Explorer
-Route::get('/asset-explorer', [AssetController::class, 'explorer'])->name('assets.explorer');
-
-// QR Tag Generation and Scanning Routes
-Route::get('/assets/print-tags', function (Illuminate\Http\Request $request) {
-    // Generate batches of tags dynamically
-    $count = $request->query('count', 24); // Default to 24 tags (like an A4 sheet)
-    $tags = [];
-    for ($i = 0; $i < $count; $i++) {
-        $tags[] = (string) Illuminate\Support\Str::uuid();
-    }
-    return view('assets.print-tags', compact('tags'));
-})->name('assets.print_tags');
-
-Route::get('/scan', function (Illuminate\Http\Request $request) {
-    $tag = $request->query('tag');
-    if (!$tag) {
-        return redirect('/dashboard')->withErrors(['scan' => 'No QR tag sequence found.']);
-    }
-    // Pre-populate the inventory setup mode with the scanned tag
-    return redirect()->route('inventory.setup', ['mode' => 'add', 'scanned_tag' => $tag]);
-})->name('assets.scan');
-
-Route::middleware('auth')->group(function () {
-
-    // --- RECIPIENTS GROUP ---
+    // --- Stakeholders / Recipients Sub-group ---
     Route::prefix('recipients')->group(function () {
-        // URL: /recipients
-        Route::get('/', function () {
-            return view('recipients.recipients'); 
-        })->name('recipients.index');
-
-        // URL: /recipients/list
-        Route::get('/list', function () {
-            return view('recipients.list'); 
-        })->name('recipients.list');
-
-        // URL: /recipients/explorer
-        Route::get('/explorer', function () {
-            return view('recipients.explorer'); 
-        })->name('recipients.explorer');
-
-        // URL: /recipients/history
-        Route::get('/history', function () {
-            return view('recipients.history'); 
-        })->name('recipients.history');
+        Route::get('/', function () { return view('recipients.recipients'); })->name('recipients.index');
+        Route::get('/list', function () { return view('recipients.list'); })->name('recipients.list');
+        Route::get('/explorer', function () { return view('recipients.explorer'); })->name('recipients.explorer');
+        Route::get('/history', function () { return view('recipients.history'); })->name('recipients.history');
     });
 
-    Route::get('/stakeholders', function () {
-    return view('stakeholders'); // Siguraduhin na stakeholders.blade.php ang file name
-})->name('stakeholders.index');
+    Route::get('/stakeholders', function () { return view('stakeholders'); })->name('stakeholders.index');
 
+    // --- Import/Export ---
     Route::match(['get', 'post'], '/partials/import/template', [\App\Http\Controllers\ImportController::class, 'downloadTemplate'])->name('assets.import.template');
     Route::get('/partials/import', [\App\Http\Controllers\ImportController::class, 'show'])->name('assets.import');
     Route::post('/partials/import', [\App\Http\Controllers\ImportController::class, 'process'])->name('assets.import.process');
     Route::post('/partials/import/confirm', [\App\Http\Controllers\ImportController::class, 'confirm'])->name('assets.import.confirm');
 
-    Route::get('/register-distributions', function () {
-    return view('register-distributions');
-    });
-
+    // --- Registration & Items ---
+    Route::get('/register-distributions', function () { return view('register-distributions'); });
     Route::get('/register-item', function () {
         set_time_limit(300);
         $categories = DB::table('categories')->orderBy('name')->get();
@@ -372,13 +286,6 @@ Route::middleware('auth')->group(function () {
     })->name('register.item');
 
     Route::post('/register-item', [InventorySetupController::class, 'storeItem'])->name('register.item.store');
-
     Route::post('/api/recipients/add', [\App\Http\Controllers\RecipientRegistryController::class, 'add'])->name('recipients.add');
 
-});
-
-    Route::get('/admin/quadrant-1-1', $quadrantHandler(1, 'admin.quadrants.q1-1'))->name('quadrant.1.1');
-    Route::get('/admin/quadrant-1-2', $quadrantHandler(2, 'admin.quadrants.q1-2'))->name('quadrant.1.2');
-    Route::get('/admin/quadrant-2-1', $quadrantHandler(3, 'admin.quadrants.q2-1'))->name('quadrant.2.1');
-    Route::get('/admin/quadrant-2-2', $quadrantHandler(4, 'admin.quadrants.q2-2'))->name('quadrant.2.2');
 });

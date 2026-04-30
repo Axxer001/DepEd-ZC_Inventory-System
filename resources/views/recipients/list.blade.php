@@ -17,7 +17,7 @@
         .back-btn-hover:hover { transform: translateX(-5px); color: #9333ea; border-color: #9333ea; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex animate-fade-in text-slate-800 overflow-x-hidden" x-data="recipientInventory()">
+<body class="bg-slate-50 min-h-screen flex animate-fade-in text-slate-800 overflow-x-hidden" x-data="stakeholderInventory()">
 
     @include('partials.sidebar')
 
@@ -31,7 +31,7 @@
                         Back to Menu
                     </a>
                     <div>
-                        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tighter italic uppercase leading-none">End-User Masterlist</h2>
+                        <h2 class="text-3xl font-extrabold text-slate-900 tracking-tighter italic uppercase leading-none">Stakeholder Masterlist</h2>
                         <p class="text-slate-400 text-[11px] mt-1 font-bold italic uppercase tracking-widest">School distribution and asset accountability records</p>
                     </div>
                 </div>
@@ -61,7 +61,7 @@
 
                     {{-- Search --}}
                     <div class="relative lg:col-span-2">
-                        <input type="text" x-model="filters.search" placeholder="Search school, room, or item..." class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-bold outline-none focus:ring-2 focus:ring-purple-100 transition-all">
+                        <input type="text" x-model="filters.search" placeholder="Search stakeholder, room, or item..." class="w-full pl-8 pr-3 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-bold outline-none focus:ring-2 focus:ring-purple-100 transition-all">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-3 h-3 absolute left-3 top-1/2 -translate-y-1/2 text-slate-300"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
                     </div>
                 </div>
@@ -70,7 +70,7 @@
             {{-- Results counter --}}
             <div class="flex items-center justify-between mb-3 px-1">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                    Showing <span class="text-slate-700" x-text="filteredRecipients().length"></span> entries
+                    Showing <span class="text-slate-700" x-text="filteredStakeholders().length"></span> entries
                 </p>
                 <template x-if="filters.district !== 'all' || filters.condition !== 'all' || filters.search">
                     <button @click="filters.district='all'; filters.condition='all'; filters.search=''" class="text-[10px] font-black text-purple-600 uppercase tracking-wider hover:underline">✕ Reset Filters</button>
@@ -83,7 +83,7 @@
                     <table class="w-full text-left border-separate border-spacing-0">
                         <thead>
                             <tr class="bg-slate-50/80">
-                                <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">School / Recipient</th>
+                                <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">School / Stakeholder</th>
                                 <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Room / Office</th>
                                 <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">Asset Accounted</th>
                                 <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 text-center">Qty</th>
@@ -91,7 +91,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <template x-for="item in filteredRecipients()" :key="item.id">
+                            <template x-for="item in filteredStakeholders()" :key="item.id">
                                 <tr class="group hover:bg-purple-50/30 transition-all">
                                     <td class="px-6 py-5">
                                         <div class="flex flex-col">
@@ -124,18 +124,18 @@
     </div>
 
     <script>
-        function recipientInventory() {
+        function stakeholderInventory() {
             return {
                 filters: { district: 'all', condition: 'all', search: '' },
                 districts: ['Central District', 'Ayala District', 'Vitali District', 'Curuan District'],
-                recipients: [
+                stakeholders: [
                     { id: 1, school: 'Ayala National High School', district: 'Ayala District', room: 'ICT Lab 1', asset: 'Dell Latitude 3420', qty: 25, condition: 'serviceable' },
                     { id: 2, school: 'Zamboanga Central School', district: 'Central District', room: 'Admin Office', asset: 'Smart TV 55"', qty: 2, condition: 'serviceable' },
                     { id: 3, school: 'Tetuan Elementary', district: 'Central District', room: 'Grade 6 Room', asset: 'Monoblock Chairs', qty: 50, condition: 'serviceable' },
                     { id: 4, school: 'Vitali NHS', district: 'Vitali District', room: 'Science Lab', asset: 'Microscope Set', qty: 10, condition: 'unserviceable' },
                 ],
-                filteredRecipients() {
-                    return this.recipients.filter(r => {
+                filteredStakeholders() {
+                    return this.stakeholders.filter(r => {
                         const matchDist = this.filters.district === 'all' || r.district === this.filters.district;
                         const matchCond = this.filters.condition === 'all' || r.condition === this.filters.condition;
                         const matchSearch = r.school.toLowerCase().includes(this.filters.search.toLowerCase()) || 
