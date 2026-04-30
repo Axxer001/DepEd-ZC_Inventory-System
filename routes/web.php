@@ -211,7 +211,14 @@ Route::middleware('auth')->group(function () {
             ->select('districts.name as district', 'quadrants.name as quadrant')
             ->get();
 
-        return view('admin.schools', compact('schools', 'search', 'allSchools', 'allDistricts', 'allQuadrants', 'districtQuadrantMapping'));
+        $legislativeDistricts = DB::table('legislative_districts')->get();
+        $quadrantsByLD = DB::table('quadrants')
+            ->join('legislative_districts', 'quadrants.legislative_district_id', '=', 'legislative_districts.id')
+            ->select('quadrants.name', 'legislative_districts.name as ld_name', 'legislative_districts.id as ld_id')
+            ->get()
+            ->groupBy('ld_name');
+
+        return view('admin.schools', compact('schools', 'search', 'allSchools', 'allDistricts', 'allQuadrants', 'districtQuadrantMapping', 'legislativeDistricts', 'quadrantsByLD'));
     })->name('admin.schools');
 
     // Route to delete a school from the registry
@@ -313,29 +320,6 @@ Route::get('/scan', function (Illuminate\Http\Request $request) {
 })->name('assets.scan');
 
 Route::middleware('auth')->group(function () {
-
-    // --- DISTRIBUTORS GROUP ---
-    Route::prefix('distributors')->group(function () {
-        // URL: /distributors
-        Route::get('/', function () {
-            return view('distributors.distributors'); 
-        })->name('distributors.index');
-
-        // URL: /distributors/list
-        Route::get('/list', function () {
-            return view('distributors.list'); 
-        })->name('distributors.list');
-
-        // URL: /distributors/explorer
-        Route::get('/explorer', function () {
-            return view('distributors.explorer'); 
-        })->name('distributors.explorer');
-
-        // URL: /distributors/history
-        Route::get('/history', function () {
-            return view('distributors.history'); 
-        })->name('distributors.history');
-    });
 
     // --- RECIPIENTS GROUP ---
     Route::prefix('recipients')->group(function () {

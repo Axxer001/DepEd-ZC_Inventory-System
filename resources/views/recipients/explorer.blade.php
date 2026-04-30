@@ -35,7 +35,7 @@
         {{-- Step 1: School Selection --}}
         <section class="mb-8">
             <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-                Step 1: Select Recipient School
+                Step 1: Select Stakeholder Institution
                 <span class="h-[1px] flex-grow bg-slate-200"></span>
             </h3>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
