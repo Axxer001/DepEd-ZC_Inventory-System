@@ -104,7 +104,7 @@
                     <th style="width: 10%;">Unit</th>
                     <th style="width: 35%;">Item Description / Specification</th>
                     <th style="width: 10%;">Qty</th>
-                    <th style="width: 20%;">Recipient School</th>
+                    <th style="width: 20%;">Stakeholder Institution</th>
                     <th style="width: 10%;">Status</th>
                 </tr>
             </thead>

@@ -110,30 +110,34 @@
                                     </div>
                                 </div>
                                 
-                                {{-- Quadrant Selection --}}
-                                <div class="flex flex-col">
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Quadrants</p>
-                                    <div class="flex flex-wrap gap-2.5">
-                                        <template x-for="quad in quadrants" :key="quad">
+                                {{-- Quadrant Selection Grouped by LD --}}
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    @foreach($quadrantsByLD as $ldName => $quads)
+                                    <div class="flex flex-col">
+                                        <p class="text-[9px] font-black {{ str_contains($ldName, '1') ? 'text-blue-600' : 'text-emerald-600' }} uppercase tracking-widest mb-3 border-b border-slate-100 pb-1 italic">{{ $ldName }}</p>
+                                        <div class="flex flex-wrap gap-2.5">
+                                            @foreach($quads as $quad)
                                             <button type="button" 
-                                                @click="!isQuadrantDisabled(quad) && toggleQuadrant(quad)"
-                                                :disabled="isQuadrantDisabled(quad)"
+                                                @click="!isQuadrantDisabled('{{ $quad->name }}') && toggleQuadrant('{{ $quad->name }}')"
+                                                :disabled="isQuadrantDisabled('{{ $quad->name }}')"
                                                 :class="[
-                                                    selectedQuadrants.includes(quad) 
+                                                    selectedQuadrants.includes('{{ $quad->name }}') 
                                                         ? 'bg-[#c00000] text-white border-[#c00000] shadow-md shadow-red-100' 
                                                         : 'bg-white text-slate-500 border-slate-200 hover:border-red-200',
-                                                    isQuadrantDisabled(quad) ? 'opacity-40 cursor-not-allowed bg-slate-100 hover:border-slate-200' : 'active:scale-95'
+                                                    isQuadrantDisabled('{{ $quad->name }}') ? 'opacity-40 cursor-not-allowed bg-slate-100 hover:border-slate-200' : 'active:scale-95'
                                                 ]"
                                                 class="px-5 py-2.5 rounded-xl border text-[11px] font-bold uppercase transition-all flex items-center gap-2">
-                                                <span x-text="quad"></span>
-                                                <template x-if="selectedQuadrants.includes(quad)">
+                                                <span>{{ $quad->name }}</span>
+                                                <template x-if="selectedQuadrants.includes('{{ $quad->name }}')">
                                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
                                                         <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
                                                     </svg>
                                                 </template>
                                             </button>
-                                        </template>
+                                            @endforeach
+                                        </div>
                                     </div>
+                                    @endforeach
                                 </div>
 
                                 {{-- District Selection --}}
