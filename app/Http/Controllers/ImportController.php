@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class ImportController extends Controller
 {
@@ -14,7 +13,7 @@ class ImportController extends Controller
     public function show()
     {
         $categories = DB::table('categories')->orderBy('name')->pluck('name');
-        
+
         $itemsMap = DB::table('items')
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->select('items.name as item_name', 'categories.name as cat_name')
@@ -22,19 +21,13 @@ class ImportController extends Controller
             ->groupBy('cat_name')
             ->map(function($rows) { return $rows->pluck('item_name')->unique()->values(); });
 
-        $subItemsMap = DB::table('sub_items')
-            ->join('items', 'sub_items.item_id', '=', 'items.id')
-            ->select('sub_items.name as sub_name', 'items.name as item_name')
-            ->get()
-            ->groupBy('item_name')
-            ->map(function($rows) { return $rows->pluck('sub_name')->unique()->values(); });
-        
-        $sources = DB::table('stakeholders')
-            ->where('type', 'Distributor')
-            ->whereNull('parent_id')
+        $sources = DB::table('acquisition_sources')
             ->orderBy('name')
-            ->select('name', 'entity_type')
+            ->select('name', 'source_type')
             ->get();
+
+        // subItemsMap is no longer needed (sub_items table dropped)
+        $subItemsMap = collect();
 
         return view('partials.import', compact('categories', 'itemsMap', 'subItemsMap', 'sources'));
     }
@@ -121,28 +114,21 @@ class ImportController extends Controller
             return back()->withErrors(['csv_file' => 'Missing required columns: ' . implode(', ', $missingHeaders) . '. Please use the standard CSV template.']);
         }
 
-        // Store CSV data in session for the confirmation step
         session(['csv_import_data' => $csvRows]);
 
-        // The view always needs these variables for the JS builder data layer
+        // The view needs these variables for the JS builder data layer
         $categories = DB::table('categories')->orderBy('name')->pluck('name');
         $itemsMap   = DB::table('items')
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->select('items.name as item_name', 'categories.name as cat_name')
             ->get()->groupBy('cat_name')
             ->map(fn($rows) => $rows->pluck('item_name')->unique()->values());
-        $subItemsMap = DB::table('sub_items')
-            ->join('items', 'sub_items.item_id', '=', 'items.id')
-            ->select('sub_items.name as sub_name', 'items.name as item_name')
-            ->get()->groupBy('item_name')
-            ->map(fn($rows) => $rows->pluck('sub_name')->unique()->values());
-        $sources = DB::table('stakeholders')
-            ->where('type', 'Distributor')->whereNull('parent_id')
-            ->orderBy('name')->select('name', 'entity_type')->get();
+        $subItemsMap = collect();
+        $sources = DB::table('acquisition_sources')
+            ->orderBy('name')->select('name', 'source_type')->get();
 
-        // Extract the header row and build associative rows for the preview view
-        $headers = $actualHeaders; // already trimmed/lowercased from validation above
-        $rawDataRows = array_slice($csvRows, 1); // slice off the header row first
+        $headers = $actualHeaders;
+        $rawDataRows = array_slice($csvRows, 1);
         $previewRows = [];
         foreach ($rawDataRows as $rawRow) {
             $map = [];
@@ -151,13 +137,14 @@ class ImportController extends Controller
             }
             $previewRows[] = $map;
         }
-        $csvRows = $previewRows; // alias for the view compact
+        $csvRows = $previewRows;
 
         return view('partials.import', compact('csvRows', 'headers', 'categories', 'itemsMap', 'subItemsMap', 'sources'));
     }
 
     /**
      * Confirm and execute the actual database import.
+     * Now writes to the new schema: asset_sources (replaces sub_items).
      */
     public function confirm(Request $request)
     {
@@ -171,13 +158,11 @@ class ImportController extends Controller
 
         $totalImported = 0;
         $totalSkipped = 0;
-        $messages = [];
 
         DB::beginTransaction();
         try {
             foreach ($dataRows as $rowIndex => $data) {
 
-                // Skip completely empty rows
                 if (empty($data['item_name']) && empty($data['sub_item_name'])) {
                     $totalSkipped++;
                     continue;
@@ -185,22 +170,26 @@ class ImportController extends Controller
 
                 $categoryName = $data['category'] ?? '';
                 $itemName = $data['item_name'] ?? '';
-                $subItemName = $data['sub_item_name'] ?? '';
+                $description = $data['sub_item_name'] ?? '';
                 $quantity = max(1, (int)($data['quantity'] ?? 1));
-                $condition = !empty($data['condition']) ? $data['condition'] : 'Serviceable';
                 $sourceName = $data['source'] ?? '';
                 $sourceType = $data['source_type'] ?? '';
 
-                // Validate source_type — must be one of the 3 allowed values
-                $allowedSourceTypes = ['School', 'External', 'Individual'];
-                if (!empty($sourceType) && !in_array($sourceType, $allowedSourceTypes, true)) {
-                    throw new \Exception(
-                        "Invalid source_type value '" . $sourceType . "' on row " . ($rowIndex + 2) .
-                        ". Allowed values: School, External, Individual."
-                    );
+                // Validate source_type
+                $allowedSourceTypes = ['Internal', 'External'];
+                // Map old values to new
+                $sourceTypeMap = ['School' => 'Internal', 'External' => 'External', 'Individual' => 'External'];
+                if (!empty($sourceType)) {
+                    $sourceType = $sourceTypeMap[$sourceType] ?? $sourceType;
+                    if (!in_array($sourceType, $allowedSourceTypes, true)) {
+                        $sourceType = 'Internal'; // Default fallback
+                    }
+                } else {
+                    $sourceType = 'Internal';
                 }
+
                 $unitPriceRaw = !empty($data['unit_price']) ? str_replace(',', '', $data['unit_price']) : null;
-                $unitPrice = $unitPriceRaw !== null ? (float)$unitPriceRaw : null;
+                $unitPrice = $unitPriceRaw !== null ? (float)$unitPriceRaw : 0;
 
                 $dateAcquiredRaw = !empty($data['date_acquired']) ? trim($data['date_acquired']) : '';
                 $dateAcquired = now()->toDateString();
@@ -208,31 +197,11 @@ class ImportController extends Controller
                     try {
                         $dateAcquired = \Carbon\Carbon::parse($dateAcquiredRaw)->toDateString();
                     } catch (\Exception $e) {
-                        // Keep the default now() if parsing fails
+                        // Keep the default now()
                     }
                 }
 
-                $isSerialized = in_array(strtolower($data['is_serialized'] ?? ''), ['yes', '1', 'true']);
-                $propertyNumber = $data['property_number'] ?? null;
-                $serialNumber = $data['serial_number'] ?? null;
-
-                // Enforce serialized logic and uniqueness checks
-                if ($isSerialized) {
-                    $quantity = 1;
-                    
-                    if (!empty($propertyNumber)) {
-                        if (DB::table('sub_items')->where('property_number', $propertyNumber)->exists()) {
-                            throw new \Exception("Row " . ($rowIndex + 1) . " failed: Property number '{$propertyNumber}' is already registered in the system.");
-                        }
-                    }
-                    if (!empty($serialNumber)) {
-                        if (DB::table('sub_items')->where('serial_number', $serialNumber)->exists()) {
-                            throw new \Exception("Row " . ($rowIndex + 1) . " failed: Serial number '{$serialNumber}' is already registered in the system.");
-                        }
-                    }
-                }
-
-                // --- Resolve Category (firstOrCreate) ---
+                // ── Resolve Category ──
                 $categoryId = null;
                 if (!empty($categoryName)) {
                     $existingCat = DB::table('categories')
@@ -257,39 +226,48 @@ class ImportController extends Controller
                     }
                 }
 
-                // --- Resolve Source/Distributor (firstOrCreate) ---
-                $distributorId = null;
+                // ── Resolve Acquisition Source ──
+                $acquisitionSourceId = null;
                 if (!empty($sourceName)) {
-                    $existingDist = DB::table('stakeholders')
+                    $existingSrc = DB::table('acquisition_sources')
                         ->whereRaw('LOWER(name) = ?', [strtolower($sourceName)])
-                        ->where('type', 'Distributor')
-                        ->whereNull('parent_id')
                         ->first();
 
-                    if ($existingDist) {
-                        $distributorId = $existingDist->id;
+                    if ($existingSrc) {
+                        $acquisitionSourceId = $existingSrc->id;
                     } else {
-                        $distributorId = DB::table('stakeholders')->insertGetId([
-                            'name'        => $sourceName,
-                            'type'        => 'Distributor',
-                            'entity_type' => !empty($sourceType) ? $sourceType : null,
-                            'status'      => 'Active',
-                            'created_at'  => now(),
-                            'updated_at'  => now(),
-                            // parent_id, school_id, position, person_name intentionally left null
+                        $acquisitionSourceId = DB::table('acquisition_sources')->insertGetId([
+                            'name' => $sourceName,
+                            'source_type' => $sourceType,
+                            'created_at' => now(),
+                            'updated_at' => now(),
                         ]);
                         DB::table('system_logs')->insert([
                             'user' => $userName,
-                            'activity' => "[CSV Import] Auto-created distributor: {$sourceName}",
-                            'module' => 'Stakeholders',
+                            'activity' => "[CSV Import] Auto-created acquisition source: {$sourceName}",
+                            'module' => 'Acquisition Sources',
                             'action_type' => 'Create',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                } else {
+                    // Create a default "Unknown Source" if none provided
+                    $defaultSrc = DB::table('acquisition_sources')
+                        ->where('name', 'Unknown Source')->first();
+                    if ($defaultSrc) {
+                        $acquisitionSourceId = $defaultSrc->id;
+                    } else {
+                        $acquisitionSourceId = DB::table('acquisition_sources')->insertGetId([
+                            'name' => 'Unknown Source',
+                            'source_type' => 'Internal',
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);
                     }
                 }
 
-                // --- Resolve Item (firstOrCreate) ---
+                // ── Resolve Item ──
                 if (empty($itemName)) {
                     $totalSkipped++;
                     continue;
@@ -301,16 +279,10 @@ class ImportController extends Controller
 
                 if ($existingItem) {
                     $itemId = $existingItem->id;
-                    // Update master quantity
-                    DB::table('items')->where('id', $itemId)->update([
-                        'master_quantity' => DB::raw("master_quantity + {$quantity}"),
-                        'updated_at' => now(),
-                    ]);
                 } else {
                     $itemId = DB::table('items')->insertGetId([
                         'name' => $itemName,
                         'category_id' => $categoryId,
-                        'master_quantity' => $quantity,
                         'created_at' => now(),
                         'updated_at' => now(),
                     ]);
@@ -324,57 +296,15 @@ class ImportController extends Controller
                     ]);
                 }
 
-                // --- Insert Sub-Item ---
-                if (empty($subItemName)) {
-                    $subItemName = $itemName; // Fall back to item name
-                }
-
-                // For non-serialized items, check if an identical sub-item already exists
-                $existingSub = null;
-                if (!$isSerialized) {
-                    $existingSub = DB::table('sub_items')
-                        ->where('item_id', $itemId)
-                        ->where('is_serialized', false)
-                        ->whereRaw('LOWER(name) = ?', [strtolower($subItemName)])
-                        ->first();
-                }
-
-                if ($existingSub) {
-                    // Stack quantity on existing sub-item
-                    DB::table('sub_items')->where('id', $existingSub->id)->update([
-                        'quantity' => DB::raw("quantity + {$quantity}"),
-                        'condition' => $condition,
-                        'updated_at' => now(),
-                    ]);
-                    $finalSubId = $existingSub->id;
-                } else {
-                    // Insert new sub-item
-                    $finalSubId = DB::table('sub_items')->insertGetId([
-                        'name' => $subItemName,
-                        'item_id' => $itemId,
-                        'distributor_id' => $distributorId,
-                        'quantity' => $quantity,
-                        'condition' => $condition,
-                        'qr_hash' => Str::uuid()->toString(),
-                        'is_serialized' => $isSerialized,
-                        'unit_price' => $unitPrice,
-                        'date_acquired' => $dateAcquired,
-                        'property_number' => !empty($propertyNumber) ? $propertyNumber : null,
-                        'serial_number' => !empty($serialNumber) ? $serialNumber : null,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-
-                // RECORD TRANSACTION: Stock-in via CSV
-                DB::table('asset_transactions')->insert([
-                    'type' => 'STOCK_IN',
-                    'sub_item_id' => $finalSubId,
-                    'quantity_affected' => $quantity,
-                    'condition_before' => $condition,
-                    'condition_after' => $condition,
-                    'processed_by' => $userName,
-                    'notes' => '[CSV Import] Batch addition from uploaded file',
+                // ── Insert Asset Source (replaces sub_items) ──
+                DB::table('asset_sources')->insert([
+                    'item_id' => $itemId,
+                    'description' => !empty($description) ? $description : null,
+                    'acquisition_source_id' => $acquisitionSourceId,
+                    'mode_of_acquisition' => 'CSV Import',
+                    'asset_cost' => $unitPrice,
+                    'quantity' => $quantity,
+                    'acceptance_date' => $dateAcquired,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -384,7 +314,6 @@ class ImportController extends Controller
 
             DB::commit();
 
-            // Log the bulk import event
             DB::table('system_logs')->insert([
                 'user' => $userName,
                 'activity' => "Bulk CSV Import: {$totalImported} asset rows processed, {$totalSkipped} skipped",
@@ -394,7 +323,6 @@ class ImportController extends Controller
                 'updated_at' => now(),
             ]);
 
-            // Clear session data
             session()->forget('csv_import_data');
 
             return redirect()->route('assets.import')->with('success', "Import complete! {$totalImported} asset(s) processed successfully." . ($totalSkipped > 0 ? " {$totalSkipped} row(s) were skipped." : ''));
