@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AssetController extends Controller
 {
@@ -12,85 +13,89 @@ class AssetController extends Controller
         return view('view-assets', compact('inventory'));
     }
 
+    /**
+     * Build inventory hierarchy from the new schema:
+     * classifications -> categories -> items -> asset_sources (descriptions)
+     * with distribution data from asset_distributions
+     */
     private function buildInventoryData()
     {
         $inventory = [];
 
-        // Universal icon for all categories
         $defaultIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>';
 
-        // 1. Fetch ALL categories and calculate total master quantity across items
-        $allCategories = \Illuminate\Support\Facades\DB::table('categories')
+        // 1. Fetch categories with total sourced quantity
+        $allCategories = DB::table('categories')
             ->leftJoin('items', 'categories.id', '=', 'items.category_id')
-            ->select('categories.id', 'categories.name', \Illuminate\Support\Facades\DB::raw('COALESCE(SUM(items.master_quantity), 0) as total_assets'))
+            ->leftJoin('asset_sources', 'items.id', '=', 'asset_sources.item_id')
+            ->select('categories.id', 'categories.name', DB::raw('COALESCE(SUM(asset_sources.quantity), 0) as total_assets'))
             ->groupBy('categories.id', 'categories.name')
             ->get();
-            
+
         foreach ($allCategories as $cat) {
             $inventory[$cat->name] = [
                 'icon' => $defaultIcon,
                 'total_assets' => (int) $cat->total_assets,
-                'items' => [] 
+                'items' => []
             ];
         }
 
-        // 2. Fetch ALL items with their distributed quantities
-        $allItems = \Illuminate\Support\Facades\DB::table('items')
+        // 2. Fetch items with sourced and distributed quantities
+        $allItems = DB::table('items')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->leftJoin(\Illuminate\Support\Facades\DB::raw('(SELECT item_id, COALESCE(SUM(quantity), 0) as distributed_quantity FROM ownerships GROUP BY item_id) as dist'), 'items.id', '=', 'dist.item_id')
-            ->select('items.id', 'items.name as item_name', 'categories.name as category_name', 'items.master_quantity', \Illuminate\Support\Facades\DB::raw('COALESCE(dist.distributed_quantity, 0) as distributed_quantity'))
+            ->leftJoin(DB::raw('(SELECT item_id, SUM(quantity) as sourced_qty FROM asset_sources GROUP BY item_id) as src'), 'items.id', '=', 'src.item_id')
+            ->leftJoin(DB::raw('(SELECT asrc.item_id, COUNT(ad.id) as distributed_qty FROM asset_distributions ad JOIN asset_sources asrc ON ad.asset_source_id = asrc.id GROUP BY asrc.item_id) as dist'), 'items.id', '=', 'dist.item_id')
+            ->select(
+                'items.id',
+                'items.name as item_name',
+                'categories.name as category_name',
+                DB::raw('COALESCE(src.sourced_qty, 0) as sourced_quantity'),
+                DB::raw('COALESCE(dist.distributed_qty, 0) as distributed_quantity')
+            )
             ->get();
-            
-        // 2b. Fetch sub-item available quantities grouped by item for "in_warehouse" calculation
-        $subItemStocks = \Illuminate\Support\Facades\DB::table('sub_items')
-            ->select('item_id', \Illuminate\Support\Facades\DB::raw('SUM(quantity) as available_qty'))
-            ->groupBy('item_id')
-            ->pluck('available_qty', 'item_id');
 
         foreach ($allItems as $item) {
             $catName = $item->category_name;
             $itemName = $item->item_name;
 
-            if (!isset($inventory[$catName]['items'][$itemName])) {
+            if (isset($inventory[$catName]) && !isset($inventory[$catName]['items'][$itemName])) {
                 $inventory[$catName]['items'][$itemName] = [
-                    'master_quantity' => (int) $item->master_quantity,
+                    'master_quantity' => (int) $item->sourced_quantity,
                     'distributed_assets' => (int) $item->distributed_quantity,
-                    'in_warehouse' => (int) ($subItemStocks[$item->id] ?? 0),
+                    'in_warehouse' => max(0, (int) $item->sourced_quantity - (int) $item->distributed_quantity),
                     'sub_items' => []
                 ];
             }
         }
 
-        // 3. Pre-fill ALL sub-items to ensure they appear even if not distributed
-        $allSubItems = \Illuminate\Support\Facades\DB::table('sub_items')
-            ->join('items', 'sub_items.item_id', '=', 'items.id')
+        // 3. Fetch asset_sources as "sub-items" (descriptions grouped by item)
+        $allAssetSources = DB::table('asset_sources')
+            ->join('items', 'asset_sources.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->select('sub_items.name as sub_item_name', 'items.name as item_name', 'categories.name as category_name')
+            ->select('asset_sources.description', 'items.name as item_name', 'categories.name as category_name')
             ->get();
-            
-        foreach ($allSubItems as $sub) {
-            $catName = $sub->category_name;
-            $itemName = $sub->item_name;
-            $subName = $sub->sub_item_name;
-            
+
+        foreach ($allAssetSources as $src) {
+            $catName = $src->category_name;
+            $itemName = $src->item_name;
+            $subName = $src->description ?: $itemName;
+
             if (isset($inventory[$catName]['items'][$itemName])) {
                 $inventory[$catName]['items'][$itemName]['sub_items'][$subName] = [];
             }
         }
 
-        // 4. Query the ownerships with all relationships to fill schools and quantities
-        $records = \Illuminate\Support\Facades\DB::table('ownerships')
-            ->join('schools', 'ownerships.school_id', '=', 'schools.id')
-            ->join('items', 'ownerships.item_id', '=', 'items.id')
-            ->leftJoin('sub_items', 'ownerships.sub_item_id', '=', 'sub_items.id')
+        // 4. Fetch distributions grouped by asset source and school
+        $records = DB::table('asset_distributions as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->select(
-                'schools.name as school_name',
+                'ad.office_school_name as school_name',
                 'categories.name as category_name',
                 'items.name as item_name',
-                'sub_items.name as sub_item_name',
-                'ownerships.quantity',
-                'ownerships.condition'
+                DB::raw('COALESCE(asrc.description, items.name) as sub_item_name'),
+                DB::raw('1 as quantity')
             )
             ->get();
 
@@ -102,8 +107,7 @@ class AssetController extends Controller
             if (!isset($inventory[$cat]['items'][$item]['sub_items'][$sub])) {
                 $inventory[$cat]['items'][$item]['sub_items'][$sub] = [];
             }
-            
-            // Check if school already exists for this subitem to accumulate quantity
+
             $existingSchoolIndex = null;
             foreach ($inventory[$cat]['items'][$item]['sub_items'][$sub] as $index => $schoolEntry) {
                 if ($schoolEntry['name'] === $row->school_name) {
@@ -118,7 +122,7 @@ class AssetController extends Controller
                 $inventory[$cat]['items'][$item]['sub_items'][$sub][] = [
                     'name' => $row->school_name,
                     'qty' => $row->quantity,
-                    'status' => $row->condition ?? 'Serviceable'
+                    'status' => 'Serviceable'
                 ];
             }
         }
@@ -126,63 +130,55 @@ class AssetController extends Controller
         return $inventory;
     }
 
-    // Temporary method para sa dynamic categories (Mock response)
     public function getCategoriesBySchool($schoolId)
     {
-        // Kunwari ito ang sagot ng database depende sa School ID
         $mockCategories = [
             '1' => ['DCP Package', 'Furniture'],
             '2' => ['Science Kit', 'DCP Package'],
             '3' => ['Furniture', 'Science Kit', 'Office Supplies']
         ];
-
         $categories = $mockCategories[$schoolId] ?? ['General Inventory'];
-
         return response()->json($categories);
-
-
-        
     }
 
     public function viewAll()
     {
-        // 1. Fetch all categories and quadrants for filter dropdowns
-        $categories = \Illuminate\Support\Facades\DB::table('categories')->orderBy('name')->pluck('name');
-        $quadrants = \Illuminate\Support\Facades\DB::table('quadrants')->orderBy('name')->get(['id', 'name']);
+        $categories = DB::table('categories')->orderBy('name')->pluck('name');
+        $quadrants = DB::table('quadrants')->orderBy('name')->get(['id', 'name']);
 
-        // 2. Fetch all items with category info (Distinct strictly)
-        $allItems = \Illuminate\Support\Facades\DB::table('items')
+        // Fetch all items with sourced quantity (replaces master_quantity)
+        $allItems = DB::table('items')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->select('items.id', 'items.name', 'items.master_quantity', 'categories.name as category')
+            ->leftJoin(DB::raw('(SELECT item_id, SUM(quantity) as total_qty FROM asset_sources GROUP BY item_id) as src'), 'items.id', '=', 'src.item_id')
+            ->select('items.id', 'items.name', DB::raw('COALESCE(src.total_qty, 0) as master_quantity'), 'categories.name as category')
             ->orderBy('items.name')
             ->distinct()
             ->get();
 
-        // 3. Fetch all sub-items grouped by item
-        $allSubItems = \Illuminate\Support\Facades\DB::table('sub_items')
-            ->select('id', 'name', 'item_id', 'quantity')
-            ->orderBy('name')
+        // Fetch asset_sources grouped by item (replaces sub_items)
+        $allSubItems = DB::table('asset_sources')
+            ->select('id', DB::raw('COALESCE(description, "General") as name'), 'item_id', 'quantity')
+            ->orderBy('item_id')
             ->get()
             ->groupBy('item_id');
 
-        // 4. Fetch all ownership records with school, district, quadrant info
-        $allOwnerships = \Illuminate\Support\Facades\DB::table('ownerships')
-            ->join('schools', 'ownerships.school_id', '=', 'schools.id')
-            ->join('districts', 'schools.district_id', '=', 'districts.id')
-            ->join('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
-            ->leftJoin('sub_items', 'ownerships.sub_item_id', '=', 'sub_items.id')
+        // Fetch distributions (replaces ownerships)
+        $allOwnerships = DB::table('asset_distributions as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->leftJoin('schools', DB::raw('CAST(ad.school_id AS CHAR)'), '=', 'schools.school_id')
+            ->leftJoin('districts', 'schools.district_id', '=', 'districts.id')
+            ->leftJoin('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
             ->select(
-                'ownerships.item_id',
-                'schools.name as school_name',
-                'districts.name as district_name',
-                'quadrants.name as quadrant_name',
-                'sub_items.name as sub_item_name',
-                'ownerships.quantity'
+                'asrc.item_id',
+                'ad.office_school_name as school_name',
+                DB::raw("COALESCE(districts.name, 'N/A') as district_name"),
+                DB::raw("COALESCE(quadrants.name, 'N/A') as quadrant_name"),
+                DB::raw("COALESCE(asrc.description, 'General') as sub_item_name"),
+                DB::raw('1 as quantity')
             )
             ->get()
             ->groupBy('item_id');
 
-        // 5. Build the inventory array for the frontend
         $inventory = [];
         foreach ($allItems as $item) {
             $specs = [];
@@ -192,7 +188,6 @@ class AssetController extends Controller
                 }
             }
 
-            // Build distribution: aggregate by school
             $distribution = [];
             if (isset($allOwnerships[$item->id])) {
                 $schoolAgg = [];
@@ -234,24 +229,24 @@ class AssetController extends Controller
         return view('assets.asset-explorer', compact('inventory'));
     }
 
-    public function history() {
-        $records = \Illuminate\Support\Facades\DB::table('ownerships')
-            ->join('items', 'ownerships.item_id', '=', 'items.id')
+    public function history()
+    {
+        // Show distribution history from asset_distributions
+        $records = DB::table('asset_distributions as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->leftJoin('sub_items', 'ownerships.sub_item_id', '=', 'sub_items.id')
-            ->join('schools', 'ownerships.school_id', '=', 'schools.id')
-            ->join('districts', 'schools.district_id', '=', 'districts.id')
             ->select(
-                'ownerships.id',
+                'ad.id',
                 'items.name as item_name',
-                'sub_items.name as sub_item_name',
+                DB::raw('COALESCE(asrc.description, "General") as sub_item_name'),
                 'categories.name as category',
-                'schools.name as school',
-                'districts.name as district',
-                'ownerships.quantity as qty',
-                'ownerships.created_at as distributed_at'
+                'ad.office_school_name as school',
+                DB::raw("'Distributed' as district"),
+                DB::raw('1 as qty'),
+                'ad.created_at as distributed_at'
             )
-            ->orderByDesc('ownerships.created_at')
+            ->orderByDesc('ad.created_at')
             ->get();
 
         $items = $records->map(function ($r) {
@@ -274,20 +269,25 @@ class AssetController extends Controller
 
     public function getSchoolAssets($id)
     {
-        $records = \Illuminate\Support\Facades\DB::table('ownerships')
-            ->join('items', 'ownerships.item_id', '=', 'items.id')
+        // Find the school and get its school_id string
+        $school = DB::table('schools')->where('id', $id)->first();
+        if (!$school) {
+            return response()->json(['success' => false, 'assets' => []]);
+        }
+
+        $records = DB::table('asset_distributions as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->leftJoin('sub_items', 'ownerships.sub_item_id', '=', 'sub_items.id')
-            ->where('ownerships.school_id', $id)
+            ->where('ad.school_id', $school->school_id)
             ->select(
                 'categories.name as category_name',
                 'items.name as item_name',
-                'sub_items.name as sub_item_name',
-                'ownerships.quantity'
+                DB::raw('COALESCE(asrc.description, items.name) as sub_item_name'),
+                DB::raw('1 as quantity')
             )
             ->orderBy('categories.name')
             ->orderBy('items.name')
-            ->orderBy('sub_items.name')
             ->get();
 
         $assets = $records->map(function ($row) {

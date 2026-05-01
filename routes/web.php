@@ -9,7 +9,6 @@ use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventorySetupController;
 use App\Http\Controllers\AssetController;
-use App\Http\Controllers\StakeholderController;
 
 // --- Public Routes ---
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
@@ -31,7 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/dashboard/quick-asset', [DashboardController::class, 'storeQuickAsset'])->name('inventory.dashboard.store');
     
     Route::get('/inventory-setup', function () {
-        set_time_limit(300); // Prevent timeouts due to high latency remote database queries
+        set_time_limit(300);
         
         $districts = DB::table('districts')
             ->join('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
@@ -40,47 +39,13 @@ Route::middleware('auth')->group(function () {
         $legislativeDistricts = DB::table('legislative_districts')->get();
         $quadrants = DB::table('quadrants')->get();
         $categories = DB::table('categories')->orderBy('name')->get();
-        $items = DB::table('items')
-            ->leftJoin(DB::raw('(SELECT item_id, COALESCE(SUM(quantity), 0) as distributed_quantity FROM ownerships GROUP BY item_id) as dist'), 'items.id', '=', 'dist.item_id')
-            ->select('items.id', 'items.name', 'items.category_id', 'items.master_quantity', DB::raw('COALESCE(dist.distributed_quantity, 0) as distributed_quantity'))
-            ->orderBy('items.name')
-            ->get();
-        $subItems = DB::table('sub_items')
-            ->leftJoin('stakeholders', 'sub_items.distributor_id', '=', 'stakeholders.id')
-            ->select('sub_items.id', 'sub_items.name', 'sub_items.item_id', 'sub_items.quantity', 'sub_items.distributor_id', 'stakeholders.name as distributor_name')
-            ->orderBy('sub_items.name')
-            ->get();
+        $items = DB::table('items')->orderBy('name')->get();
         $allSchools = DB::table('schools')
-            ->leftJoin('ownerships', 'schools.id', '=', 'ownerships.school_id')
-            ->select('schools.id', 'schools.school_id', 'schools.name', DB::raw('COALESCE(SUM(ownerships.quantity), 0) as total_assets'))
-            ->groupBy('schools.id', 'schools.school_id', 'schools.name')
-            ->orderBy('schools.name')
-            ->get();
-            
-        $stakeholders = DB::table('stakeholders')
-            ->select('id', 'parent_id', 'name', 'type', 'school_id', 'entity_type', 'position', 'person_name', 'status')
+            ->select('id', 'school_id', 'name')
             ->orderBy('name')
             ->get();
-            
-        $stakeholderOwnerships = DB::table('ownerships')
-            ->join('items', 'ownerships.item_id', '=', 'items.id')
-            ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->join('sub_items', 'ownerships.sub_item_id', '=', 'sub_items.id')
-            ->select(
-                'ownerships.recipient_id',
-                'categories.id as category_id',
-                'categories.name as category_name',
-                'items.id as item_id',
-                'items.name as item_name',
-                'sub_items.id as sub_item_id',
-                'sub_items.name as sub_item_name',
-                'ownerships.condition',
-                'ownerships.quantity'
-            )
-            ->get()
-            ->groupBy('recipient_id');
 
-        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'subItems', 'allSchools', 'stakeholderOwnerships', 'stakeholders'));
+        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'allSchools'));
     })->name('inventory.setup');
 
 
@@ -204,13 +169,9 @@ Route::middleware('auth')->group(function () {
         set_time_limit(300);
         $categories = DB::table('categories')->orderBy('name')->get();
         $items = DB::table('items')->orderBy('name')->get();
-        $subItems = DB::table('sub_items')
-            ->leftJoin('stakeholders', 'sub_items.distributor_id', '=', 'stakeholders.id')
-            ->select('sub_items.id', 'sub_items.name', 'sub_items.item_id', 'sub_items.quantity', 'sub_items.distributor_id', 'stakeholders.name as distributor_name')
-            ->orderBy('sub_items.name')->get();
-        $stakeholders = DB::table('stakeholders')->orderBy('name')->get();
+        $acquisitionSources = DB::table('acquisition_sources')->orderBy('name')->get();
         $allSchools = DB::table('schools')->select('id', 'school_id', 'name')->orderBy('name')->get();
-        return view('register-item', compact('categories', 'items', 'subItems', 'stakeholders', 'allSchools'));
+        return view('register-item', compact('categories', 'items', 'acquisitionSources', 'allSchools'));
     })->name('register.item');
 
     Route::post('/register-item', [InventorySetupController::class, 'storeItem'])->name('register.item.store');
