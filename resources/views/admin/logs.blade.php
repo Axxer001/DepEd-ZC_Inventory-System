@@ -15,6 +15,69 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; transition: all 0.3s; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+
+        /* ── System Logs dark mode overrides ── */
+
+        /* Table container card */
+        html.dark #logsSection               { background-color: #1e293b !important; border-color: #334155 !important; }
+
+        /* Section header bar */
+        html.dark #logsHeaderBar             { background-color: #1e293b !important; border-color: #334155 !important; }
+        html.dark #logsHeaderBar .bg-slate-900 { background-color: #f1f5f9 !important; }
+
+        /* Sticky thead */
+        html.dark #logTableHead tr           { background-color: #0f172a !important; }
+        html.dark #logTableHead th           { background-color: #0f172a !important;
+                                               border-color: #334155 !important;
+                                               color: #64748b !important; }
+
+        /* Table body rows */
+        html.dark #logTableBody tr           { border-color: #1e293b !important; }
+        html.dark #logTableBody tr:hover     { background-color: #0f172a !important; }
+        html.dark #logTableBody .divide-slate-50 { border-color: #1e293b !important; }
+
+        /* User avatar chip */
+        html.dark .log-avatar                { background-color: #0f172a !important;
+                                               border-color: #334155 !important;
+                                               color: #94a3b8 !important; }
+
+        /* Activity text */
+        html.dark .log-activity              { color: #94a3b8 !important; }
+
+        /* Module badge colours — keep semantic tints but darkened */
+        html.dark .badge-delete              { background-color: rgba(192,0,0,0.15) !important;
+                                               color: #f87171 !important;
+                                               border-color: rgba(192,0,0,0.25) !important; }
+        html.dark .badge-create              { background-color: rgba(5,46,22,0.5) !important;
+                                               color: #34d399 !important;
+                                               border-color: #14532d !important; }
+        html.dark .badge-other               { background-color: rgba(23,37,84,0.5) !important;
+                                               color: #60a5fa !important;
+                                               border-color: #1e3a8a !important; }
+
+        /* Pagination footer */
+        html.dark #logsPagination            { background-color: #0f172a !important;
+                                               border-color: #334155 !important; }
+        html.dark #logsPagination .bg-slate-100  { background-color: #1e293b !important; }
+        html.dark #logsPagination .bg-white      { background-color: #1e293b !important; }
+        html.dark #logsPagination .border-slate-200 { border-color: #334155 !important; }
+        html.dark #logsPagination .text-slate-600   { color: #94a3b8 !important; }
+        html.dark #logsPagination .text-slate-400   { color: #475569 !important; }
+        html.dark #logsPagination .text-slate-300   { color: #334155 !important; }
+        html.dark #logsPagination .text-slate-900   { color: #e2e8f0 !important; }
+        html.dark #logsPagination a:hover    { background-color: #c00000 !important;
+                                               border-color: #c00000 !important;
+                                               color: #ffffff !important; }
+
+        /* Scrollbar in dark */
+        html.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
+
+        /* Export button */
+        html.dark #exportBtn                 { background-color: #1e293b !important;
+                                               border: 1px solid #334155;
+                                               color: #e2e8f0 !important; }
+        html.dark #exportBtn:hover           { background-color: #c00000 !important;
+                                               border-color: #c00000 !important; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex animate-fade-in text-slate-800 overflow-x-hidden">
@@ -29,14 +92,14 @@
                     <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">System Logs</h2>
                     <p class="text-slate-500 text-sm mt-1 font-medium italic">Track all administrative activities (Philippine Standard Time)</p>
                 </div>
-                <button class="bg-slate-800 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-900 shadow-xl shadow-slate-200 transition-all hover:-translate-y-1 flex items-center gap-3 text-sm">
+                <button id="exportBtn" class="bg-slate-800 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-900 shadow-xl shadow-slate-200 transition-all hover:-translate-y-1 flex items-center gap-3 text-sm">
                     <span>Export Logs</span>
                 </button>
             </header>
 
-            <section class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-50 overflow-hidden flex flex-col">
+            <section id="logsSection" class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-50 overflow-hidden flex flex-col">
                 
-                <div class="p-8 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div id="logsHeaderBar" class="p-8 border-b border-slate-50 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div class="flex items-center gap-3">
                         <span class="w-2 h-6 bg-slate-900 rounded-full"></span>
                         <h3 class="font-extrabold text-slate-800 tracking-tight text-lg uppercase tracking-tighter">Activity History</h3>
@@ -64,7 +127,7 @@
 
                 <div class="overflow-x-auto overflow-y-auto custom-scrollbar" style="max-height: 600px;">
                     <table class="w-full text-left border-separate border-spacing-0">
-                        <thead class="sticky top-0 z-10">
+                        <thead id="logTableHead" class="sticky top-0 z-10">
                             <tr class="bg-slate-50/95 backdrop-blur-md">
                                 <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">User</th>
                                 <th class="px-8 py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Activity</th>
@@ -77,20 +140,25 @@
                             <tr class="hover:bg-slate-50/80 transition-all cursor-default group">
                                 <td class="px-8 py-4">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border border-slate-200 uppercase">
+                                        <div class="log-avatar w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border border-slate-200 uppercase">
                                             {{ substr($log->user ?? 'S', 0, 2) }}
                                         </div>
                                         <span class="font-bold text-slate-800 text-xs">{{ $log->user ?? 'System' }}</span>
                                     </div>
                                 </td>
                                 <td class="px-8 py-4">
-                                    <span class="text-xs font-semibold text-slate-600 leading-relaxed italic">"{{ $log->activity }}"</span>
+                                    <span class="log-activity text-xs font-semibold text-slate-600 leading-relaxed italic">"{{ $log->activity }}"</span>
                                 </td>
                                 <td class="px-8 py-4">
-                                     <span class="px-3 py-1.5 
-                                        {{ str_contains(strtolower($log->activity), 'delete') ? 'bg-red-50 text-red-500 border-red-100' : 
-                                           (str_contains(strtolower($log->activity), 'add') || str_contains(strtolower($log->activity), 'create') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-blue-50 text-blue-600 border-blue-100') }} 
-                                        rounded-xl text-[9px] font-black uppercase tracking-[0.1em] border shadow-sm">
+                                    @php
+                                        $act = strtolower($log->activity);
+                                        $badgeClass = str_contains($act, 'delete')
+                                            ? 'badge-delete bg-red-50 text-red-500 border-red-100'
+                                            : (str_contains($act, 'add') || str_contains($act, 'create')
+                                                ? 'badge-create bg-emerald-50 text-emerald-600 border-emerald-100'
+                                                : 'badge-other bg-blue-50 text-blue-600 border-blue-100');
+                                    @endphp
+                                     <span class="{{ $badgeClass }} px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-[0.1em] border shadow-sm">
                                         {{ $log->module ?? 'System' }}
                                      </span>
                                 </td>
@@ -115,7 +183,7 @@
                     </table>
                 </div>
 
-                <div class="p-8 bg-slate-50/50 border-t border-slate-50">
+                <div id="logsPagination" class="p-8 bg-slate-50/50 border-t border-slate-50">
                     <div class="flex flex-col md:flex-row justify-between items-center gap-6">
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
                             Showing <span class="text-slate-900">{{ $logs->firstItem() ?? 0 }}</span> - <span class="text-slate-900">{{ $logs->lastItem() ?? 0 }}</span> of <span class="text-slate-900">{{ $logs->total() }}</span> Entries

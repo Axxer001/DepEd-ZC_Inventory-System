@@ -43,7 +43,170 @@
             box-shadow: 0 10px 15px -3px rgba(192, 0, 0, 0.1);
             transform: translateX(-4px);
         }
+
+        /* ── Excel-like registration table ── */
+        .xls-th {
+            padding: 9px 14px;
+            font-size: 9px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #64748b;
+            white-space: nowrap;
+            border-right: 1px solid #e8edf2;
+            border-bottom: 2px solid #dde3ea;
+            background: #f4f6f9;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+        .xls-td {
+            padding: 0;
+            border-right: 1px solid #eef0f4;
+            border-bottom: 1px solid #f0f3f6;
+            vertical-align: middle;
+            position: relative;
+        }
+        /* row highlight */
+        .xls-row { transition: background 0.1s; }
+        .xls-row:hover .xls-td { background-color: rgba(244,246,249,0.9); }
+        .xls-row:hover .xls-td.xls-sticky-col { background-color: #f4f6f9; }
+        /* inputs inside cells */
+        .xls-input {
+            width: 100%;
+            padding: 11px 14px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: #334155;
+            background: rgba(0, 0, 0, 0.035); /* darker hue for typeboxes */
+            border: 1px solid transparent;
+            outline: none;
+            box-sizing: border-box;
+            line-height: 1.4;
+            transition: all 0.2s;
+        }
+        .xls-input:focus {
+            background: rgba(192,0,0,0.045);
+            border-color: #c00000;
+            box-shadow: 0 0 0 2px rgba(192,0,0,0.1);
+        }
+        .xls-input::placeholder { color: #c8d0db; font-weight: 500; }
+        .xls-const {
+            display: block;
+            padding: 11px 14px;
+            font-size: 11.5px;
+            font-weight: 700;
+            color: #94a3b8;
+            white-space: nowrap;
+            font-style: italic;
+        }
+        /* Scroll container: min-height = 10 rows, scrollable beyond */
+        .xls-scroll-wrap {
+            position: relative;
+            overflow-x: auto;
+            overflow-y: auto;
+            min-height: 455px;   /* ~ 10 × 44px row + 2px border each */
+            max-height: 455px;
+        }
+        /* ── Dark mode ── */
+        html.dark .xls-th {
+            background: #0d1525 !important;
+            color: #4a5568 !important;
+            border-color: #1a2535 !important;
+        }
+        html.dark .xls-td { border-color: #1a2535 !important; }
+        html.dark .xls-row:hover .xls-td { background-color: rgba(10,18,34,0.55) !important; }
+        html.dark .xls-row:hover .xls-td.xls-sticky-col { background-color: #0d1525 !important; }
+        /* Typebox enhancements */
+        html.dark .xls-input { background: rgba(0, 0, 0, 0.25); color: #e2e8f0; }
+        html.dark .xls-input:focus { background: rgba(192,0,0,0.1); border-color: #c00000; box-shadow: 0 0 0 2px rgba(192,0,0,0.2); }
+        html.dark .xls-input::placeholder { color: #475569; }
+
+        /* Custom Autocomplete */
+        .custom-autocomplete {
+            position: absolute;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 9999;
+            min-width: 150px;
+            font-family: inherit;
+        }
+        html.dark .custom-autocomplete {
+            background: #141f33;
+            border-color: #1e293b;
+        }
+        .custom-autocomplete-item {
+            padding: 10px 14px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #334155;
+            transition: background 0.1s;
+        }
+        html.dark .custom-autocomplete-item {
+            color: #cbd5e1;
+        }
+        .custom-autocomplete-item:hover {
+            background: #f8fafc;
+        }
+        html.dark .custom-autocomplete-item:hover {
+            background: #1a2535;
+        }
+
+        /* NEW Badge */
+        .new-badge {
+            position: absolute;
+            top: 3px;
+            right: 3px;
+            font-size: 8px;
+            font-weight: 900;
+            background: #10b981;
+            color: white;
+            padding: 1px 4px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+            letter-spacing: 0.5px;
+        }
+        html.dark .new-badge {
+            background: #059669;
+            color: #ecfdf5;
+            box-shadow: none;
+        }
+
+        html.dark .xls-const { color: #2e4060 !important; }
+        /* Dark: section 1 card */
+        html.dark #acqSourceCard { background-color: #141f33 !important; border-color: #1e2e47 !important; }
+        html.dark #acqSourceCard .border-b { border-color: #1e2e47 !important; }
+        html.dark #acqSourceInput {
+            background-color: #0d1525 !important;
+            border-color: #1e2e47 !important;
+            color: #94a3b8 !important;
+        }
+        /* Dark: section 2 table card */
+        html.dark #assetTableCard { background-color: #141f33 !important; border-color: #1e2e47 !important; }
+        html.dark #assetToolbar { background-color: #141f33 !important; border-color: #1e2e47 !important; }
+        html.dark #assetToolbar .bg-slate-100 { background-color: #0d1525 !important; }
+        html.dark #assetToolbar .bg-slate-50 { background-color: #0d1525 !important; border-color: #1e2e47 !important; }
+        html.dark #assetToolbar .text-slate-600 { color: #64748b !important; }
+        html.dark .xls-scroll-wrap { background-color: #141f33 !important; }
+        html.dark #assetSourceEmpty, html.dark #assetDistEmpty { background: #141f33 !important; }
+        html.dark #assetSourceEmpty p, html.dark #assetDistEmpty p { color: #253550 !important; }
+        html.dark #assetSourceEmpty svg, html.dark #assetDistEmpty svg { color: #253550 !important; }
+        /* Dark: footer */
+        html.dark #assetTableFooter { background-color: #0d1525 !important; border-color: #1e2e47 !important; }
+        html.dark #assetTableFooter #rowCountLabel { color: #2e4060 !important; }
+        /* Dark: sticky row num col */
+        html.dark .xls-sticky-col { background-color: #141f33 !important; }
+        html.dark .xls-row:hover .xls-sticky-col { background-color: #0d1525 !important; }
     </style>
+
 </head>
 <body class="bg-slate-50 min-h-screen flex text-slate-800 overflow-x-hidden relative">
 
@@ -88,7 +251,7 @@
             </div>
         </header>
 
-        <main class="p-6 lg:p-10 max-w-5xl mx-auto w-full">
+        <main id="mainContent" class="p-6 lg:p-10 max-w-5xl mx-auto w-full transition-all duration-300">
             <header class="flex justify-between items-center mb-12">
                 <div>
                     <h2 class="text-3xl font-black text-slate-900 tracking-tight italic">Inventory Setup</h2>
@@ -133,11 +296,176 @@
     <h3 id="step2Title" class="text-lg font-black text-slate-400 uppercase tracking-[0.3em] text-center mb-6 -mt-6">Select Category</h3>
     
 <div id="categoryGrid" class="grid grid-cols-2 gap-6 max-w-3xl mx-auto px-4 mb-8">        
-        {{-- Empty Grid --}}
+    {{-- Empty Grid --}}
 
 
-    </div>
 </div>
+</div>
+
+{{-- ═══════ STEP: ADD NEW RECORD — Registration Form ═══════ --}}
+<div id="stepAddNew" class="step-content">
+
+    {{-- DATALISTS (shared option pools) --}}
+    <datalist id="dl-acq-source">
+        <option value="DepEd Central Office">
+        <option value="Local Government Unit">
+        <option value="Private Donation">
+        <option value="Congressional Allocation">
+        <option value="MOOE Fund">
+    </datalist>
+    <datalist id="dl-classification">
+        <option value="Semi-Expendable">
+        <option value="Non-Expendable">
+        <option value="Expendable">
+    </datalist>
+    <datalist id="dl-category">@foreach($categories as $c)<option value="{{ $c->name }}">@endforeach</datalist>
+    <datalist id="dl-item">@foreach($items as $i)<option value="{{ $i->name }}">@endforeach</datalist>
+    <datalist id="dl-description"><option value="General"><option value="Specific"></datalist>
+    <datalist id="dl-mode">
+        <option value="Public Bidding">
+        <option value="Direct Contracting">
+        <option value="Shopping">
+        <option value="Negotiated Procurement">
+    </datalist>
+    <datalist id="dl-personnel"></datalist>
+    <datalist id="dl-position"><option value="Supply Officer"><option value="Principal"><option value="Teacher"><option value="Clerk"></datalist>
+    <datalist id="dl-school-type"><option value="Elementary School"><option value="High School"><option value="Integrated School"><option value="Division Office"></datalist>
+    <datalist id="dl-school-id">@foreach($allSchools as $s)<option value="{{ $s->school_id }}">@endforeach</datalist>
+    <datalist id="dl-school-name">@foreach($allSchools as $s)<option value="{{ $s->name }}">@endforeach</datalist>
+    <datalist id="dl-occupancy"><option value="Owned"><option value="Leased"><option value="Borrowed"></datalist>
+    <datalist id="dl-location">@foreach($allSchools as $s)<option value="{{ $s->name }}">@endforeach</datalist>
+
+    {{-- ── Section 1: Acquisition Source ── --}}
+    <div id="acqSourceCard" class="mb-6 bg-white rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden">
+        <div class="px-6 py-3 border-b border-slate-100 flex items-center gap-3">
+            <div class="w-6 h-6 bg-[#c00000] rounded-lg flex items-center justify-center text-white text-[10px] font-black shrink-0">1</div>
+            <div>
+                <h3 class="font-black text-slate-800 uppercase tracking-tight text-xs">Acquisition Source</h3>
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Identify who provided the assets</p>
+            </div>
+        </div>
+        <div class="px-6 py-4">
+            <div class="max-w-sm">
+                <label class="text-[9px] font-black text-[#c00000] uppercase tracking-widest mb-1.5 block">Source of Acquisition <span class="text-red-400">*</span></label>
+                <div class="relative">
+                    <input type="text" id="acqSourceInput" data-col="acq-source" autocomplete="off"
+                        placeholder="Type or select a source..."
+                        class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-red-100 focus:border-[#c00000] transition-all">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Section 2: Asset Source / Distribution Table ── --}}
+    <div id="assetTableCard" class="bg-white rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden">
+
+        {{-- Toolbar --}}
+        <div id="assetToolbar" class="px-5 py-3 border-b border-slate-100 flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-3">
+                <div class="w-7 h-7 bg-slate-800 rounded-xl flex items-center justify-center text-white text-xs font-black shrink-0">2</div>
+                <div class="flex bg-slate-100 rounded-xl p-1 gap-1">
+                    <button id="tabAssetSource" onclick="switchAssetTab('source')"
+                        class="px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg bg-[#c00000] text-white shadow-sm transition-all">
+                        Asset Source
+                    </button>
+                    <button id="tabAssetDist" onclick="switchAssetTab('distribution')"
+                        class="px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg text-slate-500 hover:text-slate-700 transition-all">
+                        Asset Distribution
+                    </button>
+                </div>
+                <span id="assetTabLabel" class="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Asset Source</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="openBulkAddModal()"
+                <button onclick="openBulkAddModal()"
+                    class="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-slate-100 transition-all active:scale-95">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+                    Bulk Add
+                </button>
+                <button onclick="addAssetRow()"
+                    class="flex items-center gap-2 px-4 py-2.5 bg-[#c00000] text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-red-700 transition-all shadow-sm active:scale-95">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
+                    Add Row
+                </button>
+            </div>
+        </div>
+
+        {{-- ── Asset Source Table ── --}}
+        <div id="panelAssetSource">
+            <div class="xls-scroll-wrap">
+            <table class="w-full border-collapse" style="min-width:1500px;">
+                <thead>
+                    <tr>
+                        <th class="xls-th w-10 text-center sticky left-0" style="z-index:6">#</th>
+                        <th class="xls-th" style="min-width:140px">Classification</th>
+                        <th class="xls-th" style="min-width:140px">Category</th>
+                        <th class="xls-th" style="min-width:140px">Item</th>
+                        <th class="xls-th" style="min-width:180px">Description</th>
+                        <th class="xls-th" style="min-width:150px">Mode</th>
+                        <th class="xls-th" style="min-width:160px">Source Personnel</th>
+                        <th class="xls-th" style="min-width:160px">Personnel Position</th>
+                        <th class="xls-th text-right" style="min-width:120px">Cost / Unit (₱)</th>
+                        <th class="xls-th text-right" style="min-width:80px">Qty</th>
+                        <th class="xls-th text-right" style="min-width:110px">Useful Life (yrs)</th>
+                        <th class="xls-th" style="min-width:140px">Acceptance Date</th>
+                        <th class="xls-th w-10 text-center">Del</th>
+                    </tr>
+                </thead>
+                <tbody id="assetSourceBody"></tbody>
+            </table>
+            {{-- Empty state inside scroll wrap --}}
+            <div id="assetSourceEmpty" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="inline-flex flex-col items-center gap-3 opacity-30">
+                    <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0112 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125h17.25"/></svg>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">No rows — click Add Row to begin</p>
+                </div>
+            </div>
+            </div>{{-- /xls-scroll-wrap --}}
+        </div>
+
+        {{-- ── Asset Distribution Table ── --}}
+        <div id="panelAssetDist" class="hidden">
+            <div class="xls-scroll-wrap">
+            <table class="w-full border-collapse" style="min-width:1400px;">
+                <thead>
+                    <tr>
+                        <th class="xls-th w-10 text-center sticky left-0 z-10">#</th>
+                        <th class="xls-th" style="min-width:90px">Region</th>
+                        <th class="xls-th" style="min-width:200px">Division</th>
+                        <th class="xls-th" style="min-width:160px">Office/School Type</th>
+                        <th class="xls-th" style="min-width:100px">School ID</th>
+                        <th class="xls-th" style="min-width:210px">Office/School Name</th>
+                        <th class="xls-th" style="min-width:160px">Nature of Occupancy</th>
+                        <th class="xls-th" style="min-width:160px">Location</th>
+                        <th class="xls-th" style="min-width:150px">Property No.</th>
+                        <th class="xls-th text-right" style="min-width:130px">Acquisition Cost (₱)</th>
+                        <th class="xls-th" style="min-width:140px">Acquisition Date</th>
+                        <th class="xls-th w-10 text-center">Del</th>
+                    </tr>
+                </thead>
+                <tbody id="assetDistBody"></tbody>
+            </table>
+            {{-- Empty state inside scroll wrap --}}
+            <div id="assetDistEmpty" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="inline-flex flex-col items-center gap-3 opacity-30">
+                    <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0112 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125h17.25"/></svg>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">No rows — click Add Row to begin</p>
+                </div>
+            </div>
+            </div>{{-- /xls-scroll-wrap --}}
+        </div>
+
+        {{-- Footer --}}
+        <div id="assetTableFooter" class="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <p id="rowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 Rows</p>
+            <button onclick="submitRegistration()"
+                class="px-6 py-2.5 bg-[#c00000] text-white rounded-xl font-black text-[10px] uppercase tracking-wider hover:bg-red-700 transition-all shadow-sm active:scale-95">
+                Register Records
+            </button>
+        </div>
+    </div>
+
+
             {{-- Step 3: Form Content --}}
             <div id="step3" class="step-content">
                 @if($errors->any())
@@ -211,57 +539,52 @@
 
         function nextStep(step, value) {
     if (step === 2) {
-        currentMode = value; // 'add' or 'edit'
-        
-        // Update the main header text of Step 2
-        document.getElementById('step2Title').innerText = (value === 'add' ? 'ADD NEW' : 'EDIT') + ' RECORD';
+        currentMode = value;
 
-        // Update all sub-texts dynamically based on the mode
+        // ── Add New: skip step2, go straight to registration form ──
+        if (value === 'add') {
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('stepAddNew').classList.add('active');
+            document.getElementById('mainContent').classList.replace('max-w-5xl', 'max-w-full');
+            stepHistory.push('addnew');
+            updateBackButton();
+            return;
+        }
+
+        // Edit mode: original behaviour
+        document.getElementById('step2Title').innerText = 'EDIT RECORD';
         const subTexts = document.querySelectorAll('.category-subtext');
-        subTexts.forEach(p => {
-            if (currentMode === 'add') {
-                p.innerText = p.getAttribute('data-add');
-            } else {
-                p.innerText = p.getAttribute('data-edit');
-            }
-        });
-
+        subTexts.forEach(p => { p.innerText = p.getAttribute('data-edit'); });
         const categoryGrid = document.getElementById('categoryGrid');
-
-        // Empty grid for both modes
         categoryGrid.classList.remove('grid-cols-2', 'grid-cols-3', 'max-w-3xl', 'max-w-4xl');
         categoryGrid.classList.add('grid-cols-1', 'max-w-sm');
     }
 
     if (step === 3) {
-        if (value === 'school') {
-            window.location.href = '/inventory-modifier/school';
-            return;
-        }
-        if (value === 'distribution') {
-            window.location.href = '/inventory-modifier';
-            return;
-        }
-
+        if (value === 'school') { window.location.href = '/inventory-modifier/school'; return; }
+        if (value === 'distribution') { window.location.href = '/inventory-modifier'; return; }
         currentModule = value;
         renderForm();
     }
 
-    // Navigation Logic
     document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
     document.getElementById('step' + step).classList.add('active');
-    
-    // Track history for the back button
     stepHistory.push(step);
     updateBackButton();
 }
 
         function goBack() {
             if (stepHistory.length > 1) {
+                const leavingStep = stepHistory[stepHistory.length - 1];
                 stepHistory.pop();
                 const prevStep = stepHistory[stepHistory.length - 1];
                 document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-                document.getElementById('step' + prevStep).classList.add('active');
+                const targetId = prevStep === 'addnew' ? 'stepAddNew' : ('step' + prevStep);
+                document.getElementById(targetId).classList.add('active');
+                // Restore narrow width if leaving Add New
+                if (leavingStep === 'addnew') {
+                    document.getElementById('mainContent').classList.replace('max-w-full', 'max-w-5xl');
+                }
                 updateBackButton();
             }
         }
@@ -279,6 +602,273 @@
                 const filtered = rawQuadrants.filter(q => q.legislative_district_id == ld);
                 quadSelect.innerHTML += filtered.map(q => `<option value="${q.id}">${q.name}</option>`).join('');
             }
+        }
+
+        // ══════════════════════════════════════════════════
+        //  ADD NEW REGISTRATION FORM  — JS
+        //  Rows are always in sync: Asset Source ↔ Asset Distribution (1-to-1)
+        // ══════════════════════════════════════════════════
+        let _rowNum   = 0;   // ever-incrementing ID for pairing
+        let _rowCount = 0;   // live count of paired rows
+
+        function switchAssetTab(tab) {
+            const srcPanel = document.getElementById('panelAssetSource');
+            const distPanel = document.getElementById('panelAssetDist');
+            const tabSrc   = document.getElementById('tabAssetSource');
+            const tabDst   = document.getElementById('tabAssetDist');
+            const label    = document.getElementById('assetTabLabel');
+            const ON  = 'px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg bg-[#c00000] text-white shadow-sm transition-all';
+            const OFF = 'px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg text-slate-500 hover:text-slate-700 transition-all';
+            if (tab === 'source') {
+                srcPanel.classList.remove('hidden');
+                distPanel.classList.add('hidden');
+                tabSrc.className = ON; tabDst.className = OFF;
+                label.textContent = 'Asset Source';
+            } else {
+                srcPanel.classList.add('hidden');
+                distPanel.classList.remove('hidden');
+                tabSrc.className = OFF; tabDst.className = ON;
+                label.textContent = 'Asset Distribution';
+            }
+            updateRowCount();
+        }
+
+        // Add Row always appends to BOTH tables at once
+        function addAssetRow() {
+            _rowNum++;
+            _rowCount++;
+            // Hide both empty states
+            document.getElementById('assetSourceEmpty').classList.add('hidden');
+            document.getElementById('assetDistEmpty').classList.add('hidden');
+            addSourceRow(_rowNum, _rowCount);
+            addDistRow(_rowNum, _rowCount);
+            updateRowCount();
+        }
+
+        function addSourceRow(id, displayNum) {
+            const tbody = document.getElementById('assetSourceBody');
+            const tr = document.createElement('tr');
+            tr.id = `src-${id}`;
+            tr.className = 'xls-row group border-b border-slate-100';
+            tr.dataset.rowIndex = id;
+            const today = new Date().toISOString().split('T')[0];
+            tr.innerHTML = `
+                <td class="xls-td xls-sticky-col text-center sticky left-0 w-10" style="background:inherit">
+                    <span class="row-num text-[10px] font-black text-slate-300">${displayNum}</span>
+                </td>
+                <td class="xls-td"><input type="text" data-col="classification" autocomplete="off" class="xls-input" placeholder="e.g. Semi-Expendable"></td>
+                <td class="xls-td"><input type="text" data-col="category"       autocomplete="off" class="xls-input" placeholder="Category"></td>
+                <td class="xls-td"><input type="text" data-col="item"           autocomplete="off" class="xls-input" placeholder="Item"></td>
+                <td class="xls-td"><input type="text" data-col="description"    autocomplete="off" class="xls-input" placeholder="Description"></td>
+                <td class="xls-td"><input type="text" data-col="mode"           autocomplete="off" class="xls-input" placeholder="Mode of Procurement"></td>
+                <td class="xls-td"><input type="text" data-col="personnel"      autocomplete="off" class="xls-input" placeholder="Personnel name"></td>
+                <td class="xls-td"><input type="text" data-col="position"       autocomplete="off" class="xls-input" placeholder="Position"></td>
+                <td class="xls-td"><input type="number" id="src-cost-${id}" oninput="calcCost(${id})" class="xls-input text-right" placeholder="0.00" min="0" step="0.01"></td>
+                <td class="xls-td"><input type="number" id="src-qty-${id}"  oninput="calcCost(${id})" class="xls-input text-right" placeholder="0"    min="0" step="1"></td>
+                <td class="xls-td"><input type="number" class="xls-input text-right" placeholder="0"    min="0" step="1"></td>
+                <td class="xls-td"><input type="date"   class="xls-input" value="${today}"></td>
+                <td class="xls-td text-center w-10">
+                    <button onclick="deleteRow(${id})" class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Remove row">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </td>`;
+            tbody.appendChild(tr);
+        }
+
+        function addDistRow(id, displayNum) {
+            const tbody = document.getElementById('assetDistBody');
+            const tr = document.createElement('tr');
+            tr.id = `dst-${id}`;
+            tr.className = 'xls-row group border-b border-slate-100';
+            tr.dataset.rowIndex = id;
+            const today = new Date().toISOString().split('T')[0];
+            tr.innerHTML = `
+                <td class="xls-td xls-sticky-col text-center sticky left-0 w-10" style="background:inherit">
+                    <span class="row-num text-[10px] font-black text-slate-300">${displayNum}</span>
+                </td>
+                <td class="xls-td"><span class="xls-const">Region IX</span></td>
+                <td class="xls-td"><span class="xls-const">Division of Zamboanga City</span></td>
+                <td class="xls-td"><input type="text"   data-col="school-type" autocomplete="off" class="xls-input" placeholder="School/Office type"></td>
+                <td class="xls-td"><input type="text"   data-col="school-id"   autocomplete="off" class="xls-input" placeholder="School ID" inputmode="numeric"></td>
+                <td class="xls-td"><input type="text"   data-col="school-name" autocomplete="off" class="xls-input" placeholder="School / Office name"></td>
+                <td class="xls-td"><input type="text"   data-col="occupancy"   autocomplete="off" class="xls-input" placeholder="Nature of occupancy"></td>
+                <td class="xls-td"><input type="text"   data-col="location"    autocomplete="off" class="xls-input" placeholder="Location"></td>
+                <td class="xls-td"><input type="text" id="dst-prop-${id}" oninput="checkPropertyNumber(${id})" autocomplete="off" class="xls-input" placeholder="Property number"></td>
+                <td class="xls-td"><input type="number" id="dst-cost-${id}" autocomplete="off" class="xls-input text-right bg-slate-50 dark:bg-white/5 cursor-not-allowed" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1"></td>
+                <td class="xls-td"><input type="date"                          autocomplete="off" class="xls-input" value="${today}"></td>
+                <td class="xls-td text-center w-10">
+                    <button onclick="deleteRow(${id})" class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Remove row">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </td>`;
+            tbody.appendChild(tr);
+        }
+
+        function calcCost(id) {
+            const cost = parseFloat(document.getElementById(`src-cost-${id}`).value) || 0;
+            const qty = parseFloat(document.getElementById(`src-qty-${id}`).value) || 0;
+            const dstCost = document.getElementById(`dst-cost-${id}`);
+            if (dstCost) dstCost.value = (cost * qty).toFixed(2);
+        }
+
+        function checkPropertyNumber(id) {
+            const propInput = document.getElementById(`dst-prop-${id}`);
+            const qtyInput = document.getElementById(`src-qty-${id}`);
+            if (!propInput || !qtyInput) return;
+            
+            if (propInput.value.trim() !== '') {
+                qtyInput.value = 1;
+                qtyInput.readOnly = true;
+                qtyInput.classList.add('bg-slate-50', 'dark:bg-white/5', 'cursor-not-allowed');
+            } else {
+                qtyInput.readOnly = false;
+                qtyInput.classList.remove('bg-slate-50', 'dark:bg-white/5', 'cursor-not-allowed');
+            }
+            calcCost(id);
+        }
+
+        // Delete paired rows from BOTH tables by shared row index id
+        function deleteRow(id) {
+            const srcRow  = document.getElementById(`src-${id}`);
+            const distRow = document.getElementById(`dst-${id}`);
+            if (srcRow)  srcRow.remove();
+            if (distRow) distRow.remove();
+            _rowCount = document.querySelectorAll('#assetSourceBody tr').length;
+            // Renumber both tables together
+            const srcRows  = document.querySelectorAll('#assetSourceBody tr');
+            const distRows = document.querySelectorAll('#assetDistBody tr');
+            srcRows.forEach((r, i)  => { const el = r.querySelector('.row-num');  if (el) el.textContent = i + 1; });
+            distRows.forEach((r, i) => { const el = r.querySelector('.row-num');  if (el) el.textContent = i + 1; });
+            // Show empty states if no rows remain
+            if (_rowCount === 0) {
+                document.getElementById('assetSourceEmpty').classList.remove('hidden');
+                document.getElementById('assetDistEmpty').classList.remove('hidden');
+            }
+            updateRowCount();
+            updateNewLabels();
+        }
+
+        function updateRowCount() {
+            const srcVisible = !document.getElementById('panelAssetSource').classList.contains('hidden');
+            const label = srcVisible ? 'Asset Source' : 'Asset Distribution';
+            document.getElementById('rowCountLabel').textContent =
+                _rowCount + ' ' + label + ' Row' + (_rowCount !== 1 ? 's' : '') + ' (paired)';
+        }
+
+        // =============================================
+        // BULK ADD MODAL LOGIC
+        // =============================================
+        function openBulkAddModal() {
+            const m = document.getElementById('bulkAddModal');
+            m.classList.remove('hidden');
+            setTimeout(() => {
+                m.classList.remove('opacity-0');
+                m.querySelector('.transform').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeBulkAddModal() {
+            const m = document.getElementById('bulkAddModal');
+            m.classList.add('opacity-0');
+            m.querySelector('.transform').classList.add('scale-95');
+            setTimeout(() => m.classList.add('hidden'), 300);
+        }
+
+        function confirmBulkAdd() {
+            const count = parseInt(document.getElementById('bulkRowCount').value) || 1;
+            
+            // Gather all pre-fill values
+            const data = {
+                classification: document.getElementById('bClassification').value,
+                category: document.getElementById('bCategory').value,
+                item: document.getElementById('bItem').value,
+                description: document.getElementById('bDescription').value,
+                personnel: document.getElementById('bPersonnel').value,
+                position: document.getElementById('bPosition').value,
+                cost1: document.getElementById('bCost').value,
+                qty1: document.getElementById('bQty1').value,
+                life: document.getElementById('bLife').value,
+                date1: document.getElementById('bDate1').value,
+
+                schoolType: document.getElementById('bSchoolType').value,
+                schoolId: document.getElementById('bSchoolId').value,
+                schoolName: document.getElementById('bSchoolName').value,
+                occupancy: document.getElementById('bOccupancy').value,
+                location: document.getElementById('bLocation').value,
+                propertyNo: document.getElementById('bPropertyNo').value,
+                cost2: document.getElementById('bCost2').value,
+                date2: document.getElementById('bDate2').value
+            };
+
+            const startIdx = document.querySelectorAll('#assetSourceBody tr').length;
+
+            // Generate rows
+            for (let i = 0; i < count; i++) {
+                addAssetRow();
+            }
+
+            const srcRows = document.querySelectorAll('#assetSourceBody tr');
+            const distRows = document.querySelectorAll('#assetDistBody tr');
+
+            for (let i = startIdx; i < startIdx + count; i++) {
+                const src = srcRows[i];
+                const dst = distRows[i];
+
+                if (src) {
+                    if (data.classification) setColVal(src, 'classification', data.classification);
+                    if (data.category)       setColVal(src, 'category', data.category);
+                    if (data.item)           setColVal(src, 'item', data.item);
+                    if (data.description)    setColVal(src, 'description', data.description);
+                    if (data.personnel)      setColVal(src, 'personnel', data.personnel);
+                    if (data.position)       setColVal(src, 'position', data.position);
+                    
+                    const inputs = src.querySelectorAll('input');
+                    if (data.cost1 && inputs[7]) inputs[7].value = data.cost1;
+                    if (data.qty1 && inputs[8])  inputs[8].value = data.qty1;
+                    if (data.life && inputs[9])  inputs[9].value = data.life;
+                    if (data.date1 && inputs[10]) inputs[10].value = data.date1;
+                }
+                
+                if (dst) {
+                    if (data.schoolType) setColVal(dst, 'school-type', data.schoolType);
+                    if (data.schoolId)   setColVal(dst, 'school-id', data.schoolId);
+                    if (data.schoolName) setColVal(dst, 'school-name', data.schoolName);
+                    if (data.occupancy)  setColVal(dst, 'occupancy', data.occupancy);
+                    if (data.location)   setColVal(dst, 'location', data.location);
+                    
+                    const inputs = dst.querySelectorAll('input');
+                    if (data.propertyNo && inputs[5]) inputs[5].value = data.propertyNo;
+                    if (data.cost2 && inputs[6])      inputs[6].value = data.cost2;
+                    if (data.date2 && inputs[7])      inputs[7].value = data.date2;
+                }
+            }
+
+            // Sync tags
+            updateNewLabels();
+
+            // Clear modal inputs
+            document.querySelectorAll('#bulkAddModal input').forEach(inp => {
+                if(inp.id !== 'bulkRowCount') inp.value = '';
+            });
+            document.getElementById('bulkRowCount').value = '1';
+            
+            closeBulkAddModal();
+        }
+
+        function setColVal(row, colName, val) {
+            const el = row.querySelector(`input[data-col="${colName}"]`);
+            if (el) el.value = val;
+        }
+        function closeBulkAddModal() { document.getElementById('bulkAddModal').classList.add('hidden'); }
+
+        function submitRegistration() {
+            Swal.fire({
+                title: 'Backend Not Connected',
+                text: 'Registration logic will be wired up after the design is confirmed.',
+                icon: 'info',
+                confirmButtonColor: '#c00000',
+                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
+            });
         }
 
         function renderForm() {
@@ -1557,7 +2147,440 @@
             if (extWrap  && !extWrap.contains(e.target))  document.getElementById('distExternalDropdown')?.classList.add('hidden');
             if (persWrap && !persWrap.contains(e.target)) document.getElementById('distPersonnelDropdown')?.classList.add('hidden');
         });
+        // ─── Custom Autocomplete Logic ───────────────────────────────────────
+        const dbSuggestions = {};
+        // Parse existing datalists into dictionaries on load
+        document.querySelectorAll('datalist[id^="dl-"]').forEach(dl => {
+            const colName = dl.id.replace('dl-', '');
+            dbSuggestions[colName] = Array.from(dl.options).map(opt => opt.value).filter(Boolean);
+        });
+        
+        let activeAutocomplete = null;
 
+        document.addEventListener('focusin', handleAutocompleteEvent);
+        document.addEventListener('input', handleAutocompleteEvent);
+        document.addEventListener('mousedown', (e) => {
+            if (activeAutocomplete && !e.target.closest('.custom-autocomplete') && !e.target.hasAttribute('data-col')) {
+                closeAutocomplete();
+            }
+        });
+
+        function closeAutocomplete() {
+            if (activeAutocomplete) {
+                activeAutocomplete.remove();
+                activeAutocomplete = null;
+            }
+        }
+
+        function handleAutocompleteEvent(e) {
+            const input = e.target;
+            if (!input || input.tagName !== 'INPUT' || !input.hasAttribute('data-col')) return;
+
+            const colName = input.getAttribute('data-col');
+            const typedValue = input.value.toLowerCase().trim();
+            
+            // Gather most recent typed data per column (from DOM)
+            const allInputsInCol = Array.from(document.querySelectorAll(`input[data-col="${colName}"]`));
+            const localData = [];
+            
+            // Reverse to get most recent (assuming bottom rows are most recent)
+            for (let i = allInputsInCol.length - 1; i >= 0; i--) {
+                const val = allInputsInCol[i].value.trim();
+                // We don't exclude current typed value if empty, to show all options
+                if (val && !localData.includes(val) && allInputsInCol[i] !== input) {
+                    localData.push(val);
+                }
+            }
+            
+            // Fallback to DB data
+            const dbData = dbSuggestions[colName] || [];
+            
+            // Merge unique suggestions
+            const suggestions = new Set(localData);
+            for (const item of dbData) {
+                suggestions.add(item);
+            }
+            
+            // Filter by typed value and take up to 5
+            const filtered = Array.from(suggestions)
+                .filter(val => val.toLowerCase().includes(typedValue))
+                .slice(0, 5);
+
+            closeAutocomplete();
+
+            if (filtered.length === 0) return;
+
+            // Render dropdown
+            const rect = input.getBoundingClientRect();
+            const dropdown = document.createElement('div');
+            dropdown.className = 'custom-autocomplete';
+            dropdown.style.left = `${rect.left + window.scrollX}px`;
+            // Check if there's space below, else show above
+            const spaceBelow = window.innerHeight - rect.bottom;
+            if (spaceBelow < 150 && rect.top > 150) {
+                dropdown.style.bottom = `${window.innerHeight - rect.top - window.scrollY}px`;
+                dropdown.style.top = 'auto';
+            } else {
+                dropdown.style.top = `${rect.bottom + window.scrollY}px`;
+                dropdown.style.bottom = 'auto';
+            }
+            dropdown.style.width = `${input.offsetWidth}px`;
+
+            filtered.forEach(val => {
+                const item = document.createElement('div');
+                item.className = 'custom-autocomplete-item';
+                item.textContent = val;
+                item.addEventListener('mousedown', (evt) => {
+                    evt.preventDefault(); // keep focus
+                    input.value = val;
+                    closeAutocomplete();
+                    updateNewLabels(); // Update NEW labels immediately
+                });
+                dropdown.appendChild(item);
+            });
+
+            document.body.appendChild(dropdown);
+            activeAutocomplete = dropdown;
+        }
+        
+        // Feature: "NEW" label for unrecognized/first-time data per column
+        function updateNewLabels() {
+            const cols = new Set();
+            document.querySelectorAll('input[data-col]').forEach(el => cols.add(el.getAttribute('data-col')));
+
+            cols.forEach(colName => {
+                const dbData = (dbSuggestions[colName] || []).map(v => v.toLowerCase().trim());
+                const seen = new Set(dbData);
+                
+                const inputs = document.querySelectorAll(`input[data-col="${colName}"]`);
+                inputs.forEach(input => {
+                    const val = input.value.trim().toLowerCase();
+                    const td = input.closest('td') || input.parentElement;
+                    
+                    const existingBadge = td.querySelector('.new-badge');
+                    if (existingBadge) existingBadge.remove();
+
+                    if (val !== '') {
+                        if (!seen.has(val)) {
+                            // First time we see this unrecognized value
+                            const badge = document.createElement('span');
+                            badge.className = 'new-badge';
+                            badge.textContent = 'NEW';
+                            td.appendChild(badge);
+                            seen.add(val); // Mark as seen so subsequent rows don't get the badge
+                        }
+                    }
+                });
+            });
+        }
+
+        // Attach input listener strictly for the new labels
+        document.addEventListener('input', updateNewLabels);
+
+        window.addEventListener('scroll', (e) => {
+            // Ignore scroll events originating from the autocomplete dropdown itself
+            if (activeAutocomplete && (e.target === activeAutocomplete || activeAutocomplete.contains(e.target))) return;
+            closeAutocomplete();
+        }, true);
+        window.addEventListener('resize', closeAutocomplete);
+</script>
+
+{{-- ========================================== --}}
+{{-- BULK ADD MODAL                             --}}
+{{-- ========================================== --}}
+<div id="bulkAddModal" class="fixed inset-0 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeBulkAddModal()"></div>
+    <div class="bg-white dark:bg-[#141f33] border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-2xl w-[90vw] max-w-5xl max-h-[90vh] flex flex-col relative z-10 transform scale-95 transition-transform duration-300">
+        
+        {{-- Header --}}
+        <div class="px-8 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <h3 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight italic">Bulk Add Rows</h3>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Pre-fill data across multiple new rows</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 bg-slate-50 dark:bg-[#0a101d] px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Rows to add</label>
+                    <input type="number" id="bulkRowCount" value="1" min="1" max="100" class="w-16 bg-transparent text-center font-black text-slate-800 dark:text-white outline-none">
+                </div>
+                <button onclick="closeBulkAddModal()" class="px-5 py-3 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Cancel</button>
+                <button onclick="confirmBulkAdd()" class="px-6 py-3 rounded-xl text-sm font-black text-white bg-[#c00000] hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all">Confirm Bulk Add</button>
+            </div>
+        </div>
+
+        {{-- Body --}}
+        <div class="p-8 overflow-y-auto custom-scroll flex-1 space-y-10">
+            
+            {{-- Source Section --}}
+            <div>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-6 h-6 bg-amber-500/20 text-amber-500 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0">1</div>
+                    <h4 class="font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest text-xs">Asset Data Entry (Source)</h4>
+                </div>
+                <div class="grid grid-cols-2 gap-x-6 gap-y-5">
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Classification</label><input type="text" id="bClassification" data-col="classification" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Category</label><input type="text" id="bCategory" data-col="category" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Item</label><input type="text" id="bItem" data-col="item" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Description</label><input type="text" id="bDescription" data-col="description" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Source Personnel</label><input type="text" id="bPersonnel" data-col="personnel" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Personnel Position</label><input type="text" id="bPosition" data-col="position" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Cost per Unit</label><input type="number" id="bCost" oninput="calcBulkCost()" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="1" min="0" step="0.01"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Quantity</label><input type="number" id="bQty1" oninput="calcBulkCost()" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="1" min="0" step="1"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Expected Useful Life</label><input type="number" id="bLife" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="1" min="0" step="1"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Acceptance Date</label><input type="date" id="bDate1" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-100 dark:border-slate-800"></div>
+
+            {{-- Target Section --}}
+            <div>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-6 h-6 bg-amber-500/20 text-amber-500 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0">2</div>
+                    <h4 class="font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest text-xs">Asset Distribution (Target)</h4>
+                </div>
+                <div class="grid grid-cols-2 gap-x-6 gap-y-5">
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Region</label>
+                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 flex justify-between items-center cursor-not-allowed">Region IX <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
+                    </div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Division</label>
+                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 flex justify-between items-center cursor-not-allowed">Division of Zamboanga City <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
+                    </div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Office/School Type</label><input type="text" id="bSchoolType" data-col="school-type" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">School ID</label><input type="text" id="bSchoolId" data-col="school-id" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select" inputmode="numeric"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label><input type="text" id="bSchoolName" data-col="school-name" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Nature of Occupancy</label><input type="text" id="bOccupancy" data-col="occupancy" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Location</label><input type="text" id="bLocation" data-col="location" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Property Number</label><input type="text" id="bPropertyNo" oninput="checkBulkPropertyNumber()" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Acquisition Cost</label>
+                        <div class="relative">
+                            <input type="number" id="bCost2" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 cursor-not-allowed outline-none text-right pr-10" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1">
+                            <svg class="w-3.5 h-3.5 opacity-50 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div>
+                    </div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label><input type="date" id="bDate2" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>
+    function calcBulkCost() {
+        const cost = parseFloat(document.getElementById('bCost').value) || 0;
+        const qty = parseFloat(document.getElementById('bQty1').value) || 0;
+        document.getElementById('bCost2').value = (cost * qty).toFixed(2);
+    }
+    
+    function checkBulkPropertyNumber() {
+        const propInput = document.getElementById('bPropertyNo');
+        const qtyInput = document.getElementById('bQty1');
+        if (!propInput || !qtyInput) return;
+        
+        if (propInput.value.trim() !== '') {
+            qtyInput.value = 1;
+            qtyInput.readOnly = true;
+            qtyInput.classList.add('bg-slate-50', 'dark:bg-white/5', 'cursor-not-allowed');
+        } else {
+            qtyInput.readOnly = false;
+            qtyInput.classList.remove('bg-slate-50', 'dark:bg-white/5', 'cursor-not-allowed');
+        }
+        calcBulkCost();
+    }
+    
+    function openBulkAddModal() {
+        const m = document.getElementById('bulkAddModal');
+        m.classList.remove('hidden');
+        setTimeout(() => {
+            m.classList.remove('opacity-0');
+            m.querySelector('.transform').classList.remove('scale-95');
+        }, 10);
+    }
+
+    function closeBulkAddModal() {
+        const m = document.getElementById('bulkAddModal');
+        m.classList.add('opacity-0');
+        m.querySelector('.transform').classList.add('scale-95');
+        setTimeout(() => m.classList.add('hidden'), 300);
+    }
+
+    function confirmBulkAdd() {
+        const count = parseInt(document.getElementById('bulkRowCount').value) || 1;
+        for(let i=0; i<count; i++) addAssetRow();
+        
+        const srcRows = Array.from(document.querySelectorAll('#assetSourceBody tr')).slice(-count);
+        const dstRows = Array.from(document.querySelectorAll('#assetDistBody tr')).slice(-count);
+        const modalInputs = document.getElementById('bulkAddModal').querySelectorAll('input[data-col]');
+        
+        for(let i=0; i<count; i++) {
+            modalInputs.forEach(mi => {
+                const col = mi.getAttribute('data-col');
+                let target = srcRows[i].querySelector(`input[data-col="${col}"]`);
+                if(!target) target = dstRows[i].querySelector(`input[data-col="${col}"]`);
+                if(target) target.value = mi.value;
+            });
+            
+            const id = srcRows[i].dataset.rowIndex;
+            const targetCost = document.getElementById(`src-cost-${id}`);
+            const targetQty = document.getElementById(`src-qty-${id}`);
+            if(targetCost) targetCost.value = document.getElementById('bCost').value;
+            if(targetQty) targetQty.value = document.getElementById('bQty1').value;
+            calcCost(id);
+            
+            const dateInputs1 = srcRows[i].querySelectorAll('input[type="date"]');
+            if (dateInputs1.length > 0) dateInputs1[0].value = document.getElementById('bDate1').value;
+            const dateInputs2 = dstRows[i].querySelectorAll('input[type="date"]');
+            if (dateInputs2.length > 0) dateInputs2[0].value = document.getElementById('bDate2').value;
+        }
+        
+        updateNewLabels();
+        closeBulkAddModal();
+    }
+    
+    // Set default dates in bulk modal on load
+    document.addEventListener('DOMContentLoaded', () => {
+        const d = new Date().toISOString().split('T')[0];
+        document.getElementById('bDate1').value = d;
+        document.getElementById('bDate2').value = d;
+    });
+
+    function submitRegistration() {
+        const rows = Array.from(document.querySelectorAll('#assetSourceBody tr'));
+        if (rows.length === 0) {
+            Swal.fire({ icon: 'warning', title: 'No Data', text: 'Please add at least one row to register.', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+            return;
+        }
+
+        const acqSourceInput = document.getElementById('acqSourceInput').value.trim();
+        if (!acqSourceInput) {
+            Swal.fire({ icon: 'warning', title: 'Missing Source', text: 'Please specify the Source of Acquisition at the top of the form.', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+            return;
+        }
+
+        let isValid = true;
+        let payload = [];
+
+        for (let i = 0; i < rows.length; i++) {
+            const srcRow = rows[i];
+            const id = srcRow.dataset.rowIndex;
+            const dstRow = document.getElementById(`dst-${id}`);
+            
+            if (!dstRow) continue;
+
+            const rowData = {};
+
+            // Parse src row inputs
+            const srcInputs = srcRow.querySelectorAll('input');
+            srcInputs.forEach(input => {
+                const col = input.getAttribute('data-col');
+                if (col) {
+                    rowData[col] = input.value.trim();
+                    if (!rowData[col] && !['description', 'personnel', 'position'].includes(col)) isValid = false;
+                } else if (input.id === `src-cost-${id}`) {
+                    rowData['cost'] = input.value.trim();
+                    if (!rowData['cost']) isValid = false;
+                } else if (input.id === `src-qty-${id}`) {
+                    rowData['qty'] = input.value.trim();
+                    if (!rowData['qty']) isValid = false;
+                } else if (input.placeholder === '0' && !input.id) {
+                    rowData['useful-life'] = input.value.trim();
+                } else if (input.type === 'date') {
+                    rowData['acceptance-date'] = input.value.trim();
+                    if (!rowData['acceptance-date']) isValid = false;
+                }
+            });
+
+            // Parse dst row inputs
+            const dstInputs = dstRow.querySelectorAll('input');
+            dstInputs.forEach(input => {
+                const col = input.getAttribute('data-col');
+                if (col) {
+                    rowData[col] = input.value.trim();
+                    if (!rowData[col]) {
+                        if (col !== 'property-no') isValid = false;
+                    }
+                } else if (input.id === `dst-prop-${id}`) {
+                    rowData['property-no'] = input.value.trim();
+                } else if (input.type === 'date') {
+                    rowData['acquisition-date'] = input.value.trim();
+                    if (!rowData['acquisition-date']) isValid = false;
+                }
+            });
+            
+            const spans = dstRow.querySelectorAll('.xls-const');
+            if (spans.length >= 2) {
+                rowData['region'] = spans[0].textContent.trim();
+                rowData['division'] = spans[1].textContent.trim();
+            }
+
+            payload.push(rowData);
+        }
+
+        if (!isValid) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Incomplete Fields',
+                text: 'Please fill in all required fields. Only Description, Source Personnel, Personnel Position, Useful Life, and Property Number can be left blank.',
+                confirmButtonColor: '#c00000',
+                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
+            });
+            return;
+        }
+
+        Swal.fire({
+            title: 'Confirm Registration',
+            text: `Are you sure you want to register these ${payload.length} items?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#c00000',
+            cancelButtonColor: '#94a3b8',
+            confirmButtonText: 'Yes, Register',
+            cancelButtonText: 'Cancel',
+            customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Registering...',
+                    text: 'Please wait while the system processes your batch.',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                fetch('/inventory-setup/batch', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        source_of_acquisition: acqSourceInput,
+                        rows: payload
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: data.message || 'Items successfully registered.',
+                            confirmButtonColor: '#10b981',
+                            customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
+                        }).then(() => {
+                            window.location.href = '/view-all-assets';
+                        });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Registration Failed', text: data.message || 'An error occurred.', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire({ icon: 'error', title: 'System Error', text: 'A network or server error occurred.', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
+                });
+            }
+        });
+    }
 </script>
 </body>
 </html>

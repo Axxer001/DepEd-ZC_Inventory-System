@@ -28,6 +28,14 @@ Route::middleware('auth')->group(function () {
     
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/dashboard/quick-asset', [DashboardController::class, 'storeQuickAsset'])->name('inventory.dashboard.store');
+
+    // --- Dark Mode Preference ---
+    Route::post('/user/dark-mode', function (Request $request) {
+        $user = auth()->user();
+        $user->dark_mode = !$user->dark_mode;
+        $user->save();
+        return response()->json(['dark_mode' => $user->dark_mode]);
+    })->name('user.dark-mode');
     
     Route::get('/inventory-setup', function () {
         set_time_limit(300);
@@ -40,12 +48,26 @@ Route::middleware('auth')->group(function () {
         $quadrants = DB::table('quadrants')->get();
         $categories = DB::table('categories')->orderBy('name')->get();
         $items = DB::table('items')->orderBy('name')->get();
+        
+        // Fetch sub-items (asset_sources) mapping description to name for the view
+        $subItems = DB::table('asset_sources')
+            ->select('id', 'item_id', DB::raw('COALESCE(description, "General") as name'), 'acquisition_source_id as distributor_id')
+            ->get();
+            
+        // Fetch stakeholders (acquisition_sources) mapping source_type to type for the view
+        $stakeholders = DB::table('acquisition_sources')
+            ->select('id', 'name', DB::raw('CASE WHEN source_type = "External" THEN "Distributor" ELSE "System" END as type'))
+            ->get();
+            
+        // Fetch distributions (asset_distributions)
+        $stakeholderOwnerships = DB::table('asset_distributions')->get();
+
         $allSchools = DB::table('schools')
             ->select('id', 'school_id', 'name')
             ->orderBy('name')
             ->get();
 
-        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'allSchools'));
+        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'allSchools', 'subItems', 'stakeholders', 'stakeholderOwnerships'));
     })->name('inventory.setup');
 
 
@@ -169,12 +191,22 @@ Route::middleware('auth')->group(function () {
         set_time_limit(300);
         $categories = DB::table('categories')->orderBy('name')->get();
         $items = DB::table('items')->orderBy('name')->get();
-        $acquisitionSources = DB::table('acquisition_sources')->orderBy('name')->get();
-        $allSchools = DB::table('schools')->select('id', 'school_id', 'name')->orderBy('name')->get();
-        return view('register-item', compact('categories', 'items', 'acquisitionSources', 'allSchools'));
-    })->name('register.item');
+        
+        // Fetch sub-items (asset_sources) mapping description to name for the view
+        $subItems = DB::table('asset_sources')
+            ->select('id', 'item_id', DB::raw('COALESCE(description, "General") as name'), 'acquisition_source_id as distributor_id')
+            ->get();
+            
+        // Fetch stakeholders (acquisition_sources) mapping source_type to type for the view
+        $stakeholders = DB::table('acquisition_sources')
+            ->select('id', 'name', DB::raw('CASE WHEN source_type = "External" THEN "Distributor" ELSE "System" END as type'))
+            ->get();
 
+        $allSchools = DB::table('schools')->select('id', 'school_id', 'name')->orderBy('name')->get();
+        return view('register-item', compact('categories', 'items', 'stakeholders', 'subItems', 'allSchools'));
+    })->name('register.item');
     Route::post('/register-item', [InventorySetupController::class, 'storeItem'])->name('register.item.store');
+    Route::post('/inventory-setup/batch', [InventorySetupController::class, 'storeBatch'])->name('inventory.setup.storeBatch');
     Route::post('/api/recipients/add', [\App\Http\Controllers\RecipientRegistryController::class, 'add'])->name('recipients.add');
 
 });

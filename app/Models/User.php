@@ -22,6 +22,7 @@ class User extends Authenticatable
         'email',
         'password',
         'approved',
+        'dark_mode',
     ];
 
     /**
@@ -45,6 +46,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'approved' => 'boolean',
+            'dark_mode' => 'boolean',
         ];
     }
 }
