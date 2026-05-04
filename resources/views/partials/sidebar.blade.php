@@ -364,9 +364,11 @@ html.dark body                    { background-color: #0f172a; color: #e2e8f0; }
 html.dark .bg-white               { background-color: #1e293b !important; }
 html.dark .bg-slate-50            { background-color: #0f172a !important; }
 html.dark .bg-slate-50\/30        { background-color: rgba(15,23,42,0.3) !important; }
+html.dark .bg-slate-50\/50        { background-color: rgba(15,23,42,0.5) !important; }
 html.dark .bg-slate-100           { background-color: #1e293b !important; }
-html.dark .bg-white\/80           { background-color: rgba(15,23,42,0.85) !important; }
-html.dark .bg-white\/40           { background-color: rgba(15,23,42,0.4) !important; }
+html.dark .bg-white\/80           { background-color: rgba(30,41,59,0.85) !important; }
+html.dark .bg-white\/70           { background-color: rgba(30,41,59,0.7) !important; }
+html.dark .bg-white\/40           { background-color: rgba(30,41,59,0.4) !important; }
 html.dark .bg-white\/5            { background-color: rgba(255,255,255,0.05) !important; }
 
 /* ── Text ── */

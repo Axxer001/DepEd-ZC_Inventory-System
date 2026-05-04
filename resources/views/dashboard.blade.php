@@ -49,7 +49,7 @@
 
         {{-- MAIN CONTENT AREA --}}
         <main class="flex-grow flex flex-col overflow-y-auto custom-scroll bg-slate-50/50">
-            <header class="p-6 lg:p-10 pb-4 flex justify-between items-center bg-white/70 backdrop-blur-xl sticky top-0 z-20 hidden lg:flex border-b border-slate-100">
+            <header class="py-4 px-6 lg:py-5 lg:px-8 flex justify-between items-center bg-white/70 backdrop-blur-xl sticky top-0 z-20 hidden lg:flex border-b border-slate-100">
                 <div>
                     <h2 class="text-3xl font-black text-slate-900 tracking-tight italic uppercase leading-none" x-text="filterLabel">Inventory Overview</h2>
                     <p class="text-[10px] font-bold text-[#c00000] uppercase tracking-widest mt-2 ml-1">Zamboanga City Division • Asset Management</p>
