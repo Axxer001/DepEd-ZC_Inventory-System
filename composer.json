@@ -33,6 +33,7 @@
             "Tests\\": "tests/"
         }
     },
+    
     "scripts": {
         "setup": [
             "composer install",
