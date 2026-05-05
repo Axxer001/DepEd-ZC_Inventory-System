@@ -9,6 +9,7 @@ use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventorySetupController;
 use App\Http\Controllers\AssetController;
+use App\Http\Controllers\BuildingImportController;
 
 // --- Public Routes ---
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
@@ -184,6 +185,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/partials/import', [\App\Http\Controllers\ImportController::class, 'show'])->name('assets.import');
     Route::post('/partials/import', [\App\Http\Controllers\ImportController::class, 'process'])->name('assets.import.process');
     Route::post('/partials/import/confirm', [\App\Http\Controllers\ImportController::class, 'confirm'])->name('assets.import.confirm');
+
+    // --- Building PIF Import ---
+    Route::get('/buildings/import', [BuildingImportController::class, 'show'])->name('buildings.import');
+    Route::post('/buildings/import/preview', [BuildingImportController::class, 'preview'])->name('buildings.import.preview');
+    Route::post('/buildings/import/confirm', [BuildingImportController::class, 'confirm'])->name('buildings.import.confirm');
 
     // --- Registration & Items ---
     Route::get('/register-distributions', function () { return view('register-distributions'); });

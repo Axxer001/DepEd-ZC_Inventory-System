@@ -1,13 +1,22 @@
 {{-- Anti-FOUC: apply dark mode class before page renders --}}
-@auth
 <script>
     (function(){
-        if ({{ auth()->user()->dark_mode ? 'true' : 'false' }}) {
+        let isDark = localStorage.getItem('theme') === 'dark';
+        let currentUserId = '{{ auth()->check() ? auth()->id() : "guest" }}';
+        
+        if (!localStorage.getItem('theme') || localStorage.getItem('last_user_id') !== currentUserId) {
+            isDark = {{ auth()->check() && auth()->user()->dark_mode ? 'true' : 'false' }};
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            localStorage.setItem('last_user_id', currentUserId);
+        }
+        
+        if (isDark) {
             document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
         }
     })();
 </script>
-@endauth
 
 <div id="sidebarOverlay" onclick="toggleSidebar()" class="fixed inset-0 bg-slate-900/40 z-40 hidden backdrop-blur-sm lg:hidden transition-opacity duration-300 opacity-0"></div>
 
@@ -140,6 +149,26 @@
             @endif
         </div>
 
+
+        {{-- Import Reports --}}
+<div class="relative group/navitem mt-2">
+    @if(request()->routeIs('buildings.import*')) 
+        <a href="{{ route('buildings.import') }}" class="flex items-center gap-4 px-4 py-3 bg-red-50 text-[#c00000] rounded-xl font-bold border border-red-100 transition-all" title="Import Reports">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:-translate-y-1">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="sidebar-label hidden whitespace-nowrap text-sm">Import Reports</span>
+        </a>
+        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#c00000] rounded-r-full"></div>
+    @else
+        <a href="{{ route('buildings.import') }}" class="flex items-center gap-4 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-[#c00000] rounded-xl font-semibold transition-all group" title="Import Reports">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:-translate-y-1">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+            </svg>
+            <span class="sidebar-label hidden whitespace-nowrap text-sm">Import Reports</span>
+        </a>
+    @endif
+</div>
 
         {{-- Download Reports --}}
 <div class="relative group/navitem mt-2">
@@ -310,8 +339,6 @@
     }
 
     // ── Dark Mode ──────────────────────────────────────────────
-    const _dmPref = {{ auth()->check() ? (auth()->user()->dark_mode ? 'true' : 'false') : 'false' }};
-
     function applyDarkMode(isDark) {
         const html = document.documentElement;
         const moon  = document.getElementById('dmIconMoon');
@@ -336,12 +363,15 @@
         }
     }
 
-    // Apply on page load immediately (before paint)
-    applyDarkMode(_dmPref);
+    // Apply on page load immediately based on html class set by anti-FOUC script
+    applyDarkMode(document.documentElement.classList.contains('dark'));
 
     async function toggleDarkMode() {
         const isDark = document.documentElement.classList.contains('dark');
-        applyDarkMode(!isDark);   // Instant UI feedback
+        const newTheme = !isDark;
+        applyDarkMode(newTheme);   // Instant UI feedback
+        localStorage.setItem('theme', newTheme ? 'dark' : 'light');
+        
         try {
             const csrf = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
             await fetch('/user/dark-mode', {
@@ -350,6 +380,13 @@
             });
         } catch (e) { /* silent — preference already applied visually */ }
     }
+
+    // Listen for dark mode changes in other tabs
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'theme') {
+            applyDarkMode(e.newValue === 'dark');
+        }
+    });
 </script>
 
 {{-- ═══════════════════════════════════════════════════════════
