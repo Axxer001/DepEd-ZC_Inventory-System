@@ -141,24 +141,24 @@
         </div>
 
 
-        {{-- CSV Import --}}
+        {{-- Download Reports --}}
 <div class="relative group/navitem mt-2">
     @if(request()->routeIs('assets.import')) {{-- Siguraduhin na ito yung name sa web.php mo --}}
-        <a href="{{ route('assets.import') }}" class="flex items-center gap-4 px-4 py-3 bg-red-50 text-[#c00000] rounded-xl font-bold border border-red-100 transition-all" title="Import CSV File">
+        <a href="{{ route('assets.import') }}" class="flex items-center gap-4 px-4 py-3 bg-red-50 text-[#c00000] rounded-xl font-bold border border-red-100 transition-all" title="Download Reports">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:scale-110">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v3h3" />
             </svg>
-            <span class="sidebar-label hidden whitespace-nowrap text-sm">Import CSV</span>
+            <span class="sidebar-label hidden whitespace-nowrap text-sm">Download Reports</span>
         </a>
         <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#c00000] rounded-r-full"></div>
     @else
-        <a href="{{ route('assets.import') }}" class="flex items-center gap-4 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-[#c00000] rounded-xl font-semibold transition-all group" title="Import CSV File">
+        <a href="{{ route('assets.import') }}" class="flex items-center gap-4 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-[#c00000] rounded-xl font-semibold transition-all group" title="Download Reports">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:scale-110">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v3h3" />
             </svg>
-            <span class="sidebar-label hidden whitespace-nowrap text-sm">Import CSV</span>
+            <span class="sidebar-label hidden whitespace-nowrap text-sm">Download Reports</span>
         </a>
     @endif
 </div>
@@ -364,9 +364,11 @@ html.dark body                    { background-color: #0f172a; color: #e2e8f0; }
 html.dark .bg-white               { background-color: #1e293b !important; }
 html.dark .bg-slate-50            { background-color: #0f172a !important; }
 html.dark .bg-slate-50\/30        { background-color: rgba(15,23,42,0.3) !important; }
+html.dark .bg-slate-50\/50        { background-color: rgba(15,23,42,0.5) !important; }
 html.dark .bg-slate-100           { background-color: #1e293b !important; }
-html.dark .bg-white\/80           { background-color: rgba(15,23,42,0.85) !important; }
-html.dark .bg-white\/40           { background-color: rgba(15,23,42,0.4) !important; }
+html.dark .bg-white\/80           { background-color: rgba(30,41,59,0.85) !important; }
+html.dark .bg-white\/70           { background-color: rgba(30,41,59,0.7) !important; }
+html.dark .bg-white\/40           { background-color: rgba(30,41,59,0.4) !important; }
 html.dark .bg-white\/5            { background-color: rgba(255,255,255,0.05) !important; }
 
 /* ── Text ── */
