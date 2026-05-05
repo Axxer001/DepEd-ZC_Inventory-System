@@ -180,11 +180,11 @@ Route::middleware('auth')->group(function () {
     });
 
 
-    // --- Import/Export ---
-    Route::match(['get', 'post'], '/partials/import/template', [\App\Http\Controllers\ImportController::class, 'downloadTemplate'])->name('assets.import.template');
-    Route::get('/partials/import', [\App\Http\Controllers\ImportController::class, 'show'])->name('assets.import');
-    Route::post('/partials/import', [\App\Http\Controllers\ImportController::class, 'process'])->name('assets.import.process');
-    Route::post('/partials/import/confirm', [\App\Http\Controllers\ImportController::class, 'confirm'])->name('assets.import.confirm');
+    // --- Download Reports ---
+    Route::match(['get', 'post'], '/reports/template', [\App\Http\Controllers\ImportController::class, 'downloadTemplate'])->name('assets.reports.template');
+    Route::get('/reports', [\App\Http\Controllers\ImportController::class, 'show'])->name('assets.reports');
+    Route::post('/reports', [\App\Http\Controllers\ImportController::class, 'process'])->name('assets.reports.process');
+    Route::post('/reports/confirm', [\App\Http\Controllers\ImportController::class, 'confirm'])->name('assets.reports.confirm');
 
     // --- Building PIF Import ---
     Route::get('/buildings/import', [BuildingImportController::class, 'show'])->name('buildings.import');

@@ -29,7 +29,7 @@ class ImportController extends Controller
         // subItemsMap is no longer needed (sub_items table dropped)
         $subItemsMap = collect();
 
-        return view('partials.import', compact('categories', 'itemsMap', 'subItemsMap', 'sources'));
+        return view('partials.download-reports', compact('categories', 'itemsMap', 'subItemsMap', 'sources'));
     }
 
     /**
@@ -139,7 +139,7 @@ class ImportController extends Controller
         }
         $csvRows = $previewRows;
 
-        return view('partials.import', compact('csvRows', 'headers', 'categories', 'itemsMap', 'subItemsMap', 'sources'));
+        return view('partials.download-reports', compact('csvRows', 'headers', 'categories', 'itemsMap', 'subItemsMap', 'sources'));
     }
 
     /**
@@ -151,7 +151,7 @@ class ImportController extends Controller
         $dataRows = $request->input('rows');
 
         if (!$dataRows || count($dataRows) === 0) {
-            return redirect()->route('assets.import')->withErrors(['csv_file' => 'No import data found in submission block. Please preview your import before confirming.']);
+            return redirect()->route('assets.reports')->withErrors(['csv_file' => 'No import data found in submission block. Please preview your import before confirming.']);
         }
 
         $userName = auth()->user() ? auth()->user()->name : 'System';
@@ -325,11 +325,11 @@ class ImportController extends Controller
 
             session()->forget('csv_import_data');
 
-            return redirect()->route('assets.import')->with('success', "Import complete! {$totalImported} asset(s) processed successfully." . ($totalSkipped > 0 ? " {$totalSkipped} row(s) were skipped." : ''));
+            return redirect()->route('assets.reports')->with('success', "Import complete! {$totalImported} asset(s) processed successfully." . ($totalSkipped > 0 ? " {$totalSkipped} row(s) were skipped." : ''));
 
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->route('assets.import')->withErrors(['csv_file' => 'Import failed: ' . $e->getMessage()]);
+            return redirect()->route('assets.reports')->withErrors(['csv_file' => 'Import failed: ' . $e->getMessage()]);
         }
     }
 }

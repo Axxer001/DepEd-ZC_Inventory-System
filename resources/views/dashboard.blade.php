@@ -123,8 +123,8 @@
                                 <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-[#c00000] transition-colors">System Asset Inventory</span>
                                 <span class="text-[8px] font-bold uppercase tracking-widest mt-1.5 text-[#c00000]" x-text="selectedYears.length || selectedMonths.length ? 'Filtered Result' : 'Total System Count'">Overall</span>
                             </div>
-                            <div class="p-3 bg-red-50 text-[#c00000] rounded-2xl group-hover:bg-[#c00000] group-hover:text-white transition-all duration-300 group-hover:rotate-12 shadow-sm">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                            <div class="p-2 bg-white rounded-2xl shadow-sm group-hover:rotate-12 transition-all duration-300">
+                                <img src="{{ asset('images/asset.png') }}" alt="Asset Inventory" class="w-12 h-12 object-contain">
                             </div>
                         </div>
                         <div class="relative z-10">
@@ -143,8 +143,8 @@
                                 <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-[#c00000] transition-colors">Assets Not Yet Distributed</span>
                                 <span class="text-[8px] font-bold uppercase tracking-widest mt-1.5 text-[#c00000]" x-text="selectedYears.length || selectedMonths.length ? 'Filtered Result' : 'Warehouse Stock'">Overall</span>
                             </div>
-                            <div class="p-3 bg-red-50 text-[#c00000] rounded-2xl group-hover:bg-[#c00000] group-hover:text-white transition-all duration-300 group-hover:rotate-12 shadow-sm">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                            <div class="p-2 bg-white rounded-2xl shadow-sm group-hover:rotate-12 transition-all duration-300">
+                                <img src="{{ asset('images/not_yet_distributed.png') }}" alt="Not Yet Distributed" class="w-12 h-12 object-contain">
                             </div>
                         </div>
                         <div class="relative z-10">
@@ -172,8 +172,8 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="p-3 bg-red-50 text-[#c00000] rounded-2xl group-hover:bg-[#c00000] group-hover:text-white transition-all duration-300 group-hover:scale-110 shadow-sm flex items-center justify-center relative overflow-hidden">
-                                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18V5h7a4 4 0 0 1 0 8H7" /><path d="M5 9h12" /><path d="M5 12h12" /></svg>
+                            <div class="p-2 bg-white rounded-2xl shadow-sm group-hover:scale-110 transition-all duration-300 flex items-center justify-center relative overflow-hidden">
+                                <img src="{{ asset('images/pesos.png') }}" alt="Total Amount" class="w-12 h-12 object-contain">
                             </div>
                         </div>
                         <div class="relative z-10">
