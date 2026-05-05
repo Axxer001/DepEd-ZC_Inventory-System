@@ -191,6 +191,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/buildings/import/preview', [BuildingImportController::class, 'preview'])->name('buildings.import.preview');
     Route::post('/buildings/import/confirm', [BuildingImportController::class, 'confirm'])->name('buildings.import.confirm');
 
+    // --- Building Registration ---
+    Route::get('/register-building', function () {
+        $allSchools = DB::table('schools')->select('id', 'school_id', 'name')->orderBy('name')->get();
+        return view('register-building', compact('allSchools'));
+    })->name('register.building');
+    Route::post('/register-building', [\App\Http\Controllers\InventorySetupController::class, 'storeBuilding'])->name('register.building.store');
+
     // --- Registration & Items ---
     Route::get('/register-distributions', function () { return view('register-distributions'); });
     Route::get('/register-item', function () {

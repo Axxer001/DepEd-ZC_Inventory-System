@@ -243,4 +243,109 @@ class InventorySetupController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Store one or more building rows from the registration form.
+     */
+    public function storeBuilding(Request $request)
+    {
+        $rows = $request->input('rows', []);
+
+        if (empty($rows)) {
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No building data submitted.'
+                ], 400);
+            }
+            return back()->withErrors(['rows' => 'No building data submitted.']);
+        }
+
+        $userName = auth()->user() ? auth()->user()->email : 'System';
+        $inserted = 0;
+
+        DB::beginTransaction();
+        try {
+            foreach ($rows as $row) {
+                $officeName = trim($row['office_name'] ?? '');
+                if (empty($officeName)) continue; // skip rows without office name
+
+                // Resolve school FK
+                $schoolId = null;
+                $schoolIdentifier = trim($row['school_identifier'] ?? '');
+                if (!empty($schoolIdentifier)) {
+                    $school = DB::table('schools')
+                        ->where('school_id', $schoolIdentifier)
+                        ->first();
+                    if ($school) $schoolId = $school->id;
+                }
+
+                // Parse numeric fields
+                $storeys    = !empty($row['storeys']) ? (int)$row['storeys'] : null;
+                $classrooms = !empty($row['classrooms']) ? (int)$row['classrooms'] : null;
+                $acquisitionCost = !empty($row['acquisition_cost']) ? (float)str_replace(',', '', $row['acquisition_cost']) : null;
+                $appraisedValue  = !empty($row['appraised_value']) ? (float)str_replace(',', '', $row['appraised_value']) : null;
+
+                DB::table('buildings')->insert([
+                    'school_id'         => $schoolId,
+                    'region'            => trim($row['region'] ?? 'REGION IX'),
+                    'division'          => trim($row['division'] ?? 'Division of Zamboanga City'),
+                    'office_type'       => trim($row['office_type'] ?? '') ?: null,
+                    'school_identifier' => $schoolIdentifier ?: null,
+                    'office_name'       => $officeName,
+                    'address'           => trim($row['address'] ?? '') ?: null,
+                    'storeys'           => $storeys,
+                    'classrooms'        => $classrooms,
+                    'article'           => trim($row['article'] ?? '') ?: null,
+                    'description'       => trim($row['description'] ?? '') ?: null,
+                    'classification'    => trim($row['classification'] ?? '') ?: null,
+                    'occupancy_nature'  => trim($row['occupancy_nature'] ?? '') ?: null,
+                    'location'          => trim($row['location'] ?? '') ?: null,
+                    'date_constructed'  => !empty($row['date_constructed']) ? $row['date_constructed'] : null,
+                    'acquisition_date'  => !empty($row['acquisition_date']) ? $row['acquisition_date'] : null,
+                    'property_number'   => trim($row['property_number'] ?? '') ?: null,
+                    'acquisition_cost'  => $acquisitionCost,
+                    'appraised_value'   => $appraisedValue,
+                    'appraisal_date'    => !empty($row['appraisal_date']) ? $row['appraisal_date'] : null,
+                    'remarks'           => trim($row['remarks'] ?? '') ?: null,
+                    'created_at'        => now(),
+                    'updated_at'        => now(),
+                ]);
+                $inserted++;
+            }
+
+            DB::commit();
+
+            if ($inserted > 0) {
+                DB::table('system_logs')->insert([
+                    'user'        => $userName,
+                    'activity'    => "Building Registration: {$inserted} building(s) registered via manual entry",
+                    'module'      => 'Buildings',
+                    'action_type' => 'Create',
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ]);
+            }
+
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "{$inserted} building(s) registered successfully."
+                ]);
+            }
+
+            return redirect('/inventory-setup')
+                ->with('success', "{$inserted} building(s) registered successfully.");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Registration failed: ' . $e->getMessage()
+                ], 500);
+            }
+            return back()->withErrors(['rows' => 'Registration failed: ' . $e->getMessage()]);
+        }
+    }
 }

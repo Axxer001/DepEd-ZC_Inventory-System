@@ -279,7 +279,7 @@
                         <p class="text-slate-400 text-xs font-bold uppercase mt-3 tracking-widest leading-tight">Register new items or equipment to the system</p>
                     </div>
 
-                    <div onclick="nextStep(2, 'edit')" class="group bg-white p-12 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-[#c00000] transition-all duration-300 cursor-pointer text-center">
+                    <div onclick="nextStep(2, 'building')" class="group bg-white p-12 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-[#c00000] transition-all duration-300 cursor-pointer text-center">
                         <div class="w-20 h-20 bg-slate-50 text-slate-600 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-10 h-10">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
@@ -464,9 +464,11 @@
             </button>
         </div>
     </div>
+    </div> <!-- end stepAddNew -->
 
+    @include('partials.register-building-step')
 
-            {{-- Step 3: Form Content --}}
+    {{-- Step 3: Form Content --}}
             <div id="step3" class="step-content">
                 @if($errors->any())
                     <div class="max-w-4xl mx-auto mb-6 bg-red-50 text-red-600 p-6 font-bold rounded-3xl shadow-sm border border-red-100 flex items-start gap-4">
@@ -541,7 +543,7 @@
     if (step === 2) {
         currentMode = value;
 
-        // ── Add New (now Add Item): skip step2, go straight to registration form ──
+        // Add Item
         if (value === 'add') {
             document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
             document.getElementById('stepAddNew').classList.add('active');
@@ -551,13 +553,15 @@
             return;
         }
 
-        // Edit mode (now Add Building): original behaviour
-        document.getElementById('step2Title').innerText = (value === 'edit') ? 'MANAGE BUILDINGS' : 'SELECT CATEGORY';
-        const subTexts = document.querySelectorAll('.category-subtext');
-        subTexts.forEach(p => { p.innerText = p.getAttribute('data-edit'); });
-        const categoryGrid = document.getElementById('categoryGrid');
-        categoryGrid.classList.remove('grid-cols-2', 'grid-cols-3', 'max-w-3xl', 'max-w-4xl');
-        categoryGrid.classList.add('grid-cols-1', 'max-w-sm');
+        // Add Building
+        if (value === 'building') {
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('stepAddBuilding').classList.add('active');
+            document.getElementById('mainContent').classList.replace('max-w-5xl', 'max-w-full');
+            stepHistory.push('addbuilding');
+            updateBackButton();
+            return;
+        }
     }
 
     if (step === 3) {
@@ -578,13 +582,19 @@
                 const leavingStep = stepHistory[stepHistory.length - 1];
                 stepHistory.pop();
                 const prevStep = stepHistory[stepHistory.length - 1];
+
+                if (leavingStep === 'addnew' || leavingStep === 'addbuilding') {
+                    document.getElementById('mainContent').classList.replace('max-w-full', 'max-w-5xl');
+                    document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+                    document.getElementById('step1').classList.add('active');
+                    updateBackButton();
+                    return;
+                }
+
                 document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
                 const targetId = prevStep === 'addnew' ? 'stepAddNew' : ('step' + prevStep);
                 document.getElementById(targetId).classList.add('active');
-                // Restore narrow width if leaving Add New
-                if (leavingStep === 'addnew') {
-                    document.getElementById('mainContent').classList.replace('max-w-full', 'max-w-5xl');
-                }
+                
                 updateBackButton();
             }
         }
