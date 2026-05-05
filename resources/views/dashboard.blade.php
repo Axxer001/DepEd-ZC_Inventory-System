@@ -116,50 +116,72 @@
                 
                 {{-- 1. Top Stat Cards --}}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-                    <div class="p-8 rounded-[2rem] bg-white border-l-8 border-[#c00000] shadow-xl flex flex-col justify-between h-44 group hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-out cursor-default">
-                        <div class="flex justify-between items-start">
+                    {{-- Total Inventory --}}
+                    <div class="p-7 rounded-[2rem] bg-white border-l-8 border-[#c00000] shadow-xl flex flex-col justify-between h-48 group hover:scale-[1.01] hover:shadow-2xl transition-all duration-300 ease-out cursor-default relative overflow-hidden border-r border-y border-slate-50">
+                        <div class="flex justify-between items-start relative z-10">
                             <div class="flex flex-col">
-                                <span class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-[#c00000] transition-colors">System Asset Inventory</span>
-                                <span class="text-[8px] font-bold uppercase tracking-widest mt-1 text-[#c00000]" x-text="selectedYears.length || selectedMonths.length ? 'Filtered Result' : 'Total System Count'">Overall</span>
+                                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-[#c00000] transition-colors">System Asset Inventory</span>
+                                <span class="text-[8px] font-bold uppercase tracking-widest mt-1.5 text-[#c00000]" x-text="selectedYears.length || selectedMonths.length ? 'Filtered Result' : 'Total System Count'">Overall</span>
                             </div>
-                            <div class="p-2 bg-red-50 rounded-xl text-[#c00000] group-hover:bg-[#c00000] group-hover:text-white transition-all duration-300 group-hover:rotate-12">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                            <div class="p-3 bg-red-50 text-[#c00000] rounded-2xl group-hover:bg-[#c00000] group-hover:text-white transition-all duration-300 group-hover:rotate-12 shadow-sm">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                             </div>
                         </div>
-                        <div class="flex items-baseline gap-3">
-                            <span class="text-5xl font-black tracking-tighter text-slate-900 group-hover:tracking-tight transition-all" x-text="numberFormat(filteredStats.total)">{{ number_format($totalAssets > 0 ? $totalAssets : 24850) }}</span>
-                            <span class="text-xs font-bold text-slate-400 italic uppercase tracking-widest">Stock Units</span>
+                        <div class="relative z-10">
+                            <div class="flex items-baseline gap-3">
+                                <span class="text-4xl font-black tracking-tighter text-slate-900 group-hover:tracking-tight transition-all" x-text="numberFormat(filteredStats.total)">{{ number_format($totalAssets > 0 ? $totalAssets : 24850) }}</span>
+                                <span class="text-[10px] font-bold text-slate-400 italic uppercase tracking-widest">Stock Units</span>
+                            </div>
+                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-2 italic opacity-60">Total registered units in the system</p>
                         </div>
                     </div>
-                    <div class="p-8 rounded-[2rem] bg-slate-900 text-white shadow-xl flex flex-col justify-between h-44 relative group hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-out cursor-default overflow-hidden">
-                        <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 -mr-16 -mt-16 rounded-full blur-3xl group-hover:bg-white/10 transition-colors"></div>
-                        <div class="flex justify-between items-start text-white/50">
+
+                    {{-- Not Yet Distributed Assets --}}
+                    <div class="p-7 rounded-[2rem] bg-white border-l-8 border-[#c00000] shadow-xl flex flex-col justify-between h-48 group hover:scale-[1.01] hover:shadow-2xl transition-all duration-300 ease-out cursor-default relative overflow-hidden border-r border-y border-slate-50">
+                        <div class="flex justify-between items-start relative z-10">
                             <div class="flex flex-col">
-                                <span class="text-xs font-black uppercase tracking-[0.2em] group-hover:text-white transition-colors">Total Assets Distributed</span>
-                                <span class="text-[8px] font-bold uppercase tracking-widest mt-1 text-white/30" x-text="selectedYears.length || selectedMonths.length ? 'Filtered Result' : 'Global Distribution'">Overall</span>
+                                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-[#c00000] transition-colors">Assets Not Yet Distributed</span>
+                                <span class="text-[8px] font-bold uppercase tracking-widest mt-1.5 text-[#c00000]" x-text="selectedYears.length || selectedMonths.length ? 'Filtered Result' : 'Warehouse Stock'">Overall</span>
                             </div>
-                            <div class="p-2 bg-white/10 rounded-xl text-white group-hover:bg-white group-hover:text-slate-900 transition-all duration-300 group-hover:-rotate-12">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                            <div class="p-3 bg-red-50 text-[#c00000] rounded-2xl group-hover:bg-[#c00000] group-hover:text-white transition-all duration-300 group-hover:rotate-12 shadow-sm">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                             </div>
                         </div>
-                        <div class="flex items-baseline gap-3">
-                            <span class="text-5xl font-black tracking-tighter text-white group-hover:tracking-tight transition-all" x-text="numberFormat(filteredStats.distributed)">{{ number_format(($distributedCount ?? 0) > 0 ? $distributedCount : 18420) }}</span>
-                            <span class="text-xs font-bold text-white/40 italic uppercase tracking-widest">Deployed</span>
+                        <div class="relative z-10">
+                            <div class="flex items-baseline gap-3">
+                                <span class="text-4xl font-black tracking-tighter text-slate-900 group-hover:tracking-tight transition-all" x-text="numberFormat(filteredStats.total - filteredStats.distributed)">{{ number_format(($totalAssets ?? 24850) - ($distributedCount ?? 18420)) }}</span>
+                                <span class="text-[10px] font-bold text-slate-400 italic uppercase tracking-widest">Stock Units</span>
+                            </div>
+                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-2 italic opacity-60">Total units pending for school deployment</p>
                         </div>
                     </div>
-                    <div class="p-8 rounded-[2rem] bg-white border-l-8 border-[#c00000] shadow-xl flex flex-col justify-between h-44 group hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-out cursor-default">
-                        <div class="flex justify-between items-start">
+
+                    {{-- Total Amount --}}
+                    <div class="p-7 rounded-[2rem] bg-white border-l-8 border-[#c00000] shadow-xl flex flex-col justify-between h-48 group hover:scale-[1.01] hover:shadow-2xl transition-all duration-300 ease-out cursor-default overflow-hidden relative border-r border-y border-slate-50">
+                        <div class="flex justify-between items-start relative z-10">
                             <div class="flex flex-col">
-                                <span class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-[#c00000] transition-colors">TOTAL AMOUNT OF ASSETS</span>
-                                <span class="text-[8px] font-bold uppercase tracking-widest mt-1 text-[#c00000]">System Verified</span>
+                                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-[#c00000] transition-colors">TOTAL AMOUNT OF ASSETS</span>
+                                <div class="flex items-center gap-2 mt-1.5">
+                                    <span class="text-[8px] font-bold uppercase tracking-widest text-[#c00000]" x-text="cardFilter === 'Overall' ? 'System Verified' : (cardFilter === 'SemiExpendable' ? 'Semi-Expendable' : cardFilter) + ' Value'">System Verified</span>
+                                    <select x-model="cardFilter" class="bg-red-50 border-none text-[#c00000] text-[7px] font-black uppercase tracking-widest rounded-lg px-2 py-0.5 focus:ring-0 cursor-pointer hover:bg-red-100 transition-colors">
+                                        <option value="Overall">All</option>
+                                        <option value="Items">Items</option>
+                                        <option value="Buildings">Buildings</option>
+                                        <option value="PPE">PPE</option>
+                                        <option value="SemiExpendable">Semi-Exp</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="p-2 bg-red-50 rounded-xl text-[#c00000] group-hover:bg-[#c00000] group-hover:text-white transition-all duration-300 group-hover:scale-110">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H5a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                            <div class="p-3 bg-red-50 text-[#c00000] rounded-2xl group-hover:bg-[#c00000] group-hover:text-white transition-all duration-300 group-hover:scale-110 shadow-sm flex items-center justify-center relative overflow-hidden">
+                                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18V5h7a4 4 0 0 1 0 8H7" /><path d="M5 9h12" /><path d="M5 12h12" /></svg>
                             </div>
                         </div>
-                        <div class="flex items-baseline gap-3">
-                            <span class="text-5xl font-black tracking-tighter text-[#c00000] group-hover:tracking-tight transition-all">{{ number_format($totalSchools ?? 207) }}</span>
-                            <span class="text-xs font-bold text-slate-400 italic uppercase tracking-widest">Institutions</span>
+                        <div class="relative z-10">
+                            <div class="flex items-baseline gap-1">
+                                <span class="text-xs font-black text-[#c00000] mb-2">₱</span>
+                                <span class="text-3xl font-black tracking-tighter text-[#c00000] group-hover:tracking-tight transition-all" x-text="numberFormat(filteredStats.value, 2)">{{ number_format($totalAmount ?? 12450830.50, 2) }}</span>
+                            </div>
+                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-2 italic opacity-60">Total system asset valuation in PHP</p>
                         </div>
                     </div>
                 </div>
@@ -177,10 +199,15 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
                         {{-- Serviceable --}}
-                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 group hover:scale-[1.02] hover:shadow-xl transition-all duration-300 ease-out cursor-default">
-                            <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4 block italic group-hover:translate-x-1 transition-transform">Serviceable</span>
+                        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 group hover:scale-[1.02] hover:shadow-xl transition-all duration-300 ease-out cursor-default relative overflow-hidden">
+                            <div class="flex justify-between items-start mb-6">
+                                <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest italic group-hover:translate-x-1 transition-transform">Serviceable</span>
+                                <div class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                </div>
+                            </div>
                             <div class="flex items-baseline gap-2">
-                                <span class="text-4xl font-black tracking-tighter text-slate-900" x-text="numberFormat(filteredStats.serviceable)">{{ number_format($serviceableCount) }}</span>
+                                <span class="text-3xl font-black tracking-tighter text-slate-900" x-text="numberFormat(filteredStats.serviceable)">{{ number_format($serviceableCount) }}</span>
                                 <span class="text-[10px] font-bold text-slate-400 uppercase italic">Units</span>
                             </div>
                             <div class="mt-4 w-full bg-slate-50 h-1.5 rounded-full overflow-hidden shadow-inner">
@@ -189,10 +216,18 @@
                         </div>
 
                         {{-- For Repair --}}
-                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 group hover:scale-[1.02] hover:shadow-xl transition-all duration-300 ease-out cursor-default">
-                            <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-4 block italic group-hover:translate-x-1 transition-transform">For Repair</span>
+                        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 group hover:scale-[1.02] hover:shadow-xl transition-all duration-300 ease-out cursor-default relative overflow-hidden">
+                            <div class="flex justify-between items-start mb-6">
+                                <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest italic group-hover:translate-x-1 transition-transform">For Repair</span>
+                                <div class="p-2.5 bg-amber-50 text-amber-600 rounded-xl group-hover:bg-amber-500 group-hover:text-white transition-all duration-300 shadow-sm">
+                                    {{-- Clean Wrench Icon --}}
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                                    </svg>
+                                </div>
+                            </div>
                             <div class="flex items-baseline gap-2">
-                                <span class="text-4xl font-black tracking-tighter text-slate-900" x-text="numberFormat(filteredStats.forRepair)">{{ number_format($forRepairCount) }}</span>
+                                <span class="text-3xl font-black tracking-tighter text-slate-900" x-text="numberFormat(filteredStats.forRepair)">{{ number_format($forRepairCount) }}</span>
                                 <span class="text-[10px] font-bold text-slate-400 uppercase italic">Units</span>
                             </div>
                             <div class="mt-4 w-full bg-slate-50 h-1.5 rounded-full overflow-hidden shadow-inner">
@@ -201,10 +236,18 @@
                         </div>
 
                         {{-- Unserviceable --}}
-                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 group hover:scale-[1.02] hover:shadow-xl transition-all duration-300 ease-out cursor-default">
-                            <span class="text-[10px] font-black text-[#c00000] uppercase tracking-widest mb-4 block italic group-hover:translate-x-1 transition-transform">Unserviceable</span>
+                        <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 group hover:scale-[1.02] hover:shadow-xl transition-all duration-300 ease-out cursor-default relative overflow-hidden">
+                            <div class="flex justify-between items-start mb-6">
+                                <span class="text-[10px] font-black text-[#c00000] uppercase tracking-widest italic group-hover:translate-x-1 transition-transform">Unserviceable</span>
+                                <div class="p-2.5 bg-red-50 text-[#c00000] rounded-xl group-hover:bg-[#c00000] group-hover:text-white transition-all duration-300 shadow-sm">
+                                    {{-- Clean Circle-X (Out of Service) Icon --}}
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                            </div>
                             <div class="flex items-baseline gap-2">
-                                <span class="text-4xl font-black tracking-tighter text-slate-900" x-text="numberFormat(filteredStats.unserviceable)">{{ number_format($unserviceableCount) }}</span>
+                                <span class="text-3xl font-black tracking-tighter text-slate-900" x-text="numberFormat(filteredStats.unserviceable)">{{ number_format($unserviceableCount) }}</span>
                                 <span class="text-[10px] font-bold text-slate-400 uppercase italic">Units</span>
                             </div>
                             <div class="mt-4 w-full bg-slate-50 h-1.5 rounded-full overflow-hidden shadow-inner">
@@ -222,34 +265,67 @@
                             <h3 class="text-xs font-black uppercase tracking-[0.3em]">Asset Source Portfolio</h3>
                         </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 pb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 pb-6">
                         @php
                             $assetSources = [
-                                ['title' => 'Deped Central Assets', 'qty' => 12450, 'value' => 5200000.00],
-                                ['title' => 'Deped Regional Assets', 'qty' => 8320, 'value' => 3150000.50],
-                                ['title' => 'Donated Assets', 'qty' => 2100, 'value' => 1850000.00],
-                                ['title' => 'Transferred Assets', 'qty' => 1980, 'value' => 2250830.00],
+                                [
+                                    'title' => 'Deped Central Assets', 
+                                    'qty' => 12450, 
+                                    'value' => 5200000.00,
+                                    'image' => 'central.png'
+                                ],
+                                [
+                                    'title' => 'Deped Regional Assets', 
+                                    'qty' => 8320, 
+                                    'value' => 3150000.50,
+                                    'image' => 'regional.png'
+                                ],
+                                [
+                                    'title' => 'Donated Assets', 
+                                    'qty' => 2100, 
+                                    'value' => 1850000.00,
+                                    'image' => 'donated.png'
+                                ],
+                                [
+                                    'title' => 'Transferred Assets', 
+                                    'qty' => 1980, 
+                                    'value' => 2250830.00,
+                                    'image' => 'transferred.png'
+                                ],
                             ];
                         @endphp
 
                         @foreach($assetSources as $source)
-                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 group hover:border-[#c00000]/30 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 ease-out cursor-default">
-                            <div class="flex items-center gap-3 mb-6 relative">
-                                <div class="w-1 h-5 bg-[#c00000] rounded-full group-hover:h-8 transition-all"></div>
-                                <h4 class="text-[12px] font-black uppercase tracking-wider truncate text-slate-800 group-hover:text-[#c00000] transition-colors">
-                                    {{ $source['title'] }}
-                                </h4>
-                            </div>
-                            <div class="pl-4">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 italic">Total Asset Value</p>
-                                <p class="text-2xl font-black tracking-tighter leading-none mb-6 text-[#c00000] group-hover:scale-105 origin-left transition-transform">
-                                    ₱{{ number_format($source['value'], 2) }}
-                                </p>
-                                
-                                <div class="pt-4 border-t border-slate-50">
-                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 italic">Asset Quantity</p>
-                                    <p class="text-4xl font-black text-slate-800 tracking-tighter group-hover:text-slate-900 transition-colors">{{ number_format($source['qty']) }}</p>
-                                    <p class="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1 uppercase">Units Registered</p>
+                        <div class="bg-white p-7 rounded-[2rem] shadow-xl border-l-8 border-[#c00000] group hover:scale-[1.01] hover:shadow-2xl transition-all duration-500 ease-out cursor-default relative overflow-hidden">
+                            <div class="relative z-10">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-1.5 h-6 bg-[#c00000] rounded-full group-hover:h-10 transition-all duration-500"></div>
+                                        <h4 class="text-xs font-black uppercase tracking-widest text-slate-400 group-hover:text-[#c00000] transition-colors">
+                                            {{ $source['title'] }}
+                                        </h4>
+                                    </div>
+                                    <div class="p-1 bg-red-50/50 rounded-xl group-hover:bg-white transition-all duration-300 shadow-sm overflow-hidden">
+                                        <img src="{{ asset('images/' . $source['image']) }}" alt="{{ $source['title'] }}" class="w-10 h-10 object-contain group-hover:scale-110 transition-transform duration-500">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <div class="flex items-center gap-1.5 mb-1">
+                                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic">Total Value</p>
+                                            <span class="px-1.5 py-0.5 bg-red-50 text-[#c00000] text-[7px] font-black rounded uppercase border border-red-100/50">Verified</span>
+                                        </div>
+                                        <p class="text-2xl font-black tracking-tighter leading-none text-[#c00000] group-hover:scale-105 origin-left transition-transform">
+                                            ₱{{ number_format($source['value'], 2) }}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">Quantity</p>
+                                        <div class="flex items-baseline gap-2">
+                                            <p class="text-3xl font-black text-slate-800 tracking-tighter group-hover:text-slate-900 transition-colors">{{ number_format($source['qty']) }}</p>
+                                            <p class="text-[8px] font-black uppercase tracking-[0.1em] text-slate-400">Units</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -263,39 +339,47 @@
                         <div class="w-1.5 h-4 bg-slate-400 rounded-full"></div>
                         <h3 class="text-xs font-black uppercase tracking-[0.3em]">District Distribution</h3>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 pb-10">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 pb-10">
                         @php 
                             $quadrants = [
-                                1 => ['label' => 'Q 1.1', 'desc' => 'LD 1 • 3 Districts', 'value' => 2450830.00],
-                                2 => ['label' => 'Q 1.2', 'desc' => 'LD 1 • 2 Districts', 'value' => 1850000.50],
-                                3 => ['label' => 'Q 2.1', 'desc' => 'LD 2 • 3 Districts', 'value' => 3120000.00],
-                                4 => ['label' => 'Q 2.2', 'desc' => 'LD 2 • 4 Districts', 'value' => 5030000.00],
+                                1 => ['label' => 'Q 1.1', 'short' => '1.1', 'desc' => 'LD 1 • 3 Districts', 'value' => 2450830.00],
+                                2 => ['label' => 'Q 1.2', 'short' => '1.2', 'desc' => 'LD 1 • 2 Districts', 'value' => 1850000.50],
+                                3 => ['label' => 'Q 2.1', 'short' => '2.1', 'desc' => 'LD 2 • 3 Districts', 'value' => 3120000.00],
+                                4 => ['label' => 'Q 2.2', 'short' => '2.2', 'desc' => 'LD 2 • 4 Districts', 'value' => 5030000.00],
                             ];
                         @endphp
 
                         @foreach($quadrants as $id => $q)
-                        <div class="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col justify-between group hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 ease-out cursor-default">
-                            <div>
-                                <div class="flex items-center gap-4 mb-6 relative">
-                                    <div class="w-12 h-12 bg-slate-50 text-[#c00000] rounded-2xl flex items-center justify-center text-sm font-black tracking-tighter italic border border-slate-100 group-hover:bg-[#c00000] group-hover:text-white transition-all duration-300 group-hover:rotate-6">{{ $q['label'] }}</div>
-                                    <div>
-                                        <h4 class="text-sm font-black text-slate-800 uppercase italic leading-none group-hover:text-[#c00000] transition-colors">Quadrant {{ substr($q['label'], 2) }}</h4>
-                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic mt-1">{{ $q['desc'] }}</p>
+                        <div class="bg-white p-7 rounded-[2rem] shadow-xl border-l-8 border-[#c00000] flex flex-col justify-between group hover:scale-[1.01] hover:shadow-2xl transition-all duration-500 ease-out cursor-default relative overflow-hidden">
+                            <div class="relative z-10">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 bg-red-50 text-[#c00000] rounded-2xl flex items-center justify-center text-sm font-black tracking-tighter italic border border-red-100/50 group-hover:bg-[#c00000] group-hover:text-white transition-all duration-500 group-hover:rotate-6 shadow-sm">
+                                            {{ $q['label'] }}
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xs font-black uppercase italic leading-none group-hover:text-[#c00000] transition-colors">
+                                                Quadrant {{ substr($q['label'], 2) }}
+                                            </h4>
+                                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic mt-1">{{ $q['desc'] }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="p-2.5 bg-red-50 text-[#c00000] rounded-xl group-hover:bg-[#c00000] group-hover:text-white transition-all duration-300 shadow-sm">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg>
                                     </div>
                                 </div>
 
-                                <div class="space-y-4">
-                                    <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 group-hover:bg-white transition-colors">
-                                        <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Asset Quantity</p>
-                                        <div class="flex items-baseline gap-2">
-                                            <p class="text-3xl font-black tracking-tighter leading-none text-slate-900 group-hover:scale-105 origin-left transition-transform">{{ number_format($quadrantTotals[$id] ?? 4500) }}</p>
-                                            <span class="text-[9px] font-bold text-slate-400 italic uppercase">Units</span>
-                                        </div>
+                                <div class="grid grid-cols-2 gap-6">
+                                    <div>
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">Total Amount</p>
+                                        <p class="text-2xl font-black tracking-tighter leading-none text-[#c00000] group-hover:scale-105 origin-left transition-transform duration-500">₱{{ number_format($q['value'], 2) }}</p>
                                     </div>
-
-                                    <div class="px-2">
-                                        <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Amount Overall</p>
-                                        <p class="text-xl font-black tracking-tighter text-[#c00000]">₱{{ number_format($q['value'], 2) }}</p>
+                                    <div>
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">Quantity</p>
+                                        <div class="flex items-baseline gap-2">
+                                            <p class="text-3xl font-black text-slate-800 tracking-tighter group-hover:text-slate-900 transition-colors duration-500">{{ number_format($quadrantTotals[$id] ?? 4500) }}</p>
+                                            <span class="text-[8px] font-black text-slate-400 italic uppercase">Units</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -348,11 +432,37 @@
             </div>
             
             <div class="space-y-8">
-                <div class="p-8 rounded-[2rem] bg-[#c00000] text-white shadow-xl shadow-red-100 relative overflow-hidden group hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-out cursor-default">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 -mr-16 -mt-16 rounded-full blur-3xl group-hover:bg-white/20 transition-colors"></div>
-                    <h4 class="text-xs font-black uppercase tracking-[0.2em] mb-4 opacity-70 italic group-hover:translate-x-1 transition-transform">Heads Up</h4>
-                    <p class="text-xl font-black tracking-tight leading-tight uppercase italic mb-4 group-hover:tracking-normal transition-all">Quarterly Inventory Audit Coming Up</p>
-                    <p class="text-[10px] font-bold text-white/60 leading-relaxed uppercase">All institution heads are required to verify their current asset counts by the end of the month.</p>
+                <div class="bg-[#c00000] p-7 rounded-[2.5rem] shadow-xl shadow-red-200 group hover:shadow-red-300 hover:scale-[1.01] transition-all duration-500 cursor-default relative overflow-hidden border border-white/10">
+                    {{-- Top Section: Icon & Badge --}}
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="w-14 h-14 bg-white rounded-[1.5rem] shadow-lg flex items-center justify-center group-hover:rotate-6 transition-transform duration-500">
+                             <img src="{{ asset('images/megaphone-3d.webp') }}" alt="Megaphone" class="w-10 h-10 object-contain">
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md text-white text-[8px] font-black uppercase tracking-widest rounded-full mb-2 italic border border-white/20">System Alert</span>
+                            <p class="text-[8px] font-black text-white/40 uppercase italic leading-none">Ref: #NOTICE-2026</p>
+                        </div>
+                    </div>
+
+                    {{-- Content --}}
+                    <div class="space-y-4 relative z-10">
+                        <h3 class="text-lg font-black text-white uppercase italic leading-tight">Quarterly Inventory Audit Coming Up</h3>
+                        <p class="text-[10px] font-bold text-white/70 leading-relaxed uppercase pr-4">
+                            All institution heads are required to verify their current asset counts by the end of the month.
+                        </p>
+                    </div>
+
+                    {{-- Footer --}}
+                    <div class="mt-8 pt-6 border-t border-white/10 flex justify-between items-center relative z-10">
+                        <div class="flex items-center gap-2">
+                            <div class="w-1.5 h-1.5 bg-white rounded-full animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]"></div>
+                            <span class="text-[8px] font-black text-white/60 uppercase italic">Priority: High</span>
+                        </div>
+                        <span class="text-[9px] font-black text-white/40 uppercase italic">Today • 10:45 AM</span>
+                    </div>
+
+                    {{-- Background Decoration --}}
+                    <div class="absolute -right-4 -bottom-4 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors"></div>
                 </div>
 
                 <div class="space-y-6">
@@ -399,6 +509,7 @@
                 monthNames: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                 selectedYears: [],
                 selectedMonths: [],
+                cardFilter: 'Overall',
                 
                 get filterLabel() {
                     if (this.selectedYears.length === 0 && this.selectedMonths.length === 0) {
@@ -437,18 +548,30 @@
                 },
 
                 get filteredStats() {
-                    if (this.selectedYears.length === 0 && this.selectedMonths.length === 0) {
-                        return this.origStats;
+                    let stats = { ...this.origStats };
+                    
+                    if (this.selectedYears.length > 0 || this.selectedMonths.length > 0) {
+                        const factor = (this.selectedYears.length + this.selectedMonths.length) / 15;
+                        stats.total = Math.round(stats.total * factor);
+                        stats.distributed = Math.round(stats.distributed * factor);
+                        stats.value = stats.value * factor;
+                        stats.serviceable = Math.round(stats.serviceable * factor);
+                        stats.forRepair = Math.round(stats.forRepair * factor);
+                        stats.unserviceable = Math.round(stats.unserviceable * factor);
                     }
-                    const factor = (this.selectedYears.length + this.selectedMonths.length) / 15;
-                    return {
-                        total: Math.round(this.origStats.total * factor),
-                        distributed: Math.round(this.origStats.distributed * factor),
-                        value: this.origStats.value * factor,
-                        serviceable: Math.round(this.origStats.serviceable * factor),
-                        forRepair: Math.round(this.origStats.forRepair * factor),
-                        unserviceable: Math.round(this.origStats.unserviceable * factor)
-                    };
+
+                    // Apply card-level specific filter for the Amount card
+                    if (this.cardFilter === 'Items') {
+                        stats.value = stats.value * 0.65; 
+                    } else if (this.cardFilter === 'Buildings') {
+                        stats.value = stats.value * 0.35; 
+                    } else if (this.cardFilter === 'PPE') {
+                        stats.value = stats.value * 0.75; // Mock: PPE is 75% of value
+                    } else if (this.cardFilter === 'SemiExpendable') {
+                        stats.value = stats.value * 0.25; // Mock: Semi-expendable is 25% of value
+                    }
+
+                    return stats;
                 },
 
                 toggleYear(year) {
