@@ -31,9 +31,9 @@
 
         <div class="flex items-center gap-3 justify-center">
             <img src="{{ asset('images/deped_logo.png') }}" class="h-10 w-auto shrink-0 transition-transform duration-500 group-hover:rotate-12">
-            <div class="sidebar-label hidden whitespace-nowrap overflow-hidden">
-                <h1 class="text-xl font-extrabold tracking-tight italic leading-tight text-slate-900">DepEd ZC</h1>
-                <p class="text-[9px] text-slate-400 font-bold tracking-[0.2em] uppercase">Asset Management</p>
+            <div class="sidebar-label hidden whitespace-nowrap overflow-hidden text-left">
+                <h1 class="text-sm font-black tracking-tighter italic leading-none text-slate-900 uppercase">DepEd ZC</h1>
+                <p class="text-[8px] text-[#c00000] font-bold tracking-widest uppercase mt-1">Inventory Management System</p>
             </div>
         </div>
     </div>

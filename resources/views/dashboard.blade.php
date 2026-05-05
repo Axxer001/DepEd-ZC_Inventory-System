@@ -42,7 +42,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
                     </svg>
                 </button>
-                <span class="font-extrabold italic text-sm text-slate-800 uppercase tracking-tight">DepEd ZC IMS</span>
+                <span class="font-extrabold italic text-sm text-slate-800 uppercase tracking-tight">DepEd ZC Inventory Management</span>
             </div>
             <div class="w-8 h-8 bg-[#c00000] rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-red-100 italic">A</div>
         </header>
@@ -52,7 +52,7 @@
             <header class="p-6 lg:p-10 pb-4 flex justify-between items-center bg-white/70 backdrop-blur-xl sticky top-0 z-20 hidden lg:flex border-b border-slate-100">
                 <div>
                     <h2 class="text-3xl font-black text-slate-900 tracking-tight italic uppercase leading-none" x-text="filterLabel">Inventory Overview</h2>
-                    <p class="text-[10px] font-bold text-[#c00000] uppercase tracking-widest mt-2 ml-1">Zamboanga City Division • Asset Management</p>
+                    <p class="text-[10px] font-bold text-[#c00000] uppercase tracking-widest mt-2 ml-1">Deped ZC Inventory Management System</p>
                 </div>
                 <div class="flex items-center gap-6">
                     {{-- Premium Filter Dropdown --}}
@@ -105,9 +105,9 @@
                         </div>
                     </div>
 
-                    <button class="relative p-3 bg-white border border-slate-200 text-slate-400 rounded-2xl hover:text-[#c00000] transition-all shadow-sm group">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                        <span class="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full animate-pulse"></span>
+                    <button class="relative p-3 bg-white border border-slate-200 text-slate-400 rounded-2xl hover:text-[#c00000] hover:border-[#c00000]/30 hover:shadow-lg hover:shadow-red-50 transition-all shadow-sm group active:scale-90">
+                        <svg class="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                        <span class="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full animate-pulse group-hover:scale-125 transition-transform"></span>
                     </button>
                 </div>
             </header>
@@ -116,48 +116,49 @@
                 
                 {{-- 1. Top Stat Cards --}}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-                    <div class="p-8 rounded-[2rem] bg-white border-l-8 border-[#c00000] shadow-xl flex flex-col justify-between h-44 group">
+                    <div class="p-8 rounded-[2rem] bg-white border-l-8 border-[#c00000] shadow-xl flex flex-col justify-between h-44 group hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-out cursor-default">
                         <div class="flex justify-between items-start">
                             <div class="flex flex-col">
-                                <span class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">System Asset Inventory</span>
+                                <span class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-[#c00000] transition-colors">System Asset Inventory</span>
                                 <span class="text-[8px] font-bold uppercase tracking-widest mt-1 text-[#c00000]" x-text="selectedYears.length || selectedMonths.length ? 'Filtered Result' : 'Total System Count'">Overall</span>
                             </div>
-                            <div class="p-2 bg-red-50 rounded-xl text-[#c00000]">
+                            <div class="p-2 bg-red-50 rounded-xl text-[#c00000] group-hover:bg-[#c00000] group-hover:text-white transition-all duration-300 group-hover:rotate-12">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
                             </div>
                         </div>
                         <div class="flex items-baseline gap-3">
-                            <span class="text-5xl font-black tracking-tighter text-slate-900" x-text="numberFormat(filteredStats.total)">{{ number_format($totalAssets > 0 ? $totalAssets : 24850) }}</span>
+                            <span class="text-5xl font-black tracking-tighter text-slate-900 group-hover:tracking-tight transition-all" x-text="numberFormat(filteredStats.total)">{{ number_format($totalAssets > 0 ? $totalAssets : 24850) }}</span>
                             <span class="text-xs font-bold text-slate-400 italic uppercase tracking-widest">Stock Units</span>
                         </div>
                     </div>
-                    <div class="p-8 rounded-[2rem] bg-slate-900 text-white shadow-xl flex flex-col justify-between h-44 relative">
+                    <div class="p-8 rounded-[2rem] bg-slate-900 text-white shadow-xl flex flex-col justify-between h-44 relative group hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-out cursor-default overflow-hidden">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-white/5 -mr-16 -mt-16 rounded-full blur-3xl group-hover:bg-white/10 transition-colors"></div>
                         <div class="flex justify-between items-start text-white/50">
                             <div class="flex flex-col">
-                                <span class="text-xs font-black uppercase tracking-[0.2em]">Total Assets Distributed</span>
+                                <span class="text-xs font-black uppercase tracking-[0.2em] group-hover:text-white transition-colors">Total Assets Distributed</span>
                                 <span class="text-[8px] font-bold uppercase tracking-widest mt-1 text-white/30" x-text="selectedYears.length || selectedMonths.length ? 'Filtered Result' : 'Global Distribution'">Overall</span>
                             </div>
-                            <div class="p-2 bg-white/10 rounded-xl text-white">
+                            <div class="p-2 bg-white/10 rounded-xl text-white group-hover:bg-white group-hover:text-slate-900 transition-all duration-300 group-hover:-rotate-12">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                             </div>
                         </div>
                         <div class="flex items-baseline gap-3">
-                            <span class="text-5xl font-black tracking-tighter text-white" x-text="numberFormat(filteredStats.distributed)">{{ number_format(($distributedCount ?? 0) > 0 ? $distributedCount : 18420) }}</span>
+                            <span class="text-5xl font-black tracking-tighter text-white group-hover:tracking-tight transition-all" x-text="numberFormat(filteredStats.distributed)">{{ number_format(($distributedCount ?? 0) > 0 ? $distributedCount : 18420) }}</span>
                             <span class="text-xs font-bold text-white/40 italic uppercase tracking-widest">Deployed</span>
                         </div>
                     </div>
-                    <div class="p-8 rounded-[2rem] bg-white border-l-8 border-[#c00000] shadow-xl flex flex-col justify-between h-44">
+                    <div class="p-8 rounded-[2rem] bg-white border-l-8 border-[#c00000] shadow-xl flex flex-col justify-between h-44 group hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-out cursor-default">
                         <div class="flex justify-between items-start">
                             <div class="flex flex-col">
-                                <span class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">TOTAL AMOUNT OF ASSETS</span>
+                                <span class="text-xs font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-[#c00000] transition-colors">TOTAL AMOUNT OF ASSETS</span>
                                 <span class="text-[8px] font-bold uppercase tracking-widest mt-1 text-[#c00000]">System Verified</span>
                             </div>
-                            <div class="p-2 bg-red-50 rounded-xl text-[#c00000]">
+                            <div class="p-2 bg-red-50 rounded-xl text-[#c00000] group-hover:bg-[#c00000] group-hover:text-white transition-all duration-300 group-hover:scale-110">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H5a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                             </div>
                         </div>
                         <div class="flex items-baseline gap-3">
-                            <span class="text-5xl font-black tracking-tighter text-[#c00000]">{{ number_format($totalSchools ?? 207) }}</span>
+                            <span class="text-5xl font-black tracking-tighter text-[#c00000] group-hover:tracking-tight transition-all">{{ number_format($totalSchools ?? 207) }}</span>
                             <span class="text-xs font-bold text-slate-400 italic uppercase tracking-widest">Institutions</span>
                         </div>
                     </div>
@@ -176,38 +177,38 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
                         {{-- Serviceable --}}
-                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
-                            <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4 block italic">Serviceable</span>
+                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 group hover:scale-[1.02] hover:shadow-xl transition-all duration-300 ease-out cursor-default">
+                            <span class="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-4 block italic group-hover:translate-x-1 transition-transform">Serviceable</span>
                             <div class="flex items-baseline gap-2">
                                 <span class="text-4xl font-black tracking-tighter text-slate-900" x-text="numberFormat(filteredStats.serviceable)">{{ number_format($serviceableCount) }}</span>
                                 <span class="text-[10px] font-bold text-slate-400 uppercase italic">Units</span>
                             </div>
                             <div class="mt-4 w-full bg-slate-50 h-1.5 rounded-full overflow-hidden shadow-inner">
-                                <div class="bg-emerald-500 h-full rounded-full" :style="`width: ${calcPercent(filteredStats.serviceable)}%`" style="width: 100%"></div>
+                                <div class="bg-emerald-500 h-full rounded-full group-hover:bg-emerald-400 transition-colors" :style="`width: ${calcPercent(filteredStats.serviceable)}%`" style="width: 100%"></div>
                             </div>
                         </div>
 
                         {{-- For Repair --}}
-                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
-                            <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-4 block italic">For Repair</span>
+                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 group hover:scale-[1.02] hover:shadow-xl transition-all duration-300 ease-out cursor-default">
+                            <span class="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-4 block italic group-hover:translate-x-1 transition-transform">For Repair</span>
                             <div class="flex items-baseline gap-2">
                                 <span class="text-4xl font-black tracking-tighter text-slate-900" x-text="numberFormat(filteredStats.forRepair)">{{ number_format($forRepairCount) }}</span>
                                 <span class="text-[10px] font-bold text-slate-400 uppercase italic">Units</span>
                             </div>
                             <div class="mt-4 w-full bg-slate-50 h-1.5 rounded-full overflow-hidden shadow-inner">
-                                <div class="bg-amber-500 h-full rounded-full" :style="`width: ${calcPercent(filteredStats.forRepair)}%`" style="width: 60%"></div>
+                                <div class="bg-amber-500 h-full rounded-full group-hover:bg-amber-400 transition-colors" :style="`width: ${calcPercent(filteredStats.forRepair)}%`" style="width: 60%"></div>
                             </div>
                         </div>
 
                         {{-- Unserviceable --}}
-                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100">
-                            <span class="text-[10px] font-black text-[#c00000] uppercase tracking-widest mb-4 block italic">Unserviceable</span>
+                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 group hover:scale-[1.02] hover:shadow-xl transition-all duration-300 ease-out cursor-default">
+                            <span class="text-[10px] font-black text-[#c00000] uppercase tracking-widest mb-4 block italic group-hover:translate-x-1 transition-transform">Unserviceable</span>
                             <div class="flex items-baseline gap-2">
                                 <span class="text-4xl font-black tracking-tighter text-slate-900" x-text="numberFormat(filteredStats.unserviceable)">{{ number_format($unserviceableCount) }}</span>
                                 <span class="text-[10px] font-bold text-slate-400 uppercase italic">Units</span>
                             </div>
                             <div class="mt-4 w-full bg-slate-50 h-1.5 rounded-full overflow-hidden shadow-inner">
-                                <div class="bg-[#c00000] h-full rounded-full" :style="`width: ${calcPercent(filteredStats.unserviceable)}%`" style="width: 30%"></div>
+                                <div class="bg-[#c00000] h-full rounded-full group-hover:bg-red-500 transition-colors" :style="`width: ${calcPercent(filteredStats.unserviceable)}%`" style="width: 30%"></div>
                             </div>
                         </div>
                     </div>
@@ -232,22 +233,22 @@
                         @endphp
 
                         @foreach($assetSources as $source)
-                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 hover:border-[#c00000]/30 transition-colors">
+                        <div class="bg-white p-8 rounded-[2rem] shadow-sm border border-slate-100 group hover:border-[#c00000]/30 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 ease-out cursor-default">
                             <div class="flex items-center gap-3 mb-6 relative">
-                                <div class="w-1 h-5 bg-[#c00000] rounded-full"></div>
-                                <h4 class="text-[12px] font-black uppercase tracking-wider truncate text-slate-800">
+                                <div class="w-1 h-5 bg-[#c00000] rounded-full group-hover:h-8 transition-all"></div>
+                                <h4 class="text-[12px] font-black uppercase tracking-wider truncate text-slate-800 group-hover:text-[#c00000] transition-colors">
                                     {{ $source['title'] }}
                                 </h4>
                             </div>
                             <div class="pl-4">
                                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 italic">Total Asset Value</p>
-                                <p class="text-2xl font-black tracking-tighter leading-none mb-6 text-[#c00000]">
+                                <p class="text-2xl font-black tracking-tighter leading-none mb-6 text-[#c00000] group-hover:scale-105 origin-left transition-transform">
                                     ₱{{ number_format($source['value'], 2) }}
                                 </p>
                                 
                                 <div class="pt-4 border-t border-slate-50">
                                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 italic">Asset Quantity</p>
-                                    <p class="text-4xl font-black text-slate-800 tracking-tighter">{{ number_format($source['qty']) }}</p>
+                                    <p class="text-4xl font-black text-slate-800 tracking-tighter group-hover:text-slate-900 transition-colors">{{ number_format($source['qty']) }}</p>
                                     <p class="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400 mt-1 uppercase">Units Registered</p>
                                 </div>
                             </div>
@@ -273,21 +274,21 @@
                         @endphp
 
                         @foreach($quadrants as $id => $q)
-                        <div class="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-lg transition-shadow">
+                        <div class="bg-white p-7 rounded-[2rem] shadow-sm border border-slate-100 flex flex-col justify-between group hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 ease-out cursor-default">
                             <div>
                                 <div class="flex items-center gap-4 mb-6 relative">
-                                    <div class="w-12 h-12 bg-slate-50 text-[#c00000] rounded-2xl flex items-center justify-center text-sm font-black tracking-tighter italic border border-slate-100">{{ $q['label'] }}</div>
+                                    <div class="w-12 h-12 bg-slate-50 text-[#c00000] rounded-2xl flex items-center justify-center text-sm font-black tracking-tighter italic border border-slate-100 group-hover:bg-[#c00000] group-hover:text-white transition-all duration-300 group-hover:rotate-6">{{ $q['label'] }}</div>
                                     <div>
-                                        <h4 class="text-sm font-black text-slate-800 uppercase italic leading-none">Quadrant {{ substr($q['label'], 2) }}</h4>
+                                        <h4 class="text-sm font-black text-slate-800 uppercase italic leading-none group-hover:text-[#c00000] transition-colors">Quadrant {{ substr($q['label'], 2) }}</h4>
                                         <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic mt-1">{{ $q['desc'] }}</p>
                                     </div>
                                 </div>
 
                                 <div class="space-y-4">
-                                    <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-100">
+                                    <div class="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 group-hover:bg-white transition-colors">
                                         <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Asset Quantity</p>
                                         <div class="flex items-baseline gap-2">
-                                            <p class="text-3xl font-black tracking-tighter leading-none text-slate-900">{{ number_format($quadrantTotals[$id] ?? 4500) }}</p>
+                                            <p class="text-3xl font-black tracking-tighter leading-none text-slate-900 group-hover:scale-105 origin-left transition-transform">{{ number_format($quadrantTotals[$id] ?? 4500) }}</p>
                                             <span class="text-[9px] font-bold text-slate-400 italic uppercase">Units</span>
                                         </div>
                                     </div>
@@ -322,13 +323,13 @@
                             </thead>
                             <tbody class="text-xs font-bold text-slate-700 divide-y divide-slate-50">
                                 <template x-for="log in filteredLogs" :key="log.id">
-                                    <tr class="hover:bg-slate-50/50 transition-colors group">
-                                        <td class="px-6 py-6 text-slate-400 font-black italic" x-text="'#INV-' + log.id.toString().padStart(5, '0')"></td>
-                                        <td class="px-6 py-6 font-black text-slate-800 transition-colors uppercase leading-tight" x-text="log.school"></td>
+                                    <tr class="hover:bg-slate-50 transition-all duration-200 group cursor-default">
+                                        <td class="px-6 py-6 text-slate-400 font-black italic group-hover:text-[#c00000] transition-colors" x-text="'#INV-' + log.id.toString().padStart(5, '0')"></td>
+                                        <td class="px-6 py-6 font-black text-slate-800 transition-colors uppercase leading-tight group-hover:translate-x-1 transition-transform" x-text="log.school"></td>
                                         <td class="px-6 py-6 text-slate-500 uppercase tracking-tighter" x-text="log.timestamp"></td>
-                                        <td class="px-6 py-6 font-black text-lg tracking-tighter text-slate-900" x-text="numberFormat(log.qty)"></td>
+                                        <td class="px-6 py-6 font-black text-lg tracking-tighter text-slate-900 group-hover:scale-110 transition-transform" x-text="numberFormat(log.qty)"></td>
                                         <td class="px-6 py-6 text-right">
-                                            <span class="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase italic border border-emerald-100 shadow-sm">Verified</span>
+                                            <span class="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase italic border border-emerald-100 shadow-sm group-hover:bg-emerald-500 group-hover:text-white transition-all">Verified</span>
                                         </td>
                                     </tr>
                                 </template>
@@ -347,38 +348,39 @@
             </div>
             
             <div class="space-y-8">
-                <div class="p-8 rounded-[2rem] bg-[#c00000] text-white shadow-xl shadow-red-100 relative overflow-hidden group">
-                    <h4 class="text-xs font-black uppercase tracking-[0.2em] mb-4 opacity-70 italic">Heads Up</h4>
-                    <p class="text-xl font-black tracking-tight leading-tight uppercase italic mb-4">Quarterly Inventory Audit Coming Up</p>
+                <div class="p-8 rounded-[2rem] bg-[#c00000] text-white shadow-xl shadow-red-100 relative overflow-hidden group hover:scale-[1.02] hover:shadow-2xl transition-all duration-300 ease-out cursor-default">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 -mr-16 -mt-16 rounded-full blur-3xl group-hover:bg-white/20 transition-colors"></div>
+                    <h4 class="text-xs font-black uppercase tracking-[0.2em] mb-4 opacity-70 italic group-hover:translate-x-1 transition-transform">Heads Up</h4>
+                    <p class="text-xl font-black tracking-tight leading-tight uppercase italic mb-4 group-hover:tracking-normal transition-all">Quarterly Inventory Audit Coming Up</p>
                     <p class="text-[10px] font-bold text-white/60 leading-relaxed uppercase">All institution heads are required to verify their current asset counts by the end of the month.</p>
                 </div>
 
                 <div class="space-y-6">
                     <div class="flex items-center gap-3 px-2">
-                        <div class="w-1 h-3 bg-[#c00000] rounded-full"></div>
+                        <div class="w-1 h-3 bg-[#c00000] rounded-full group-hover:h-5 transition-all"></div>
                         <h5 class="text-[10px] font-black uppercase tracking-widest text-slate-400">System Notifications</h5>
                     </div>
 
                     <div class="space-y-4">
-                        <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 group cursor-default hover:shadow-md transition-all">
+                        <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 group cursor-default hover:shadow-lg hover:bg-white hover:scale-[1.02] transition-all duration-300">
                             <div class="flex items-center gap-4 mb-3">
-                                <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center border border-emerald-100">
+                                <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center border border-emerald-100 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 </div>
                                 <div>
-                                    <p class="text-[11px] font-black text-slate-800 uppercase italic">Database Sync</p>
+                                    <p class="text-[11px] font-black text-slate-800 uppercase italic group-hover:text-[#c00000] transition-colors">Database Sync</p>
                                     <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Successful • 5 mins ago</p>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 group cursor-default hover:shadow-md transition-all">
+                        <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 group cursor-default hover:shadow-lg hover:bg-white hover:scale-[1.02] transition-all duration-300">
                             <div class="flex items-center gap-4 mb-3">
-                                <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center border border-amber-100">
+                                <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center border border-amber-100 group-hover:bg-amber-500 group-hover:text-white transition-all duration-300">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                                 </div>
                                 <div>
-                                    <p class="text-[11px] font-black text-slate-800 uppercase italic">Maintenance Alert</p>
+                                    <p class="text-[11px] font-black text-slate-800 uppercase italic group-hover:text-[#c00000] transition-colors">Maintenance Alert</p>
                                     <p class="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Scheduled • Tonight 12:00 AM</p>
                                 </div>
                             </div>

@@ -272,21 +272,21 @@
                     <div onclick="nextStep(2, 'add')" class="group bg-white p-12 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-[#c00000] transition-all duration-300 cursor-pointer text-center">
                         <div class="w-20 h-20 bg-red-50 text-[#c00000] rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-10 h-10">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                             </svg>
                         </div>
-                        <h4 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Add New</h4>
-                        <p class="text-slate-400 text-xs font-bold uppercase mt-3 tracking-widest leading-tight">Register new data to the system</p>
+                        <h4 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Add Item</h4>
+                        <p class="text-slate-400 text-xs font-bold uppercase mt-3 tracking-widest leading-tight">Register new items or equipment to the system</p>
                     </div>
 
                     <div onclick="nextStep(2, 'edit')" class="group bg-white p-12 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-[#c00000] transition-all duration-300 cursor-pointer text-center">
                         <div class="w-20 h-20 bg-slate-50 text-slate-600 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-10 h-10">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-10 h-10">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
                             </svg>
                         </div>
-                        <h4 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Edit / Update</h4>
-                        <p class="text-slate-400 text-xs font-bold uppercase mt-3 tracking-widest leading-tight">Modify or update existing records</p>
+                        <h4 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Add Building</h4>
+                        <p class="text-slate-400 text-xs font-bold uppercase mt-3 tracking-widest leading-tight">Register or manage school buildings and infrastructure</p>
                     </div>
                 </div>
             </div>
@@ -541,7 +541,7 @@
     if (step === 2) {
         currentMode = value;
 
-        // ── Add New: skip step2, go straight to registration form ──
+        // ── Add New (now Add Item): skip step2, go straight to registration form ──
         if (value === 'add') {
             document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
             document.getElementById('stepAddNew').classList.add('active');
@@ -551,8 +551,8 @@
             return;
         }
 
-        // Edit mode: original behaviour
-        document.getElementById('step2Title').innerText = 'EDIT RECORD';
+        // Edit mode (now Add Building): original behaviour
+        document.getElementById('step2Title').innerText = (value === 'edit') ? 'MANAGE BUILDINGS' : 'SELECT CATEGORY';
         const subTexts = document.querySelectorAll('.category-subtext');
         subTexts.forEach(p => { p.innerText = p.getAttribute('data-edit'); });
         const categoryGrid = document.getElementById('categoryGrid');
@@ -883,7 +883,7 @@
                 parentWrap.classList.add('max-w-2xl', 'overflow-hidden');
             }
 
-            const modeText = 'Update';
+            const modeText = currentMode === 'edit' ? 'Manage' : 'Update';
             const btnColor = 'bg-[#c00000] hover:bg-red-700 shadow-red-100';
             let html = `<h4 class="text-2xl font-black text-slate-800 mb-8 uppercase tracking-tight italic">${modeText} ${currentModule}</h4>`;
 
