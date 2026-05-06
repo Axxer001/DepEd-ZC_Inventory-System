@@ -170,9 +170,9 @@
                             <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Classification</label>
                             <select x-model="filters.classification" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
                                 <option value="">All Classifications</option>
-                                <option>School Equipments</option>
-                                <option>Buildings & Structures</option>
-                                <option>ICT Packages</option>
+                                @foreach($categories as $cat)
+                                    <option value="{{ $cat }}">{{ $cat }}</option>
+                                @endforeach
                             </select>
                         </div>
 
@@ -192,59 +192,38 @@
                             <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">School Name</label>
                             <select x-model="filters.schoolName" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
                                 <option value="">All Schools</option>
-                                <option>Zamboanga City HS</option>
-                                <option>Ayala National HS</option>
-                                <option>Tetuan Central School</option>
-                                <option>Maria Clara Lobregat NHS</option>
+                                <template x-for="school in filterOptions.schools" :key="school">
+                                    <option :value="school" x-text="school"></option>
+                                </template>
                             </select>
                         </div>
 
                         {{-- Item Category --}}
                         <div>
-                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Item Category</label>
+                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Item Category (Article)</label>
                             <select x-model="filters.article" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
                                 <option value="">All Items</option>
-                                <option>Laptops & Tablets</option>
-                                <option>Printers & Scanners</option>
-                                <option>Desks & Chairs</option>
-                                <option>Laboratory Tools</option>
+                                <template x-for="article in filterOptions.articles" :key="article">
+                                    <option :value="article" x-text="article"></option>
+                                </template>
                             </select>
                         </div>
 
-                        {{-- Cost Filter --}}
+                        {{-- Location --}}
                         <div>
-                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Cost Filter</label>
-                            <select x-model="filters.costOperator" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
-                                <option value="">Any Amount</option>
-                                <option value="gt">Higher than (>) </option>
-                                <option value="lt">Lower than (<) </option>
-                                <option value="eq">Exactly (=)</option>
-                            </select>
-                        </div>
-
-                        {{-- Amount --}}
-                        <div>
-                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Amount (PHP)</label>
-                            <select x-model="filters.acquisitionCost" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
-                                <option value="">Select Amount</option>
-                                <option value="5000">₱5,000.00</option>
-                                <option value="10000">₱10,000.00</option>
-                                <option value="50000">₱50,000.00</option>
-                                <option value="100000">₱100,000.00</option>
-                                <option value="500000">₱500,000.00</option>
+                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Location</label>
+                            <select x-model="filters.location" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
+                                <option value="">All Locations</option>
+                                <template x-for="location in filterOptions.locations" :key="location">
+                                    <option :value="location" x-text="location"></option>
+                                </template>
                             </select>
                         </div>
 
                         {{-- Year --}}
                         <div>
                             <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Year</label>
-                            <select x-model="filters.year" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
-                                <option value="">All Years</option>
-                                <option>2026</option>
-                                <option>2025</option>
-                                <option>2024</option>
-                                <option>2023</option>
-                            </select>
+                            <input type="number" x-model="filters.year" placeholder="YYYY" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500">
                         </div>
 
                         {{-- Month --}}
@@ -270,8 +249,65 @@
 
                     <div class="mt-8 pt-6 border-t border-slate-50 flex justify-end gap-3">
                         <button @click="clearFilters()" class="px-8 py-3 bg-slate-100 text-slate-500 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-200 transition-all active:scale-95 italic">Clear All Filters</button>
-                        <button @click="showFilters = false" class="px-8 py-3 bg-slate-900 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-deped transition-all active:scale-95 italic">Apply Configuration</button>
+                        <button @click="applyFilters()" class="px-8 py-3 bg-slate-900 text-white rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-deped transition-all active:scale-95 italic">Apply Configuration</button>
                     </div>
+                </div>
+            </div>
+
+            {{-- LIVE PREVIEW TABLE --}}
+            <div class="mb-12 bg-white rounded-[2rem] border border-slate-100 shadow-xl overflow-hidden relative fade-enter">
+                <div class="p-6 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest italic" x-text="selectedReport + ' Preview'"></h3>
+                        <p class="text-[10px] text-slate-400 font-bold tracking-wider mt-1 uppercase" x-text="'Showing ' + previewRows.length + ' exact matched assets'"></p>
+                    </div>
+                    <div x-show="loading" class="w-5 h-5 border-2 border-deped border-t-transparent rounded-full animate-spin"></div>
+                </div>
+                
+                <div class="overflow-x-auto custom-scroll max-h-[400px]">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead class="sticky top-0 bg-slate-50 z-10 shadow-sm">
+                            <tr class="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b-2 border-slate-100">
+                                <th class="px-4 py-4">#</th>
+                                <th class="px-4 py-4">Region</th>
+                                <th class="px-4 py-4">Division</th>
+                                <th class="px-4 py-4">School Type</th>
+                                <th class="px-4 py-4">School ID</th>
+                                <th class="px-4 py-4">School Name</th>
+                                <th class="px-4 py-4 text-slate-900">Article</th>
+                                <th class="px-4 py-4">Description</th>
+                                <th class="px-4 py-4">Classification</th>
+                                <th class="px-4 py-4">Occupancy</th>
+                                <th class="px-4 py-4">Location</th>
+                                <th class="px-4 py-4">Acq. Date</th>
+                                <th class="px-4 py-4 text-[#c00000]">Property No.</th>
+                                <th class="px-4 py-4 text-right">Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-xs">
+                            <template x-for="(row, index) in previewRows" :key="index">
+                                <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                                    <td class="px-4 py-3 text-[10px] font-black text-slate-400" x-text="index + 1"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.region"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.division"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.office_school_type"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.school_id"></td>
+                                    <td class="px-4 py-3 font-bold text-slate-700" x-text="row.office_school_name"></td>
+                                    <td class="px-4 py-3 font-black text-slate-900" x-text="row.article"></td>
+                                    <td class="px-4 py-3 text-slate-500 text-[10px] truncate max-w-[200px]" :title="row.description" x-text="row.description"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.classification"></td>
+                                    <td class="px-4 py-3 text-slate-500 text-[10px]" x-text="row.nature_of_occupancy"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.location"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.acquisition_date"></td>
+                                    <td class="px-4 py-3 font-black text-[#c00000]" x-text="row.property_number"></td>
+                                    <td class="px-4 py-3 font-black text-right" x-text="'₱' + parseFloat(row.acquisition_cost).toLocaleString('en-US', {minimumFractionDigits: 2})"></td>
+                                </tr>
+                            </template>
+                            <tr x-show="previewRows.length === 0 && !loading">
+                                <td colspan="14" class="px-4 py-12 text-center text-slate-400 text-xs font-bold uppercase tracking-widest italic">No matching records found. Adjust your filters.</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -289,20 +325,32 @@
     </main>
 </div>
 
-<script>
+    <form id="downloadForm" method="POST" action="{{ route('assets.reports.download_rpc') }}" class="hidden">
+        @csrf
+        <input type="hidden" name="report_type" id="downloadReportType">
+        <input type="hidden" name="filters" id="downloadFilters">
+    </form>
+
+    <script>
     function reportManager() {
         return {
             step: 1,
             showFilters: true,
+            loading: false,
             selectedReport: '',
             reportSubtext: '',
+            previewRows: [],
+            filterOptions: {
+                schools: [],
+                articles: [],
+                locations: []
+            },
             filters: {
                 classification: '',
                 schoolType: '',
                 schoolName: '',
                 article: '',
-                costOperator: '',
-                acquisitionCost: '',
+                location: '',
                 year: '',
                 month: ''
             },
@@ -311,6 +359,19 @@
                 this.selectedReport = type;
                 this.reportSubtext = (type === 'RPCPPE') ? '₱50,000.00 and Above valuation' : '₱49,999.00 and Below valuation';
                 this.step = 2;
+                this.fetchFilterOptions();
+                this.clearFilters();
+            },
+
+            fetchFilterOptions() {
+                fetch('{{ route("api.reports.filters") }}?report_type=' + this.selectedReport)
+                .then(res => res.json())
+                .then(data => {
+                    this.filterOptions.schools = data.schools || [];
+                    this.filterOptions.articles = data.articles || [];
+                    this.filterOptions.locations = data.locations || [];
+                })
+                .catch(err => console.error("Failed to fetch filter options", err));
             },
 
             clearFilters() {
@@ -319,22 +380,56 @@
                     schoolType: '',
                     schoolName: '',
                     article: '',
-                    costOperator: '',
-                    acquisitionCost: '',
+                    location: '',
                     year: '',
                     month: ''
                 };
+                this.applyFilters();
+            },
+
+            applyFilters() {
+                this.loading = true;
+                
+                fetch('{{ route("api.reports.preview") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        report_type: this.selectedReport,
+                        filters: this.filters
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    this.previewRows = data.rows || [];
+                })
+                .catch(err => {
+                    console.error("Preview fetch error:", err);
+                    Swal.fire('Error', 'Failed to fetch preview data.', 'error');
+                })
+                .finally(() => {
+                    this.loading = false;
+                });
             },
 
             download() {
+                if (this.previewRows.length === 0) {
+                    Swal.fire('Empty Report', 'No assets match your current filters.', 'info');
+                    return;
+                }
+
                 Swal.fire({
-                    title: 'Downloading Report...',
-                    html: 'Preparing the ' + this.selectedReport + ' Excel file for download.',
+                    title: 'Generating Report...',
+                    html: `Generating exact ${this.selectedReport} Template with <strong>${this.previewRows.length}</strong> assets.`,
                     timer: 2000,
                     timerProgressBar: true,
                     didOpen: () => { Swal.showLoading() },
                     willClose: () => {
-                        window.location.href = "{{ route('assets.reports.template') }}";
+                        document.getElementById('downloadReportType').value = this.selectedReport;
+                        document.getElementById('downloadFilters').value = JSON.stringify(this.filters);
+                        document.getElementById('downloadForm').submit();
                     }
                 });
             }

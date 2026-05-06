@@ -185,6 +185,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports', [\App\Http\Controllers\ImportController::class, 'show'])->name('assets.reports');
     Route::post('/reports', [\App\Http\Controllers\ImportController::class, 'process'])->name('assets.reports.process');
     Route::post('/reports/confirm', [\App\Http\Controllers\ImportController::class, 'confirm'])->name('assets.reports.confirm');
+    
+    Route::post('/api/reports/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getPreview'])->name('api.reports.preview');
+    Route::get('/api/reports/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getFilterOptions'])->name('api.reports.filters');
+    Route::post('/reports/download-rpc', [\App\Http\Controllers\ReportDownloadController::class, 'download'])->name('assets.reports.download_rpc');
 
     // --- Building PIF Import ---
     Route::get('/buildings/import', [BuildingImportController::class, 'show'])->name('buildings.import');
