@@ -183,6 +183,7 @@ class InventorySetupController extends Controller
                 $assetSourceId = DB::table('asset_sources')->insertGetId([
                     'item_id' => $itemId,
                     'description' => $row['description'] ?? null,
+                    'unit_of_measurement' => $row['uom'] ?? null,
                     'acquisition_source_id' => $acqSourceId,
                     'mode_of_acquisition' => $row['mode'] ?? 'Unknown',
                     'source_personnel' => $row['personnel'] ?? null,

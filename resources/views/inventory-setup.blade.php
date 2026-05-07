@@ -205,6 +205,23 @@
         /* Dark: sticky row num col */
         html.dark .xls-sticky-col { background-color: #141f33 !important; }
         html.dark .xls-row:hover .xls-sticky-col { background-color: #0d1525 !important; }
+
+        /* Pagination Styles */
+        .pg-btn {
+            padding: 8px 16px;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: 12px;
+            transition: all 0.2s;
+            display: flex;
+            items-center: center;
+            gap: 6px;
+        }
+        .pg-btn:not(:disabled):hover { background: #f1f5f9; color: #c00000; }
+        .pg-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        html.dark .pg-btn:not(:disabled):hover { background: #1e293b; }
     </style>
 
 </head>
@@ -382,6 +399,11 @@
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
                     Bulk Add
                 </button>
+                <button onclick="openBulkDeleteModal()"
+                    class="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all active:scale-95">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                    Bulk Delete
+                </button>
                 <button onclick="addAssetRow()"
                     class="flex items-center gap-2 px-4 py-2.5 bg-[#c00000] text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-red-700 transition-all shadow-sm active:scale-95">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/></svg>
@@ -401,6 +423,7 @@
                         <th class="xls-th" style="min-width:140px">Category</th>
                         <th class="xls-th" style="min-width:140px">Item</th>
                         <th class="xls-th" style="min-width:180px">Description</th>
+                        <th class="xls-th" style="min-width:120px">Unit</th>
                         <th class="xls-th" style="min-width:150px">Mode</th>
                         <th class="xls-th" style="min-width:160px">Source Personnel</th>
                         <th class="xls-th" style="min-width:160px">Personnel Position</th>
@@ -457,7 +480,24 @@
 
         {{-- Footer --}}
         <div id="assetTableFooter" class="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-            <p id="rowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 Rows</p>
+            <div class="flex items-center gap-6">
+                <p id="rowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 Rows</p>
+                <div id="paginationControls" class="flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-6">
+                    <button onclick="prevPage()" id="prevBtn" class="pg-btn text-slate-500">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
+                        Prev
+                    </button>
+                    <div class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-[#0a101d] rounded-lg">
+                        <span id="currentPageDisplay" class="text-[10px] font-black text-slate-800 dark:text-white">1</span>
+                        <span class="text-[10px] font-bold text-slate-400">/</span>
+                        <span id="totalPagesDisplay" class="text-[10px] font-black text-slate-400">1</span>
+                    </div>
+                    <button onclick="nextPage()" id="nextBtn" class="pg-btn text-slate-500">
+                        Next
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </div>
             <button onclick="submitRegistration()"
                 class="px-6 py-2.5 bg-[#c00000] text-white rounded-xl font-black text-[10px] uppercase tracking-wider hover:bg-red-700 transition-all shadow-sm active:scale-95">
                 Register Records
@@ -560,6 +600,7 @@
             document.getElementById('mainContent').classList.replace('max-w-5xl', 'max-w-full');
             stepHistory.push('addbuilding');
             updateBackButton();
+            if (typeof renderBldgTable === 'function') renderBldgTable();
             return;
         }
     }
@@ -615,11 +656,41 @@
         }
 
         // ══════════════════════════════════════════════════
-        //  ADD NEW REGISTRATION FORM  — JS
-        //  Rows are always in sync: Asset Source ↔ Asset Distribution (1-to-1)
+        //  ADD NEW REGISTRATION FORM — STATE-BASED
         // ══════════════════════════════════════════════════
-        let _rowNum   = 0;   // ever-incrementing ID for pairing
-        let _rowCount = 0;   // live count of paired rows
+        let allRowsData = []; 
+        let currentPage = 1;
+        const rowsPerPage = 50;
+        let _rowNumCounter = 0; 
+
+        function updatePaginationDisplay() {
+            const totalPages = Math.max(1, Math.ceil(allRowsData.length / rowsPerPage));
+            if (currentPage > totalPages) currentPage = totalPages;
+            const curDisplay = document.getElementById('currentPageDisplay');
+            const totalDisplay = document.getElementById('totalPagesDisplay');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const rowLabel = document.getElementById('rowCountLabel');
+            if (curDisplay) curDisplay.textContent = currentPage;
+            if (totalDisplay) totalDisplay.textContent = totalPages;
+            if (prevBtn) prevBtn.disabled = (currentPage === 1);
+            if (nextBtn) nextBtn.disabled = (currentPage === totalPages);
+            if (rowLabel) rowLabel.textContent = `${allRowsData.length} Rows`;
+            const controls = document.getElementById('paginationControls');
+            if (controls) {
+                if (allRowsData.length <= rowsPerPage) { controls.classList.add('hidden'); }
+                else { controls.classList.remove('hidden'); }
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(allRowsData.length / rowsPerPage);
+            if (currentPage < totalPages) { currentPage++; renderAssetTable(); }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) { currentPage--; renderAssetTable(); }
+        }
 
         function switchAssetTab(tab) {
             const srcPanel = document.getElementById('panelAssetSource');
@@ -643,119 +714,198 @@
             updateRowCount();
         }
 
-        // Add Row always appends to BOTH tables at once
-        function addAssetRow() {
-            _rowNum++;
-            _rowCount++;
-            // Hide both empty states
+        function renderAssetTable() {
+            const totalPages = Math.max(1, Math.ceil(allRowsData.length / rowsPerPage));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const tbodySource = document.getElementById('assetSourceBody');
+            const tbodyDist = document.getElementById('assetDistBody');
+            if (!tbodySource || !tbodyDist) return;
+            tbodySource.innerHTML = ''; tbodyDist.innerHTML = '';
+            if (allRowsData.length === 0) {
+                document.getElementById('assetSourceEmpty').classList.remove('hidden');
+                document.getElementById('assetDistEmpty').classList.remove('hidden');
+                updatePaginationDisplay(); return;
+            }
             document.getElementById('assetSourceEmpty').classList.add('hidden');
             document.getElementById('assetDistEmpty').classList.add('hidden');
-            addSourceRow(_rowNum, _rowCount);
-            addDistRow(_rowNum, _rowCount);
-            updateRowCount();
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const pageData = allRowsData.slice(start, end);
+            pageData.forEach((row, index) => {
+                const displayNum = start + index + 1;
+                addSourceRowDOM(row, displayNum);
+                addDistRowDOM(row, displayNum);
+            });
+            updatePaginationDisplay();
+            updateNewLabels();
         }
 
-        function addSourceRow(id, displayNum) {
+        function syncState(rowId, col, value) {
+            const row = allRowsData.find(r => r.id === rowId);
+            if (row) {
+                row[col] = value;
+                if (col === 'cost' || col === 'qty') {
+                    const cost = parseFloat(row.cost || 0);
+                    const qty = parseInt(row.qty || 0);
+                    const distInput = document.getElementById(`dst-cost-${rowId}`);
+                    if (distInput) distInput.value = (cost * qty).toFixed(2);
+                }
+                if (col === 'property-no') {
+                    if (value.trim() !== '') {
+                        row.qty = 1; renderAssetTable();
+                    }
+                }
+            }
+        }
+
+        function addAssetRow() {
+            const today = new Date().toISOString().split('T')[0];
+            const newRow = {
+                id: ++_rowNumCounter,
+                classification: '', category: '', item: '', description: '', uom: '', mode: '', personnel: '', position: '',
+                cost: '', qty: '', 'useful-life': '', 'acceptance-date': today,
+                'school-type': '', 'school-id': '', 'school-name': '', occupancy: '', location: '', 'property-no': '', 'acquisition-date': today
+            };
+            allRowsData.push(newRow);
+            currentPage = Math.ceil(allRowsData.length / rowsPerPage);
+            renderAssetTable();
+            setTimeout(() => {
+                const tr = document.getElementById(`src-${newRow.id}`);
+                if (tr) tr.querySelector('input').focus();
+            }, 50);
+        }
+
+        function addSourceRowDOM(data, displayNum) {
             const tbody = document.getElementById('assetSourceBody');
             const tr = document.createElement('tr');
-            tr.id = `src-${id}`;
+            tr.id = `src-${data.id}`;
             tr.className = 'xls-row group border-b border-slate-100';
-            tr.dataset.rowIndex = id;
-            const today = new Date().toISOString().split('T')[0];
             tr.innerHTML = `
                 <td class="xls-td xls-sticky-col text-center sticky left-0 w-10" style="background:inherit">
                     <span class="row-num text-[10px] font-black text-slate-300">${displayNum}</span>
                 </td>
-                <td class="xls-td"><input type="text" data-col="classification" autocomplete="off" class="xls-input" placeholder="e.g. Semi-Expendable"></td>
-                <td class="xls-td"><input type="text" data-col="category"       autocomplete="off" class="xls-input" placeholder="Category"></td>
-                <td class="xls-td"><input type="text" data-col="item"           autocomplete="off" class="xls-input" placeholder="Item"></td>
-                <td class="xls-td"><input type="text" data-col="description"    autocomplete="off" class="xls-input" placeholder="Description"></td>
-                <td class="xls-td"><input type="text" data-col="mode"           autocomplete="off" class="xls-input" placeholder="Mode of Procurement"></td>
-                <td class="xls-td"><input type="text" data-col="personnel"      autocomplete="off" class="xls-input" placeholder="Personnel name"></td>
-                <td class="xls-td"><input type="text" data-col="position"       autocomplete="off" class="xls-input" placeholder="Position"></td>
-                <td class="xls-td"><input type="number" id="src-cost-${id}" oninput="calcCost(${id})" class="xls-input text-right" placeholder="0.00" min="0" step="0.01"></td>
-                <td class="xls-td"><input type="number" id="src-qty-${id}"  oninput="calcCost(${id})" class="xls-input text-right" placeholder="0"    min="0" step="1"></td>
-                <td class="xls-td"><input type="number" class="xls-input text-right" placeholder="0"    min="0" step="1"></td>
-                <td class="xls-td"><input type="date"   class="xls-input" value="${today}"></td>
+                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'classification', this.value)" data-col="classification" value="${data.classification}" autocomplete="off" class="xls-input" placeholder="e.g. Semi-Expendable"></td>
+                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'category', this.value)"       data-col="category"       value="${data.category}"       autocomplete="off" class="xls-input" placeholder="Category"></td>
+                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'item', this.value)"           data-col="item"           value="${data.item}"           autocomplete="off" class="xls-input" placeholder="Item"></td>
+                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'description', this.value)"    data-col="description"    value="${data.description}"    autocomplete="off" class="xls-input" placeholder="Description"></td>
+                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'uom', this.value)"            data-col="uom"            value="${data.uom}"            autocomplete="off" class="xls-input" placeholder="e.g. Unit, Set, Pcs"></td>
+                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'mode', this.value)"           data-col="mode"           value="${data.mode}"           autocomplete="off" class="xls-input" placeholder="Mode of Procurement"></td>
+                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'personnel', this.value)"      data-col="personnel"      value="${data.personnel}"      autocomplete="off" class="xls-input" placeholder="Personnel name"></td>
+                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'position', this.value)"       data-col="position"       value="${data.position}"       autocomplete="off" class="xls-input" placeholder="Position"></td>
+                <td class="xls-td"><input type="number" oninput="syncState(${data.id}, 'cost', this.value)" data-col="cost" value="${data.cost}" class="xls-input text-right" placeholder="0.00" min="0" step="0.01"></td>
+                <td class="xls-td"><input type="number" oninput="syncState(${data.id}, 'qty', this.value)"  data-col="qty"  value="${data.qty}"  class="xls-input text-right ${data['property-no'] ? 'bg-slate-50 cursor-not-allowed' : ''}" placeholder="0" min="0" step="1" ${data['property-no'] ? 'readonly' : ''}></td>
+                <td class="xls-td"><input type="number" oninput="syncState(${data.id}, 'useful-life', this.value)" data-col="useful-life" value="${data['useful-life']}" class="xls-input text-right" placeholder="0"    min="0" step="1"></td>
+                <td class="xls-td"><input type="date"   oninput="syncState(${data.id}, 'acceptance-date', this.value)" data-col="acceptance-date" value="${data['acceptance-date']}" class="xls-input"></td>
                 <td class="xls-td text-center w-10">
-                    <button onclick="deleteRow(${id})" class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Remove row">
+                    <button onclick="deleteRow(${data.id})" class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Remove row">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </td>`;
             tbody.appendChild(tr);
         }
 
-        function addDistRow(id, displayNum) {
+        function addDistRowDOM(data, displayNum) {
             const tbody = document.getElementById('assetDistBody');
             const tr = document.createElement('tr');
-            tr.id = `dst-${id}`;
+            tr.id = `dst-${data.id}`;
             tr.className = 'xls-row group border-b border-slate-100';
-            tr.dataset.rowIndex = id;
-            const today = new Date().toISOString().split('T')[0];
+            const total = (parseFloat(data.cost || 0) * parseInt(data.qty || 0)).toFixed(2);
             tr.innerHTML = `
                 <td class="xls-td xls-sticky-col text-center sticky left-0 w-10" style="background:inherit">
                     <span class="row-num text-[10px] font-black text-slate-300">${displayNum}</span>
                 </td>
                 <td class="xls-td"><span class="xls-const">Region IX</span></td>
                 <td class="xls-td"><span class="xls-const">Division of Zamboanga City</span></td>
-                <td class="xls-td"><input type="text"   data-col="school-type" autocomplete="off" class="xls-input" placeholder="School/Office type"></td>
-                <td class="xls-td"><input type="text"   data-col="school-id"   autocomplete="off" class="xls-input" placeholder="School ID" inputmode="numeric"></td>
-                <td class="xls-td"><input type="text"   data-col="school-name" autocomplete="off" class="xls-input" placeholder="School / Office name"></td>
-                <td class="xls-td"><input type="text"   data-col="occupancy"   autocomplete="off" class="xls-input" placeholder="Nature of occupancy"></td>
-                <td class="xls-td"><input type="text"   data-col="location"    autocomplete="off" class="xls-input" placeholder="Location"></td>
-                <td class="xls-td"><input type="text" id="dst-prop-${id}" oninput="checkPropertyNumber(${id})" autocomplete="off" class="xls-input" placeholder="Property number"></td>
-                <td class="xls-td"><input type="number" id="dst-cost-${id}" autocomplete="off" class="xls-input text-right bg-slate-50 dark:bg-white/5 cursor-not-allowed" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1"></td>
-                <td class="xls-td"><input type="date"                          autocomplete="off" class="xls-input" value="${today}"></td>
+                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'school-type', this.value)" data-col="school-type" value="${data['school-type']}" autocomplete="off" class="xls-input" placeholder="School/Office type"></td>
+                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'school-id', this.value)"   data-col="school-id"   value="${data['school-id']}"   autocomplete="off" class="xls-input" placeholder="School ID" inputmode="numeric"></td>
+                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'school-name', this.value)" data-col="school-name" value="${data['school-name']}" autocomplete="off" class="xls-input" placeholder="School / Office name"></td>
+                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'occupancy', this.value)"   data-col="occupancy"   value="${data.occupancy}"       autocomplete="off" class="xls-input" placeholder="Nature of occupancy"></td>
+                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'location', this.value)"    data-col="location"    value="${data.location}"        autocomplete="off" class="xls-input" placeholder="Location"></td>
+                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'property-no', this.value)" data-col="property-no" value="${data['property-no']}" autocomplete="off" class="xls-input" placeholder="Property number" id="dst-prop-${data.id}"></td>
+                <td class="xls-td"><input type="number" id="dst-cost-${data.id}" data-col="cost-total" value="${total}" autocomplete="off" class="xls-input text-right bg-slate-50 dark:bg-white/5 cursor-not-allowed" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1"></td>
+                <td class="xls-td"><input type="date"   oninput="syncState(${data.id}, 'acquisition-date', this.value)" data-col="acquisition-date" value="${data['acquisition-date']}" autocomplete="off" class="xls-input"></td>
                 <td class="xls-td text-center w-10">
-                    <button onclick="deleteRow(${id})" class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Remove row">
+                    <button onclick="deleteRow(${data.id})" class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Remove row">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </td>`;
             tbody.appendChild(tr);
         }
 
-        function calcCost(id) {
-            const cost = parseFloat(document.getElementById(`src-cost-${id}`).value) || 0;
-            const qty = parseFloat(document.getElementById(`src-qty-${id}`).value) || 0;
-            const dstCost = document.getElementById(`dst-cost-${id}`);
-            if (dstCost) dstCost.value = (cost * qty).toFixed(2);
-        }
-
-        function checkPropertyNumber(id) {
-            const propInput = document.getElementById(`dst-prop-${id}`);
-            const qtyInput = document.getElementById(`src-qty-${id}`);
-            if (!propInput || !qtyInput) return;
-            
-            if (propInput.value.trim() !== '') {
-                qtyInput.value = 1;
-                qtyInput.readOnly = true;
-                qtyInput.classList.add('bg-slate-50', 'dark:bg-white/5', 'cursor-not-allowed');
-            } else {
-                qtyInput.readOnly = false;
-                qtyInput.classList.remove('bg-slate-50', 'dark:bg-white/5', 'cursor-not-allowed');
-            }
-            calcCost(id);
-        }
-
-        // Delete paired rows from BOTH tables by shared row index id
         function deleteRow(id) {
-            const srcRow  = document.getElementById(`src-${id}`);
-            const distRow = document.getElementById(`dst-${id}`);
-            if (srcRow)  srcRow.remove();
-            if (distRow) distRow.remove();
-            _rowCount = document.querySelectorAll('#assetSourceBody tr').length;
-            // Renumber both tables together
-            const srcRows  = document.querySelectorAll('#assetSourceBody tr');
-            const distRows = document.querySelectorAll('#assetDistBody tr');
-            srcRows.forEach((r, i)  => { const el = r.querySelector('.row-num');  if (el) el.textContent = i + 1; });
-            distRows.forEach((r, i) => { const el = r.querySelector('.row-num');  if (el) el.textContent = i + 1; });
-            // Show empty states if no rows remain
-            if (_rowCount === 0) {
-                document.getElementById('assetSourceEmpty').classList.remove('hidden');
-                document.getElementById('assetDistEmpty').classList.remove('hidden');
+            allRowsData = allRowsData.filter(r => r.id !== id);
+            renderAssetTable();
+        }
+
+        let deleteMode = 'rows';
+        function setDeleteMode(mode) {
+            deleteMode = mode;
+            const btnRows = document.getElementById('btnDelRows');
+            const btnPages = document.getElementById('btnDelPages');
+            const lblFrom = document.getElementById('lblDelFrom');
+            const lblTo = document.getElementById('lblDelTo');
+            const ON = 'px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white transition-all';
+            const OFF = 'px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg text-slate-400 transition-all';
+            
+            if (mode === 'rows') {
+                btnRows.className = ON; btnPages.className = OFF;
+                lblFrom.textContent = 'From Row'; lblTo.textContent = 'To Row';
+                document.getElementById('deleteToRow').value = allRowsData.length;
+            } else {
+                btnRows.className = OFF; btnPages.className = ON;
+                lblFrom.textContent = 'From Page'; lblTo.textContent = 'To Page';
+                document.getElementById('deleteToRow').value = Math.ceil(allRowsData.length / rowsPerPage);
             }
-            updateRowCount();
-            updateNewLabels();
+        }
+
+        function openBulkDeleteModal() {
+            const m = document.getElementById('bulkDeleteModal'); if (!m) return;
+            m.classList.remove('hidden');
+            setTimeout(() => { m.classList.remove('opacity-0'); m.querySelector('.transform').classList.remove('scale-95'); }, 10);
+            setDeleteMode('rows');
+            document.getElementById('deleteFromRow').value = 1;
+        }
+
+        function closeBulkDeleteModal() {
+            const m = document.getElementById('bulkDeleteModal'); if (!m) return;
+            m.classList.add('opacity-0'); m.querySelector('.transform').classList.add('scale-95');
+            setTimeout(() => m.classList.add('hidden'), 300);
+        }
+
+        function confirmBulkDelete() {
+            let from = parseInt(document.getElementById('deleteFromRow').value);
+            let to = parseInt(document.getElementById('deleteToRow').value);
+            let fromIdx, toIdx;
+
+            if (deleteMode === 'rows') {
+                if (isNaN(from) || isNaN(to) || from < 1 || to < from || to > allRowsData.length) {
+                    Swal.fire({ icon: 'error', title: 'Invalid Range', text: 'Please enter a valid row range.', confirmButtonColor: '#c00000' }); return;
+                }
+                fromIdx = from - 1; toIdx = to - 1;
+            } else {
+                const totalPages = Math.ceil(allRowsData.length / rowsPerPage);
+                if (isNaN(from) || isNaN(to) || from < 1 || to < from || from > totalPages) {
+                    Swal.fire({ icon: 'error', title: 'Invalid Range', text: 'Please enter a valid page range.', confirmButtonColor: '#c00000' }); return;
+                }
+                if (to > totalPages) to = totalPages;
+                fromIdx = (from - 1) * rowsPerPage;
+                toIdx = (to * rowsPerPage) - 1;
+                if (toIdx >= allRowsData.length) toIdx = allRowsData.length - 1;
+            }
+
+            const countToDelete = toIdx - fromIdx + 1;
+            Swal.fire({
+                title: 'Confirm Delete', text: `Delete ${deleteMode === 'rows' ? 'rows' : 'pages'} ${from} to ${to} (${countToDelete} items)?`,
+                icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626', confirmButtonText: 'Yes, delete',
+                customClass: { popup: 'rounded-[2rem]' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    allRowsData.splice(fromIdx, countToDelete);
+                    renderAssetTable(); closeBulkDeleteModal();
+                    Swal.fire({ icon: 'success', title: 'Deleted', text: `Successfully removed ${countToDelete} items.`, timer: 1500, showConfirmButton: false });
+                }
+            });
         }
 
         function updateRowCount() {
@@ -793,6 +943,7 @@
                 category: document.getElementById('bCategory').value,
                 item: document.getElementById('bItem').value,
                 description: document.getElementById('bDescription').value,
+                uom: document.getElementById('bUom').value,
                 personnel: document.getElementById('bPersonnel').value,
                 position: document.getElementById('bPosition').value,
                 cost1: document.getElementById('bCost').value,
@@ -829,6 +980,7 @@
                     if (data.category)       setColVal(src, 'category', data.category);
                     if (data.item)           setColVal(src, 'item', data.item);
                     if (data.description)    setColVal(src, 'description', data.description);
+                    if (data.uom)            setColVal(src, 'uom', data.uom);
                     if (data.personnel)      setColVal(src, 'personnel', data.personnel);
                     if (data.position)       setColVal(src, 'position', data.position);
                     
@@ -2189,43 +2341,50 @@
             const colName = input.getAttribute('data-col');
             const typedValue = input.value.toLowerCase().trim();
             
-            // Gather most recent typed data per column (from DOM)
-            const allInputsInCol = Array.from(document.querySelectorAll(`input[data-col="${colName}"]`));
+            // Detect active module
+            const isBuilding = document.getElementById('stepAddBuilding')?.classList.contains('active');
+            const dataToUse = isBuilding ? bldgRowsData : allRowsData;
+            const pageToUse = isBuilding ? bldgCurrentPage : currentPage;
+            const rowsPerPageToUse = isBuilding ? bldgRowsPerPage : rowsPerPage;
+
+            // Gather unique values from CURRENT PAGE only (most recent first)
+            const start = (pageToUse - 1) * rowsPerPageToUse;
+            const end   = start + rowsPerPageToUse;
+            const pageData = dataToUse.slice(start, end);
+
             const localData = [];
-            
-            // Reverse to get most recent (assuming bottom rows are most recent)
-            for (let i = allInputsInCol.length - 1; i >= 0; i--) {
-                const val = allInputsInCol[i].value.trim();
-                // We don't exclude current typed value if empty, to show all options
-                if (val && !localData.includes(val) && allInputsInCol[i] !== input) {
-                    localData.push(val);
+            for (let i = pageData.length - 1; i >= 0; i--) {
+                const val = (pageData[i][colName] || "").toString().trim();
+                if (val && !localData.includes(val)) {
+                    // Don't suggest the value currently being typed in the SAME row
+                    const tr = input.closest('tr');
+                    if (tr) {
+                        const rowIdStr = tr.id.split('-').pop(); // Handle src-ID or bldg-row-ID
+                        const rowId = parseInt(rowIdStr);
+                        if (pageData[i].id !== rowId) {
+                            localData.push(val);
+                        }
+                    } else {
+                        localData.push(val);
+                    }
                 }
             }
             
-            // Fallback to DB data
             const dbData = dbSuggestions[colName] || [];
-            
-            // Merge unique suggestions
             const suggestions = new Set(localData);
-            for (const item of dbData) {
-                suggestions.add(item);
-            }
+            for (const item of dbData) { suggestions.add(item); }
             
-            // Filter by typed value and take up to 5
             const filtered = Array.from(suggestions)
                 .filter(val => val.toLowerCase().includes(typedValue))
                 .slice(0, 5);
 
             closeAutocomplete();
-
             if (filtered.length === 0) return;
 
-            // Render dropdown
             const rect = input.getBoundingClientRect();
             const dropdown = document.createElement('div');
             dropdown.className = 'custom-autocomplete';
             dropdown.style.left = `${rect.left + window.scrollX}px`;
-            // Check if there's space below, else show above
             const spaceBelow = window.innerHeight - rect.bottom;
             if (spaceBelow < 150 && rect.top > 150) {
                 dropdown.style.bottom = `${window.innerHeight - rect.top - window.scrollY}px`;
@@ -2241,59 +2400,193 @@
                 item.className = 'custom-autocomplete-item';
                 item.textContent = val;
                 item.addEventListener('mousedown', (evt) => {
-                    evt.preventDefault(); // keep focus
+                    evt.preventDefault();
                     input.value = val;
+                    const tr = input.closest('tr');
+                    const rowId = parseInt(tr.id.split('-').pop());
+                    if (isBuilding) {
+                        syncBldgState(rowId, colName, val);
+                    } else {
+                        syncState(rowId, colName, val);
+                    }
                     closeAutocomplete();
-                    updateNewLabels(); // Update NEW labels immediately
+                    if (isBuilding) {
+                        if (typeof updateBldgNewLabels === 'function') updateBldgNewLabels();
+                    } else {
+                        updateNewLabels();
+                    }
                 });
                 dropdown.appendChild(item);
             });
-
             document.body.appendChild(dropdown);
             activeAutocomplete = dropdown;
         }
         
-        // Feature: "NEW" label for unrecognized/first-time data per column
         function updateNewLabels() {
-            const cols = new Set();
-            document.querySelectorAll('input[data-col]').forEach(el => cols.add(el.getAttribute('data-col')));
+            const visibleInputs = document.querySelectorAll('input[data-col]');
+            if (visibleInputs.length === 0) return;
 
-            cols.forEach(colName => {
-                const dbData = (dbSuggestions[colName] || []).map(v => v.toLowerCase().trim());
-                const seen = new Set(dbData);
-                
-                const inputs = document.querySelectorAll(`input[data-col="${colName}"]`);
-                inputs.forEach(input => {
-                    const val = input.value.trim().toLowerCase();
-                    const td = input.closest('td') || input.parentElement;
-                    
-                    const existingBadge = td.querySelector('.new-badge');
-                    if (existingBadge) existingBadge.remove();
+            const colNames = Array.from(new Set(Array.from(visibleInputs).map(el => el.getAttribute('data-col'))));
+            const colContexts = {};
+            colNames.forEach(cn => {
+                colContexts[cn] = {
+                    seen: new Set((dbSuggestions[cn] || []).map(v => v.toLowerCase().trim())),
+                    firstOccurrences: new Map()
+                };
+            });
 
-                    if (val !== '') {
-                        if (!seen.has(val)) {
-                            // First time we see this unrecognized value
-                            const badge = document.createElement('span');
-                            badge.className = 'new-badge';
-                            badge.textContent = 'NEW';
-                            td.appendChild(badge);
-                            seen.add(val); // Mark as seen so subsequent rows don't get the badge
-                        }
+            // Process only current page state to find first occurrences
+            const isBuilding = document.getElementById('stepAddBuilding')?.classList.contains('active');
+            const dataToUse = isBuilding ? bldgRowsData : allRowsData;
+            const pageToUse = isBuilding ? bldgCurrentPage : currentPage;
+            const rowsPerPageToUse = isBuilding ? bldgRowsPerPage : rowsPerPage;
+
+            const start = (pageToUse - 1) * rowsPerPageToUse;
+            const end   = start + rowsPerPageToUse;
+            const pageData = dataToUse.slice(start, end);
+
+            pageData.forEach(row => {
+                colNames.forEach(cn => {
+                    const val = (row[cn] || "").toString().trim().toLowerCase();
+                    if (val && !colContexts[cn].seen.has(val)) {
+                        colContexts[cn].firstOccurrences.set(val, row.id);
+                        colContexts[cn].seen.add(val);
                     }
                 });
+            });
+
+            // Update only visible DOM elements
+            visibleInputs.forEach(input => {
+                const cn = input.getAttribute('data-col');
+                const val = input.value.trim().toLowerCase();
+                const tr = input.closest('tr');
+                if (!tr) return;
+                const rowId = parseInt(tr.id.split('-').pop());
+                const td = input.closest('td');
+                
+                const existingBadge = td.querySelector('.new-badge');
+                if (existingBadge) existingBadge.remove();
+
+                if (val !== '' && colContexts[cn].firstOccurrences.get(val) === rowId) {
+                    const badge = document.createElement('span');
+                    badge.className = 'new-badge';
+                    badge.textContent = 'NEW';
+                    td.appendChild(badge);
+                }
             });
         }
 
         // Attach input listener strictly for the new labels
         document.addEventListener('input', updateNewLabels);
 
+        function calcBulkCost() {
+            const cost = parseFloat(document.getElementById('bCost').value) || 0;
+            const qty = parseFloat(document.getElementById('bQty1').value) || 0;
+            const bCost2 = document.getElementById('bCost2');
+            if (bCost2) bCost2.value = (cost * qty).toFixed(2);
+        }
+
+        function checkBulkPropertyNumber() {
+            const propInput = document.getElementById('bPropertyNo');
+            const qtyInput = document.getElementById('bQty1');
+            if (!propInput || !qtyInput) return;
+            if (propInput.value.trim() !== '') {
+                qtyInput.value = 1; qtyInput.readOnly = true;
+                qtyInput.classList.add('bg-slate-50', 'dark:bg-white/5', 'cursor-not-allowed');
+            } else {
+                qtyInput.readOnly = false;
+                qtyInput.classList.remove('bg-slate-50', 'dark:bg-white/5', 'cursor-not-allowed');
+            }
+            calcBulkCost();
+        }
+
+        function confirmBulkAdd() {
+            const count = parseInt(document.getElementById('bulkRowCount').value) || 1;
+            const data = {
+                classification: document.getElementById('bClassification').value,
+                category: document.getElementById('bCategory').value,
+                item: document.getElementById('bItem').value,
+                description: document.getElementById('bDescription').value,
+                uom: document.getElementById('bUom').value,
+                mode: document.getElementById('bMode').value,
+                personnel: document.getElementById('bPersonnel').value,
+                position: document.getElementById('bPosition').value,
+                cost: document.getElementById('bCost').value,
+                qty: document.getElementById('bQty1').value,
+                'useful-life': document.getElementById('bLife').value,
+                'acceptance-date': document.getElementById('bDate1').value,
+                'school-type': document.getElementById('bSchoolType').value,
+                'school-id': document.getElementById('bSchoolId').value,
+                'school-name': document.getElementById('bSchoolName').value,
+                occupancy: document.getElementById('bOccupancy').value,
+                location: document.getElementById('bLocation').value,
+                'property-no': document.getElementById('bPropertyNo').value,
+                'acquisition-date': document.getElementById('bDate2').value
+            };
+
+            for (let i = 0; i < count; i++) {
+                allRowsData.push({ id: ++_rowNumCounter, ...data });
+            }
+            currentPage = Math.ceil(allRowsData.length / rowsPerPage);
+            // Clear modal inputs
+            const ids = ['bClassification', 'bCategory', 'bItem', 'bDescription', 'bUom', 'bMode', 'bPersonnel', 'bPosition', 'bCost', 'bQty1', 'bLife', 'bDate1', 'bSchoolType', 'bSchoolId', 'bSchoolName', 'bOccupancy', 'bLocation', 'bPropertyNo', 'bDate2'];
+            ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+            document.getElementById('bulkRowCount').value = '1';
+
+            renderAssetTable(); closeBulkAddModal();
+            Swal.fire({ icon: 'success', title: 'Bulk Rows Added', text: `Successfully added ${count} rows.`, timer: 1500, showConfirmButton: false });
+        }
+
+        function submitRegistration() {
+            if (allRowsData.length === 0) {
+                Swal.fire({ icon: 'warning', title: 'No Data', text: 'Please add at least one row.', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]' } });
+                return;
+            }
+            const acqSourceInput = document.getElementById('acqSourceInput').value.trim();
+            if (!acqSourceInput) {
+                Swal.fire({ icon: 'warning', title: 'Missing Source', text: 'Please specify the Source of Acquisition.', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]' } });
+                return;
+            }
+            let isValid = true;
+            allRowsData.forEach(row => {
+                const required = ['classification', 'category', 'item', 'uom', 'cost', 'qty', 'acceptance-date', 'school-type', 'school-id', 'school-name', 'occupancy', 'location', 'acquisition-date'];
+                required.forEach(field => { if (!row[field]) isValid = false; });
+            });
+            if (!isValid) {
+                Swal.fire({ icon: 'error', title: 'Incomplete Fields', text: 'Please fill in all required fields across all pages.', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]' } });
+                return;
+            }
+            Swal.fire({
+                title: 'Confirm Registration', text: `Register ${allRowsData.length} items?`, icon: 'question', showCancelButton: true,
+                confirmButtonColor: '#c00000', cancelButtonColor: '#94a3b8', confirmButtonText: 'Yes, Register',
+                customClass: { popup: 'rounded-[2rem]' }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Registering...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                    fetch('/inventory-setup/batch', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') },
+                        body: JSON.stringify({ source_of_acquisition: acqSourceInput, rows: allRowsData })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({ icon: 'success', title: 'Success!', text: data.message, confirmButtonColor: '#10b981', customClass: { popup: 'rounded-[2rem]' } })
+                            .then(() => { window.location.href = '/view-all-assets'; });
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Failed', text: data.message, confirmButtonColor: '#c00000' });
+                        }
+                    }).catch(err => { console.error(err); Swal.fire({ icon: 'error', title: 'Error', text: 'A network error occurred.' }); });
+                }
+            });
+        }
+
         window.addEventListener('scroll', (e) => {
-            // Ignore scroll events originating from the autocomplete dropdown itself
             if (activeAutocomplete && (e.target === activeAutocomplete || activeAutocomplete.contains(e.target))) return;
             closeAutocomplete();
         }, true);
         window.addEventListener('resize', closeAutocomplete);
-</script>
+    </script>
 
 {{-- ========================================== --}}
 {{-- BULK ADD MODAL                             --}}
@@ -2332,6 +2625,8 @@
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Category</label><input type="text" id="bCategory" data-col="category" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Item</label><input type="text" id="bItem" data-col="item" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Description</label><input type="text" id="bDescription" data-col="description" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Unit of Measurement</label><input type="text" id="bUom" data-col="uom" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="e.g. Unit, Set, Pcs"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Mode of Procurement</label><input type="text" id="bMode" data-col="mode" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="e.g. Public Bidding"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Source Personnel</label><input type="text" id="bPersonnel" data-col="personnel" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Personnel Position</label><input type="text" id="bPosition" data-col="position" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Cost per Unit</label><input type="number" id="bCost" oninput="calcBulkCost()" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="1" min="0" step="0.01"></div>
@@ -2376,221 +2671,41 @@
         </div>
     </div>
 </div>
-<script>
-    function calcBulkCost() {
-        const cost = parseFloat(document.getElementById('bCost').value) || 0;
-        const qty = parseFloat(document.getElementById('bQty1').value) || 0;
-        document.getElementById('bCost2').value = (cost * qty).toFixed(2);
-    }
-    
-    function checkBulkPropertyNumber() {
-        const propInput = document.getElementById('bPropertyNo');
-        const qtyInput = document.getElementById('bQty1');
-        if (!propInput || !qtyInput) return;
-        
-        if (propInput.value.trim() !== '') {
-            qtyInput.value = 1;
-            qtyInput.readOnly = true;
-            qtyInput.classList.add('bg-slate-50', 'dark:bg-white/5', 'cursor-not-allowed');
-        } else {
-            qtyInput.readOnly = false;
-            qtyInput.classList.remove('bg-slate-50', 'dark:bg-white/5', 'cursor-not-allowed');
-        }
-        calcBulkCost();
-    }
-    
-    function openBulkAddModal() {
-        const m = document.getElementById('bulkAddModal');
-        m.classList.remove('hidden');
-        setTimeout(() => {
-            m.classList.remove('opacity-0');
-            m.querySelector('.transform').classList.remove('scale-95');
-        }, 10);
-    }
 
-    function closeBulkAddModal() {
-        const m = document.getElementById('bulkAddModal');
-        m.classList.add('opacity-0');
-        m.querySelector('.transform').classList.add('scale-95');
-        setTimeout(() => m.classList.add('hidden'), 300);
-    }
+{{-- ========================================== --}}
+{{-- BULK DELETE MODAL                          --}}
+{{-- ========================================== --}}
+<div id="bulkDeleteModal" class="fixed inset-0 z-[60] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeBulkDeleteModal()"></div>
+    <div class="bg-white dark:bg-[#141f33] border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-2xl w-full max-w-md relative z-10 transform scale-95 transition-transform duration-300">
+        <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+            <div>
+                <h3 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight italic">Bulk Delete</h3>
+                <p class="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-1">Warning: Permanent Action</p>
+            </div>
+            <div class="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                <button onclick="setDeleteMode('rows')" id="btnDelRows" class="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white transition-all">Rows</button>
+                <button onclick="setDeleteMode('pages')" id="btnDelPages" class="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg text-slate-400 transition-all">Pages</button>
+            </div>
+        </div>
+        <div class="p-8 space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label id="lblDelFrom" class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">From Row</label>
+                    <input type="number" id="deleteFromRow" min="1" class="w-full px-4 py-3 bg-slate-50 dark:bg-[#0a101d] border border-slate-200 dark:border-slate-800 rounded-xl font-black text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-red-100 transition-all text-center" placeholder="1">
+                </div>
+                <div class="space-y-2">
+                    <label id="lblDelTo" class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">To Row</label>
+                    <input type="number" id="deleteToRow" min="1" class="w-full px-4 py-3 bg-slate-50 dark:bg-[#0a101d] border border-slate-200 dark:border-slate-800 rounded-xl font-black text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-red-100 transition-all text-center" placeholder="10">
+                </div>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeBulkDeleteModal()" class="flex-1 py-4 rounded-2xl font-black text-sm border-2 border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50 transition-all">Cancel</button>
+                <button onclick="confirmBulkDelete()" class="flex-1 py-4 rounded-2xl font-black text-sm bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-100 transition-all">Delete Range</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-    function confirmBulkAdd() {
-        const count = parseInt(document.getElementById('bulkRowCount').value) || 1;
-        for(let i=0; i<count; i++) addAssetRow();
-        
-        const srcRows = Array.from(document.querySelectorAll('#assetSourceBody tr')).slice(-count);
-        const dstRows = Array.from(document.querySelectorAll('#assetDistBody tr')).slice(-count);
-        const modalInputs = document.getElementById('bulkAddModal').querySelectorAll('input[data-col]');
-        
-        for(let i=0; i<count; i++) {
-            modalInputs.forEach(mi => {
-                const col = mi.getAttribute('data-col');
-                let target = srcRows[i].querySelector(`input[data-col="${col}"]`);
-                if(!target) target = dstRows[i].querySelector(`input[data-col="${col}"]`);
-                if(target) target.value = mi.value;
-            });
-            
-            const id = srcRows[i].dataset.rowIndex;
-            const targetCost = document.getElementById(`src-cost-${id}`);
-            const targetQty = document.getElementById(`src-qty-${id}`);
-            if(targetCost) targetCost.value = document.getElementById('bCost').value;
-            if(targetQty) targetQty.value = document.getElementById('bQty1').value;
-            calcCost(id);
-            
-            const dateInputs1 = srcRows[i].querySelectorAll('input[type="date"]');
-            if (dateInputs1.length > 0) dateInputs1[0].value = document.getElementById('bDate1').value;
-            const dateInputs2 = dstRows[i].querySelectorAll('input[type="date"]');
-            if (dateInputs2.length > 0) dateInputs2[0].value = document.getElementById('bDate2').value;
-        }
-        
-        updateNewLabels();
-        closeBulkAddModal();
-    }
-    
-    // Set default dates in bulk modal on load
-    document.addEventListener('DOMContentLoaded', () => {
-        const d = new Date().toISOString().split('T')[0];
-        document.getElementById('bDate1').value = d;
-        document.getElementById('bDate2').value = d;
-    });
-
-    function submitRegistration() {
-        const rows = Array.from(document.querySelectorAll('#assetSourceBody tr'));
-        if (rows.length === 0) {
-            Swal.fire({ icon: 'warning', title: 'No Data', text: 'Please add at least one row to register.', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-            return;
-        }
-
-        const acqSourceInput = document.getElementById('acqSourceInput').value.trim();
-        if (!acqSourceInput) {
-            Swal.fire({ icon: 'warning', title: 'Missing Source', text: 'Please specify the Source of Acquisition at the top of the form.', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-            return;
-        }
-
-        let isValid = true;
-        let payload = [];
-
-        for (let i = 0; i < rows.length; i++) {
-            const srcRow = rows[i];
-            const id = srcRow.dataset.rowIndex;
-            const dstRow = document.getElementById(`dst-${id}`);
-            
-            if (!dstRow) continue;
-
-            const rowData = {};
-
-            // Parse src row inputs
-            const srcInputs = srcRow.querySelectorAll('input');
-            srcInputs.forEach(input => {
-                const col = input.getAttribute('data-col');
-                if (col) {
-                    rowData[col] = input.value.trim();
-                    if (!rowData[col] && !['description', 'personnel', 'position'].includes(col)) isValid = false;
-                } else if (input.id === `src-cost-${id}`) {
-                    rowData['cost'] = input.value.trim();
-                    if (!rowData['cost']) isValid = false;
-                } else if (input.id === `src-qty-${id}`) {
-                    rowData['qty'] = input.value.trim();
-                    if (!rowData['qty']) isValid = false;
-                } else if (input.placeholder === '0' && !input.id) {
-                    rowData['useful-life'] = input.value.trim();
-                } else if (input.type === 'date') {
-                    rowData['acceptance-date'] = input.value.trim();
-                    if (!rowData['acceptance-date']) isValid = false;
-                }
-            });
-
-            // Parse dst row inputs
-            const dstInputs = dstRow.querySelectorAll('input');
-            dstInputs.forEach(input => {
-                const col = input.getAttribute('data-col');
-                if (col) {
-                    rowData[col] = input.value.trim();
-                    if (!rowData[col]) {
-                        if (col !== 'property-no') isValid = false;
-                    }
-                } else if (input.id === `dst-prop-${id}`) {
-                    rowData['property-no'] = input.value.trim();
-                } else if (input.type === 'date') {
-                    rowData['acquisition-date'] = input.value.trim();
-                    if (!rowData['acquisition-date']) isValid = false;
-                }
-            });
-            
-            const spans = dstRow.querySelectorAll('.xls-const');
-            if (spans.length >= 2) {
-                rowData['region'] = spans[0].textContent.trim();
-                rowData['division'] = spans[1].textContent.trim();
-            }
-
-            payload.push(rowData);
-        }
-
-        if (!isValid) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Incomplete Fields',
-                text: 'Please fill in all required fields. Only Description, Source Personnel, Personnel Position, Useful Life, and Property Number can be left blank.',
-                confirmButtonColor: '#c00000',
-                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
-            });
-            return;
-        }
-
-        Swal.fire({
-            title: 'Confirm Registration',
-            text: `Are you sure you want to register these ${payload.length} items?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#c00000',
-            cancelButtonColor: '#94a3b8',
-            confirmButtonText: 'Yes, Register',
-            cancelButtonText: 'Cancel',
-            customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({
-                    title: 'Registering...',
-                    text: 'Please wait while the system processes your batch.',
-                    allowOutsideClick: false,
-                    didOpen: () => { Swal.showLoading(); }
-                });
-
-                fetch('/inventory-setup/batch', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    },
-                    body: JSON.stringify({
-                        source_of_acquisition: acqSourceInput,
-                        rows: payload
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Success!',
-                            text: data.message || 'Items successfully registered.',
-                            confirmButtonColor: '#10b981',
-                            customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
-                        }).then(() => {
-                            window.location.href = '/view-all-assets';
-                        });
-                    } else {
-                        Swal.fire({ icon: 'error', title: 'Registration Failed', text: data.message || 'An error occurred.', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                    }
-                })
-                .catch(err => {
-                    console.error(err);
-                    Swal.fire({ icon: 'error', title: 'System Error', text: 'A network or server error occurred.', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                });
-            }
-        });
-    }
-</script>
 </body>
 </html>
