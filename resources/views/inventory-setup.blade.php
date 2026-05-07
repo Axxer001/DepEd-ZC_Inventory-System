@@ -289,6 +289,29 @@
                         <p class="text-slate-400 text-xs font-bold uppercase mt-3 tracking-widest leading-tight">Register or manage school buildings and infrastructure</p>
                     </div>
                 </div>
+
+                {{-- Edit Assets Full-Width Card --}}
+                <div class="mt-8 px-4">
+                    <div onclick="nextStep(2, 'edit')" class="group bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-blue-600 transition-all duration-300 cursor-pointer flex items-center justify-between overflow-hidden relative">
+                        <div class="absolute -right-10 -top-10 w-48 h-48 bg-blue-50 rounded-full opacity-50 blur-3xl group-hover:bg-blue-100 transition-colors"></div>
+                        <div class="flex items-center gap-6 relative z-10">
+                            <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                </svg>
+                            </div>
+                            <div class="text-left">
+                                <h4 class="text-2xl font-black text-slate-800 tracking-tight uppercase">Inventory Management</h4>
+                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Update, rename, or maintain master inventory registry records</p>
+                            </div>
+                        </div>
+                        <div class="text-blue-600 group-hover:translate-x-2 transition-transform relative z-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
             </div>
 
 {{-- Step 2: Category Selection --}}

@@ -33,6 +33,8 @@ class ReportDownloadController extends Controller
             $query->where('asset_distributions.acquisition_cost', '>=', 50000);
         } elseif ($type === 'RPCSP') {
             $query->where('asset_distributions.acquisition_cost', '<', 50000);
+        } elseif ($type === 'PIF') {
+            // PIF includes all assets or specific logic if needed, currently no cost filter
         }
 
         if (!empty($filters['classification'])) {
@@ -79,6 +81,8 @@ class ReportDownloadController extends Controller
             $baseQuery->where('asset_distributions.acquisition_cost', '>=', 50000);
         } elseif ($type === 'RPCSP') {
             $baseQuery->where('asset_distributions.acquisition_cost', '<', 50000);
+        } elseif ($type === 'PIF') {
+            // No specific cost filter for PIF
         }
 
         $schools = (clone $baseQuery)->whereNotNull('asset_distributions.office_school_name')->where('asset_distributions.office_school_name', '!=', '')->pluck('asset_distributions.office_school_name')->unique()->sort()->values();
@@ -95,7 +99,7 @@ class ReportDownloadController extends Controller
     public function download(Request $request)
     {
         $type = $request->input('report_type');
-        if (!in_array($type, ['RPCPPE', 'RPCSP'])) {
+        if (!in_array($type, ['RPCPPE', 'RPCSP', 'PIF'])) {
             return back()->withErrors('Invalid report type.');
         }
 

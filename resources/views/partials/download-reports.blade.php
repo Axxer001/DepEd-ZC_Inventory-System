@@ -69,7 +69,7 @@
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 px-2">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 px-2">
                 {{-- RPCPPE Card --}}
                 <div @click="selectReport('RPCPPE')" class="group bg-white rounded-[3rem] border border-slate-100 shadow-xl p-10 hover:shadow-red-50 hover:border-red-100 transition-all duration-500 relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[380px]">
                     <div class="absolute -right-10 -top-10 w-48 h-48 bg-red-50 rounded-full opacity-50 blur-3xl group-hover:bg-red-100 transition-colors"></div>
@@ -90,19 +90,38 @@
                 </div>
 
                 {{-- RPCSP Card --}}
-                <div @click="selectReport('RPCSP')" class="group bg-white rounded-[3rem] border border-slate-100 shadow-xl p-10 hover:shadow-slate-200 transition-all duration-500 relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[380px]">
-                    <div class="absolute -right-10 -top-10 w-48 h-48 bg-slate-50 rounded-full opacity-50 blur-3xl group-hover:bg-red-50 transition-colors"></div>
+                <div @click="selectReport('RPCSP')" class="group bg-white rounded-[3rem] border border-slate-100 shadow-xl p-10 hover:shadow-emerald-50 hover:border-emerald-100 transition-all duration-500 relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[380px]">
+                    <div class="absolute -right-10 -top-10 w-48 h-48 bg-emerald-50 rounded-full opacity-50 blur-3xl group-hover:bg-emerald-100 transition-colors"></div>
                     <div class="relative z-10">
-                        <div class="w-16 h-16 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 group-hover:-rotate-6 transition-all border border-slate-100 shadow-inner group-hover:text-deped group-hover:bg-red-50">
+                        <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 group-hover:-rotate-6 transition-all border border-emerald-100 shadow-inner">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                             </svg>
                         </div>
                         <h2 class="text-4xl font-black text-slate-900 uppercase tracking-tighter italic mb-2">RPCSP</h2>
-                        <span class="px-4 py-1.5 bg-slate-50 text-slate-400 text-[9px] font-black uppercase tracking-[0.3em] rounded-full border border-slate-100 italic mb-6 inline-block shadow-sm group-hover:text-deped group-hover:bg-red-50 group-hover:border-red-100 transition-all">Semi-Expendable Assets</span>
+                        <span class="px-4 py-1.5 bg-emerald-50 text-emerald-600 text-[9px] font-black uppercase tracking-[0.3em] rounded-full border border-emerald-100 italic mb-6 inline-block shadow-sm group-hover:text-emerald-700 group-hover:bg-emerald-100 group-hover:border-emerald-200 transition-all">Semi-Expendable Assets</span>
                         <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px] leading-relaxed mt-4 max-w-[280px]">Items valued below ₱50,000.00. Consumable Inventory Reporting.</p>
                     </div>
-                    <div class="mt-auto pt-8 flex items-center gap-3 text-slate-400 font-black uppercase italic tracking-[0.3em] text-[10px] group-hover:text-deped group-hover:translate-x-2 transition-all">
+                    <div class="mt-auto pt-8 flex items-center gap-3 text-emerald-600 font-black uppercase italic tracking-[0.3em] text-[10px] group-hover:translate-x-2 transition-all">
+                        Configure Report Options
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                    </div>
+                </div>
+
+                {{-- PIF Card --}}
+                <div @click="selectReport('PIF')" class="group bg-white rounded-[3rem] border border-slate-100 shadow-xl p-10 hover:shadow-blue-50 hover:border-blue-100 transition-all duration-500 relative overflow-hidden flex flex-col justify-between cursor-pointer min-h-[380px]">
+                    <div class="absolute -right-10 -top-10 w-48 h-48 bg-blue-50 rounded-full opacity-50 blur-3xl group-hover:bg-blue-100 transition-colors"></div>
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 group-hover:rotate-6 transition-all border border-blue-100 shadow-inner">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m.75 12 3 3m0 0 3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+                            </svg>
+                        </div>
+                        <h2 class="text-4xl font-black text-slate-900 uppercase tracking-tighter italic mb-2">PIF</h2>
+                        <span class="px-4 py-1.5 bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-[0.3em] rounded-full border border-blue-100 italic mb-6 inline-block shadow-sm group-hover:text-blue-700 group-hover:bg-blue-100 group-hover:border-blue-200 transition-all">Asset Reports</span>
+                        <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px] leading-relaxed mt-4 max-w-[280px]">Property Inventory Form. Comprehensive Asset Tracking and Reporting.</p>
+                    </div>
+                    <div class="mt-auto pt-8 flex items-center gap-3 text-blue-600 font-black uppercase italic tracking-[0.3em] text-[10px] group-hover:translate-x-2 transition-all">
                         Configure Report Options
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                     </div>
