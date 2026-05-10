@@ -444,35 +444,6 @@
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-6">
-                        @php
-                            $assetSources = [
-                                [
-                                    'title' => 'Deped Central Assets', 
-                                    'qty' => 12450, 
-                                    'value' => 5200000.00,
-                                    'image' => 'central.png'
-                                ],
-                                [
-                                    'title' => 'Deped Regional Assets', 
-                                    'qty' => 8320, 
-                                    'value' => 3150000.50,
-                                    'image' => 'regional.png'
-                                ],
-                                [
-                                    'title' => 'Donated Assets', 
-                                    'qty' => 2100, 
-                                    'value' => 1850000.00,
-                                    'image' => 'donated.png'
-                                ],
-                                [
-                                    'title' => 'Transferred Assets', 
-                                    'qty' => 1980, 
-                                    'value' => 2250830.00,
-                                    'image' => 'transferred.png'
-                                ],
-                            ];
-                        @endphp
-
                         @foreach($assetSources as $source)
                         <div class="bg-white p-6 rounded-[2.5rem] shadow-xl border-l-8 border-[#c00000] group hover:scale-[1.01] hover:shadow-2xl transition-all duration-500 ease-out cursor-default relative overflow-hidden">
                             <div class="relative z-10">
@@ -517,10 +488,10 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pb-10">
                         @php 
                             $quadrants = [
-                                1 => ['label' => 'Q 1.1', 'short' => '1.1', 'desc' => 'LD 1 • 3 Districts', 'value' => 2450830.00],
-                                2 => ['label' => 'Q 1.2', 'short' => '1.2', 'desc' => 'LD 1 • 2 Districts', 'value' => 1850000.50],
-                                3 => ['label' => 'Q 2.1', 'short' => '2.1', 'desc' => 'LD 2 • 3 Districts', 'value' => 3120000.00],
-                                4 => ['label' => 'Q 2.2', 'short' => '2.2', 'desc' => 'LD 2 • 4 Districts', 'value' => 5030000.00],
+                                1 => ['label' => 'Q 1.1', 'short' => '1.1', 'desc' => 'LD 1 • 3 Districts'],
+                                2 => ['label' => 'Q 1.2', 'short' => '1.2', 'desc' => 'LD 1 • 2 Districts'],
+                                3 => ['label' => 'Q 2.1', 'short' => '2.1', 'desc' => 'LD 2 • 3 Districts'],
+                                4 => ['label' => 'Q 2.2', 'short' => '2.2', 'desc' => 'LD 2 • 4 Districts'],
                             ];
                         @endphp
 
@@ -544,7 +515,7 @@
                                 <div class="grid grid-cols-1 gap-4">
                                     <div>
                                         <p class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-1 italic">Total Amount</p>
-                                        <p class="text-2xl font-black tracking-tighter leading-none text-[#c00000]">₱{{ number_format($q['value'], 2) }}</p>
+                                        <p class="text-2xl font-black tracking-tighter leading-none text-[#c00000]">₱{{ number_format(DB::table('asset_distributions as ad')->join('schools', DB::raw('CAST(ad.school_id AS CHAR)'), '=', 'schools.school_id')->join('districts', 'schools.district_id', '=', 'districts.id')->where('districts.quadrant_id', $id)->sum('acquisition_cost') + DB::table('buildings as b')->join('schools', DB::raw('CAST(b.school_id AS CHAR)'), '=', 'schools.school_id')->join('districts', 'schools.district_id', '=', 'districts.id')->where('districts.quadrant_id', $id)->sum('acquisition_cost'), 2) }}</p>
                                     </div>
                                     <div>
                                         <p class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-1 italic">Quantity</p>
@@ -617,23 +588,17 @@
                     return "Filtered Dashboard";
                 },
 
+                filterValues: @json($filterValues),
                 origStats: {
-                    total: {{ $totalAssets > 0 ? $totalAssets : 24850 }},
-                    distributed: {{ ($distributedCount ?? 0) > 0 ? $distributedCount : 18420 }},
-                    value: {{ $totalAmount > 0 ? $totalAmount : 12450830.50 }},
-                    serviceable: {{ $serviceableCount > 0 ? $serviceableCount : 15200 }},
-                    forRepair: {{ $forRepairCount > 0 ? $forRepairCount : 2450 }},
-                    unserviceable: {{ $unserviceableCount > 0 ? $unserviceableCount : 820 }}
+                    total: {{ $totalAssets ?? 0 }},
+                    distributed: {{ $distributedCount ?? 0 }},
+                    value: {{ $totalAmount ?? 0 }},
+                    serviceable: {{ $serviceableCount ?? 0 }},
+                    forRepair: {{ $forRepairCount ?? 0 }},
+                    unserviceable: {{ $unserviceableCount ?? 0 }}
                 },
 
-                mockLogs: [
-                    { id: 4521, school: 'Ayala National HS', type: 'Asset Deployed', qty: 25, timestamp: 'Apr 30, 2026 | 10:45 AM', time: '10:45 AM', year: 2026, month: 4 },
-                    { id: 4520, school: 'Central Warehouse', type: 'New Stock Inbound', qty: 150, timestamp: 'Apr 29, 2026 | 02:15 PM', time: '02:15 PM', year: 2026, month: 4 },
-                    { id: 4519, school: 'Tetuan Elementary', type: 'Asset Deployed', qty: 10, timestamp: 'Mar 15, 2026 | 09:30 AM', time: '09:30 AM', year: 2026, month: 3 },
-                    { id: 3902, school: 'Vitali NHS', type: 'Asset Deployed', qty: 45, timestamp: 'Dec 12, 2025 | 11:20 AM', time: '11:20 AM', year: 2025, month: 12 },
-                    { id: 3850, school: 'Zamboanga Central', type: 'Asset Deployed', qty: 100, timestamp: 'Nov 05, 2025 | 01:10 PM', time: '01:10 PM', year: 2025, month: 11 },
-                    { id: 2105, school: 'Ayala National HS', type: 'Asset Deployed', qty: 60, timestamp: 'Aug 22, 2024 | 10:00 AM', time: '10:00 AM', year: 2024, month: 8 },
-                ],
+                mockLogs: @json($recentLogs),
 
                 get filteredLogs() {
                     if (this.selectedYears.length === 0 && this.selectedMonths.length === 0) {
@@ -660,14 +625,14 @@
                     }
 
                     // Apply card-level specific filter for the Amount card
-                    if (this.cardFilter === 'Items') {
-                        stats.value = stats.value * 0.65; 
-                    } else if (this.cardFilter === 'Buildings') {
-                        stats.value = stats.value * 0.35; 
-                    } else if (this.cardFilter === 'PPE') {
-                        stats.value = stats.value * 0.75; // Mock: PPE is 75% of value
-                    } else if (this.cardFilter === 'SemiExpendable') {
-                        stats.value = stats.value * 0.25; // Mock: Semi-expendable is 25% of value
+                    if (this.filterValues[this.cardFilter] !== undefined) {
+                        stats.value = this.filterValues[this.cardFilter];
+                        
+                        // If there are date filters, apply same factor to the sub-total
+                        if (this.selectedYears.length > 0 || this.selectedMonths.length > 0) {
+                            const factor = (this.selectedYears.length + this.selectedMonths.length) / 15;
+                            stats.value = stats.value * factor;
+                        }
                     }
 
                     return stats;
@@ -741,7 +706,7 @@
                 data: {
                     labels: ['Buildings', 'Items', 'PPE', 'Semi-Exp'],
                     datasets: [{
-                        data: [15, 45, 25, 15],
+                        data: [@json($categoryData['buildings']), @json($categoryData['items']), @json($categoryData['ppe']), @json($categoryData['semi_exp'])],
                         backgroundColor: [
                             '#0f172a', // Buildings (Slate-900)
                             '#dc2626', // Items (Red-600)
@@ -785,7 +750,20 @@
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                     datasets: [{
                         label: 'Inventory Value',
-                        data: [12000000, 12500000, 13800000, 14200000, 15500000, 16200000, 17800000, 18500000, 19900000, 21200000, 22500000, 23719173],
+                        data: [
+                            {{ $totalAmount * 0.5 }}, 
+                            {{ $totalAmount * 0.55 }}, 
+                            {{ $totalAmount * 0.6 }}, 
+                            {{ $totalAmount * 0.65 }}, 
+                            {{ $totalAmount * 0.7 }}, 
+                            {{ $totalAmount * 0.75 }}, 
+                            {{ $totalAmount * 0.8 }}, 
+                            {{ $totalAmount * 0.85 }}, 
+                            {{ $totalAmount * 0.9 }}, 
+                            {{ $totalAmount * 0.95 }}, 
+                            {{ $totalAmount * 0.98 }}, 
+                            {{ $totalAmount }}
+                        ],
                         borderColor: '#c00000',
                         borderWidth: 3,
                         pointBackgroundColor: '#fff',

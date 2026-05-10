@@ -192,6 +192,7 @@ class InventorySetupController extends Controller
                     'quantity' => $qty,
                     'estimated_useful_life' => isset($row['useful-life']) && $row['useful-life'] !== '' ? intval($row['useful-life']) : null,
                     'acceptance_date' => $row['acceptance-date'] ?? now()->toDateString(),
+                    'remarks' => $row['remarks'] ?? null,
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);

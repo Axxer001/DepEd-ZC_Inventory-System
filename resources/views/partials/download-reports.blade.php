@@ -118,8 +118,8 @@
                             </svg>
                         </div>
                         <h2 class="text-4xl font-black text-slate-900 uppercase tracking-tighter italic mb-2">PIF</h2>
-                        <span class="px-4 py-1.5 bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-[0.3em] rounded-full border border-blue-100 italic mb-6 inline-block shadow-sm group-hover:text-blue-700 group-hover:bg-blue-100 group-hover:border-blue-200 transition-all">Asset Reports</span>
-                        <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px] leading-relaxed mt-4 max-w-[280px]">Property Inventory Form. Comprehensive Asset Tracking and Reporting.</p>
+                        <span class="px-4 py-1.5 bg-blue-50 text-blue-600 text-[9px] font-black uppercase tracking-[0.3em] rounded-full border border-blue-100 italic mb-6 inline-block shadow-sm group-hover:text-blue-700 group-hover:bg-blue-100 group-hover:border-blue-200 transition-all">Full Asset Inventory</span>
+                        <p class="text-slate-400 font-bold uppercase tracking-widest text-[10px] leading-relaxed mt-4 max-w-[280px]">Property Inventory Form. Combined reporting of all assets regardless of valuation (High-Value & Semi-Expendable).</p>
                     </div>
                     <div class="mt-auto pt-8 flex items-center gap-3 text-blue-600 font-black uppercase italic tracking-[0.3em] text-[10px] group-hover:translate-x-2 transition-all">
                         Configure Report Options
@@ -187,29 +187,50 @@
                         {{-- Classification --}}
                         <div>
                             <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Classification</label>
-                            <select x-model="filters.classification" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
+                            <select x-model="filters.classification" @change="applyFilters()" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
                                 <option value="">All Classifications</option>
-                                @foreach($categories as $cat)
-                                    <option value="{{ $cat }}">{{ $cat }}</option>
-                                @endforeach
+                                <template x-for="c in filterOptions.classifications" :key="c">
+                                    <option :value="c" x-text="c"></option>
+                                </template>
                             </select>
                         </div>
 
-                        {{-- School Type --}}
+                        {{-- Category --}}
                         <div>
-                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">School Type</label>
-                            <select x-model="filters.schoolType" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
-                                <option value="">All Types</option>
-                                <option>Elementary</option>
-                                <option>Secondary</option>
-                                <option>Senior High</option>
+                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Category</label>
+                            <select x-model="filters.category" @change="applyFilters()" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
+                                <option value="">All Categories</option>
+                                <template x-for="cat in filterOptions.categories" :key="cat">
+                                    <option :value="cat" x-text="cat"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        {{-- Item --}}
+                        <div>
+                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Item</label>
+                            <select x-model="filters.article" @change="applyFilters()" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
+                                <option value="">All Items</option>
+                                <template x-for="item in filterOptions.items" :key="item">
+                                    <option :value="item" x-text="item"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        {{-- Cost Sorting --}}
+                        <div>
+                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Cost Sorting</label>
+                            <select x-model="filters.sortCost" @change="applyFilters()" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
+                                <option value="">Default (ID)</option>
+                                <option value="low_to_high">Low to High</option>
+                                <option value="high_to_low">High to Low</option>
                             </select>
                         </div>
 
                         {{-- School Name --}}
                         <div>
                             <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">School Name</label>
-                            <select x-model="filters.schoolName" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
+                            <select x-model="filters.schoolName" @change="applyFilters()" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
                                 <option value="">All Schools</option>
                                 <template x-for="school in filterOptions.schools" :key="school">
                                     <option :value="school" x-text="school"></option>
@@ -217,52 +238,32 @@
                             </select>
                         </div>
 
-                        {{-- Item Category --}}
+                        {{-- Source of Acquisition --}}
                         <div>
-                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Item Category (Article)</label>
-                            <select x-model="filters.article" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
-                                <option value="">All Items</option>
-                                <template x-for="article in filterOptions.articles" :key="article">
-                                    <option :value="article" x-text="article"></option>
+                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Source of Acquisition</label>
+                            <select x-model="filters.source" @change="applyFilters()" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
+                                <option value="">All Sources</option>
+                                <template x-for="s in filterOptions.sources" :key="s">
+                                    <option :value="s" x-text="s"></option>
                                 </template>
                             </select>
                         </div>
 
-                        {{-- Location --}}
+                        {{-- Mode of Acquisition --}}
                         <div>
-                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Location</label>
-                            <select x-model="filters.location" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
-                                <option value="">All Locations</option>
-                                <template x-for="location in filterOptions.locations" :key="location">
-                                    <option :value="location" x-text="location"></option>
+                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Mode of Acquisition</label>
+                            <select x-model="filters.mode" @change="applyFilters()" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
+                                <option value="">All Modes</option>
+                                <template x-for="m in filterOptions.modes" :key="m">
+                                    <option :value="m" x-text="m"></option>
                                 </template>
                             </select>
                         </div>
 
-                        {{-- Year --}}
+                        {{-- Date Acquired --}}
                         <div>
-                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Year</label>
-                            <input type="number" x-model="filters.year" placeholder="YYYY" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500">
-                        </div>
-
-                        {{-- Month --}}
-                        <div>
-                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Month</label>
-                            <select x-model="filters.month" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
-                                <option value="">All Months</option>
-                                <option value="1">January</option>
-                                <option value="2">February</option>
-                                <option value="3">March</option>
-                                <option value="4">April</option>
-                                <option value="5">May</option>
-                                <option value="6">June</option>
-                                <option value="7">July</option>
-                                <option value="8">August</option>
-                                <option value="9">September</option>
-                                <option value="10">October</option>
-                                <option value="11">November</option>
-                                <option value="12">December</option>
-                            </select>
+                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Date Acquired (Acceptance)</label>
+                            <input type="date" x-model="filters.dateAcquired" @change="applyFilters()" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500">
                         </div>
                     </div>
 
@@ -360,23 +361,33 @@
             reportSubtext: '',
             previewRows: [],
             filterOptions: {
+                classifications: [],
+                categories: [],
+                items: [],
                 schools: [],
-                articles: [],
-                locations: []
+                sources: [],
+                modes: []
             },
             filters: {
                 classification: '',
-                schoolType: '',
-                schoolName: '',
+                category: '',
                 article: '',
-                location: '',
-                year: '',
-                month: ''
+                sortCost: '',
+                schoolName: '',
+                source: '',
+                mode: '',
+                dateAcquired: ''
             },
 
             selectReport(type) {
                 this.selectedReport = type;
-                this.reportSubtext = (type === 'RPCPPE') ? '₱50,000.00 and Above valuation' : '₱49,999.00 and Below valuation';
+                if (type === 'RPCPPE') {
+                    this.reportSubtext = '₱50,000.00 and Above valuation';
+                } else if (type === 'RPCSP') {
+                    this.reportSubtext = '₱49,999.00 and Below valuation';
+                } else {
+                    this.reportSubtext = 'Combined Asset Valuation (All Items)';
+                }
                 this.step = 2;
                 this.fetchFilterOptions();
                 this.clearFilters();
@@ -386,9 +397,12 @@
                 fetch('{{ route("api.reports.filters") }}?report_type=' + this.selectedReport)
                 .then(res => res.json())
                 .then(data => {
+                    this.filterOptions.classifications = data.classifications || [];
+                    this.filterOptions.categories = data.categories || [];
+                    this.filterOptions.items = data.items || [];
                     this.filterOptions.schools = data.schools || [];
-                    this.filterOptions.articles = data.articles || [];
-                    this.filterOptions.locations = data.locations || [];
+                    this.filterOptions.sources = data.sources || [];
+                    this.filterOptions.modes = data.modes || [];
                 })
                 .catch(err => console.error("Failed to fetch filter options", err));
             },
@@ -396,12 +410,13 @@
             clearFilters() {
                 this.filters = {
                     classification: '',
-                    schoolType: '',
-                    schoolName: '',
+                    category: '',
                     article: '',
-                    location: '',
-                    year: '',
-                    month: ''
+                    sortCost: '',
+                    schoolName: '',
+                    source: '',
+                    mode: '',
+                    dateAcquired: ''
                 };
                 this.applyFilters();
             },

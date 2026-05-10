@@ -10,7 +10,7 @@ class AssetController extends Controller
     public function index()
     {
         $inventory = $this->buildInventoryData();
-        return view('view-assets', compact('inventory'));
+        return view('assets.view-assets', compact('inventory'));
     }
 
     /**
@@ -22,7 +22,7 @@ class AssetController extends Controller
     {
         $inventory = [];
 
-        $defaultIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg>';
+        $defaultIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25a2.25 2.25 0 01-13.5 18v-2.25z" /></svg>';
 
         // 1. Fetch categories with total sourced quantity
         $allCategories = DB::table('categories')
@@ -141,86 +141,49 @@ class AssetController extends Controller
         return response()->json($categories);
     }
 
-    public function viewAll()
+    public function viewAll(Request $request)
     {
-        $categories = DB::table('categories')->orderBy('name')->pluck('name');
-        $quadrants = DB::table('quadrants')->orderBy('name')->get(['id', 'name']);
+        $categories = DB::table('categories')->orderBy('name')->get();
+        $quadrants = DB::table('quadrants')->orderBy('name')->get();
+        $classifications = DB::table('classifications')->orderBy('name')->get();
 
-        // Fetch all items with sourced quantity (replaces master_quantity)
-        $allItems = DB::table('items')
+        // Data for Asset Source Tab
+        $assetSources = DB::table('asset_sources as asrc')
+            ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->leftJoin(DB::raw('(SELECT item_id, SUM(quantity) as total_qty FROM asset_sources GROUP BY item_id) as src'), 'items.id', '=', 'src.item_id')
-            ->select('items.id', 'items.name', DB::raw('COALESCE(src.total_qty, 0) as master_quantity'), 'categories.name as category')
-            ->orderBy('items.name')
-            ->distinct()
-            ->get();
+            ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')
+            ->join('acquisition_sources', 'asrc.acquisition_source_id', '=', 'acquisition_sources.id')
+            ->select(
+                'asrc.*',
+                'items.name as item_name',
+                'categories.name as category_name',
+                'classifications.name as classification_name',
+                'acquisition_sources.name as acquisition_source_name'
+            )
+            ->orderBy('asrc.created_at', 'desc')
+            ->paginate(50, ['*'], 'source_page');
 
-        // Fetch asset_sources grouped by item (replaces sub_items)
-        $allSubItems = DB::table('asset_sources')
-            ->select('id', DB::raw('COALESCE(description, "General") as name'), 'item_id', 'quantity')
-            ->orderBy('item_id')
-            ->get()
-            ->groupBy('item_id');
-
-        // Fetch distributions (replaces ownerships)
-        $allOwnerships = DB::table('asset_distributions as ad')
+        // Data for Asset Distribution Tab
+        $assetDistributions = DB::table('asset_distributions as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
-            ->leftJoin('schools', DB::raw('CAST(ad.school_id AS CHAR)'), '=', 'schools.school_id')
+            ->join('items', 'asrc.item_id', '=', 'items.id')
+            ->leftJoin('schools', 'ad.school_id', '=', 'schools.school_id')
             ->leftJoin('districts', 'schools.district_id', '=', 'districts.id')
             ->leftJoin('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
             ->select(
-                'asrc.item_id',
-                'ad.office_school_name as school_name',
-                DB::raw("COALESCE(districts.name, 'N/A') as district_name"),
-                DB::raw("COALESCE(quadrants.name, 'N/A') as quadrant_name"),
-                DB::raw("COALESCE(asrc.description, 'General') as sub_item_name"),
-                DB::raw('1 as quantity')
+                'ad.*',
+                'items.name as item_name',
+                'asrc.description as asset_description',
+                'districts.name as district_name',
+                'quadrants.name as quadrant_name'
             )
-            ->get()
-            ->groupBy('item_id');
+            ->orderBy('ad.created_at', 'desc')
+            ->paginate(50, ['*'], 'dist_page');
 
-        $inventory = [];
-        foreach ($allItems as $item) {
-            $specs = [];
-            if (isset($allSubItems[$item->id])) {
-                foreach ($allSubItems[$item->id] as $sub) {
-                    $specs[] = ['name' => $sub->name, 'qty' => (int) $sub->quantity];
-                }
-            }
-
-            $distribution = [];
-            if (isset($allOwnerships[$item->id])) {
-                $schoolAgg = [];
-                foreach ($allOwnerships[$item->id] as $own) {
-                    $schoolKey = $own->school_name;
-                    if (!isset($schoolAgg[$schoolKey])) {
-                        $schoolAgg[$schoolKey] = [
-                            'school' => $own->school_name,
-                            'district' => $own->district_name,
-                            'quadrant' => $own->quadrant_name,
-                            'qty' => 0,
-                        ];
-                    }
-                    $schoolAgg[$schoolKey]['qty'] += (int) $own->quantity;
-                }
-                $distribution = array_values($schoolAgg);
-            }
-
-            $inventory[] = [
-                'id' => $item->id,
-                'name' => $item->name,
-                'category' => $item->category,
-                'master_quantity' => (int) $item->master_quantity,
-                'specs' => $specs,
-                'distribution' => $distribution,
-            ];
-        }
-
-        return view('assets.view-all', [
-            'inventoryJson' => json_encode($inventory),
-            'categoriesJson' => json_encode($categories->values()),
-            'quadrantsJson' => json_encode($quadrants->pluck('name')->values()),
-        ]);
+        return view('assets.view-all', compact(
+            'assetSources', 'assetDistributions',
+            'categories', 'quadrants', 'classifications'
+        ));
     }
 
     public function explorer()
