@@ -207,10 +207,6 @@
                         </div>
                     </div>
 
-                    <button @click="showNotifications = true" class="relative p-3 bg-white border border-slate-200 text-slate-900 rounded-2xl hover:text-[#c00000] hover:border-[#c00000]/30 hover:shadow-lg hover:shadow-red-50 transition-all shadow-sm group active:scale-90">
-                        <svg class="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                        <span class="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full animate-pulse group-hover:scale-125 transition-transform"></span>
-                    </button>
                 </div>
             </header>
 
@@ -504,13 +500,13 @@
                             <div class="relative z-10">
                                 <div class="flex justify-between items-start mb-6">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-1 h-5 bg-[#c00000] rounded-full group-hover:h-8 transition-all duration-500"></div>
+                                        <div class="w-1.5 h-5 bg-[#c00000] rounded-full group-hover:h-8 transition-all duration-500"></div>
                                         <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-900 group-hover:text-[#c00000] transition-colors leading-tight">
                                             {{ $source['title'] }}
                                         </h4>
                                     </div>
                                     <div class="p-1.5 bg-red-50/50 rounded-xl group-hover:bg-white transition-all duration-300 shadow-sm overflow-hidden">
-                                        <img src="{{ asset('images/' . $source['image']) }}" alt="{{ $source['title'] }}" class="w-8 h-8 object-contain group-hover:scale-110 transition-transform duration-500">
+                                        <img src="{{ asset('images/' . ($source['image'] ?? 'central.png')) }}" alt="{{ $source['title'] }}" class="w-8 h-8 object-contain group-hover:scale-110 transition-transform duration-500">
                                     </div>
                                 </div>
                                 <div class="space-y-4">

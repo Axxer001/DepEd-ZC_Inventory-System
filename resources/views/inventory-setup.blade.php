@@ -28,9 +28,10 @@
         .toast-enter { animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .toast-exit { animation: slideOutRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-        .custom-scroll::-webkit-scrollbar { width: 6px; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
 
         .back-btn-cool {
             background: white;
@@ -46,31 +47,33 @@
 
         /* ── Excel-like registration table ── */
         .xls-th {
-            padding: 9px 14px;
-            font-size: 9px;
-            font-weight: 900;
+            padding: 14px 16px;
+            font-size: 10px;
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.12em;
-            color: #64748b;
+            letter-spacing: 0.1em;
+            color: #94a3b8;
             white-space: nowrap;
-            border-right: 1px solid #e8edf2;
-            border-bottom: 2px solid #dde3ea;
-            background: #f4f6f9;
+            border-right: 1px solid #1e293b;
+            border-bottom: 2px solid #0f172a;
+            background: #1e293b;
             position: sticky;
             top: 0;
-            z-index: 5;
+            z-index: 20;
         }
         .xls-td {
-            padding: 0;
-            border-right: 1px solid #eef0f4;
-            border-bottom: 1px solid #f0f3f6;
+            height: 48px;
+            border-right: 1px solid #1e293b;
+            border-bottom: 1px solid #1e293b;
             vertical-align: middle;
             position: relative;
+            padding: 0;
+            background: #0f172a;
         }
         /* row highlight */
         .xls-row { transition: background 0.1s; }
-        .xls-row:hover .xls-td { background-color: rgba(244,246,249,0.9); }
-        .xls-row:hover .xls-td.xls-sticky-col { background-color: #f4f6f9; }
+        .xls-row:hover .xls-td { background-color: #1e293b !important; }
+        .xls-row:hover .xls-td.xls-sticky-col { background-color: #1e293b !important; }
         /* inputs inside cells */
         .xls-input {
             width: 100%;
@@ -92,21 +95,64 @@
         }
         .xls-input::placeholder { color: #c8d0db; font-weight: 500; }
         .xls-const {
-            display: block;
-            padding: 11px 14px;
-            font-size: 11.5px;
-            font-weight: 700;
-            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            height: 100%;
+            font-size: 12px;
+            font-weight: 600;
+            color: #cbd5e1;
             white-space: nowrap;
-            font-style: italic;
+            font-style: normal;
         }
         /* Scroll container: min-height = 10 rows, scrollable beyond */
         .xls-scroll-wrap {
             position: relative;
             overflow-x: auto;
             overflow-y: auto;
-            min-height: 455px;   /* ~ 10 × 44px row + 2px border each */
-            max-height: 455px;
+            width: 100%;
+            max-width: 100%;
+            min-height: 400px;
+            max-height: calc(100vh - 450px);
+            flex-grow: 1;
+            background: #0f172a;
+        }
+        .pg-btn {
+            padding: 8px 18px;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: 9999px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        html.dark .pg-btn {
+            background: white;
+            color: #1e293b;
+            border-color: rgba(255,255,255,0.1);
+        }
+        .pg-btn:hover:not(:disabled) {
+            border-color: #c00000;
+            color: #c00000;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .pg-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        .pg-btn-active {
+            background: #c00000 !important;
+            color: white !important;
+            border-color: #c00000 !important;
         }
         /* ── Dark mode ── */
         html.dark .xls-th {
@@ -302,8 +348,8 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
                             </svg>
                         </div>
-                        <h4 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Add Building</h4>
-                        <p class="text-slate-400 text-xs font-bold uppercase mt-3 tracking-widest leading-tight">Register or manage school buildings and infrastructure</p>
+                        <h4 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Building Records</h4>
+                        <p class="text-slate-400 text-xs font-bold uppercase mt-3 tracking-widest leading-tight">View, filter, and manage school buildings and infrastructure</p>
                     </div>
                 </div>
 
@@ -556,6 +602,8 @@
                 </div>
             </div>
 
+            @include('partials.inventory-edit-step')
+
         </main>
     </div>
 
@@ -618,6 +666,17 @@
             return;
         }
 
+        // Edit Items (Inventory Management)
+        if (value === 'edit') {
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('stepInventoryEdit').classList.add('active');
+            document.getElementById('mainContent').classList.replace('max-w-5xl', 'max-w-full');
+            stepHistory.push('edit');
+            updateBackButton();
+            if (typeof initInventoryEdit === 'function') initInventoryEdit();
+            return;
+        }
+
         // Add Building
         if (value === 'building') {
             document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
@@ -649,7 +708,7 @@
                 stepHistory.pop();
                 const prevStep = stepHistory[stepHistory.length - 1];
 
-                if (leavingStep === 'addnew' || leavingStep === 'addbuilding') {
+                if (leavingStep === 'addnew' || leavingStep === 'addbuilding' || leavingStep === 'edit') {
                     document.getElementById('mainContent').classList.replace('max-w-full', 'max-w-5xl');
                     document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
                     document.getElementById('step1').classList.add('active');
@@ -766,10 +825,62 @@
             updateNewLabels();
         }
 
+        function cleanSchoolNameForLocation(name) {
+            if (!name) return '';
+            // Remove common school suffixes (case insensitive)
+            const suffixes = [
+                / elementary school/gi,
+                / integrated school/gi,
+                / national high school/gi,
+                / high school/gi,
+                / senior high school/gi,
+                / - snhs/gi,
+                / - standalone/gi,
+                / central school/gi,
+                / primary school/gi
+            ];
+            let cleaned = name;
+            suffixes.forEach(regex => {
+                cleaned = cleaned.replace(regex, '');
+            });
+            return cleaned.trim() + ", Zamboanga City";
+        }
+
         function syncState(rowId, col, value) {
             const row = allRowsData.find(r => r.id === rowId);
             if (row) {
                 row[col] = value;
+                
+                // --- Auto-fill logic for School ID <-> School Name <-> Location ---
+                if (col === 'school-id') {
+                    const school = allSchoolsList.find(s => String(s.school_id) === String(value));
+                    if (school) {
+                        row['school-name'] = school.name;
+                        row['location'] = cleanSchoolNameForLocation(school.name);
+                        // Update UI if on current page
+                        const nameInp = document.querySelector(`#dst-${rowId} input[data-col="school-name"]`);
+                        const locInp = document.querySelector(`#dst-${rowId} input[data-col="location"]`);
+                        if (nameInp) nameInp.value = school.name;
+                        if (locInp) locInp.value = row['location'];
+                    }
+                } else if (col === 'school-name') {
+                    const school = allSchoolsList.find(s => s.name.toLowerCase() === value.toLowerCase());
+                    if (school) {
+                        row['school-id'] = school.school_id;
+                        row['location'] = cleanSchoolNameForLocation(school.name);
+                        // Update UI if on current page
+                        const idInp = document.querySelector(`#dst-${rowId} input[data-col="school-id"]`);
+                        const locInp = document.querySelector(`#dst-${rowId} input[data-col="location"]`);
+                        if (idInp) idInp.value = school.school_id;
+                        if (locInp) locInp.value = row['location'];
+                    } else if (value.trim() !== "") {
+                        // Even if not a valid school, auto-fill location based on typed name
+                        row['location'] = cleanSchoolNameForLocation(value);
+                        const locInp = document.querySelector(`#dst-${rowId} input[data-col="location"]`);
+                        if (locInp) locInp.value = row['location'];
+                    }
+                }
+
                 if (col === 'cost' || col === 'qty') {
                     const cost = parseFloat(row.cost || 0);
                     const qty = parseInt(row.qty || 0);
@@ -973,6 +1084,7 @@
 
         function confirmBulkAdd() {
             const count = parseInt(document.getElementById('bulkRowCount').value) || 1;
+            const today = new Date().toISOString().split('T')[0];
             
             // Gather all pre-fill values
             const data = {
@@ -981,12 +1093,14 @@
                 item: document.getElementById('bItem').value,
                 description: document.getElementById('bDescription').value,
                 uom: document.getElementById('bUom').value,
+                mode: document.getElementById('bMode').value,
                 personnel: document.getElementById('bPersonnel').value,
                 position: document.getElementById('bPosition').value,
                 cost1: document.getElementById('bCost').value,
                 qty1: document.getElementById('bQty1').value,
                 life: document.getElementById('bLife').value,
                 date1: document.getElementById('bDate1').value,
+                remarks: document.getElementById('bRemarks').value || 'Good Condition',
 
                 schoolType: document.getElementById('bSchoolType').value,
                 schoolId: document.getElementById('bSchoolId').value,
@@ -998,51 +1112,37 @@
                 date2: document.getElementById('bDate2').value
             };
 
-            const startIdx = document.querySelectorAll('#assetSourceBody tr').length;
-
-            // Generate rows
+            // Generate rows in data array first (fast)
             for (let i = 0; i < count; i++) {
-                addAssetRow();
+                const newRow = {
+                    id: ++_rowNumCounter,
+                    classification: data.classification || '',
+                    category: data.category || '',
+                    item: data.item || '',
+                    description: data.description || '',
+                    uom: data.uom || '', 
+                    mode: data.mode || '', 
+                    personnel: data.personnel || '',
+                    position: data.position || '',
+                    cost: data.cost1 || '',
+                    qty: data.qty1 || '', 
+                    'useful-life': data.life || '', 
+                    'acceptance-date': data.date1 || today,
+                    remarks: data.remarks,
+                    'school-type': data.schoolType || '',
+                    'school-id': data.schoolId || '',
+                    'school-name': data.schoolName || '',
+                    occupancy: data.occupancy || '',
+                    location: data.location || '',
+                    'property-no': data.propertyNo || '',
+                    'acquisition-date': data.date2 || today
+                };
+                allRowsData.push(newRow);
             }
 
-            const srcRows = document.querySelectorAll('#assetSourceBody tr');
-            const distRows = document.querySelectorAll('#assetDistBody tr');
-
-            for (let i = startIdx; i < startIdx + count; i++) {
-                const src = srcRows[i];
-                const dst = distRows[i];
-
-                if (src) {
-                    if (data.classification) setColVal(src, 'classification', data.classification);
-                    if (data.category)       setColVal(src, 'category', data.category);
-                    if (data.item)           setColVal(src, 'item', data.item);
-                    if (data.description)    setColVal(src, 'description', data.description);
-                    if (data.uom)            setColVal(src, 'uom', data.uom);
-                    if (data.personnel)      setColVal(src, 'personnel', data.personnel);
-                    if (data.position)       setColVal(src, 'position', data.position);
-                    
-                    const inputs = src.querySelectorAll('input');
-                    if (data.cost1 && inputs[7]) inputs[7].value = data.cost1;
-                    if (data.qty1 && inputs[8])  inputs[8].value = data.qty1;
-                    if (data.life && inputs[9])  inputs[9].value = data.life;
-                    if (data.date1 && inputs[10]) inputs[10].value = data.date1;
-                }
-                
-                if (dst) {
-                    if (data.schoolType) setColVal(dst, 'school-type', data.schoolType);
-                    if (data.schoolId)   setColVal(dst, 'school-id', data.schoolId);
-                    if (data.schoolName) setColVal(dst, 'school-name', data.schoolName);
-                    if (data.occupancy)  setColVal(dst, 'occupancy', data.occupancy);
-                    if (data.location)   setColVal(dst, 'location', data.location);
-                    
-                    const inputs = dst.querySelectorAll('input');
-                    if (data.propertyNo && inputs[5]) inputs[5].value = data.propertyNo;
-                    if (data.cost2 && inputs[6])      inputs[6].value = data.cost2;
-                    if (data.date2 && inputs[7])      inputs[7].value = data.date2;
-                }
-            }
-
-            // Sync tags
+            // Render ONCE
+            currentPage = Math.ceil(allRowsData.length / rowsPerPage);
+            renderAssetTable();
             updateNewLabels();
 
             // Clear modal inputs
@@ -1058,17 +1158,7 @@
             const el = row.querySelector(`input[data-col="${colName}"]`);
             if (el) el.value = val;
         }
-        function closeBulkAddModal() { document.getElementById('bulkAddModal').classList.add('hidden'); }
 
-        function submitRegistration() {
-            Swal.fire({
-                title: 'Backend Not Connected',
-                text: 'Registration logic will be wired up after the design is confirmed.',
-                icon: 'info',
-                confirmButtonColor: '#c00000',
-                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
-            });
-        }
 
         function renderForm() {
             const container = document.getElementById('formContent');
@@ -2537,43 +2627,6 @@
             calcBulkCost();
         }
 
-        function confirmBulkAdd() {
-            const count = parseInt(document.getElementById('bulkRowCount').value) || 1;
-            const data = {
-                classification: document.getElementById('bClassification').value,
-                category: document.getElementById('bCategory').value,
-                item: document.getElementById('bItem').value,
-                description: document.getElementById('bDescription').value,
-                uom: document.getElementById('bUom').value,
-                mode: document.getElementById('bMode').value,
-                personnel: document.getElementById('bPersonnel').value,
-                position: document.getElementById('bPosition').value,
-                cost: document.getElementById('bCost').value,
-                qty: document.getElementById('bQty1').value,
-                'useful-life': document.getElementById('bLife').value,
-                'acceptance-date': document.getElementById('bDate1').value || today,
-                remarks: document.getElementById('bRemarks').value || 'Good Condition',
-                'school-type': document.getElementById('bSchoolType').value,
-                'school-id': document.getElementById('bSchoolId').value,
-                'school-name': document.getElementById('bSchoolName').value,
-                occupancy: document.getElementById('bOccupancy').value,
-                location: document.getElementById('bLocation').value,
-                'property-no': document.getElementById('bPropertyNo').value,
-                'acquisition-date': document.getElementById('bDate2').value || today
-            };
-
-            for (let i = 0; i < count; i++) {
-                allRowsData.push({ id: ++_rowNumCounter, ...data });
-            }
-            currentPage = Math.ceil(allRowsData.length / rowsPerPage);
-            // Clear modal inputs
-            const ids = ['bClassification', 'bCategory', 'bItem', 'bDescription', 'bUom', 'bMode', 'bPersonnel', 'bPosition', 'bCost', 'bQty1', 'bLife', 'bDate1', 'bRemarks', 'bSchoolType', 'bSchoolId', 'bSchoolName', 'bOccupancy', 'bLocation', 'bPropertyNo', 'bDate2'];
-            ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-            document.getElementById('bulkRowCount').value = '1';
-
-            renderAssetTable(); closeBulkAddModal();
-            Swal.fire({ icon: 'success', title: 'Bulk Rows Added', text: `Successfully added ${count} rows.`, timer: 1500, showConfirmButton: false });
-        }
 
         function submitRegistration() {
             if (allRowsData.length === 0) {
@@ -2587,7 +2640,7 @@
             }
             let isValid = true;
             allRowsData.forEach(row => {
-                const required = ['classification', 'category', 'item', 'uom', 'cost', 'qty', 'acceptance-date', 'school-type', 'school-id', 'school-name', 'occupancy', 'location', 'acquisition-date'];
+                const required = ['classification', 'category', 'item', 'uom', 'cost', 'qty', 'acceptance-date', 'school-type', 'school-name', 'occupancy', 'location', 'acquisition-date'];
                 required.forEach(field => { if (!row[field]) isValid = false; });
             });
             if (!isValid) {
@@ -2610,7 +2663,7 @@
                     .then(data => {
                         if (data.success) {
                             Swal.fire({ icon: 'success', title: 'Success!', text: data.message, confirmButtonColor: '#10b981', customClass: { popup: 'rounded-[2rem]' } })
-                            .then(() => { window.location.href = '/view-all-assets'; });
+                            .then(() => { window.location.href = '/inventory-setup'; });
                         } else {
                             Swal.fire({ icon: 'error', title: 'Failed', text: data.message, confirmButtonColor: '#c00000' });
                         }
@@ -2699,10 +2752,20 @@
                         <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 flex justify-between items-center cursor-not-allowed">Division of Zamboanga City <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
                     </div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Office/School Type</label><input type="text" id="bSchoolType" data-col="school-type" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">School ID</label><input type="text" id="bSchoolId" data-col="school-id" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select" inputmode="numeric"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label><input type="text" id="bSchoolName" data-col="school-name" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Nature of Occupancy</label><input type="text" id="bOccupancy" data-col="occupancy" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Location</label><input type="text" id="bLocation" data-col="location" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">School ID</label>
+                        <input type="text" id="bSchoolId" data-col="school-id" autocomplete="off" 
+                            oninput="const s=allSchoolsList.find(x=>String(x.school_id)===this.value); if(s){document.getElementById('bSchoolName').value=s.name; document.getElementById('bLocation').value=cleanSchoolNameForLocation(s.name);}"
+                            class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select" inputmode="numeric">
+                    </div>
+                    <div class="relative">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label>
+                        <input type="text" id="bSchoolName" data-col="school-name" autocomplete="off" 
+                            oninput="const s=allSchoolsList.find(x=>x.name.toLowerCase()===this.value.toLowerCase()); if(s){document.getElementById('bSchoolId').value=s.school_id; document.getElementById('bLocation').value=cleanSchoolNameForLocation(s.name);} else if(this.value.trim()){document.getElementById('bLocation').value=cleanSchoolNameForLocation(this.value);}"
+                            class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select">
+                    </div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Nature of Occupancy</label><input type="text" id="bOccupancy" data-col="occupancy" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Location</label><input type="text" id="bLocation" data-col="location" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Property Number</label><input type="text" id="bPropertyNo" oninput="checkBulkPropertyNumber()" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
                     <div class="relative">
                         <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Acquisition Cost</label>

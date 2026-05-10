@@ -3,419 +3,444 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>School Directory | DepEd ZC</title>
+    <title>School Registry | DepEd Zamboanga City</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    {{-- Alpine.js for filtering and toggle logic --}}
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; transition: all 0.3s; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
-        .table-row-transition { transition: all 0.2s ease-in-out; }
-        [x-cloak] { display: none !important; }
-        
-        /* Premium Pagination Override */
-        .laravel-pagination-wrapper nav { 
-            display: flex !important; 
-            justify-content: center !important; 
-            align-items: center !important;
-            width: 100% !important;
+        .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
+        .custom-scroll::-webkit-scrollbar { width: 5px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .back-btn-cool { background: white; border: 1px solid #e2e8f0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .back-btn-cool:hover { border-color: #c00000; color: #c00000; box-shadow: 0 10px 15px -3px rgba(192, 0, 0, 0.1); transform: translateX(-4px); }
+        .xls-th { padding: 12px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; white-space: nowrap; border-right: 1px solid #1e293b; border-bottom: 2px solid #0f172a; background: #1e293b; position: sticky; top: 0; z-index: 20; }
+        .xls-td { height: 48px; border-right: 1px solid #1e293b; border-bottom: 1px solid #1e293b; vertical-align: middle; padding: 0; background: #0f172a; }
+        .xls-row { transition: background 0.1s; }
+        .xls-row:hover .xls-td { background-color: #1e293b !important; }
+        .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: #cbd5e1; white-space: nowrap; }
+        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 450px); min-height: 400px; background: #0f172a; flex-grow: 1; transition: height 0.3s ease-in-out; }
+        .xls-scroll-wrap.expanded { height: calc(100vh - 250px); }
+        .pg-btn {
+            padding: 8px 18px;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: 9999px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e2e8f0;
+            background: white;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .pg-btn:hover:not(:disabled) {
+            border-color: #c00000;
+            color: #c00000;
+            transform: translateY(-1px);
+        }
+        .pg-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: #f1f5f9;
         }
         
-        /* Hide the bulky Laravel default "Showing X to Y" text blocks */
-        .laravel-pagination-wrapper nav div:first-child,
-        .laravel-pagination-wrapper nav p.text-sm.text-gray-700 { 
-            display: none !important; 
+        /* Dark Mode Overrides */
+        html.dark body { background-color: #0f172a; color: #f8fafc; }
+        html.dark .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
+        html.dark .text-slate-800 { color: #f8fafc !important; }
+        html.dark .text-slate-900 { color: #f8fafc !important; }
+        html.dark .bg-slate-50 { background-color: #0f172a !important; border-color: #1e293b !important; }
+        html.dark .bg-slate-50\/50 { background-color: #1e293b !important; }
+        html.dark .border-t { border-color: #334155 !important; }
+        
+        /* Glass Indicator Box */
+        .glass-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+        html.dark .glass-indicator {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.05);
         }
 
-        /* Ensure the pagination buttons container is a single clean row */
-        .laravel-pagination-wrapper nav > div:last-child,
-        .laravel-pagination-wrapper nav .relative.inline-flex { 
-            display: flex !important; 
-            flex-direction: row !important;
-            gap: 0.4rem !important; 
-            box-shadow: none !important; 
-            border: none !important; 
-            background: transparent !important;
+        .custom-autocomplete {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            margin-top: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 50;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
-
-        /* Refined Button Styling */
-        .laravel-pagination-wrapper nav span, 
-        .laravel-pagination-wrapper nav a {
-            display: flex !important; 
-            align-items: center !important; 
-            justify-content: center !important;
-            min-width: 38px !important; 
-            height: 38px !important; 
-            border-radius: 12px !important;
-            font-size: 0.75rem !important; 
-            font-weight: 800 !important; 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; 
-            border: 1px solid #f1f5f9 !important;
-            background: white !important; 
-            color: #64748b !important; 
-            padding: 0 !important;
-            margin: 0 !important;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+        .custom-autocomplete-item {
+            padding: 10px 16px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
         }
-
-        /* Active Page State */
-        .laravel-pagination-wrapper nav span[aria-current="page"] span {
-            background: #c00000 !important; 
-            color: white !important; 
-            border-color: #c00000 !important;
-            box-shadow: 0 8px 15px -3px rgba(192, 0, 0, 0.3) !important; 
-            transform: scale(1.05); 
-            z-index: 10;
+        .custom-autocomplete-item:hover {
+            background: #f8fafc;
+            color: #c00000;
         }
-
-        /* Hover State */
-        .laravel-pagination-wrapper nav a:hover {
-            color: #c00000 !important; 
-            border-color: #fecaca !important; 
-            background: #fff1f2 !important;
-            transform: translateY(-2px); 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+        html.dark .custom-autocomplete {
+            background: #1e293b;
+            border-color: #334155;
         }
-
-        /* Disabled State */
-        .laravel-pagination-wrapper nav span[aria-disabled="true"] span {
-            background: #f8fafc !important; 
-            color: #cbd5e1 !important; 
-            opacity: 0.5 !important;
-            border-color: #f1f5f9 !important;
-        }
-
-        /* Icon Fixes */
-        .laravel-pagination-wrapper svg { 
-            width: 1.25rem !important; 
-            height: 1.25rem !important; 
+        html.dark .custom-autocomplete-item:hover {
+            background: #0f172a;
         }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex animate-fade-in text-slate-800 overflow-x-hidden"
-      x-data="schoolFilter()">
+<body class="bg-slate-50 min-h-screen flex text-slate-900 overflow-x-hidden">
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto">
-        <main class="p-6 lg:p-10">
-            <header class="flex flex-col md:flex-row md:justify-between md:items-start mb-10 gap-4">
-                <div>
-                    <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight italic">School Registry</h2>
-                    <p class="text-slate-500 text-sm mt-1 font-medium italic">Zamboanga City Division Master List</p>
-                </div>
-                <a href="{{ route('inventory.setup') }}" class="group bg-[#c00000] text-white px-8 py-4 rounded-[1.5rem] font-bold hover:bg-red-700 shadow-xl shadow-red-200 transition-all hover:-translate-y-1 flex items-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 group-hover:rotate-90 transition-transform">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                    </svg>
-                    Register New School
-                </a>
-            </header>
+    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll">
+    <div class="w-full mx-auto p-6 lg:p-10 min-h-screen flex flex-col">
 
-            @if(session('success'))
-            <div id="flashNotification" class="fixed top-6 right-6 bg-emerald-500 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 z-50 animate-fade-in">
-                <div class="bg-white/20 p-2 rounded-xl">✓</div>
-                <p class="text-xs font-bold">{{ session('success') }}</p>
-                <button onclick="this.parentElement.remove()" class="ml-4 opacity-50 hover:opacity-100">✕</button>
+        <div class="flex justify-between items-center mb-10 px-2">
+            <div>
+                <h2 class="text-3xl font-black text-slate-800 uppercase italic leading-none">School Registry</h2>
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mt-2">Zamboanga City Division Master List</p>
             </div>
-            <script>setTimeout(() => document.getElementById('flashNotification')?.remove(), 5000);</script>
-            @endif
+            <div class="flex items-center gap-4">
+                <button onclick="toggleSchoolFilters()" id="toggleFilterBtn" class="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-100 hover:border-red-600 transition-all flex items-center gap-2 active:scale-95 shadow-sm italic">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
+                    Hide Filters
+                </button>
+                <a href="/dashboard" class="back-btn-cool px-6 py-3 rounded-2xl text-sm font-bold text-slate-600 flex items-center gap-2 shadow-sm active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
+                    Back
+                </a>
+            </div>
+        </div>
 
-            <section class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-50 overflow-hidden flex flex-col">
-                <div class="p-8 border-b border-slate-50">
-                    <form id="filterForm" method="GET" action="{{ route('admin.schools') }}">
-                        {{-- Hidden input for districts and quadrants array --}}
-                        <input type="hidden" name="districts" :value="selectedDistricts.join(',')">
-                        <input type="hidden" name="quadrants" :value="selectedQuadrants.join(',')">
-
-                        <div class="flex flex-col md:flex-row justify-between items-center gap-4">
-                            <div class="flex items-center gap-3">
-                                <span class="w-2 h-6 bg-[#c00000] rounded-full"></span>
-                                <h3 class="font-extrabold text-slate-800 tracking-tight text-lg italic">Master List</h3>
-                            </div>
-                            
-                            <div class="flex items-center gap-3 w-full md:w-auto flex-grow max-w-2xl justify-end">
-                                {{-- Search Bar --}}
-                                <div class="relative w-full md:w-96 group" id="searchContainer">
-                                    <input type="text" id="searchInput" name="search" value="{{ request('search') }}" placeholder="Search School ID or name..." autocomplete="off" class="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] text-sm font-semibold focus:outline-none focus:ring-4 focus:ring-red-50 transition-all relative z-20">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-[#c00000] transition-colors z-20">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                                    </svg>
-                                    <ul id="searchResults" class="absolute z-30 w-full bg-white border border-slate-100 rounded-2xl shadow-2xl mt-2 max-h-60 overflow-y-auto hidden custom-scrollbar"></ul>
-                                </div>
-
-                                {{-- Filter Toggle Button --}}
-                                <button type="button" @click="showFilters = !showFilters" 
-                                        :class="showFilters || selectedDistricts.length > 0 || selectedQuadrants.length > 0 ? 'bg-[#c00000] text-white border-[#c00000]' : 'bg-white text-slate-600 border-slate-200'"
-                                        class="flex items-center gap-2 px-6 py-4 rounded-2xl border font-bold text-sm transition-all hover:shadow-lg active:scale-95 shrink-0 relative">
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 18H7.5m9-6h2.25m-2.25 0a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 12h7.5" />
-                                    </svg>
-                                    <template x-if="(selectedDistricts.length + selectedQuadrants.length) > 0">
-                                        <span class="bg-white text-[#c00000] text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-black shadow-sm" x-text="(selectedDistricts.length + selectedQuadrants.length)"></span>
-                                    </template>
-                                </button>
-                            </div>
-                        </div>
-
-                        {{-- Collapsible Manual Filter Section --}}
-                        <div x-show="showFilters" x-cloak
-                             x-transition:enter="transition ease-out duration-300"
-                             x-transition:enter-start="opacity-0 -translate-y-4"
-                             class="mt-6 p-8 bg-slate-50/50 rounded-[2rem] border border-slate-100 shadow-inner">
-                            
-                            <div class="flex flex-col gap-6">
-                                <div class="flex justify-between items-center">
-                                    <div class="flex flex-col">
-                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">Multi-Quadrant & District Selection</span>
-                                        <p class="text-xs text-slate-500 font-medium">Select one or more parameters to filter down the list.</p>
-                                    </div>
-                                    <div class="flex items-center gap-3">
-                                        <button type="button" x-show="selectedDistricts.length > 0 || selectedQuadrants.length > 0" 
-                                                @click="selectedDistricts = []; selectedQuadrants = [];"
-                                                class="text-[10px] font-black text-slate-400 uppercase hover:text-red-600 transition-colors">
-                                            Clear Selection
-                                        </button>
-                                        <button type="submit" class="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold text-xs shadow-lg hover:bg-slate-800 transition-all active:scale-95">
-                                            Apply Filters
-                                        </button>
-                                    </div>
-                                </div>
-                                
-                                {{-- Quadrant Selection Grouped by LD --}}
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    @foreach($quadrantsByLD as $ldName => $quads)
-                                    <div class="flex flex-col">
-                                        <p class="text-[9px] font-black {{ str_contains($ldName, '1') ? 'text-blue-600' : 'text-emerald-600' }} uppercase tracking-widest mb-3 border-b border-slate-100 pb-1 italic">{{ $ldName }}</p>
-                                        <div class="flex flex-wrap gap-2.5">
-                                            @foreach($quads as $quad)
-                                            <button type="button" 
-                                                @click="!isQuadrantDisabled('{{ $quad->name }}') && toggleQuadrant('{{ $quad->name }}')"
-                                                :disabled="isQuadrantDisabled('{{ $quad->name }}')"
-                                                :class="[
-                                                    selectedQuadrants.includes('{{ $quad->name }}') 
-                                                        ? 'bg-[#c00000] text-white border-[#c00000] shadow-md shadow-red-100' 
-                                                        : 'bg-white text-slate-500 border-slate-200 hover:border-red-200',
-                                                    isQuadrantDisabled('{{ $quad->name }}') ? 'opacity-40 cursor-not-allowed bg-slate-100 hover:border-slate-200' : 'active:scale-95'
-                                                ]"
-                                                class="px-5 py-2.5 rounded-xl border text-[11px] font-bold uppercase transition-all flex items-center gap-2">
-                                                <span>{{ $quad->name }}</span>
-                                                <template x-if="selectedQuadrants.includes('{{ $quad->name }}')">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
-                                                        <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                                                    </svg>
-                                                </template>
-                                            </button>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                    @endforeach
-                                </div>
-
-                                {{-- District Selection --}}
-                                <div class="flex flex-col">
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Districts</p>
-                                    <div class="flex flex-wrap gap-2.5">
-                                    <template x-for="dist in districts" :key="dist">
-                                        <button type="button" 
-                                            @click="!isDistrictDisabled(dist) && toggleDistrict(dist)"
-                                            :disabled="isDistrictDisabled(dist)"
-                                            :class="[
-                                                selectedDistricts.includes(dist) 
-                                                    ? 'bg-[#c00000] text-white border-[#c00000] shadow-md shadow-red-100' 
-                                                    : 'bg-white text-slate-500 border-slate-200 hover:border-red-200',
-                                                isDistrictDisabled(dist) ? 'opacity-40 cursor-not-allowed bg-slate-100 hover:border-slate-200' : 'active:scale-95'
-                                            ]"
-                                            class="px-5 py-2.5 rounded-xl border text-[11px] font-bold uppercase transition-all flex items-center gap-2">
-                                            <span x-text="dist"></span>
-                                            <template x-if="selectedDistricts.includes(dist)">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
-                                                    <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                                                </svg>
-                                            </template>
-                                        </button>
-                                    </template>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
+        <!-- Filter Configuration -->
+        <div id="schoolFilterSection" class="bg-white rounded-[2.5rem] shadow-lg border border-slate-100 p-8 mb-8 relative z-50 animate-fade transition-all duration-300 origin-top">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8 relative z-10">
+                <div>
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Quadrant</label>
+                    <select id="schoolFilterQuadrant" onchange="schoolFetchFilters()" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+                        <option value="">All Quadrants</option>
+                    </select>
                 </div>
-
-                {{-- Table Section --}}
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-separate border-spacing-0">
-                        <thead>
-                            <tr class="bg-slate-50/50">
-                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">School ID</th>
-                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Institutional Name</th>
-                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">Quadrant</th>
-                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100">District</th>
-                                <th class="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center border-b border-slate-100">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="schoolTableBody" class="divide-y divide-slate-50">
-                            @forelse($schools as $school)
-                            <tr class="group hover:bg-slate-50/80 transition-all table-row-transition">
-                                <td class="px-8 py-5">
-                                    <span class="font-black text-blue-600 bg-blue-50 px-4 py-2 rounded-xl text-xs italic border border-blue-100">{{ $school->school_id }}</span>
-                                </td>
-                                <td class="px-8 py-5">
-                                    <div class="flex flex-col">
-                                        <span class="font-bold text-slate-800 group-hover:text-[#c00000] uppercase text-sm leading-tight transition-colors">{{ $school->name }}</span>
-                                        <span class="text-[9px] font-black text-slate-300 uppercase mt-0.5 tracking-tighter italic">Verified DepEd Record</span>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-5">
-                                    <span class="font-bold text-slate-600 text-xs italic">{{ $school->quadrant_name ?? 'N/A' }}</span>
-                                </td>
-                                <td class="px-8 py-5">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-1.5 h-1.5 bg-emerald-400 rounded-full shadow-[0_0_8px_rgba(52,211,153,0.6)]"></div>
-                                        <span class="font-bold text-slate-600 text-[13px] italic">{{ $school->district_name ?? 'N/A' }}</span>
-                                    </div>
-                                </td>
-                                <td class="px-8 py-5 text-center">
-                                    <div class="flex justify-center opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0">
-                                        <button onclick="openDeleteModal('{{ $school->id }}', '{{ addslashes($school->name) }}')" class="p-2.5 bg-white border border-slate-100 text-slate-400 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="4" class="px-8 py-20 text-center font-bold text-slate-400 italic">No matching schools found.</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                <div>
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">District</label>
+                    <select id="schoolFilterDistrict" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+                        <option value="">All Districts</option>
+                    </select>
                 </div>
-
-                {{-- Pagination Footer --}}
-                <div class="p-8 bg-slate-50/30 border-t border-slate-50">
-                    <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">
-                            Showing <span class="text-slate-900">{{ $schools->firstItem() ?? 0 }} - {{ $schools->lastItem() ?? 0 }}</span> of <span class="text-slate-900">{{ $schools->total() }}</span> Institutions
-                        </p>
-                        <div class="laravel-pagination-wrapper">
-                            {{ $schools->appends(request()->query())->links() }}
+                <div class="relative">
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">School ID or Name</label>
+                    <div class="relative">
+                        <input type="text" id="schoolFilterSearch" placeholder="Search School..." autocomplete="off" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500 pr-10">
+                        <div id="schoolSearchDropdown" class="custom-autocomplete hidden"></div>
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
+                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                         </div>
                     </div>
                 </div>
-            </section>
-        </main>
-    </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Sorting</label>
+                    <select id="schoolFilterSort" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+                        <option value="">Default (Name A-Z)</option>
+                        <option value="name_asc">Name: A to Z</option>
+                        <option value="name_desc">Name: Z to A</option>
+                        <option value="id_asc">School ID: Low to High</option>
+                        <option value="id_desc">School ID: High to Low</option>
+                        <option value="cost_asc">Total Valuation: Low to High</option>
+                        <option value="cost_desc">Total Valuation: High to Low</option>
+                        <option value="bldg_asc">Bldg Cost: Low to High</option>
+                        <option value="bldg_desc">Bldg Cost: High to Low</option>
+                        <option value="ppe_asc">PPE Cost: Low to High</option>
+                        <option value="ppe_desc">PPE Cost: High to Low</option>
+                        <option value="semi_asc">Semi-PPE Cost: Low to High</option>
+                        <option value="semi_desc">Semi-PPE Cost: High to Low</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-end items-center gap-8 relative z-10">
+                <button onclick="clearSchoolFilters()" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-red-600 transition-all italic">Clear All Filters</button>
+                <button onclick="schoolFetchData()" class="px-8 py-2.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all active:scale-95 shadow-lg shadow-slate-200 italic">Apply Configuration</button>
+            </div>
+        </div>
 
-    {{-- Delete Modal --}}
-    <div id="deleteModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
-        <div class="bg-white rounded-[2.5rem] w-full max-w-md p-10 text-center shadow-2xl">
-            <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6 text-2xl">⚠️</div>
-            <h3 class="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tight">Confirm Delete</h3>
-            <p id="deleteSchoolName" class="text-sm text-slate-500 mb-8 font-medium"></p>
-            <div class="flex gap-4">
-                <button onclick="closeDeleteModal()" class="flex-1 py-4 bg-slate-100 rounded-2xl font-bold transition-colors hover:bg-slate-200">Cancel</button>
-                <form id="deleteForm" method="POST" class="flex-1">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="w-full py-4 bg-red-600 text-white rounded-2xl font-bold shadow-xl shadow-red-100 hover:bg-red-700 transition-all active:scale-95">Delete</button>
-                </form>
+        <div class="bg-white rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden flex flex-col animate-fade relative">
+            <div class="xls-scroll-wrap">
+                <table class="w-full border-collapse" style="min-width:1200px;">
+                    <thead><tr>
+                        <th class="xls-th w-10 text-center sticky left-0 z-10">#</th>
+                        <th class="xls-th" style="min-width:120px">School ID</th>
+                        <th class="xls-th" style="min-width:300px">Institutional Name</th>
+                        <th class="xls-th" style="min-width:180px">District</th>
+                        <th class="xls-th" style="min-width:180px">Quadrant</th>
+                        <th class="xls-th" style="min-width:150px">Total Bldg Cost</th>
+                        <th class="xls-th" style="min-width:150px">Total PPE Cost</th>
+                        <th class="xls-th" style="min-width:150px">Total Semi-PPE Cost</th>
+                        <th class="xls-th" style="min-width:180px">Created At</th>
+                        <th class="xls-th" style="min-width:180px">Updated At</th>
+                    </tr></thead>
+                    <tbody id="schoolBody"></tbody>
+                </table>
+                
+                {{-- Loading State --}}
+                <div id="schoolLoading" class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-50 flex items-center justify-center hidden">
+                    <div class="flex flex-col items-center gap-4">
+                        <div class="w-12 h-12 border-4 border-slate-100 border-t-red-600 rounded-full animate-spin"></div>
+                        <p class="text-[10px] font-black text-slate-800 uppercase tracking-widest italic">Fetching School Data...</p>
+                    </div>
+                </div>
+
+                {{-- Empty State --}}
+                <div id="schoolEmpty" class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div class="inline-flex flex-col items-center gap-3 opacity-30">
+                        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A4.833 4.833 0 0012 9a4.833 4.833 0 00-7.5 1.332V21m15 0h-15"/></svg>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">No schools found — adjust filters</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="schoolTableFooter" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-white dark:bg-slate-900 relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+                <div class="flex items-center gap-6">
+                    <p id="schoolRowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 Rows</p>
+                    <div id="schoolPaginationControls" class="flex items-center gap-3 border-l border-slate-200 dark:border-slate-800 pl-6">
+                        <button onclick="schoolPrevPage()" id="schoolPrevBtn" class="pg-btn">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
+                            Prev
+                        </button>
+                        <div class="glass-indicator">
+                            <span id="schoolCurrentPage" class="text-[10px] font-black text-white dark:text-blue-400">1</span>
+                            <span class="text-[10px] font-bold text-slate-500">/</span>
+                            <span id="schoolTotalPages" class="text-[10px] font-black text-slate-500">1</span>
+                        </div>
+                        <button onclick="schoolNextPage()" id="schoolNextBtn" class="pg-btn">
+                            Next
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div></div>
             </div>
         </div>
     </div>
+    </div>
 
     <script>
-        {{-- Logic separated into a function to prevent HTML character issues --}}
-        function schoolFilter() {
-            return {
-                showFilters: false,
-                districts: @json($allDistricts ?? []),
-                quadrants: @json($allQuadrants ?? []),
-                mapping: @json($districtQuadrantMapping ?? []),
-                selectedDistricts: @json(request('districts') ? explode(',', request('districts')) : []),
-                selectedQuadrants: @json(request('quadrants') ? explode(',', request('quadrants')) : []),
-                
-                toggleDistrict(dist) {
-                    if (this.selectedDistricts.includes(dist)) {
-                        this.selectedDistricts = this.selectedDistricts.filter(d => d !== dist);
-                    } else {
-                        this.selectedDistricts.push(dist);
-                    }
-                },
-                
-                toggleQuadrant(quad) {
-                    if (this.selectedQuadrants.includes(quad)) {
-                        this.selectedQuadrants = this.selectedQuadrants.filter(q => q !== quad);
-                    } else {
-                        this.selectedQuadrants.push(quad);
-                    }
-                },
+        let schoolRowsData = [];
+        let schoolCurrentPage = 1;
+        const schoolRowsPerPage = 50;
 
-                isDistrictDisabled(distName) {
-                    if (this.selectedQuadrants.length === 0) return false;
-                    // Find the quadrant this district belongs to
-                    const mapItem = this.mapping.find(m => m.district === distName);
-                    if (!mapItem) return false;
-                    // Disabled if its quadrant is NOT in the selected quadrants
-                    return !this.selectedQuadrants.includes(mapItem.quadrant);
-                },
+        let allSchoolList = [];
+        let isSearchInit = false;
 
-                isQuadrantDisabled(quadName) {
-                    if (this.selectedDistricts.length === 0) return false;
-                    // Get all districts that belong to this specific quadrant
-                    const districtsInQuad = this.mapping.filter(m => m.quadrant === quadName).map(m => m.district);
-                    // Check if ANY of the currently selected districts belong to this quadrant
-                    const hasSelectedDistrict = this.selectedDistricts.some(sd => districtsInQuad.includes(sd));
-                    // Disabled if NONE of the selected districts belong to it
-                    return !hasSelectedDistrict;
+        async function schoolFetchFilters() {
+            try {
+                const quadVal = document.getElementById('schoolFilterQuadrant').value;
+                const res = await fetch(`{{ route('api.schools.filters') }}?quadrant=${encodeURIComponent(quadVal)}`);
+                const data = await res.json();
+                
+                const populate = (id, list, label) => {
+                    const el = document.getElementById(id);
+                    const currentVal = el.value;
+                    el.innerHTML = `<option value="">All ${label}s</option>`;
+                    
+                    // Filter and clean the list to prevent empty/blank options
+                    const cleanList = (list || []).filter(item => item && item.toString().trim() !== '');
+                    
+                    cleanList.forEach(item => {
+                        const opt = document.createElement('option');
+                        opt.value = item;
+                        opt.textContent = item;
+                        if(item === currentVal) opt.selected = true;
+                        el.appendChild(opt);
+                    });
+                };
+                
+                // Only populate quadrants if empty (first load)
+                const qEl = document.getElementById('schoolFilterQuadrant');
+                if (qEl.options.length <= 1) {
+                    populate('schoolFilterQuadrant', data.quadrants, 'Quadrant');
                 }
-            }
+                
+                populate('schoolFilterDistrict', data.districts, 'District');
+                
+                allSchoolList = data.allSchools || [];
+                if (!isSearchInit) {
+                    initSchoolSearchAutocomplete();
+                    isSearchInit = true;
+                }
+            } catch (e) { console.error('Failed to fetch school filters', e); }
         }
 
-        {{-- Autocomplete and Modal Scripts --}}
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('searchInput');
-            const searchResults = document.getElementById('searchResults');
-            const allSchools = @json($allSchools ?? []);
+        function initSchoolSearchAutocomplete() {
+            const input = document.getElementById('schoolFilterSearch');
+            const dropdown = document.getElementById('schoolSearchDropdown');
+            
+            input.onfocus = () => showSearchDropdown(input.value);
+            input.oninput = (e) => showSearchDropdown(e.target.value);
+            
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            });
 
-            if(searchInput) {
-                searchInput.addEventListener('input', function() {
-                    const query = this.value.toLowerCase().trim();
-                    searchResults.innerHTML = '';
-                    if (query.length === 0) { searchResults.classList.add('hidden'); return; }
-                    const filtered = allSchools.filter(s => (s.name && s.name.toLowerCase().includes(query)) || (s.school_id && s.school_id.toString().includes(query)));
-                    if (filtered.length > 0) {
-                        filtered.forEach(s => {
-                            const li = document.createElement('li');
-                            li.className = 'px-6 py-4 hover:bg-red-50 cursor-pointer text-[11px] font-black text-slate-700 transition-all border-b border-slate-50 uppercase tracking-widest';
-                            li.innerHTML = `<span class="text-blue-600 mr-2">${s.school_id}</span> - ${s.name}`;
-                            li.onclick = () => { searchInput.value = s.school_id; document.getElementById('filterForm').submit(); };
-                            searchResults.appendChild(li);
-                        });
-                    } else {
-                        searchResults.innerHTML = '<li class="px-6 py-5 text-xs font-bold text-slate-400 italic">No institutions found</li>';
-                    }
-                    searchResults.classList.remove('hidden');
+            function showSearchDropdown(query = '') {
+                const filtered = query 
+                    ? allSchoolList.filter(s => s.toLowerCase().includes(query.toLowerCase()))
+                    : allSchoolList;
+                
+                dropdown.innerHTML = '';
+                if (filtered.length === 0) {
+                    dropdown.classList.add('hidden');
+                    return;
+                }
+
+                filtered.slice(0, 10).forEach(school => {
+                    const item = document.createElement('div');
+                    item.className = 'custom-autocomplete-item';
+                    item.textContent = school;
+                    item.onclick = () => {
+                        // Extract just the name or ID part if desired, or keep the whole string
+                        // The filter logic in the controller uses LIKE %query% so the whole string is fine
+                        input.value = school;
+                        dropdown.classList.add('hidden');
+                        schoolFetchData(); // Auto fetch on selection
+                    };
+                    dropdown.appendChild(item);
                 });
+                
+                dropdown.classList.remove('hidden');
             }
-            document.addEventListener('click', (e) => { if (searchInput && !searchInput.contains(e.target)) searchResults.classList.add('hidden'); });
+        }
+
+        async function schoolFetchData() {
+            const loading = document.getElementById('schoolLoading');
+            loading.classList.remove('hidden');
+            const filters = {
+                quadrant: document.getElementById('schoolFilterQuadrant').value,
+                district: document.getElementById('schoolFilterDistrict').value,
+                search: document.getElementById('schoolFilterSearch').value,
+                sort: document.getElementById('schoolFilterSort').value
+            };
+            try {
+                const res = await fetch("{{ route('api.schools.preview') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                    body: JSON.stringify({ filters: filters })
+                });
+                const data = await res.json();
+                schoolRowsData = data.rows || [];
+                schoolCurrentPage = 1;
+                renderSchoolTable();
+            } catch (e) {
+                console.error('Failed to fetch schools', e);
+                Swal.fire('Error', 'Failed to load school data.', 'error');
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        function clearSchoolFilters() {
+            document.getElementById('schoolFilterQuadrant').value = '';
+            document.getElementById('schoolFilterDistrict').value = '';
+            document.getElementById('schoolFilterSearch').value = '';
+            document.getElementById('schoolFilterSort').value = '';
+            schoolCurrentPage = 1;
+            schoolFetchData();
+        }
+
+        function renderSchoolTable() {
+            const tbody = document.getElementById('schoolBody');
+            tbody.innerHTML = '';
+            if (schoolRowsData.length === 0) {
+                document.getElementById('schoolEmpty').classList.remove('hidden');
+                document.getElementById('schoolRowCountLabel').textContent = '0 Rows';
+                return;
+            }
+            document.getElementById('schoolEmpty').classList.add('hidden');
+            const start = (schoolCurrentPage - 1) * schoolRowsPerPage;
+            const pageData = schoolRowsData.slice(start, start + schoolRowsPerPage);
+            pageData.forEach((row, idx) => {
+                const displayNum = start + idx + 1;
+                const tr = document.createElement('tr');
+                tr.className = 'xls-row group border-b border-slate-100';
+                
+                const cell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const">${val || ''}</span></td>`;
+                const idCell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const font-black text-blue-500 italic">${val || ''}</span></td>`;
+                const costCell = (val, color) => `<td class="xls-td relative"><span class="xls-const font-black italic ${color}">₱ ${Number(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></td>`;
+
+                tr.innerHTML = `
+                    <td class="xls-td text-center sticky left-0 w-10 bg-[#0f172a] z-10"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
+                    ${idCell(row.school_id)}
+                    <td class="xls-td relative">
+                        <span class="xls-const font-bold text-slate-200 uppercase">${row.name || ''}</span>
+                    </td>
+                    ${cell(row.district_name)}
+                    ${cell(row.quadrant_name)}
+                    ${costCell(row.total_bldg_cost, 'text-emerald-400')}
+                    ${costCell(row.total_ppe_cost, 'text-blue-400')}
+                    ${costCell(row.total_semi_ppe_cost, 'text-amber-400')}
+                    ${cell(row.created_at ? new Date(row.created_at).toLocaleString() : '', 'text-slate-500 text-[9px]')}
+                    ${cell(row.updated_at ? new Date(row.updated_at).toLocaleString() : '', 'text-slate-500 text-[9px]')}
+                `;
+                tbody.appendChild(tr);
+            });
+            const totalPages = Math.ceil(schoolRowsData.length / schoolRowsPerPage) || 1;
+            document.getElementById('schoolRowCountLabel').textContent = schoolRowsData.length + " Schools Found";
+            
+            document.getElementById('schoolCurrentPage').textContent = schoolCurrentPage;
+            document.getElementById('schoolTotalPages').textContent = totalPages;
+            document.getElementById('schoolPrevBtn').disabled = schoolCurrentPage === 1;
+            document.getElementById('schoolNextBtn').disabled = schoolCurrentPage === totalPages;
+        }
+
+        function schoolPrevPage() { if (schoolCurrentPage > 1) { schoolCurrentPage--; renderSchoolTable(); } }
+        function schoolNextPage() { const t = Math.ceil(schoolRowsData.length/schoolRowsPerPage); if (schoolCurrentPage < t) { schoolCurrentPage++; renderSchoolTable(); } }
+
+        function toggleSchoolFilters() {
+            const section = document.getElementById('schoolFilterSection');
+            const btn = document.getElementById('toggleFilterBtn');
+            const tableWrap = document.querySelector('.xls-scroll-wrap');
+            
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                tableWrap.classList.remove('expanded');
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg> Hide Filters`;
+            } else {
+                section.classList.add('hidden');
+                tableWrap.classList.add('expanded');
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg> Show Filters`;
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            schoolFetchFilters();
+            schoolFetchData();
         });
-
-        function openDeleteModal(id, name) {
-            document.getElementById('deleteSchoolName').textContent = 'Confirm deletion of ' + name + '?';
-            document.getElementById('deleteForm').action = '/admin/schools/' + id;
-            document.getElementById('deleteModal').classList.replace('hidden', 'flex');
-        }
-
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.replace('flex', 'hidden');
-        }
     </script>
 </body>
 </html>

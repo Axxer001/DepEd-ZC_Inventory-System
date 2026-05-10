@@ -22,8 +22,6 @@ class DashboardController extends Controller
 
         // 2. Distributed Assets (What is currently in schools/offices)
         $distributedItems = DB::table('asset_distributions')
-            ->whereNotNull('office_school_type')
-            ->where('office_school_type', '!=', '')
             ->whereNotNull('office_school_name')
             ->where('office_school_name', '!=', '')
             ->count();
@@ -34,42 +32,29 @@ class DashboardController extends Controller
         $buildingsValue = DB::table('buildings')->sum('acquisition_cost');
         $totalAmount = $itemsValue + $buildingsValue;
 
-        // 4. Asset Source Portfolio (Grouping logic)
-        $pifSource = DB::table('acquisition_sources')->where('name', 'PIF Import')->first();
-        $pifId = $pifSource ? $pifSource->id : null;
-
-        // Fetch from asset_sources
-        $sourceData = DB::table('asset_sources')
-            ->select('acquisition_source_id', DB::raw('SUM(quantity) as qty'), DB::raw('SUM(quantity * asset_cost) as value'))
-            ->groupBy('acquisition_source_id')
-            ->get();
-
-        $portfolio = [
-            'DEPED' => ['qty' => $buildingPool, 'value' => $buildingsValue, 'title' => 'DEPED ASSETS', 'image' => 'central.png'],
-            'DONATED' => ['qty' => 0, 'value' => 0, 'title' => 'DONATED ASSETS', 'image' => 'donated.png'],
-            'TRANSFERRED' => ['qty' => 0, 'value' => 0, 'title' => 'TRANSFERRED ASSETS', 'image' => 'transferred.png'],
-            'REGIONAL' => ['qty' => 0, 'value' => 0, 'title' => 'REGIONAL ASSETS', 'image' => 'regional.png'],
-        ];
-
-        foreach ($sourceData as $sd) {
-            $isDeped = is_null($sd->acquisition_source_id) || $sd->acquisition_source_id == $pifId;
-            
-            if ($isDeped) {
-                $portfolio['DEPED']['qty'] += $sd->qty;
-                $portfolio['DEPED']['value'] += $sd->value;
-            } else {
-                // Try to find source name
-                $sourceName = DB::table('acquisition_sources')->where('id', $sd->acquisition_source_id)->value('name');
-                $key = 'DEPED';
-                if (stripos($sourceName, 'Donate') !== false) $key = 'DONATED';
-                elseif (stripos($sourceName, 'Transfer') !== false) $key = 'TRANSFERRED';
-                elseif (stripos($sourceName, 'Region') !== false) $key = 'REGIONAL';
+        // 4. Asset Source Portfolio (Dynamic Acquisition Sources)
+        $assetSources = DB::table('asset_sources')
+            ->join('acquisition_sources', 'asset_sources.acquisition_source_id', '=', 'acquisition_sources.id')
+            ->select(
+                'acquisition_sources.name as title',
+                DB::raw('SUM(asset_sources.quantity) as qty'),
+                DB::raw('SUM(asset_sources.asset_cost * asset_sources.quantity) as value')
+            )
+            ->groupBy('acquisition_sources.name')
+            ->get()
+            ->map(function($src) {
+                // Assign a generic image based on name or default
+                $name = strtolower($src->title);
+                $src->image = 'central.png';
+                if (str_contains($name, 'donate')) $src->image = 'donated.png';
+                elseif (str_contains($name, 'transfer')) $src->image = 'transferred.png';
+                elseif (str_contains($name, 'region')) $src->image = 'regional.png';
                 
-                $portfolio[$key]['qty'] += $sd->qty;
-                $portfolio[$key]['value'] += $sd->value;
-            }
-        }
-        $assetSources = array_values($portfolio);
+                // Format title for UI
+                $src->title = strtoupper($src->title) . ' ASSETS';
+                return (array)$src;
+            })
+            ->toArray();
 
         // 5. Per-Quadrant Totals (Combined Items + Buildings)
         $itemQuadrants = DB::table('asset_distributions as ad')

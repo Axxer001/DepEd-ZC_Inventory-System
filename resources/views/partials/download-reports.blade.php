@@ -128,20 +128,7 @@
                 </div>
             </div>
             
-            {{-- STEP 1 FOOTER: CUSTOM REQUEST --}}
-            <div class="mt-12 p-8 bg-white border border-slate-100 rounded-[3rem] flex flex-col md:flex-row items-center justify-between gap-8 overflow-hidden relative shadow-xl group hover:border-deped/20 transition-all duration-500">
-                <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-red-50 rounded-full opacity-30 blur-3xl"></div>
-                <div class="relative z-10 flex items-center gap-6">
-                    <div class="w-16 h-16 bg-slate-50 text-slate-400 rounded-3xl flex items-center justify-center border border-slate-100 group-hover:bg-red-50 group-hover:text-deped transition-all">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </div>
-                    <div class="text-center md:text-left">
-                        <h4 class="text-lg font-black text-slate-800 uppercase italic tracking-tight mb-1">Need a specialized report?</h4>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">Contact the AMU Administrator for custom data exports.</p>
-                    </div>
-                </div>
-                <button class="relative z-10 px-10 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-deped transition-all shadow-lg active:scale-95 italic">Request Data Export</button>
-            </div>
+            <div></div>
         </div>
 
         {{-- STEP 2: CONFIGURE & DOWNLOAD --}}
@@ -163,11 +150,11 @@
 
                 <div class="flex items-center gap-3">
                     <button @click="showFilters = !showFilters" 
-                        class="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-3 shadow-sm hover:border-deped hover:text-deped transition-all active:scale-95">
+                        class="px-6 py-3 bg-white border border-slate-200 rounded-2xl text-[9px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-3 shadow-sm hover:border-deped hover:text-deped transition-all active:scale-95 italic">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" />
                         </svg>
-                        <span x-text="showFilters ? 'Hide Filters' : 'Filter Options'"></span>
+                        <span x-text="showFilters ? 'Hide Filters' : 'Show Filters'"></span>
                     </button>
 
                     <button @click="download()" class="px-6 py-3 bg-deped text-white rounded-2xl text-[9px] font-black uppercase tracking-widest flex items-center gap-3 shadow-lg shadow-red-100 hover:bg-red-700 transition-all active:scale-95 italic">
@@ -284,7 +271,7 @@
                     <div x-show="loading" class="w-5 h-5 border-2 border-deped border-t-transparent rounded-full animate-spin"></div>
                 </div>
                 
-                <div class="overflow-x-auto custom-scroll max-h-[400px]">
+                <div class="overflow-x-auto custom-scroll transition-all duration-300" :class="showFilters ? 'max-h-[400px]' : 'max-h-[750px]'">
                     <table class="w-full text-left border-collapse whitespace-nowrap">
                         <thead class="sticky top-0 bg-slate-50 z-10 shadow-sm">
                             <tr class="text-[9px] font-black text-slate-400 uppercase tracking-widest border-b-2 border-slate-100">
