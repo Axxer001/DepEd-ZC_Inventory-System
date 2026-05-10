@@ -366,20 +366,75 @@
                         </div>
 
                         {{-- UPDATED: Total Inventory Growth - Gradient Area Chart --}}
-                        <div class="bg-white p-8 rounded-[3rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:shadow-xl transition-all duration-500 relative overflow-hidden">
-                            <div class="flex items-center justify-between mb-8 relative z-10">
+                        <div class="bg-white p-8 rounded-[3rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:shadow-xl transition-all duration-500 relative z-0" x-data="growthChartFilter()">
+                            <div class="flex items-center justify-between mb-8 relative z-30">
                                 <div class="flex items-center gap-3">
                                     <div class="w-1.5 h-4 bg-[#c00000] rounded-full shadow-[0_0_8px_rgba(192,0,0,0.4)]"></div>
                                     <h3 class="text-xs font-black text-slate-900 uppercase tracking-[0.3em]">Total Inventory Growth</h3>
                                 </div>
                                 <div class="flex items-center gap-4">
+                                    <div class="relative" x-data="{ open: false }">
+                                        <button @click="open = !open" class="flex items-center gap-2 px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest text-[#c00000] hover:bg-[#c00000] hover:text-white transition-all shadow-sm">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+                                            Year Filter
+                                        </button>
+                                        
+                                        {{-- Filter Pop-over --}}
+                                        <div x-show="open" @click.away="open = false" x-cloak
+                                             x-transition:enter="transition ease-out duration-200"
+                                             x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                                             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                             @click.stop
+                                             style="background-color: #0f172a !important;"
+                                             class="year-filter-popover absolute right-0 mt-3 w-72 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] rounded-[2rem] border border-slate-800 p-6 z-[100]">
+                                            
+                                            <div class="space-y-6">
+                                                <div>
+                                                    <label class="text-[9px] font-black text-slate-100 uppercase tracking-widest mb-3 block italic">Filtering Mode</label>
+                                                    <div class="flex p-1 bg-slate-800 rounded-xl border border-slate-700">
+                                                        <button @click="mode = 'specific'" :class="mode === 'specific' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all">Specific Year</button>
+                                                        <button @click="mode = 'gap'" :class="mode === 'gap' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all">Year Gap</button>
+                                                    </div>
+                                                </div>
+
+                                                <div x-show="mode === 'specific'" x-transition x-cloak>
+                                                    <label class="text-[9px] font-black text-slate-100 uppercase tracking-widest mb-2 block italic">Choose Year</label>
+                                                    <select x-model="selectedYear" @click.stop class="w-full bg-slate-800 border-slate-700 text-white rounded-xl text-[11px] font-black uppercase py-2.5 px-4 focus:ring-[#c00000] focus:border-[#c00000]">
+                                                        <template x-for="y in availableYears" :key="y">
+                                                            <option :value="y" x-text="y"></option>
+                                                        </template>
+                                                    </select>
+                                                </div>
+
+                                                <div x-show="mode === 'gap'" x-transition x-cloak>
+                                                    <div class="flex justify-between items-center mb-2">
+                                                        <label class="text-[9px] font-black text-slate-200 uppercase tracking-widest block italic">Gap Range (Years)</label>
+                                                        <span class="text-[10px] font-black text-white bg-[#c00000] px-2 py-0.5 rounded-md" x-text="selectedGap + ' yrs'"></span>
+                                                    </div>
+                                                    <input type="range" x-model="selectedGap" min="1" max="10" step="1" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#c00000]">
+                                                    <div class="flex justify-between mt-2 px-1">
+                                                        <span class="text-[8px] font-bold text-slate-200 uppercase">1yr</span>
+                                                        <span class="text-[8px] font-bold text-slate-200 uppercase">10yrs</span>
+                                                    </div>
+                                                </div>
+
+                                                <button @click="applyFilter(); open = false" class="w-full py-3.5 bg-slate-900 text-white rounded-[1.25rem] text-[10px] font-black uppercase tracking-widest hover:bg-[#c00000] transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+                                                    Confirm Changes
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="flex items-center gap-2">
                                         <span class="text-[9px] font-black text-slate-900 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">Value Accumulation</span>
                                     </div>
                                 </div>
                             </div>
-                            <div class="h-[200px] w-full relative z-10">
+                            <div class="h-[200px] w-full relative z-10" :class="loading ? 'opacity-30' : ''">
                                 <canvas id="inventoryGrowthChart"></canvas>
+                                <div x-show="loading" class="absolute inset-0 flex items-center justify-center">
+                                    <div class="w-6 h-6 border-4 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -673,6 +728,31 @@
             }
         }
 
+        function growthChartFilter() {
+            return {
+                mode: 'gap',
+                selectedYear: {{ date('Y') }},
+                selectedGap: 5,
+                loading: false,
+                availableYears: @json($growthData['availableYears'] ?? []),
+                
+                async applyFilter() {
+                    this.loading = true;
+                    try {
+                        const val = this.mode === 'specific' ? this.selectedYear : this.selectedGap;
+                        const resp = await fetch(`/api/dashboard/growth-data?mode=${this.mode}&value=${val}`);
+                        const res = await resp.json();
+                        
+                        updateGrowthChart(res.labels, res.data);
+                    } catch (e) {
+                        console.error('Filter failed', e);
+                    } finally {
+                        this.loading = false;
+                    }
+                }
+            }
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
@@ -698,6 +778,17 @@
         }
 
         // Initialize Category Distribution Chart
+        let growthChart = null;
+
+        function updateGrowthChart(labels, data) {
+            if (!growthChart) return;
+            growthChart.data.labels = labels;
+            growthChart.data.datasets[0].data = data.buildings;
+            growthChart.data.datasets[1].data = data.ppe;
+            growthChart.data.datasets[2].data = data.semi_exp;
+            growthChart.update();
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const ctx = document.getElementById('categoryDistributionChart').getContext('2d');
             
@@ -740,41 +831,45 @@
             // Initialize Inventory Growth Chart (Gradient Area Chart)
             const growthCtx = document.getElementById('inventoryGrowthChart').getContext('2d');
             
-            const areaGradient = growthCtx.createLinearGradient(0, 0, 0, 200);
-            areaGradient.addColorStop(0, 'rgba(192, 0, 0, 0.2)');
-            areaGradient.addColorStop(1, 'rgba(192, 0, 0, 0.0)');
-
-            new Chart(growthCtx, {
+            growthChart = new Chart(growthCtx, {
                 type: 'line',
                 data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                    datasets: [{
-                        label: 'Inventory Value',
-                        data: [
-                            {{ $totalAmount * 0.5 }}, 
-                            {{ $totalAmount * 0.55 }}, 
-                            {{ $totalAmount * 0.6 }}, 
-                            {{ $totalAmount * 0.65 }}, 
-                            {{ $totalAmount * 0.7 }}, 
-                            {{ $totalAmount * 0.75 }}, 
-                            {{ $totalAmount * 0.8 }}, 
-                            {{ $totalAmount * 0.85 }}, 
-                            {{ $totalAmount * 0.9 }}, 
-                            {{ $totalAmount * 0.95 }}, 
-                            {{ $totalAmount * 0.98 }}, 
-                            {{ $totalAmount }}
-                        ],
-                        borderColor: '#c00000',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#c00000',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        fill: true,
-                        backgroundColor: areaGradient,
-                        tension: 0.4 // Makes the line smooth
-                    }]
+                    labels: @json($growthData['labels']),
+                    datasets: [
+                        {
+                            label: 'Buildings',
+                            data: @json($growthData['data']['buildings']),
+                            borderColor: '#0f172a',
+                            borderWidth: 2,
+                            backgroundColor: 'rgba(15, 23, 42, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 4
+                        },
+                        {
+                            label: 'PPE (High-Value)',
+                            data: @json($growthData['data']['ppe']),
+                            borderColor: '#f59e0b',
+                            borderWidth: 2,
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 4
+                        },
+                        {
+                            label: 'Semi-Expendable',
+                            data: @json($growthData['data']['semi_exp']),
+                            borderColor: '#c00000',
+                            borderWidth: 3,
+                            backgroundColor: 'rgba(192, 0, 0, 0.2)',
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 2,
+                            pointHoverRadius: 6
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
@@ -782,6 +877,10 @@
                     plugins: {
                         legend: { display: false },
                         tooltip: {
+                            enabled: (context) => {
+                                const popover = document.querySelector('.year-filter-popover');
+                                return !popover || popover.style.display === 'none' || popover.classList.contains('hidden');
+                            },
                             mode: 'index',
                             intersect: false,
                             backgroundColor: '#fff',
@@ -794,7 +893,13 @@
                             displayColors: false,
                             callbacks: {
                                 label: function(context) {
-                                    return '₱ ' + new Intl.NumberFormat('en-PH').format(context.parsed.y);
+                                    const val = context.parsed.y;
+                                    return context.dataset.label + ': ₱' + new Intl.NumberFormat('en-PH').format(val);
+                                },
+                                footer: function(items) {
+                                    let total = 0;
+                                    items.forEach(i => total += i.parsed.y);
+                                    return 'Total Accumulation: ₱' + new Intl.NumberFormat('en-PH').format(total);
                                 }
                             }
                         }
@@ -802,16 +907,20 @@
                     scales: {
                         x: {
                             grid: { display: false },
-                            ticks: { font: { weight: 'bold', family: 'Plus Jakarta Sans' }, color: '#0f172a' }
+                            ticks: { font: { weight: 'bold', family: 'Plus Jakarta Sans' }, color: '#94a3b8' }
                         },
                         y: {
-                            beginAtZero: false,
-                            grid: { color: 'rgba(0, 0, 0, 0.03)', drawBorder: false },
+                            stacked: true,
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)', drawBorder: false },
                             ticks: { 
                                 font: { weight: 'bold', family: 'Plus Jakarta Sans' }, 
-                                color: '#0f172a',
+                                color: '#94a3b8',
                                 callback: function(value) {
-                                    return '₱' + (value / 1000000) + 'M';
+                                    if (value >= 1000000000) return '₱' + (value / 1000000000).toFixed(1) + 'B';
+                                    if (value >= 1000000) return '₱' + (value / 1000000).toFixed(0) + 'M';
+                                    if (value >= 1000) return '₱' + (value / 1000).toFixed(0) + 'K';
+                                    return '₱' + value;
                                 }
                             }
                         }

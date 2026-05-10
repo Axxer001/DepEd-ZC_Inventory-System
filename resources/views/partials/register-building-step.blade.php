@@ -47,6 +47,7 @@
                     <th class="xls-th" style="min-width:120px">Acquisition Date</th>
                     <th class="xls-th" style="min-width:130px">Property No.</th>
                     <th class="xls-th text-right" style="min-width:120px">Acq. Cost (₱)</th>
+                    <th class="xls-th text-center" style="min-width:100px">Est. Useful Life</th>
                     <th class="xls-th text-right" style="min-width:120px">Appraised Value</th>
                     <th class="xls-th" style="min-width:120px">Appraisal Date</th>
                     <th class="xls-th" style="min-width:140px">Remarks</th>
@@ -132,6 +133,7 @@
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Location</label><input type="text" id="bkLoc" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Property No.</label><input type="text" id="bkPropNo" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Acq. Cost (₱)</label><input type="number" id="bkCost" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="0.00" min="0" step="0.01"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Est. Useful Life</label><input type="number" id="bkLife" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-center" placeholder="25" min="0"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Appraised Value</label><input type="number" id="bkAppVal" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="0.00" min="0" step="0.01"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Date Constructed</label><input type="date" id="bkDateConst" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label><input type="date" id="bkAcqDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
@@ -261,6 +263,7 @@
             <td class="xls-td relative"><input type="date" oninput="syncBldgState(${data.id}, 'acquisition_date', this.value)" data-col="acquisition_date" class="xls-input" value="${data.acquisition_date||today}"></td>
             <td class="xls-td relative"><input type="text" oninput="syncBldgState(${data.id}, 'property_number', this.value)" data-col="property_number" class="xls-input" placeholder="Property No." value="${data.property_number||''}"></td>
             <td class="xls-td relative"><input type="number" oninput="syncBldgState(${data.id}, 'acquisition_cost', this.value)" data-col="acquisition_cost" class="xls-input text-right" placeholder="0.00" min="0" step="0.01" value="${data.acquisition_cost||''}"></td>
+            <td class="xls-td relative"><input type="number" oninput="syncBldgState(${data.id}, 'estimated_useful_life', this.value)" data-col="estimated_useful_life" class="xls-input text-center" placeholder="25" min="0" value="${data.estimated_useful_life||25}"></td>
             <td class="xls-td relative"><input type="number" oninput="syncBldgState(${data.id}, 'appraised_value', this.value)" data-col="appraised_value" class="xls-input text-right" placeholder="0.00" min="0" step="0.01" value="${data.appraised_value||''}"></td>
             <td class="xls-td relative"><input type="date" oninput="syncBldgState(${data.id}, 'appraisal_date', this.value)" data-col="appraisal_date" class="xls-input" value="${data.appraisal_date||''}"></td>
             <td class="xls-td relative"><input type="text" oninput="syncBldgState(${data.id}, 'remarks', this.value)" data-col="remarks" class="xls-input" placeholder="Remarks" value="${data.remarks||''}"></td>
@@ -271,7 +274,7 @@
     function addBldgRow() {
         const newId = ++_bldgRnCounter;
         const today = new Date().toISOString().split('T')[0];
-        const row = { id: newId, office_type: '', school_identifier: '', office_name: '', address: '', storeys: '', classrooms: '', article: '', description: '', classification: '', occupancy_nature: '', location: '', date_constructed: today, acquisition_date: today, property_number: '', acquisition_cost: '', appraised_value: '', appraisal_date: '', remarks: '' };
+        const row = { id: newId, office_type: '', school_identifier: '', office_name: '', address: '', storeys: '', classrooms: '', article: '', description: '', classification: '', occupancy_nature: '', location: '', date_constructed: today, acquisition_date: today, property_number: '', acquisition_cost: '', estimated_useful_life: 25, appraised_value: '', appraisal_date: '', remarks: '' };
         bldgRowsData.push(row);
         bldgCurrentPage = Math.ceil(bldgRowsData.length / bldgRowsPerPage);
         renderBldgTable();
@@ -373,6 +376,7 @@
             acquisition_date: document.getElementById('bkAcqDate').value || today,
             property_number: document.getElementById('bkPropNo').value,
             acquisition_cost: document.getElementById('bkCost').value,
+            estimated_useful_life: document.getElementById('bkLife').value || 25,
             appraised_value: document.getElementById('bkAppVal').value,
             appraisal_date: document.getElementById('bkAppDate').value,
             remarks: document.getElementById('bkRemarks').value,

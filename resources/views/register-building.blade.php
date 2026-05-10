@@ -119,6 +119,7 @@
                             <th class="xls-th" style="min-width:120px">Acquisition Date</th>
                             <th class="xls-th" style="min-width:130px">Property No.</th>
                             <th class="xls-th text-right" style="min-width:120px">Acq. Cost (₱)</th>
+                            <th class="xls-th text-center" style="min-width:100px">Est. Useful Life</th>
                             <th class="xls-th text-right" style="min-width:120px">Appraised Value</th>
                             <th class="xls-th" style="min-width:120px">Appraisal Date</th>
                             <th class="xls-th" style="min-width:140px">Remarks</th>
@@ -157,6 +158,71 @@
 
         </div>
     </div>
+    </div>
+
+    {{-- BULK ADD MODAL --}}
+    <div id="bulkModal" class="hidden fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4 opacity-0 transition-all duration-300">
+        <div class="transform scale-95 transition-all duration-300 bg-white rounded-[2.5rem] shadow-2xl w-full max-w-4xl overflow-hidden">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h3 class="text-xl font-black text-slate-800 uppercase italic">Bulk Add Buildings</h3>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Pre-fill details for multiple rows</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="bg-slate-100 rounded-xl px-4 py-2 flex items-center gap-2">
+                            <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Rows</span>
+                            <input type="number" id="bulkCount" value="1" min="1" class="w-12 bg-transparent font-black text-sm outline-none text-center">
+                        </div>
+                        <button onclick="closeBulkModal()" class="p-2 text-slate-400 hover:text-slate-600 transition-all"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-6 mb-8">
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block ml-1">Office/School Type</label>
+                        <input type="text" id="bkType" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-xs outline-none focus:ring-2 focus:ring-red-100">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block ml-1">School ID</label>
+                        <input type="text" id="bkSchoolId" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-xs outline-none focus:ring-2 focus:ring-red-100">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block ml-1">Office/School Name</label>
+                        <input type="text" id="bkName" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-xs outline-none focus:ring-2 focus:ring-red-100">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block ml-1">Address</label>
+                        <input type="text" id="bkAddr" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-xs outline-none focus:ring-2 focus:ring-red-100">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block ml-1">Classification</label>
+                        <input type="text" id="bkClass" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-xs outline-none focus:ring-2 focus:ring-red-100">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block ml-1">Occupancy</label>
+                        <input type="text" id="bkOcc" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-xs outline-none focus:ring-2 focus:ring-red-100">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block ml-1">Location</label>
+                        <input type="text" id="bkLoc" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-xs outline-none focus:ring-2 focus:ring-red-100">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block ml-1">Acquisition Date</label>
+                        <input type="date" id="bkAcqDate" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-xs outline-none focus:ring-2 focus:ring-red-100">
+                    </div>
+                    <div>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 block ml-1">Est. Useful Life</label>
+                        <input type="number" id="bkLife" value="25" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl font-black text-xs outline-none focus:ring-2 focus:ring-red-100">
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button onclick="closeBulkModal()" class="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black text-xs uppercase hover:bg-slate-200 transition-all">Cancel</button>
+                    <button onclick="doBulkAdd()" class="flex-[2] py-4 bg-[#c00000] text-white rounded-2xl font-black text-xs uppercase hover:bg-red-700 transition-all shadow-lg shadow-red-100">Add Rows</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     {{-- BULK DELETE MODAL --}}
@@ -264,6 +330,7 @@
                 <td class="xls-td relative"><input type="date" oninput="syncState(${data.id}, 'acquisition_date', this.value)" data-col="acquisition_date" class="xls-input" value="${data.acquisition_date||today}"></td>
                 <td class="xls-td relative"><input type="text" oninput="syncState(${data.id}, 'property_number', this.value)" data-col="property_number" class="xls-input" placeholder="Property No." value="${data.property_number||''}"></td>
                 <td class="xls-td relative"><input type="number" oninput="syncState(${data.id}, 'acquisition_cost', this.value)" data-col="acquisition_cost" class="xls-input text-right" placeholder="0.00" min="0" step="0.01" value="${data.acquisition_cost||''}"></td>
+                <td class="xls-td relative"><input type="number" oninput="syncState(${data.id}, 'estimated_useful_life', this.value)" data-col="estimated_useful_life" class="xls-input text-center" placeholder="25" min="0" value="${data.estimated_useful_life||25}"></td>
                 <td class="xls-td relative"><input type="number" oninput="syncState(${data.id}, 'appraised_value', this.value)" data-col="appraised_value" class="xls-input text-right" placeholder="0.00" min="0" step="0.01" value="${data.appraised_value||''}"></td>
                 <td class="xls-td relative"><input type="date" oninput="syncState(${data.id}, 'appraisal_date', this.value)" data-col="appraisal_date" class="xls-input" value="${data.appraisal_date||''}"></td>
                 <td class="xls-td relative"><input type="text" oninput="syncState(${data.id}, 'remarks', this.value)" data-col="remarks" class="xls-input" placeholder="Remarks" value="${data.remarks||''}"></td>
@@ -274,7 +341,7 @@
         function addBldgRow() {
             const newId = ++_rowNumCounter;
             const today = new Date().toISOString().split('T')[0];
-            const row = { id: newId, office_type: '', school_identifier: '', office_name: '', address: '', storeys: '', classrooms: '', article: '', description: '', classification: '', occupancy_nature: '', location: '', date_constructed: '', acquisition_date: today, property_number: '', acquisition_cost: '', appraised_value: '', appraisal_date: '', remarks: '' };
+            const row = { id: newId, office_type: '', school_identifier: '', office_name: '', address: '', storeys: '', classrooms: '', article: '', description: '', classification: '', occupancy_nature: '', location: '', date_constructed: '', acquisition_date: today, property_number: '', acquisition_cost: '', estimated_useful_life: 25, appraised_value: '', appraisal_date: '', remarks: '' };
             allRowsData.push(row);
             currentPage = Math.ceil(allRowsData.length / rowsPerPage);
             renderBuildingTable();
@@ -367,7 +434,8 @@
                 classification: document.getElementById('bkClass').value,
                 occupancy_nature: document.getElementById('bkOcc').value,
                 location: document.getElementById('bkLoc').value,
-                acquisition_date: document.getElementById('bkAcqDate').value || today
+                acquisition_date: document.getElementById('bkAcqDate').value || today,
+                estimated_useful_life: document.getElementById('bkLife').value || 25
             };
             for (let i = 0; i < n; i++) {
                 const newId = ++_rowNumCounter;

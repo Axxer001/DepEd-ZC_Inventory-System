@@ -146,7 +146,7 @@
                 });
             }
 
-            const buildingHeaders = ['#','Region','Division','Office/School Type','School ID','Office/School Name','Address','Storeys','Classrooms','Article/Item','Description','Classification','Occupancy','Location','Date Constructed','Acquisition Date','Property No.','Acquisition Cost','Appraised Value','Appraisal Date','Remarks'];
+            const buildingHeaders = ['#','Region','Division','Office/School Type','School ID','Office/School Name','Address','Storeys','Classrooms','Article/Item','Description','Classification','Occupancy','Location','Date Constructed','Acquisition Date','Property No.','Acquisition Cost','Est. Useful Life','Appraised Value','Appraisal Date','Remarks'];
             const assetHeaders    = ['#','Region','Division','Office/School Type','School ID','Office/School Name','Article/Item','Description','Classification','Occupancy','Location','Acquisition Date','Property No.','Acquisition Cost'];
 
             function switchTab(key) {
@@ -192,6 +192,7 @@
                             <td class="px-4 py-4">${esc(row.acquisition_date)}</td>
                             <td class="px-4 py-4 text-[#c00000] font-black">${esc(row.property_number)}</td>
                             <td class="px-4 py-4 text-right font-black">${fmtCost(row.acquisition_cost)}</td>
+                            <td class="px-4 py-4 text-center font-bold">${row.estimated_useful_life ?? 25}</td>
                             <td class="px-4 py-4 text-right">${fmtCost(row.appraised_value)}</td>
                             <td class="px-4 py-4">${esc(row.appraisal_date)}</td>
                             <td class="px-4 py-4 text-slate-500 italic">${esc(row.remarks)}</td>

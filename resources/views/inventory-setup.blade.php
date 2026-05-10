@@ -362,6 +362,7 @@
     <datalist id="dl-item">@foreach($items as $i)<option value="{{ $i->name }}">@endforeach</datalist>
     <datalist id="dl-description"><option value="General"><option value="Specific"></datalist>
     <datalist id="dl-mode">
+        <option value="Deped Central Office">
         <option value="Public Bidding">
         <option value="Direct Contracting">
         <option value="Shopping">
@@ -787,9 +788,13 @@
             const today = new Date().toISOString().split('T')[0];
             const newRow = {
                 id: ++_rowNumCounter,
-                classification: '', category: '', item: '', description: '', uom: '', mode: '', personnel: '', position: '',
-                cost: '', qty: '', 'useful-life': '', 'acceptance-date': today,
-                remarks: '',
+                classification: '', category: '', item: '', description: '', uom: '', 
+                mode: '', 
+                personnel: '', position: '',
+                cost: '', qty: '', 
+                'useful-life': '', 
+                'acceptance-date': today,
+                remarks: 'Good Condition',
                 'school-type': '', 'school-id': '', 'school-name': '', occupancy: '', location: '', 'property-no': '', 'acquisition-date': today
             };
             allRowsData.push(newRow);
@@ -820,9 +825,15 @@
                 <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'position', this.value)"       data-col="position"       value="${data.position}"       autocomplete="off" class="xls-input" placeholder="Position"></td>
                 <td class="xls-td"><input type="number" oninput="syncState(${data.id}, 'cost', this.value)" data-col="cost" value="${data.cost}" class="xls-input text-right" placeholder="0.00" min="0" step="0.01"></td>
                 <td class="xls-td"><input type="number" oninput="syncState(${data.id}, 'qty', this.value)"  data-col="qty"  value="${data.qty}"  class="xls-input text-right ${data['property-no'] ? 'bg-slate-50 cursor-not-allowed' : ''}" placeholder="0" min="0" step="1" ${data['property-no'] ? 'readonly' : ''}></td>
-                <td class="xls-td"><input type="number" oninput="syncState(${data.id}, 'useful-life', this.value)" data-col="useful-life" value="${data['useful-life']}" class="xls-input text-right" placeholder="0"    min="0" step="1"></td>
+                <td class="xls-td"><input type="number" oninput="syncState(${data.id}, 'useful-life', this.value)" data-col="useful-life" value="${data['useful-life'] || ''}" class="xls-input text-right" placeholder="0"    min="0" step="1"></td>
                 <td class="xls-td"><input type="date"   oninput="syncState(${data.id}, 'acceptance-date', this.value)" data-col="acceptance-date" value="${data['acceptance-date']}" class="xls-input"></td>
-                <td class="xls-td"><input type="text"   oninput="syncState(${data.id}, 'remarks', this.value)"         data-col="remarks"         value="${data.remarks || ''}" autocomplete="off" class="xls-input" placeholder="Remarks"></td>
+                <td class="xls-td">
+                    <select onchange="syncState(${data.id}, 'remarks', this.value)" data-col="remarks" class="xls-input bg-transparent">
+                        <option value="Good Condition" ${data.remarks === 'Good Condition' ? 'selected' : ''}>Good Condition</option>
+                        <option value="Needs Repair" ${data.remarks === 'Needs Repair' ? 'selected' : ''}>Needs Repair</option>
+                        <option value="Not Useable" ${data.remarks === 'Not Useable' ? 'selected' : ''}>Not Useable</option>
+                    </select>
+                </td>
                 <td class="xls-td text-center w-10">
                     <button onclick="deleteRow(${data.id})" class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Remove row">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -2540,15 +2551,15 @@
                 cost: document.getElementById('bCost').value,
                 qty: document.getElementById('bQty1').value,
                 'useful-life': document.getElementById('bLife').value,
-                'acceptance-date': document.getElementById('bDate1').value,
-                remarks: document.getElementById('bRemarks').value,
+                'acceptance-date': document.getElementById('bDate1').value || today,
+                remarks: document.getElementById('bRemarks').value || 'Good Condition',
                 'school-type': document.getElementById('bSchoolType').value,
                 'school-id': document.getElementById('bSchoolId').value,
                 'school-name': document.getElementById('bSchoolName').value,
                 occupancy: document.getElementById('bOccupancy').value,
                 location: document.getElementById('bLocation').value,
                 'property-no': document.getElementById('bPropertyNo').value,
-                'acquisition-date': document.getElementById('bDate2').value
+                'acquisition-date': document.getElementById('bDate2').value || today
             };
 
             for (let i = 0; i < count; i++) {
@@ -2660,7 +2671,15 @@
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Quantity</label><input type="number" id="bQty1" oninput="calcBulkCost()" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="1" min="0" step="1"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Expected Useful Life</label><input type="number" id="bLife" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="1" min="0" step="1"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Acceptance Date</label><input type="date" id="bDate1" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Remarks</label><input type="text" id="bRemarks" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Remarks"></div>
+                    <div class="relative">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Remarks</label>
+                        <select id="bRemarks" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl bg-transparent">
+                            <option value="">-- Default (Good Condition) --</option>
+                            <option value="Good Condition">Good Condition</option>
+                            <option value="Needs Repair">Needs Repair</option>
+                            <option value="Not Useable">Not Useable</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 

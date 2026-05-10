@@ -137,6 +137,9 @@ class DashboardController extends Controller
         $categories = DB::table('categories')->orderBy('name')->get();
         $items = DB::table('items')->orderBy('name')->get();
 
+        // 8. Default Growth Data (5-Year Intervals)
+        $growthData = $this->calculateGrowthData('gap', 5);
+
         return view('dashboard', compact(
             'schools',
             'totalAssets',
@@ -151,8 +154,72 @@ class DashboardController extends Controller
             'categoryData',
             'filterValues',
             'categories',
-            'items'
+            'items',
+            'growthData'
         ));
+    }
+
+    /**
+     * API Endpoint for dynamic growth data
+     */
+    public function getGrowthData(Request $request)
+    {
+        $mode = $request->input('mode', 'gap');
+        $value = (int)$request->input('value', 5);
+        
+        return response()->json($this->calculateGrowthData($mode, $value));
+    }
+
+    private function calculateGrowthData($mode, $value)
+    {
+        $minBldgYear = DB::table('buildings')->whereNotNull('acquisition_date')->min(DB::raw('YEAR(acquisition_date)'));
+        $minAssetYear = DB::table('asset_distributions')->whereNotNull('acquisition_date')->min(DB::raw('YEAR(acquisition_date)'));
+        $earliestYear = min($minBldgYear ?? date('Y'), $minAssetYear ?? date('Y'));
+        $currentYear = date('Y');
+
+        $bldgs = DB::table('buildings')->select('acquisition_cost', 'acquisition_date')->whereNotNull('acquisition_date')->get();
+        $assets = DB::table('asset_distributions as ad')
+            ->join('asset_sources as as', 'ad.asset_source_id', '=', 'as.id')
+            ->select('ad.acquisition_cost', 'ad.acquisition_date', 'as.asset_cost')
+            ->whereNotNull('ad.acquisition_date')->get();
+
+        $labels = [];
+        $data = ['buildings' => [], 'ppe' => [], 'semi_exp' => []];
+
+        if ($mode === 'specific') {
+            // Monthly for a specific year
+            $year = $value ?: $currentYear;
+            $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            foreach (range(1, 12) as $m) {
+                $labels[] = $monthNames[$m-1];
+                $lastDay = date('Y-m-d', strtotime("$year-$m-01 +1 month -1 day"));
+                
+                $data['buildings'][] = $bldgs->where('acquisition_date', '<=', $lastDay)->sum('acquisition_cost');
+                $monthAssets = $assets->where('acquisition_date', '<=', $lastDay);
+                $data['ppe'][] = $monthAssets->where('asset_cost', '>=', 50000)->sum('acquisition_cost');
+                $data['semi_exp'][] = $monthAssets->where('asset_cost', '<', 50000)->sum('acquisition_cost');
+            }
+        } else {
+            // Yearly with gaps
+            $gap = $value ?: 5;
+            $startYear = floor($earliestYear / $gap) * $gap;
+            $years = [];
+            for ($y = $startYear; $y <= $currentYear; $y += $gap) {
+                $years[] = (int)$y;
+            }
+            if (end($years) < $currentYear) $years[] = (int)$currentYear;
+
+            foreach ($years as $y) {
+                $labels[] = (string)$y;
+                $lastDay = "$y-12-31";
+                $data['buildings'][] = $bldgs->where('acquisition_date', '<=', $lastDay)->sum('acquisition_cost');
+                $yearAssets = $assets->where('acquisition_date', '<=', $lastDay);
+                $data['ppe'][] = $yearAssets->where('asset_cost', '>=', 50000)->sum('acquisition_cost');
+                $data['semi_exp'][] = $yearAssets->where('asset_cost', '<', 50000)->sum('acquisition_cost');
+            }
+        }
+
+        return ['labels' => $labels, 'data' => $data, 'availableYears' => range($currentYear, $earliestYear)];
     }
 
     public function storeQuickAsset(Request $request)

@@ -244,6 +244,7 @@ class BuildingImportController extends Controller
                     'acquisition_date'  => $row['acquisition_date'],
                     'property_number'   => $propNo,
                     'acquisition_cost'  => $row['acquisition_cost'],
+                    'estimated_useful_life' => $row['estimated_useful_life'] ?? 25,
                     'appraised_value'   => $row['appraised_value'],
                     'appraisal_date'    => $row['appraisal_date'],
                     'remarks'           => $row['remarks'] ?: null,
@@ -429,7 +430,7 @@ class BuildingImportController extends Controller
 
         for ($rowIdx = 11; $rowIdx <= $maxRow; $rowIdx++) {
             $v = [];
-            for ($col = 1; $col <= 19; $col++) {
+            for ($col = 1; $col <= 20; $col++) {
                 $v[$col] = $sheet->getCellByColumnAndRow($col, $rowIdx)->getCalculatedValue();
             }
             if (!$this->rowHasData($v)) continue;
@@ -469,6 +470,7 @@ class BuildingImportController extends Controller
                 'acquisition_date'       => $dateA,
                 'property_number'        => trim((string)($v[15] ?? '')),
                 'acquisition_cost'       => $this->parseDecimal($v[16] ?? null),
+                'estimated_useful_life'  => !empty($v[20]) ? (int)$v[20] : 25, // Assuming col 20 for life or default 25
                 'appraised_value'        => $this->parseDecimal($v[17] ?? null),
                 'appraisal_date'         => $this->parseDate($v[18] ?? null),
                 'remarks'                => trim((string)($v[19] ?? '')),

@@ -141,15 +141,18 @@ class ReportDownloadController extends Controller
         $spreadsheet = IOFactory::load($templatePath);
         $sheet = $spreadsheet->getActiveSheet();
 
-        // Dynamic Classification Header for RPCPPE/RPCSP
+        // Dynamic Classification/Category Header for RPCPPE/RPCSP
         $filters = $request->input('filters', []);
         if (is_string($filters)) {
             $filters = json_decode($filters, true) ?: [];
         }
         $classification = $filters['classification'] ?? null;
+        $category = $filters['category'] ?? null;
+        
+        $reportTitle = $category ?: $classification;
 
-        if ($classification && ($type === 'RPCPPE' || $type === 'RPCSP')) {
-            $sheet->setCellValue('B4', $classification);
+        if ($reportTitle && ($type === 'RPCPPE' || $type === 'RPCSP')) {
+            $sheet->setCellValue('B4', $reportTitle);
             $sheet->getStyle('B4')->getFont()
                 ->setBold(true)
                 ->setItalic(true)
@@ -248,6 +251,15 @@ class ReportDownloadController extends Controller
             }
             
             $currentRow++;
+        }
+
+        // Delete excess rows between the last data row and the signature row
+        if (($type === 'RPCPPE' || $type === 'RPCSP') && $signatureRow !== null) {
+            if ($currentRow < $signatureRow) {
+                $countToDelete = $signatureRow - $currentRow;
+                $sheet->removeRow($currentRow, $countToDelete);
+                $signatureRow = $currentRow; // Update it as we've shifted it up
+            }
         }
 
         // Ensure at least 1 blank row below the last asset row before signatories

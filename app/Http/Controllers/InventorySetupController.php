@@ -186,13 +186,13 @@ class InventorySetupController extends Controller
                     'unit_of_measurement' => $row['uom'] ?? null,
                     'acquisition_source_id' => $acqSourceId,
                     'mode_of_acquisition' => $row['mode'] ?? 'Unknown',
-                    'source_personnel' => $row['personnel'] ?? null,
-                    'personnel_position' => $row['position'] ?? null,
+                    'source_personnel' => !empty($row['personnel']) ? $row['personnel'] : null,
+                    'personnel_position' => !empty($row['position']) ? $row['position'] : null,
                     'asset_cost' => $costPerUnit,
                     'quantity' => $qty,
-                    'estimated_useful_life' => isset($row['useful-life']) && $row['useful-life'] !== '' ? intval($row['useful-life']) : null,
+                    'estimated_useful_life' => (isset($row['useful-life']) && $row['useful-life'] !== '') ? intval($row['useful-life']) : null,
                     'acceptance_date' => $row['acceptance-date'] ?? now()->toDateString(),
-                    'remarks' => $row['remarks'] ?? null,
+                    'remarks' => !empty($row['remarks']) ? $row['remarks'] : 'Good Condition',
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
@@ -286,6 +286,7 @@ class InventorySetupController extends Controller
                 $storeys    = !empty($row['storeys']) ? (int)$row['storeys'] : null;
                 $classrooms = !empty($row['classrooms']) ? (int)$row['classrooms'] : null;
                 $acquisitionCost = !empty($row['acquisition_cost']) ? (float)str_replace(',', '', $row['acquisition_cost']) : null;
+                $estimatedUsefulLife = !empty($row['estimated_useful_life']) ? (int)$row['estimated_useful_life'] : 25;
                 $appraisedValue  = !empty($row['appraised_value']) ? (float)str_replace(',', '', $row['appraised_value']) : null;
 
                 DB::table('buildings')->insert([
@@ -307,6 +308,7 @@ class InventorySetupController extends Controller
                     'acquisition_date'  => !empty($row['acquisition_date']) ? $row['acquisition_date'] : null,
                     'property_number'   => trim($row['property_number'] ?? '') ?: null,
                     'acquisition_cost'  => $acquisitionCost,
+                    'estimated_useful_life' => $estimatedUsefulLife,
                     'appraised_value'   => $appraisedValue,
                     'appraisal_date'    => !empty($row['appraisal_date']) ? $row['appraisal_date'] : null,
                     'remarks'           => trim($row['remarks'] ?? '') ?: null,

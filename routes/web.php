@@ -28,6 +28,7 @@ Route::get('/login', function() { return redirect('/'); });
 Route::middleware('auth')->group(function () {
     
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/api/dashboard/growth-data', [DashboardController::class, 'getGrowthData'])->name('api.dashboard.growth_data');
     Route::post('/dashboard/quick-asset', [DashboardController::class, 'storeQuickAsset'])->name('inventory.dashboard.store');
 
     // --- Dark Mode Preference ---
