@@ -68,6 +68,26 @@
             @endif
         </div>
 
+        {{-- Buildings Registry --}}
+        <div class="relative group/navitem mt-2">
+            @if(request()->routeIs('register.building'))
+                <a href="{{ route('register.building') }}" class="flex items-center gap-4 px-4 py-3 bg-red-50 text-[#c00000] rounded-2xl font-bold border border-red-100 transition-all" title="Buildings">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-10.5 3.75h.75m-.75 3h.75m3-3h.75m-.75 3h.75" />
+                    </svg>
+                    <span class="sidebar-label hidden whitespace-nowrap text-sm">Buildings</span>
+                </a>
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#c00000] rounded-r-full"></div>
+            @else
+                <a href="{{ route('register.building') }}" class="flex items-center gap-4 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-[#c00000] rounded-2xl font-bold transition-all" title="Buildings">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-10.5 3.75h.75m-.75 3h.75m3-3h.75m-.75 3h.75" />
+                    </svg>
+                    <span class="sidebar-label hidden whitespace-nowrap text-sm">Buildings</span>
+                </a>
+            @endif
+        </div>
+
         {{-- Schools Registry --}}
 <div class="relative group/navitem mt-2">
     @if(request()->routeIs('admin.schools'))
