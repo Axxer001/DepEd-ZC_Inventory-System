@@ -38,14 +38,6 @@
                         <p class="text-slate-500 text-sm mt-2 font-medium italic uppercase tracking-wider">Historical Supply Inflow & Delivery Records</p>
                     </div>
                 </div>
-                <div class="flex gap-3 items-end h-full pt-10 md:pt-0">
-                    <button onclick="window.print()" class="group bg-white text-slate-600 border border-slate-200 px-6 py-4 rounded-[1.5rem] font-bold hover:bg-slate-50 transition-all flex items-center gap-3 shadow-sm active:scale-95">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5 text-slate-400 group-hover:text-orange-600 transition-colors">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231a1.125 1.125 0 01-1.117-1.227L6.34 18m11.318-4.171a42.41 42.41 0 014.232.748 1.125 1.125 0 01.815 1.39l-1.077 4.195a1.125 1.125 0 01-1.392.815l-1.332-.342M17.66 18l-1.332-.342m-11.318-4.171a42.41 42.41 0 00-4.232.748 1.125 1.125 0 00-.815 1.39l1.077 4.195a1.125 1.125 0 001.392.815l1.332-.342M6.34 18l1.332-.342m0 0V5.25A2.25 2.25 0 019 3h6a2.25 2.25 0 012.25 2.25v12.75m-11.25 0h11.25" />
-                        </svg>
-                        Export Logs
-                    </button>
-                </div>
             </header>
 
             {{-- Table Container --}}

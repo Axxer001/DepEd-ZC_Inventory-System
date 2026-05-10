@@ -71,13 +71,6 @@
 
         /* Scrollbar in dark */
         html.dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-
-        /* Export button */
-        html.dark #exportBtn                 { background-color: #1e293b !important;
-                                               border: 1px solid #334155;
-                                               color: #e2e8f0 !important; }
-        html.dark #exportBtn:hover           { background-color: #c00000 !important;
-                                               border-color: #c00000 !important; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex animate-fade-in text-slate-800 overflow-x-hidden">
@@ -92,9 +85,6 @@
                     <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">System Logs</h2>
                     <p class="text-slate-500 text-sm mt-1 font-medium italic">Track all administrative activities (Philippine Standard Time)</p>
                 </div>
-                <button id="exportBtn" class="bg-slate-800 text-white px-6 py-3 rounded-2xl font-bold hover:bg-slate-900 shadow-xl shadow-slate-200 transition-all hover:-translate-y-1 flex items-center gap-3 text-sm">
-                    <span>Export Logs</span>
-                </button>
             </header>
 
             <section id="logsSection" class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/40 border border-slate-50 overflow-hidden flex flex-col">
