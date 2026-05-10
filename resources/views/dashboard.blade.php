@@ -374,7 +374,7 @@
                                 </div>
                                 <div class="flex items-center gap-4">
                                     <div class="flex items-center gap-2">
-                                        <span class="text-[9px] font-black text-[#c00000] uppercase tracking-widest bg-red-50 px-2 py-1 rounded-lg">Value Accumulation</span>
+                                        <span class="text-[9px] font-black text-slate-900 uppercase tracking-widest bg-slate-50 px-2 py-1 rounded-lg border border-slate-100">Value Accumulation</span>
                                     </div>
                                 </div>
                             </div>

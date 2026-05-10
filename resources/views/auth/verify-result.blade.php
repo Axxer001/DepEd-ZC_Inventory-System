@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
 </head>
-<body class="flex flex-col items-center justify-center p-4">
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
 
     <div class="flex flex-col items-center w-full max-w-2xl">
 
@@ -16,14 +16,14 @@
             <div class="flex items-center gap-4 mb-2">
                 <img src="{{ asset('images/deped_logo.png') }}" alt="DepEd Logo" class="h-12 md:h-14 w-auto object-contain">
                 <img src="{{ asset('images/deped_zc_logo.png') }}" alt="DepEd ZC Logo" class="h-12 md:h-14 w-auto object-contain">
-                <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-black">
+                <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight text-white">
                     DepEd Zamboanga City
                 </h1>
             </div>
-            <p class="text-slate-400 font-bold tracking-[0.2em] text-[10px] ml-8 uppercase">Inventory Management System</p>
+            <p class="text-white/70 font-bold tracking-[0.2em] text-[10px] ml-8 uppercase">Inventory Management System</p>
         </div>
 
-        <div class="w-full max-w-md bg-white rounded-[2rem] shadow-2xl shadow-slate-200 border border-slate-100 overflow-hidden animate-fade-up" style="animation-delay: 0.1s;">
+        <div class="w-full max-w-md bg-white rounded-[2rem] shadow-none overflow-hidden animate-fade-up" style="animation-delay: 0.1s;">
 
             @if($status === 'accepted')
                 <div class="h-1.5 bg-green-600 w-full"></div>
