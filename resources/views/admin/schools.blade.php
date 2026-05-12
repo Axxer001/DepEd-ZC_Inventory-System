@@ -12,16 +12,18 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #f87171; border: 2px solid transparent; background-clip: padding-box; }
         .back-btn-cool { background: white; border: 1px solid #e2e8f0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .back-btn-cool:hover { border-color: #c00000; color: #c00000; box-shadow: 0 10px 15px -3px rgba(192, 0, 0, 0.1); transform: translateX(-4px); }
-        .xls-th { padding: 12px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; white-space: nowrap; border-right: 1px solid #1e293b; border-bottom: 2px solid #0f172a; background: #1e293b; position: sticky; top: 0; z-index: 20; }
-        .xls-td { height: 48px; border-right: 1px solid #1e293b; border-bottom: 1px solid #1e293b; vertical-align: middle; padding: 0; background: #0f172a; }
-        .xls-row { transition: background 0.1s; }
-        .xls-row:hover .xls-td { background-color: #1e293b !important; }
-        .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: #cbd5e1; white-space: nowrap; }
-        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 450px); min-height: 400px; background: #0f172a; flex-grow: 1; transition: height 0.3s ease-in-out; }
+        .back-btn-cool:hover { border-color: #ef4444; color: #ef4444; box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.15); transform: translateY(-2px); }
+        .xls-th { padding: 14px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; white-space: nowrap; border-right: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: #ffffff; position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .xls-td { height: 52px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; vertical-align: middle; padding: 0; background: #ffffff; transition: all 0.2s ease; }
+        .xls-row { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .xls-row:hover .xls-td { background-color: #fff1f2 !important; }
+        .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: #334155; white-space: nowrap; }
+        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 450px); min-height: 400px; background: #ffffff; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
         .xls-scroll-wrap.expanded { height: calc(100vh - 250px); }
         .pg-btn {
             padding: 8px 18px;
@@ -33,48 +35,36 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid #e2e8f0;
             background: white;
-            color: #1e293b;
+            color: #475569;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
             cursor: pointer;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05);
         }
         .pg-btn:hover:not(:disabled) {
-            border-color: #c00000;
-            color: #c00000;
-            transform: translateY(-1px);
+            border-color: #ef4444;
+            color: #ef4444;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.15);
         }
         .pg-btn:disabled {
             opacity: 0.3;
             cursor: not-allowed;
             background: #f1f5f9;
         }
-        
-        /* Dark Mode Overrides */
-        html.dark body { background-color: #0f172a; color: #f8fafc; }
-        html.dark .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
-        html.dark .text-slate-800 { color: #f8fafc !important; }
-        html.dark .text-slate-900 { color: #f8fafc !important; }
-        html.dark .bg-slate-50 { background-color: #0f172a !important; border-color: #1e293b !important; }
-        html.dark .bg-slate-50\/50 { background-color: #1e293b !important; }
-        html.dark .border-t { border-color: #334155 !important; }
-        
+
         /* Glass Indicator Box */
         .glass-indicator {
             display: flex;
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
             border-radius: 12px;
-        }
-        html.dark .glass-indicator {
-            background: rgba(0, 0, 0, 0.4);
-            border-color: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
         .custom-autocomplete {
@@ -104,33 +94,30 @@
             background: #f8fafc;
             color: #c00000;
         }
-        html.dark .custom-autocomplete {
-            background: #1e293b;
-            border-color: #334155;
-        }
-        html.dark .custom-autocomplete-item:hover {
-            background: #0f172a;
-        }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex text-slate-900 overflow-x-hidden">
+<body class="bg-slate-50 min-h-screen flex text-slate-900 overflow-x-hidden selection:bg-red-100 selection:text-red-900 relative">
+    <div class="absolute inset-0 z-[-1] opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 24px 24px;"></div>
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll">
-    <div class="w-full mx-auto p-6 lg:p-10 min-h-screen flex flex-col">
+    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll relative">
+    <div class="w-full mx-auto p-6 lg:p-10 min-h-screen flex flex-col relative z-10">
 
-        <div class="flex justify-between items-center mb-10 px-2">
+        <div class="flex justify-between items-center mb-10 px-2 animate-fade">
             <div>
-                <h2 class="text-3xl font-black text-slate-800 uppercase italic leading-none">School Registry</h2>
-                <p class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mt-2">Zamboanga City Division Master List</p>
+                <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-700 to-red-500 uppercase italic leading-none drop-shadow-sm tracking-tight">School Registry</h2>
+                <p class="text-slate-500 text-[11px] font-bold uppercase tracking-[0.25em] mt-3 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>
+                    Zamboanga City Division Master List
+                </p>
             </div>
             <div class="flex items-center gap-4">
-                <button onclick="toggleSchoolFilters()" id="toggleFilterBtn" class="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-100 hover:border-red-600 transition-all flex items-center gap-2 active:scale-95 shadow-sm italic">
+                <button onclick="toggleSchoolFilters()" id="toggleFilterBtn" class="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 bg-white border border-slate-200 hover:border-red-500 hover:text-red-600 hover:shadow-lg hover:shadow-red-500/10 transition-all duration-300 flex items-center gap-2 active:scale-95 italic">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
-                    Hide Filters
+                    Show Filters
                 </button>
-                <a href="/dashboard" class="back-btn-cool px-6 py-3 rounded-2xl text-sm font-bold text-slate-600 flex items-center gap-2 shadow-sm active:scale-95">
+                <a href="/dashboard" class="back-btn-cool px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 flex items-center gap-2 shadow-sm italic active:scale-95">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
                     Back
                 </a>
@@ -138,7 +125,7 @@
         </div>
 
         <!-- Filter Configuration -->
-        <div id="schoolFilterSection" class="bg-white rounded-[2.5rem] shadow-lg border border-slate-100 p-8 mb-8 relative z-50 animate-fade transition-all duration-300 origin-top">
+        <div id="schoolFilterSection" class="hidden bg-white rounded-[2.5rem] shadow-lg border border-slate-100 p-8 mb-8 relative z-50 animate-fade transition-all duration-300 origin-top">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8 relative z-10">
                 <div>
                     <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Quadrant</label>
@@ -181,17 +168,17 @@
                     </select>
                 </div>
             </div>
-            <div class="mt-8 flex justify-end items-center gap-8 relative z-10">
+            <div class="mt-8 flex justify-end items-center gap-8 relative z-10 pt-6 border-t border-slate-100/60">
                 <button onclick="clearSchoolFilters()" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-red-600 transition-all italic">Clear All Filters</button>
-                <button onclick="schoolFetchData()" class="px-8 py-2.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all active:scale-95 shadow-lg shadow-slate-200 italic">Apply Configuration</button>
+                <button onclick="schoolFetchData()" class="px-8 py-3 bg-gradient-to-r from-red-700 to-red-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:from-red-600 hover:to-red-400 transition-all duration-300 active:scale-95 shadow-lg shadow-red-500/30 italic transform hover:-translate-y-0.5">Apply Configuration</button>
             </div>
         </div>
 
-        <div class="bg-white rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden flex flex-col animate-fade relative">
-            <div class="xls-scroll-wrap">
+        <div class="bg-white rounded-[2rem] border border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col animate-fade relative ring-1 ring-black/5">
+            <div class="xls-scroll-wrap expanded">
                 <table class="w-full border-collapse" style="min-width:1200px;">
                     <thead><tr>
-                        <th class="xls-th w-10 text-center sticky left-0 z-10">#</th>
+                        <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
                         <th class="xls-th" style="min-width:120px">School ID</th>
                         <th class="xls-th" style="min-width:300px">Institutional Name</th>
                         <th class="xls-th" style="min-width:180px">District</th>
@@ -206,32 +193,34 @@
                 </table>
                 
                 {{-- Loading State --}}
-                <div id="schoolLoading" class="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-50 flex items-center justify-center hidden">
-                    <div class="flex flex-col items-center gap-4">
+                <div id="schoolLoading" class="absolute inset-0 bg-white/80 backdrop-blur-[4px] z-50 flex items-center justify-center hidden transition-all duration-300">
+                    <div class="flex flex-col items-center gap-5 bg-white px-10 py-8 rounded-3xl shadow-2xl shadow-slate-200/50 border border-slate-100">
                         <div class="w-12 h-12 border-4 border-slate-100 border-t-red-600 rounded-full animate-spin"></div>
-                        <p class="text-[10px] font-black text-slate-800 uppercase tracking-widest italic">Fetching School Data...</p>
+                        <p class="text-[10px] font-black text-slate-800 uppercase tracking-widest italic animate-pulse">Fetching School Data...</p>
                     </div>
                 </div>
 
                 {{-- Empty State --}}
-                <div id="schoolEmpty" class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div class="inline-flex flex-col items-center gap-3 opacity-30">
-                        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A4.833 4.833 0 0012 9a4.833 4.833 0 00-7.5 1.332V21m15 0h-15"/></svg>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">No schools found — adjust filters</p>
+                <div id="schoolEmpty" class="absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-300 bg-white/50 backdrop-blur-[2px]">
+                    <div class="inline-flex flex-col items-center gap-4 bg-slate-50/80 px-12 py-10 rounded-[2.5rem] border border-dashed border-slate-200 shadow-sm">
+                        <div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center text-red-400 shadow-inner">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A4.833 4.833 0 0012 9a4.833 4.833 0 00-7.5 1.332V21m15 0h-15"/></svg>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-500 uppercase tracking-[0.25em]">No schools found — adjust filters</p>
                     </div>
                 </div>
             </div>
 
-            <div id="schoolTableFooter" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-white dark:bg-slate-900 relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            <div id="schoolTableFooter" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-white relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                 <div class="flex items-center gap-6">
                     <p id="schoolRowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 Rows</p>
-                    <div id="schoolPaginationControls" class="flex items-center gap-3 border-l border-slate-200 dark:border-slate-800 pl-6">
+                    <div id="schoolPaginationControls" class="flex items-center gap-3 border-l border-slate-200 pl-6">
                         <button onclick="schoolPrevPage()" id="schoolPrevBtn" class="pg-btn">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
                             Prev
                         </button>
                         <div class="glass-indicator">
-                            <span id="schoolCurrentPage" class="text-[10px] font-black text-white dark:text-blue-400">1</span>
+                            <span id="schoolCurrentPage" class="text-[10px] font-black text-red-600">1</span>
                             <span class="text-[10px] font-bold text-slate-500">/</span>
                             <span id="schoolTotalPages" class="text-[10px] font-black text-slate-500">1</span>
                         </div>
@@ -389,20 +378,20 @@
                 tr.className = 'xls-row group border-b border-slate-100';
                 
                 const cell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const">${val || ''}</span></td>`;
-                const idCell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const font-black text-blue-500 italic">${val || ''}</span></td>`;
+                const idCell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const font-black text-red-600 italic">${val || ''}</span></td>`;
                 const costCell = (val, color) => `<td class="xls-td relative"><span class="xls-const font-black italic ${color}">₱ ${Number(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></td>`;
 
                 tr.innerHTML = `
-                    <td class="xls-td text-center sticky left-0 w-10 bg-[#0f172a] z-10"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
+                    <td class="xls-td text-center sticky left-0 w-10 bg-[#f8fafc] z-10"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
                     ${idCell(row.school_id)}
                     <td class="xls-td relative">
-                        <span class="xls-const font-bold text-slate-200 uppercase">${row.name || ''}</span>
+                        <span class="xls-const font-bold text-slate-800 uppercase">${row.name || ''}</span>
                     </td>
                     ${cell(row.district_name)}
                     ${cell(row.quadrant_name)}
-                    ${costCell(row.total_bldg_cost, 'text-emerald-400')}
-                    ${costCell(row.total_ppe_cost, 'text-blue-400')}
-                    ${costCell(row.total_semi_ppe_cost, 'text-amber-400')}
+                    ${costCell(row.total_bldg_cost, 'text-emerald-600')}
+                    ${costCell(row.total_ppe_cost, 'text-blue-600')}
+                    ${costCell(row.total_semi_ppe_cost, 'text-amber-600')}
                     ${cell(row.created_at ? new Date(row.created_at).toLocaleString() : '', 'text-slate-500 text-[9px]')}
                     ${cell(row.updated_at ? new Date(row.updated_at).toLocaleString() : '', 'text-slate-500 text-[9px]')}
                 `;
