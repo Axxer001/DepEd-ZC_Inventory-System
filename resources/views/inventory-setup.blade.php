@@ -337,7 +337,7 @@
             {{-- Step 1: Add or Edit Selection --}}
             <div id="step1" class="step-content active">
                 <h3 class="text-center text-lg font-bold text-slate-400 uppercase tracking-[0.3em] mb-10">What would you like to do?</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 px-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 px-4 mb-10">
                     <div onclick="nextStep(2, 'add')" class="group bg-white p-12 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-[#c00000] transition-all duration-300 cursor-pointer text-center">
                         <div class="w-20 h-20 bg-red-50 text-[#c00000] rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-10 h-10">
@@ -359,19 +359,19 @@
                     </div>
                 </div>
 
-                {{-- Inventory Management Full-Width Card --}}
-                <div class="mt-8 px-4">
-                    <div onclick="nextStep(2, 'edit')" class="group bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-blue-600 transition-all duration-300 cursor-pointer flex items-center justify-between overflow-hidden relative">
-                        <div class="absolute -right-10 -top-10 w-48 h-48 bg-blue-50 rounded-full opacity-50 blur-3xl group-hover:bg-blue-100 transition-colors"></div>
-                        <div class="flex items-center gap-6 relative z-10">
-                            <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8">
+                {{-- Bottom Row: Management Cards (Slim Horizontal side-by-side) --}}
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 mt-10">
+                    {{-- Inventory Management --}}
+                    <div onclick="nextStep(2, 'edit')" class="group bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border-2 border-transparent hover:border-blue-600 transition-all duration-300 cursor-pointer flex items-center justify-between relative overflow-hidden">
+                        <div class="flex items-center gap-5 relative z-10">
+                            <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-7 h-7">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                                 </svg>
                             </div>
                             <div class="text-left">
-                                <h4 class="text-2xl font-black text-slate-800 tracking-tight uppercase">Inventory Management</h4>
-                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Update, rename, or maintain master inventory registry records</p>
+                                <h4 class="text-lg font-black text-slate-800 tracking-tight uppercase">Inventory Management</h4>
+                                <p class="text-slate-400 text-[8px] font-bold uppercase tracking-widest mt-1">Master Registry Records</p>
                             </div>
                         </div>
                         <div class="text-blue-600 group-hover:translate-x-2 transition-transform relative z-10">
@@ -380,21 +380,18 @@
                             </svg>
                         </div>
                     </div>
-                </div>
 
-                {{-- Infrastructure Management Full-Width Card --}}
-                <div class="mt-8 px-4">
-                    <div onclick="nextStep(2, 'building')" class="group bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-emerald-600 transition-all duration-300 cursor-pointer flex items-center justify-between overflow-hidden relative">
-                        <div class="absolute -right-10 -top-10 w-48 h-48 bg-emerald-50 rounded-full opacity-50 blur-3xl group-hover:bg-emerald-100 transition-colors"></div>
-                        <div class="flex items-center gap-6 relative z-10">
-                            <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8">
+                    {{-- Infrastructure Management --}}
+                    <div onclick="nextStep(2, 'building')" class="group bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border-2 border-transparent hover:border-emerald-600 transition-all duration-300 cursor-pointer flex items-center justify-between relative overflow-hidden">
+                        <div class="flex items-center gap-5 relative z-10">
+                            <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-7 h-7">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m1.5-1.5l-3-1m-3.182-5.182L15 4.5" />
                                 </svg>
                             </div>
                             <div class="text-left">
-                                <h4 class="text-2xl font-black text-slate-800 tracking-tight uppercase">Infrastructure Management</h4>
-                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">View, filter, and manage school buildings and infrastructure</p>
+                                <h4 class="text-lg font-black text-slate-800 tracking-tight uppercase">Infrastructure Management</h4>
+                                <p class="text-slate-400 text-[8px] font-bold uppercase tracking-widest mt-1">Buildings & Facilities</p>
                             </div>
                         </div>
                         <div class="text-emerald-600 group-hover:translate-x-2 transition-transform relative z-10">
