@@ -52,28 +52,28 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            color: #94a3b8;
+            color: #64748b;
             white-space: nowrap;
-            border-right: 1px solid #1e293b;
-            border-bottom: 2px solid #0f172a;
-            background: #1e293b;
+            border-right: 1px solid #e2e8f0;
+            border-bottom: 2px solid #f1f5f9;
+            background: #f8fafc;
             position: sticky;
             top: 0;
             z-index: 20;
         }
         .xls-td {
             height: 48px;
-            border-right: 1px solid #1e293b;
-            border-bottom: 1px solid #1e293b;
+            border-right: 1px solid #e2e8f0;
+            border-bottom: 1px solid #f1f5f9;
             vertical-align: middle;
             position: relative;
             padding: 0;
-            background: #0f172a;
+            background: #ffffff;
         }
         /* row highlight */
         .xls-row { transition: background 0.1s; }
-        .xls-row:hover .xls-td { background-color: #1e293b !important; }
-        .xls-row:hover .xls-td.xls-sticky-col { background-color: #1e293b !important; }
+        .xls-row:hover .xls-td { background-color: #f8fafc !important; }
+        .xls-row:hover .xls-td.xls-sticky-col { background-color: #f8fafc !important; }
         /* inputs inside cells */
         .xls-input {
             width: 100%;
@@ -81,7 +81,7 @@
             font-size: 11.5px;
             font-weight: 600;
             color: #334155;
-            background: rgba(0, 0, 0, 0.035); /* darker hue for typeboxes */
+            background: transparent;
             border: 1px solid transparent;
             outline: none;
             box-sizing: border-box;
@@ -93,7 +93,7 @@
             border-color: #c00000;
             box-shadow: 0 0 0 2px rgba(192,0,0,0.1);
         }
-        .xls-input::placeholder { color: #c8d0db; font-weight: 500; }
+        .xls-input::placeholder { color: #cbd5e1; font-weight: 500; }
         .xls-const {
             display: flex;
             align-items: center;
@@ -101,7 +101,7 @@
             height: 100%;
             font-size: 12px;
             font-weight: 600;
-            color: #cbd5e1;
+            color: #64748b;
             white-space: nowrap;
             font-style: normal;
         }
@@ -115,7 +115,7 @@
             min-height: 400px;
             max-height: calc(100vh - 450px);
             flex-grow: 1;
-            background: #0f172a;
+            background: #ffffff;
         }
         .pg-btn {
             padding: 8px 18px;
@@ -154,19 +154,25 @@
             color: white !important;
             border-color: #c00000 !important;
         }
-        /* ── Dark mode ── */
+        /* ── Dark mode overrides (keeping table white/light even in dark mode if preferred, or matching dark theme) ── */
         html.dark .xls-th {
-            background: #0d1525 !important;
-            color: #4a5568 !important;
-            border-color: #1a2535 !important;
+            background: #0f172a !important;
+            color: #94a3b8 !important;
+            border-color: #1e293b !important;
         }
-        html.dark .xls-td { border-color: #1a2535 !important; }
-        html.dark .xls-row:hover .xls-td { background-color: rgba(10,18,34,0.55) !important; }
-        html.dark .xls-row:hover .xls-td.xls-sticky-col { background-color: #0d1525 !important; }
+        html.dark .xls-td { 
+            background: #0f172a !important;
+            border-color: #1e293b !important; 
+        }
+        html.dark .xls-row:hover .xls-td { background-color: #1e293b !important; }
+        html.dark .xls-row:hover .xls-td.xls-sticky-col { background-color: #1e293b !important; }
         /* Typebox enhancements */
-        html.dark .xls-input { background: rgba(0, 0, 0, 0.25); color: #e2e8f0; }
+        html.dark .xls-input { background: transparent; color: #e2e8f0; }
         html.dark .xls-input:focus { background: rgba(192,0,0,0.1); border-color: #c00000; box-shadow: 0 0 0 2px rgba(192,0,0,0.2); }
         html.dark .xls-input::placeholder { color: #475569; }
+        html.dark .xls-scroll-wrap { background-color: #0f172a !important; }
+        html.dark .xls-const { color: #94a3b8 !important; }
+        html.dark .xls-sticky-col { background-color: #0f172a !important; }
 
         /* Custom Autocomplete */
         .custom-autocomplete {
@@ -343,17 +349,17 @@
                     </div>
 
                     <div onclick="nextStep(2, 'building')" class="group bg-white p-12 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-[#c00000] transition-all duration-300 cursor-pointer text-center">
-                        <div class="w-20 h-20 bg-slate-50 text-slate-600 rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                        <div class="w-20 h-20 bg-red-50 text-[#c00000] rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-10 h-10">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
                             </svg>
                         </div>
-                        <h4 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Building Records</h4>
-                        <p class="text-slate-400 text-xs font-bold uppercase mt-3 tracking-widest leading-tight">View, filter, and manage school buildings and infrastructure</p>
+                        <h4 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Add Building</h4>
+                        <p class="text-slate-400 text-xs font-bold uppercase mt-3 tracking-widest leading-tight">Register new school buildings or infrastructure units</p>
                     </div>
                 </div>
 
-                {{-- Edit Assets Full-Width Card --}}
+                {{-- Inventory Management Full-Width Card --}}
                 <div class="mt-8 px-4">
                     <div onclick="nextStep(2, 'edit')" class="group bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-blue-600 transition-all duration-300 cursor-pointer flex items-center justify-between overflow-hidden relative">
                         <div class="absolute -right-10 -top-10 w-48 h-48 bg-blue-50 rounded-full opacity-50 blur-3xl group-hover:bg-blue-100 transition-colors"></div>
@@ -375,11 +381,35 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Infrastructure Management Full-Width Card --}}
+                <div class="mt-8 px-4">
+                    <div onclick="nextStep(2, 'building')" class="group bg-white p-8 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-emerald-600 transition-all duration-300 cursor-pointer flex items-center justify-between overflow-hidden relative">
+                        <div class="absolute -right-10 -top-10 w-48 h-48 bg-emerald-50 rounded-full opacity-50 blur-3xl group-hover:bg-emerald-100 transition-colors"></div>
+                        <div class="flex items-center gap-6 relative z-10">
+                            <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-8 h-8">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m1.5-1.5l-3-1m-3.182-5.182L15 4.5" />
+                                </svg>
+                            </div>
+                            <div class="text-left">
+                                <h4 class="text-2xl font-black text-slate-800 tracking-tight uppercase">Infrastructure Management</h4>
+                                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">View, filter, and manage school buildings and infrastructure</p>
+                            </div>
+                        </div>
+                        <div class="text-emerald-600 group-hover:translate-x-2 transition-transform relative z-10">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
 {{-- Step 2: Category Selection --}}
 <div id="step2" class="step-content">
-    <h3 id="step2Title" class="text-lg font-black text-slate-400 uppercase tracking-[0.3em] text-center mb-6 -mt-6">Select Category</h3>
+    <h3 id="step2Title" class="text-lg font-black text-slate-900 uppercase tracking-[0.3em] text-center mb-6 -mt-6">Select Category</h3>
     
 <div id="categoryGrid" class="grid grid-cols-2 gap-6 max-w-3xl mx-auto px-4 mb-8">        
     {{-- Empty Grid --}}
@@ -428,7 +458,7 @@
             <div class="w-6 h-6 bg-[#c00000] rounded-lg flex items-center justify-center text-white text-[10px] font-black shrink-0">1</div>
             <div>
                 <h3 class="font-black text-slate-800 uppercase tracking-tight text-xs">Acquisition Source</h3>
-                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Identify who provided the assets</p>
+                <p class="text-[9px] text-slate-900 font-bold uppercase tracking-widest">Identify who provided the assets</p>
             </div>
         </div>
         <div class="px-6 py-4">
@@ -456,11 +486,11 @@
                         Asset Source
                     </button>
                     <button id="tabAssetDist" onclick="switchAssetTab('distribution')"
-                        class="px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg text-slate-500 hover:text-slate-700 transition-all">
+                        class="px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg text-slate-900 hover:text-slate-900 transition-all">
                         Asset Distribution
                     </button>
                 </div>
-                <span id="assetTabLabel" class="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Asset Source</span>
+                <span id="assetTabLabel" class="hidden md:block text-[10px] font-bold text-slate-900 uppercase tracking-widest italic">Asset Source</span>
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="openBulkAddModal()"
@@ -510,8 +540,8 @@
             {{-- Empty state inside scroll wrap --}}
             <div id="assetSourceEmpty" class="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div class="inline-flex flex-col items-center gap-3 opacity-30">
-                    <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0112 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125h17.25"/></svg>
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">No rows — click Add Row to begin</p>
+                    <svg class="w-8 h-8 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0112 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125h17.25"/></svg>
+                    <p class="text-[10px] font-black text-slate-900 uppercase tracking-[0.25em]">No rows — click Add Row to begin</p>
                 </div>
             </div>
             </div>{{-- /xls-scroll-wrap --}}
@@ -542,8 +572,8 @@
             {{-- Empty state inside scroll wrap --}}
             <div id="assetDistEmpty" class="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div class="inline-flex flex-col items-center gap-3 opacity-30">
-                    <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0112 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125h17.25"/></svg>
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.25em]">No rows — click Add Row to begin</p>
+                    <svg class="w-8 h-8 text-slate-900" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0112 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125h17.25"/></svg>
+                    <p class="text-[10px] font-black text-slate-900 uppercase tracking-[0.25em]">No rows — click Add Row to begin</p>
                 </div>
             </div>
             </div>{{-- /xls-scroll-wrap --}}
@@ -552,18 +582,18 @@
         {{-- Footer --}}
         <div id="assetTableFooter" class="px-5 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
             <div class="flex items-center gap-6">
-                <p id="rowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 Rows</p>
+                <p id="rowCountLabel" class="text-[9px] font-black text-slate-900 uppercase tracking-widest">0 Rows</p>
                 <div id="paginationControls" class="flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-6">
-                    <button onclick="prevPage()" id="prevBtn" class="pg-btn text-slate-500">
+                    <button onclick="prevPage()" id="prevBtn" class="pg-btn text-slate-900">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
                         Prev
                     </button>
                     <div class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-[#0a101d] rounded-lg">
                         <span id="currentPageDisplay" class="text-[10px] font-black text-slate-800 dark:text-white">1</span>
-                        <span class="text-[10px] font-bold text-slate-400">/</span>
-                        <span id="totalPagesDisplay" class="text-[10px] font-black text-slate-400">1</span>
+                        <span class="text-[10px] font-bold text-slate-900">/</span>
+                        <span id="totalPagesDisplay" class="text-[10px] font-black text-slate-900">1</span>
                     </div>
-                    <button onclick="nextPage()" id="nextBtn" class="pg-btn text-slate-500">
+                    <button onclick="nextPage()" id="nextBtn" class="pg-btn text-slate-900">
                         Next
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
                     </button>
@@ -783,7 +813,7 @@
             const tabDst   = document.getElementById('tabAssetDist');
             const label    = document.getElementById('assetTabLabel');
             const ON  = 'px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg bg-[#c00000] text-white shadow-sm transition-all';
-            const OFF = 'px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg text-slate-500 hover:text-slate-700 transition-all';
+            const OFF = 'px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg text-slate-900 hover:text-slate-900 transition-all';
             if (tab === 'source') {
                 srcPanel.classList.remove('hidden');
                 distPanel.classList.add('hidden');
@@ -994,7 +1024,7 @@
             const lblFrom = document.getElementById('lblDelFrom');
             const lblTo = document.getElementById('lblDelTo');
             const ON = 'px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white transition-all';
-            const OFF = 'px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg text-slate-400 transition-all';
+            const OFF = 'px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg text-slate-900 transition-all';
             
             if (mode === 'rows') {
                 btnRows.className = ON; btnPages.className = OFF;
@@ -1185,7 +1215,7 @@
                 ).join('');
 
                 html += `
-                    <p class="text-slate-400 text-xs font-semibold mb-5 -mt-4 italic text-center">Select a mode, then make your selections below.</p>
+                    <p class="text-slate-900 text-xs font-semibold mb-5 -mt-4 italic text-center">Select a mode, then make your selections below.</p>
 
                     {{-- Mode Toggle Buttons --}}
                     <div class="flex gap-3 mb-7" id="updateItemModeToggle">
@@ -1196,7 +1226,7 @@
                         </button>
                         <button type="button" id="btnModeDelete"
                             onclick="switchUpdateItemMode('delete')"
-                            class="flex-1 py-3.5 rounded-2xl font-black text-sm text-center border-2 border-slate-200 bg-white text-slate-400 transition-all hover:border-slate-300">
+                            class="flex-1 py-3.5 rounded-2xl font-black text-sm text-center border-2 border-slate-200 bg-white text-slate-900 transition-all hover:border-slate-300">
                             🗑️ Delete
                         </button>
                     </div>
@@ -1207,72 +1237,72 @@
                         <div class="grid grid-cols-2 gap-3 items-center">
                             {{-- Row 1: Category --}}
                             <div class="space-y-1">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
+                                <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1">Category</label>
                                 <select id="uCategoryDd"
                                     onchange="uOnCategoryChange()"
-                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all">
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-900 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all">
                                     <option value="">-- Select Category --</option>
                                     ${rawCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
                                 </select>
                             </div>
                             <div class="space-y-1">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rename Category To</label>
+                                <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1">Rename Category To</label>
                                 <input type="text" id="uCategoryRename" placeholder="Leave blank to keep current name"
-                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 transition-all">
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-900 text-sm focus:ring-2 focus:ring-red-100 transition-all">
                             </div>
 
                             {{-- Row 2: Item --}}
                             <div class="space-y-1">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item</label>
+                                <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1">Item</label>
                                 <select id="uItemDd"
                                     onchange="uOnItemChange()"
-                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all"
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-900 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all"
                                     disabled>
                                     <option value="">-- Select Item --</option>
                                 </select>
                             </div>
                             <div class="space-y-1">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rename Item To</label>
+                                <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1">Rename Item To</label>
                                 <input type="text" id="uItemRename" placeholder="Leave blank to keep current name"
-                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 transition-all"
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-900 text-sm focus:ring-2 focus:ring-red-100 transition-all"
                                     disabled>
                             </div>
 
                             {{-- Row 3: Sub-item --}}
                             <div class="space-y-1">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sub-item</label>
+                                <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1">Sub-item</label>
                                 <select id="uSubItemDd"
                                     onchange="uOnSubItemChange()"
-                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all"
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-900 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all"
                                     disabled>
                                     <option value="">-- Select Sub-item --</option>
                                 </select>
                             </div>
                             <div class="space-y-1">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Rename Sub-item To</label>
+                                <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1">Rename Sub-item To</label>
                                 <input type="text" id="uSubItemRename" placeholder="Leave blank to keep current name"
-                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 transition-all"
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-900 text-sm focus:ring-2 focus:ring-red-100 transition-all"
                                     disabled>
                             </div>
                         </div>
 
                         {{-- Distributor Transfer Row --}}
                         <div class="pt-4 border-t border-slate-100">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-2">Transfer Distributor Ownership</label>
-                            <p class="text-[10px] text-slate-400 font-medium ml-1 mb-3">Select a sub-item above first. The left shows the current distributor; pick a new one on the right to transfer ownership.</p>
+                            <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-2">Transfer Distributor Ownership</label>
+                            <p class="text-[10px] text-slate-900 font-medium ml-1 mb-3">Select a sub-item above first. The left shows the current distributor; pick a new one on the right to transfer ownership.</p>
                             <div class="grid grid-cols-2 gap-3">
                                 <div class="space-y-1">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Distributor</label>
+                                    <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1">Current Distributor</label>
                                     <select id="uCurrentDist" disabled
-                                        class="w-full p-3.5 bg-slate-100 border border-slate-200 rounded-2xl outline-none font-semibold text-slate-500 text-sm cursor-not-allowed">
+                                        class="w-full p-3.5 bg-slate-100 border border-slate-200 rounded-2xl outline-none font-semibold text-slate-900 text-sm cursor-not-allowed">
                                         <option value="">-- No Sub-item Selected --</option>
                                         ${distOptHtml}
                                     </select>
                                 </div>
                                 <div class="space-y-1">
-                                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Transfer To</label>
+                                    <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1">Transfer To</label>
                                     <select id="uNewDist" disabled
-                                        class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all">
+                                        class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-900 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all">
                                         <option value="">-- Select New Distributor --</option>
                                         ${distOptHtml}
                                     </select>
@@ -1283,7 +1313,7 @@
                         {{-- Update Panel Action Buttons --}}
                         <div class="flex gap-3 pt-2">
                             <button type="button" onclick="uClearAll()"
-                                class="flex-1 py-4 rounded-2xl font-black text-sm border-2 border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50 transition-all active:scale-95">
+                                class="flex-1 py-4 rounded-2xl font-black text-sm border-2 border-slate-200 text-slate-900 hover:border-slate-300 hover:bg-slate-50 transition-all active:scale-95">
                                 Clear
                             </button>
                             <button type="button" onclick="uSaveChanges()"
@@ -1299,16 +1329,16 @@
                         <div class="grid grid-cols-2 gap-3 items-start">
                             {{-- Row 1: Category --}}
                             <div class="space-y-1">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Category</label>
+                                <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1">Category</label>
                                 <select id="dCategoryDd"
                                     onchange="dOnCategoryChange()"
-                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all">
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-900 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all">
                                     <option value="">-- Select Category --</option>
                                     ${rawCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
                                 </select>
                             </div>
                             <div class="flex flex-col justify-end space-y-1 pb-0.5">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 invisible">Label</label>
+                                <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1 invisible">Label</label>
                                 <label class="flex items-center gap-3 p-3.5 bg-red-50 border border-red-100 rounded-2xl cursor-pointer group">
                                     <input type="checkbox" id="dCategoryChk" onchange="dOnCategoryChkChange()"
                                         class="w-4 h-4 rounded accent-[#c00000] cursor-pointer">
@@ -1321,16 +1351,16 @@
 
                             {{-- Row 2: Item --}}
                             <div class="space-y-1">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Item</label>
+                                <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1">Item</label>
                                 <select id="dItemDd"
                                     onchange="dOnItemChange()"
-                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all"
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-900 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all"
                                     disabled>
                                     <option value="">-- Select Item --</option>
                                 </select>
                             </div>
                             <div class="flex flex-col justify-end space-y-1 pb-0.5">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 invisible">Label</label>
+                                <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1 invisible">Label</label>
                                 <label class="flex items-center gap-3 p-3.5 bg-red-50 border border-red-100 rounded-2xl cursor-pointer group" id="dItemChkWrap">
                                     <input type="checkbox" id="dItemChk" onchange="dOnItemChkChange()"
                                         class="w-4 h-4 rounded accent-[#c00000] cursor-pointer" disabled>
@@ -1343,15 +1373,15 @@
 
                             {{-- Row 3: Sub-item --}}
                             <div class="space-y-1">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sub-item</label>
+                                <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1">Sub-item</label>
                                 <select id="dSubItemDd"
-                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-700 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all"
+                                    class="w-full p-3.5 bg-slate-50 border border-slate-100 rounded-2xl outline-none font-semibold text-slate-900 text-sm focus:ring-2 focus:ring-red-100 cursor-pointer transition-all"
                                     disabled>
                                     <option value="">-- Select Sub-item --</option>
                                 </select>
                             </div>
                             <div class="flex flex-col justify-end space-y-1 pb-0.5">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 invisible">Label</label>
+                                <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1 invisible">Label</label>
                                 <label class="flex items-center gap-3 p-3.5 bg-red-50 border border-red-100 rounded-2xl cursor-pointer group" id="dSubItemChkWrap">
                                     <input type="checkbox" id="dSubItemChk"
                                         class="w-4 h-4 rounded accent-[#c00000] cursor-pointer" disabled>
@@ -1363,7 +1393,7 @@
                         {{-- Delete Panel Action Buttons --}}
                         <div class="flex gap-3 pt-2">
                             <button type="button" onclick="dClearAll()"
-                                class="flex-1 py-4 rounded-2xl font-black text-sm border-2 border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50 transition-all active:scale-95">
+                                class="flex-1 py-4 rounded-2xl font-black text-sm border-2 border-slate-200 text-slate-900 hover:border-slate-300 hover:bg-slate-50 transition-all active:scale-95">
                                 Clear
                             </button>
                             <button type="button" onclick="dSaveChanges()"
@@ -1424,16 +1454,16 @@
 
         function rebuildCategoryDropdown() {
             const dropdown = document.getElementById('categoryDropdownList');
-            let html = '<div class="p-3 text-xs text-slate-400 font-bold uppercase tracking-widest">Select existing category</div>';
+            let html = '<div class="p-3 text-xs text-slate-900 font-bold uppercase tracking-widest">Select existing category</div>';
             if (rawCategories.length === 0) {
-                html += '<div class="px-4 py-3 text-sm text-slate-400 italic">No existing categories</div>';
+                html += '<div class="px-4 py-3 text-sm text-slate-900 italic">No existing categories</div>';
             } else {
                 rawCategories.forEach(c => {
                     html += `<div onclick="selectExistingCategory(${c.id}, '${c.name.replace(/'/g, "\\'")}')"
-                                 class="px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors">${c.name}</div>`;
+                                 class="px-4 py-3 text-sm font-semibold text-slate-900 hover:bg-red-50 hover:text-[#c00000] cursor-pointer transition-colors">${c.name}</div>`;
                 });
             }
-            html += `<div onclick="clearCategorySelection()" class="px-4 py-3 text-xs font-bold text-slate-400 hover:bg-slate-50 cursor-pointer border-t border-slate-100 transition-colors">✕ Clear selection (type new category)</div>`;
+            html += `<div onclick="clearCategorySelection()" class="px-4 py-3 text-xs font-bold text-slate-900 hover:bg-slate-50 cursor-pointer border-t border-slate-100 transition-colors">✕ Clear selection (type new category)</div>`;
             dropdown.innerHTML = html;
         }
 
@@ -1469,12 +1499,12 @@
                 panelUpdate.classList.remove('hidden');
                 panelDelete.classList.add('hidden');
                 btnUpdate.className = 'flex-1 py-3.5 rounded-2xl font-black text-sm text-center border-2 border-[#c00000] bg-red-50 text-[#c00000] transition-all';
-                btnDelete.className  = 'flex-1 py-3.5 rounded-2xl font-black text-sm text-center border-2 border-slate-200 bg-white text-slate-400 transition-all hover:border-slate-300';
+                btnDelete.className  = 'flex-1 py-3.5 rounded-2xl font-black text-sm text-center border-2 border-slate-200 bg-white text-slate-900 transition-all hover:border-slate-300';
             } else {
                 panelUpdate.classList.add('hidden');
                 panelDelete.classList.remove('hidden');
                 btnDelete.className  = 'flex-1 py-3.5 rounded-2xl font-black text-sm text-center border-2 border-[#c00000] bg-red-50 text-[#c00000] transition-all';
-                btnUpdate.className = 'flex-1 py-3.5 rounded-2xl font-black text-sm text-center border-2 border-slate-200 bg-white text-slate-400 transition-all hover:border-slate-300';
+                btnUpdate.className = 'flex-1 py-3.5 rounded-2xl font-black text-sm text-center border-2 border-slate-200 bg-white text-slate-900 transition-all hover:border-slate-300';
             }
         }
 
@@ -1532,8 +1562,8 @@
 
             // Enable new-distributor dropdown
             newDist.disabled = false;
-            newDist.classList.remove('cursor-not-allowed', 'bg-slate-100', 'text-slate-400');
-            newDist.classList.add('cursor-pointer', 'bg-slate-50', 'text-slate-700');
+            newDist.classList.remove('cursor-not-allowed', 'bg-slate-100', 'text-slate-900');
+            newDist.classList.add('cursor-pointer', 'bg-slate-50', 'text-slate-900');
 
             // Auto-fill current distributor
             const sub = rawSubItems.find(s => String(s.id) === String(subId));
@@ -1559,8 +1589,8 @@
             if (newDist) {
                 newDist.value = '';
                 newDist.disabled = true;
-                newDist.classList.remove('cursor-pointer', 'bg-slate-50', 'text-slate-700');
-                newDist.classList.add('cursor-not-allowed', 'bg-slate-100', 'text-slate-500');
+                newDist.classList.remove('cursor-pointer', 'bg-slate-50', 'text-slate-900');
+                newDist.classList.add('cursor-not-allowed', 'bg-slate-100', 'text-slate-900');
             }
         }
 
@@ -1833,7 +1863,7 @@
 
             const result = await Swal.fire({
                 title: 'Confirm Deletion',
-                html: `<div class="text-sm text-slate-700">${confirmMsg}</div><div class="text-xs text-red-500 font-bold mt-3">⚠️ This action cannot be undone.</div>`,
+                html: `<div class="text-sm text-slate-900">${confirmMsg}</div><div class="text-xs text-red-500 font-bold mt-3">⚠️ This action cannot be undone.</div>`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#c00000',
@@ -1904,12 +1934,12 @@
             const search = document.getElementById('preDistSchoolSearch');
             
             if (tab === 'school') {
-                btnSchool.className = "text-[10px] font-bold px-3 py-1 rounded-md bg-white shadow-sm text-slate-700 transition-all";
-                btnIndiv.className = "text-[10px] font-bold px-3 py-1 rounded-md text-slate-500 hover:text-slate-700 transition-all bg-transparent";
+                btnSchool.className = "text-[10px] font-bold px-3 py-1 rounded-md bg-white shadow-sm text-slate-900 transition-all";
+                btnIndiv.className = "text-[10px] font-bold px-3 py-1 rounded-md text-slate-900 hover:text-slate-900 transition-all bg-transparent";
                 search.placeholder = "Search schools...";
             } else {
-                btnIndiv.className = "text-[10px] font-bold px-3 py-1 rounded-md bg-white shadow-sm text-slate-700 transition-all";
-                btnSchool.className = "text-[10px] font-bold px-3 py-1 rounded-md text-slate-500 hover:text-slate-700 transition-all bg-transparent";
+                btnIndiv.className = "text-[10px] font-bold px-3 py-1 rounded-md bg-white shadow-sm text-slate-900 transition-all";
+                btnSchool.className = "text-[10px] font-bold px-3 py-1 rounded-md text-slate-900 hover:text-slate-900 transition-all bg-transparent";
                 search.placeholder = "Search individual records or offices...";
             }
             
@@ -2165,7 +2195,7 @@
 
             if (action === 'update') {
                 updateBtn.className = 'flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-[#c00000] bg-red-50 text-[#c00000]';
-                deleteBtn.className = 'flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-slate-200 bg-white text-slate-400 hover:border-red-300 hover:text-red-400';
+                deleteBtn.className = 'flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-slate-200 bg-white text-slate-900 hover:border-red-300 hover:text-red-400';
                 if (renameTargetId) {
                     inputWrap.classList.remove('hidden');
                     rnSubmit.classList.remove('hidden');
@@ -2173,7 +2203,7 @@
                 warnWrap.classList.add('hidden');
                 delSubmit.classList.add('hidden');
             } else {
-                updateBtn.className = 'flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-slate-200 bg-white text-slate-400 hover:border-red-300 hover:text-red-400';
+                updateBtn.className = 'flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-slate-200 bg-white text-slate-900 hover:border-red-300 hover:text-red-400';
                 deleteBtn.className = 'flex-1 py-4 rounded-2xl font-bold text-sm transition-all border-2 border-red-600 bg-red-50 text-red-600';
                 inputWrap.classList.add('hidden');
                 rnSubmit.classList.add('hidden');
@@ -2213,7 +2243,7 @@
             const impactTxt = document.getElementById('deleteImpactDetails');
             
             impactBox.classList.remove('hidden');
-            impactTxt.innerHTML = '<span class="text-slate-500 animate-pulse">Calculating impact...</span>';
+            impactTxt.innerHTML = '<span class="text-slate-900 animate-pulse">Calculating impact...</span>';
             
             try {
                 const res = await fetch("#", {
@@ -2240,10 +2270,10 @@
                         impactBox.classList.replace('border-emerald-200', 'border-red-200');
                     }
                 } else {
-                    impactTxt.innerHTML = '<span class="text-slate-500">Failed to calculate impact.</span>';
+                    impactTxt.innerHTML = '<span class="text-slate-900">Failed to calculate impact.</span>';
                 }
             } catch (e) {
-                impactTxt.innerHTML = '<span class="text-slate-500">Failed to calculate impact.</span>';
+                impactTxt.innerHTML = '<span class="text-slate-900">Failed to calculate impact.</span>';
             }
         }
 
@@ -2394,7 +2424,7 @@
                             <p class="text-white font-bold text-xs truncate">${data.display_name}</p>
                             ${newBadge}
                         </div>
-                        <p class="text-slate-500 text-[9px] uppercase font-black tracking-widest truncate mt-0.5">${data.sub_label}</p>
+                        <p class="text-slate-900 text-[9px] uppercase font-black tracking-widest truncate mt-0.5">${data.sub_label}</p>
                     </div>
                     <button onclick="distRemoveRecipient(this, ${data.id})" class="text-slate-600 hover:text-red-400 transition-colors ml-3 shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -2680,53 +2710,53 @@
     </script>
 
 {{-- ========================================== --}}
-{{-- BULK ADD MODAL                             --}}
+{{-- BULK ADD MODAL                            --}}
 {{-- ========================================== --}}
 <div id="bulkAddModal" class="fixed inset-0 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeBulkAddModal()"></div>
-    <div class="bg-white dark:bg-[#141f33] border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-2xl w-[90vw] max-w-5xl max-h-[90vh] flex flex-col relative z-10 transform scale-95 transition-transform duration-300">
-        
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeBulkAddModal()"></div>
+    <div class="bg-white border border-slate-200 rounded-[2rem] shadow-2xl w-[90vw] max-w-5xl max-h-[90vh] flex flex-col relative z-10 transform scale-95 transition-transform duration-300">
+
         {{-- Header --}}
-        <div class="px-8 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div class="px-8 py-5 border-b border-slate-100 flex items-center justify-between">
             <div>
-                <h3 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight italic">Bulk Add Rows</h3>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Pre-fill data across multiple new rows</p>
+                <h3 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Bulk Add Rows</h3>
+                <p class="text-xs font-bold text-slate-900 uppercase tracking-widest mt-1">Pre-fill data across multiple new rows</p>
             </div>
             <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2 bg-slate-50 dark:bg-[#0a101d] px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800">
-                    <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">Rows to add</label>
-                    <input type="number" id="bulkRowCount" value="1" min="1" max="100" class="w-16 bg-transparent text-center font-black text-slate-800 dark:text-white outline-none">
+                <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
+                    <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest">Rows to add</label>
+                    <input type="number" id="bulkRowCount" value="1" min="1" max="100" class="w-16 bg-transparent text-center font-black text-slate-800 outline-none">
                 </div>
-                <button onclick="closeBulkAddModal()" class="px-5 py-3 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Cancel</button>
+                <button onclick="closeBulkAddModal()" class="px-5 py-3 rounded-xl text-sm font-bold text-slate-900 hover:bg-slate-100 transition-all">Cancel</button>
                 <button onclick="confirmBulkAdd()" class="px-6 py-3 rounded-xl text-sm font-black text-white bg-[#c00000] hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all">Confirm Bulk Add</button>
             </div>
         </div>
 
         {{-- Body --}}
-        <div class="p-8 overflow-y-auto custom-scroll flex-1 space-y-10">
-            
+        <div class="p-8 overflow-y-auto custom-scroll flex-1 space-y-10 bg-white">
+
             {{-- Source Section --}}
             <div>
                 <div class="flex items-center gap-3 mb-6">
-                    <div class="w-6 h-6 bg-amber-500/20 text-amber-500 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0">1</div>
-                    <h4 class="font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest text-xs">Asset Data Entry (Source)</h4>
+                    <div class="w-6 h-6 bg-amber-500/10 text-amber-600 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0">1</div>
+                    <h4 class="font-black text-slate-800 uppercase tracking-widest text-xs">Asset Data Entry (Source)</h4>
                 </div>
                 <div class="grid grid-cols-2 gap-x-6 gap-y-5">
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Classification</label><input type="text" id="bClassification" data-col="classification" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Category</label><input type="text" id="bCategory" data-col="category" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Item</label><input type="text" id="bItem" data-col="item" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Description</label><input type="text" id="bDescription" data-col="description" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Unit of Measurement</label><input type="text" id="bUom" data-col="uom" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="e.g. Unit, Set, Pcs"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Mode of Procurement</label><input type="text" id="bMode" data-col="mode" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="e.g. Public Bidding"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Source Personnel</label><input type="text" id="bPersonnel" data-col="personnel" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Personnel Position</label><input type="text" id="bPosition" data-col="position" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Cost per Unit</label><input type="number" id="bCost" oninput="calcBulkCost()" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="1" min="0" step="0.01"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Quantity</label><input type="number" id="bQty1" oninput="calcBulkCost()" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="1" min="0" step="1"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Expected Useful Life</label><input type="number" id="bLife" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="1" min="0" step="1"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Acceptance Date</label><input type="date" id="bDate1" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Classification</label><input type="text" id="bClassification" data-col="classification" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Category</label><input type="text" id="bCategory" data-col="category" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Item</label><input type="text" id="bItem" data-col="item" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Description</label><input type="text" id="bDescription" data-col="description" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Unit of Measurement</label><input type="text" id="bUom" data-col="uom" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="e.g. Unit, Set, Pcs"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Mode of Procurement</label><input type="text" id="bMode" data-col="mode" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="e.g. Public Bidding"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Source Personnel</label><input type="text" id="bPersonnel" data-col="personnel" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Personnel Position</label><input type="text" id="bPosition" data-col="position" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Cost per Unit</label><input type="number" id="bCost" oninput="calcBulkCost()" class="xls-input !border border-slate-100 rounded-xl text-right bg-slate-50/50" placeholder="1" min="0" step="0.01"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Quantity</label><input type="number" id="bQty1" oninput="calcBulkCost()" class="xls-input !border border-slate-100 rounded-xl text-right bg-slate-50/50" placeholder="1" min="0" step="1"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Expected Useful Life</label><input type="number" id="bLife" class="xls-input !border border-slate-100 rounded-xl text-right bg-slate-50/50" placeholder="1" min="0" step="1"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acceptance Date</label><input type="date" id="bDate1" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50"></div>
                     <div class="relative">
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Remarks</label>
-                        <select id="bRemarks" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl bg-transparent">
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Remarks</label>
+                        <select id="bRemarks" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50">
                             <option value="">-- Default (Good Condition) --</option>
                             <option value="Good Condition">Good Condition</option>
                             <option value="Needs Repair">Needs Repair</option>
@@ -2736,45 +2766,45 @@
                 </div>
             </div>
 
-            <div class="border-t border-slate-100 dark:border-slate-800"></div>
+            <div class="border-t border-slate-100"></div>
 
             {{-- Target Section --}}
             <div>
                 <div class="flex items-center gap-3 mb-6">
-                    <div class="w-6 h-6 bg-amber-500/20 text-amber-500 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0">2</div>
-                    <h4 class="font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest text-xs">Asset Distribution (Target)</h4>
+                    <div class="w-6 h-6 bg-amber-500/10 text-amber-600 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0">2</div>
+                    <h4 class="font-black text-slate-800 uppercase tracking-widest text-xs">Asset Distribution (Target)</h4>
                 </div>
                 <div class="grid grid-cols-2 gap-x-6 gap-y-5">
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Region</label>
-                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 flex justify-between items-center cursor-not-allowed">Region IX <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Region</label>
+                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Region IX <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Division</label>
-                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 flex justify-between items-center cursor-not-allowed">Division of Zamboanga City <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Division</label>
+                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Division of Zamboanga City <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Office/School Type</label><input type="text" id="bSchoolType" data-col="school-type" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Type</label><input type="text" id="bSchoolType" data-col="school-type" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
                     <div class="relative">
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">School ID</label>
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">School ID</label>
                         <input type="text" id="bSchoolId" data-col="school-id" autocomplete="off" 
                             oninput="const s=allSchoolsList.find(x=>String(x.school_id)===this.value); if(s){document.getElementById('bSchoolName').value=s.name; document.getElementById('bLocation').value=cleanSchoolNameForLocation(s.name);}"
-                            class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select" inputmode="numeric">
+                            class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select" inputmode="numeric">
                     </div>
                     <div class="relative">
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label>
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label>
                         <input type="text" id="bSchoolName" data-col="school-name" autocomplete="off" 
                             oninput="const s=allSchoolsList.find(x=>x.name.toLowerCase()===this.value.toLowerCase()); if(s){document.getElementById('bSchoolId').value=s.school_id; document.getElementById('bLocation').value=cleanSchoolNameForLocation(s.name);} else if(this.value.trim()){document.getElementById('bLocation').value=cleanSchoolNameForLocation(this.value);}"
-                            class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select">
+                            class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select">
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Nature of Occupancy</label><input type="text" id="bOccupancy" data-col="occupancy" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Location</label><input type="text" id="bLocation" data-col="location" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Property Number</label><input type="text" id="bPropertyNo" oninput="checkBulkPropertyNumber()" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Nature of Occupancy</label><input type="text" id="bOccupancy" data-col="occupancy" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Location</label><input type="text" id="bLocation" data-col="location" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Property Number</label><input type="text" id="bPropertyNo" oninput="checkBulkPropertyNumber()" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
                     <div class="relative">
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Acquisition Cost</label>
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Cost</label>
                         <div class="relative">
-                            <input type="number" id="bCost2" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 cursor-not-allowed outline-none text-right pr-10" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1">
-                            <svg class="w-3.5 h-3.5 opacity-50 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                            <input type="number" id="bCost2" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 border border-slate-100 rounded-xl text-slate-900 cursor-not-allowed outline-none text-right pr-10" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1">
+                            <svg class="w-3.5 h-3.5 opacity-50 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         </div>
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label><input type="date" id="bDate2" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label><input type="date" id="bDate2" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50"></div>
                 </div>
             </div>
 
@@ -2786,33 +2816,34 @@
 {{-- BULK DELETE MODAL                          --}}
 {{-- ========================================== --}}
 <div id="bulkDeleteModal" class="fixed inset-0 z-[60] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeBulkDeleteModal()"></div>
-    <div class="bg-white dark:bg-[#141f33] border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-2xl w-full max-w-md relative z-10 transform scale-95 transition-transform duration-300">
-        <div class="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeBulkDeleteModal()"></div>
+    <div class="bg-white border border-slate-200 rounded-[2rem] shadow-2xl w-full max-w-md relative z-10 transform scale-95 transition-transform duration-300">
+        <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
             <div>
-                <h3 class="text-xl font-black text-slate-800 dark:text-white uppercase tracking-tight italic">Bulk Delete</h3>
+                <h3 class="text-xl font-black text-slate-800 uppercase tracking-tight italic">Bulk Delete</h3>
                 <p class="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-1">Warning: Permanent Action</p>
             </div>
-            <div class="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                <button onclick="setDeleteMode('rows')" id="btnDelRows" class="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg bg-white dark:bg-slate-700 shadow-sm text-slate-800 dark:text-white transition-all">Rows</button>
-                <button onclick="setDeleteMode('pages')" id="btnDelPages" class="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg text-slate-400 transition-all">Pages</button>
+            <div class="flex p-1 bg-slate-100 rounded-xl">
+                <button onclick="setDeleteMode('rows')" id="btnDelRows" class="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg bg-white shadow-sm text-slate-800 transition-all">Rows</button>
+                <button onclick="setDeleteMode('pages')" id="btnDelPages" class="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg text-slate-900 transition-all">Pages</button>
             </div>
         </div>
-        <div class="p-8 space-y-6">
+        <div class="p-8 space-y-6 bg-white">
             <div class="grid grid-cols-2 gap-4">
                 <div class="space-y-2">
-                    <label id="lblDelFrom" class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">From Row</label>
-                    <input type="number" id="deleteFromRow" min="1" class="w-full px-4 py-3 bg-slate-50 dark:bg-[#0a101d] border border-slate-200 dark:border-slate-800 rounded-xl font-black text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-red-100 transition-all text-center" placeholder="1">
+                    <label id="lblDelFrom" class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1">From Row</label>
+                    <input type="number" id="deleteFromRow" min="1" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-black text-slate-800 outline-none focus:ring-2 focus:ring-red-100 transition-all text-center" placeholder="1">
                 </div>
                 <div class="space-y-2">
-                    <label id="lblDelTo" class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">To Row</label>
-                    <input type="number" id="deleteToRow" min="1" class="w-full px-4 py-3 bg-slate-50 dark:bg-[#0a101d] border border-slate-200 dark:border-slate-800 rounded-xl font-black text-slate-800 dark:text-white outline-none focus:ring-2 focus:ring-red-100 transition-all text-center" placeholder="10">
+                    <label id="lblDelTo" class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1">To Row</label>
+                    <input type="number" id="deleteToRow" min="1" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-black text-slate-800 outline-none focus:ring-2 focus:ring-red-100 transition-all text-center" placeholder="10">
                 </div>
             </div>
             <div class="flex gap-3 pt-2">
-                <button onclick="closeBulkDeleteModal()" class="flex-1 py-4 rounded-2xl font-black text-sm border-2 border-slate-200 text-slate-500 hover:border-slate-300 hover:bg-slate-50 transition-all">Cancel</button>
+                <button onclick="closeBulkDeleteModal()" class="flex-1 py-4 rounded-2xl font-black text-sm border-2 border-slate-200 text-slate-900 hover:border-slate-300 hover:bg-slate-50 transition-all">Cancel</button>
                 <button onclick="confirmBulkDelete()" class="flex-1 py-4 rounded-2xl font-black text-sm bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-100 transition-all">Delete Range</button>
             </div>
+
         </div>
     </div>
 </div>
