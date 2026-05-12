@@ -126,7 +126,7 @@ class BuildingImportController extends Controller
         }
 
         if (!empty($buildingProps)) {
-            $existingInDbB = array_flip(DB::table('buildings')
+            $existingInDbB = array_flip(DB::table('building_records')
                 ->whereIn('property_number', $buildingProps)
                 ->pluck('property_number')
                 ->all());
@@ -206,7 +206,7 @@ class BuildingImportController extends Controller
             foreach ($allGroups['buildings'] ?? [] as $row) {
                 if (!empty($row['property_number'])) $allBProps[] = trim($row['property_number']);
             }
-            $inDbB = !empty($allBProps) ? array_flip(DB::table('buildings')->whereIn('property_number', $allBProps)->pluck('property_number')->all()) : [];
+            $inDbB = !empty($allBProps) ? array_flip(DB::table('building_records')->whereIn('property_number', $allBProps)->pluck('property_number')->all()) : [];
 
             foreach ($allGroups['buildings'] ?? [] as $row) {
                 $pn = trim($row['property_number'] ?? '');
@@ -298,7 +298,7 @@ class BuildingImportController extends Controller
         }
 
         $existingBuildingProps = !empty($buildingProps)
-            ? array_flip(DB::table('buildings')->whereIn('property_number', $buildingProps)->pluck('property_number')->all())
+            ? array_flip(DB::table('building_records')->whereIn('property_number', $buildingProps)->pluck('property_number')->all())
             : [];
 
         $existingAssetProps = !empty($assetProps)
@@ -333,7 +333,7 @@ class BuildingImportController extends Controller
                 }
 
                 if (!empty($buildingPropsToOverwrite)) {
-                    DB::table('buildings')->whereIn('property_number', $buildingPropsToOverwrite)->delete();
+                    DB::table('building_records')->whereIn('property_number', $buildingPropsToOverwrite)->delete();
                 }
 
                 // Since we deleted them, we don't consider them 'existing' anymore for skipping
@@ -352,21 +352,41 @@ class BuildingImportController extends Controller
                     if ($school) $schoolId = $school->id;
                 }
 
-                DB::table('buildings')->insert([
+                // Taxonomy lookup
+                $classStr = trim($row['classification'] ?: 'Unclassified');
+                $classRec = DB::table('building_classifications')->where('name', $classStr)->first();
+                $classId = $classRec ? $classRec->id : DB::table('building_classifications')->insertGetId(['name' => $classStr, 'created_at' => now(), 'updated_at' => now()]);
+
+                $typeStr = trim($row['article'] ?: 'Building');
+                $typeRec = DB::table('building_types')->where('building_classification_id', $classId)->where('name', $typeStr)->first();
+                $typeId = $typeRec ? $typeRec->id : DB::table('building_types')->insertGetId(['building_classification_id' => $classId, 'name' => $typeStr, 'created_at' => now(), 'updated_at' => now()]);
+
+                $descStr = trim($row['description'] ?: '');
+                $st = $row['storeys'];
+                $cr = $row['classrooms'];
+                
+                $specQuery = DB::table('building_specs')->where('building_type_id', $typeId)->where('description', $descStr);
+                if ($st !== null) $specQuery->where('storeys', $st); else $specQuery->whereNull('storeys');
+                if ($cr !== null) $specQuery->where('classrooms', $cr); else $specQuery->whereNull('classrooms');
+                $specRec = $specQuery->first();
+                
+                $specId = $specRec ? $specRec->id : DB::table('building_specs')->insertGetId([
+                    'building_type_id' => $typeId,
+                    'description' => $descStr ?: null,
+                    'storeys' => $st,
+                    'classrooms' => $cr,
+                    'created_at' => now(), 'updated_at' => now()
+                ]);
+
+                DB::table('building_records')->insert([
                     'school_id'         => $schoolId,
+                    'building_spec_id'  => $specId,
                     'region'            => $row['region'] ?: 'REGION IX',
                     'division'          => $row['division'] ?: 'Division of Zamboanga City',
                     'office_type'       => $row['office_type'] ?: null,
-                    'school_identifier' => $row['school_identifier'] ?: null,
-                    'office_name'       => $row['office_name'] ?: null,
                     'address'           => $row['address'] ?: null,
-                    'storeys'           => $row['storeys'],
-                    'classrooms'        => $row['classrooms'],
-                    'article'           => $row['article'] ?: null,
-                    'description'       => $row['description'] ?: null,
-                    'classification'    => $row['classification'] ?: null,
-                    'occupancy_nature'  => $row['occupancy_nature'] ?: null,
                     'location'          => $row['location'] ?: null,
+                    'occupancy_nature'  => $row['occupancy_nature'] ?: null,
                     'date_constructed'  => $row['date_constructed'],
                     'acquisition_date'  => $row['acquisition_date'],
                     'property_number'   => $propNo,

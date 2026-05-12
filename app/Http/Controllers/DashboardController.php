@@ -17,7 +17,7 @@ class DashboardController extends Controller
 
         // 1. Total Assets Pool (Inventory Base)
         $itemPool = DB::table('asset_sources')->sum('quantity');
-        $buildingPool = DB::table('buildings')->count();
+        $buildingPool = DB::table('building_records')->count();
         $totalAssets = $itemPool + $buildingPool;
 
         // 2. Distributed Assets (What is currently in schools/offices)
@@ -29,7 +29,7 @@ class DashboardController extends Controller
 
         // 3. Total Asset Value
         $itemsValue = DB::table('asset_sources')->sum(DB::raw('quantity * asset_cost'));
-        $buildingsValue = DB::table('buildings')->sum('acquisition_cost');
+        $buildingsValue = DB::table('building_records')->sum('acquisition_cost');
         $totalAmount = $itemsValue + $buildingsValue;
 
         // 4. Asset Source Portfolio (Dynamic Acquisition Sources)
@@ -73,8 +73,8 @@ class DashboardController extends Controller
                     )
                     ->first();
 
-                $bldgData = DB::table('buildings as b')
-                    ->join('schools', DB::raw('CAST(b.school_id AS CHAR)'), '=', 'schools.school_id')
+                $bldgData = DB::table('building_records as b')
+                    ->join('schools', 'b.school_id', '=', 'schools.id')
                     ->join('districts', 'schools.district_id', '=', 'districts.id')
                     ->where('districts.quadrant_id', $itemId)
                     ->select(
@@ -179,12 +179,12 @@ class DashboardController extends Controller
 
     private function calculateGrowthData($mode, $value)
     {
-        $minBldgYear = DB::table('buildings')->whereNotNull('acquisition_date')->min(DB::raw('YEAR(acquisition_date)'));
+        $minBldgYear = DB::table('building_records')->whereNotNull('acquisition_date')->min(DB::raw('YEAR(acquisition_date)'));
         $minAssetYear = DB::table('asset_distributions')->whereNotNull('acquisition_date')->min(DB::raw('YEAR(acquisition_date)'));
         $earliestYear = min($minBldgYear ?? date('Y'), $minAssetYear ?? date('Y'));
         $currentYear = date('Y');
 
-        $bldgs = DB::table('buildings')->select('acquisition_cost', 'acquisition_date')->whereNotNull('acquisition_date')->get();
+        $bldgs = DB::table('building_records')->select('acquisition_cost', 'acquisition_date')->whereNotNull('acquisition_date')->get();
         $assets = DB::table('asset_distributions as ad')
             ->join('asset_sources as as', 'ad.asset_source_id', '=', 'as.id')
             ->select('ad.acquisition_cost', 'ad.acquisition_date', 'as.asset_cost')

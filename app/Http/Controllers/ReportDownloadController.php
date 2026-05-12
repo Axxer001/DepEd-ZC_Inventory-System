@@ -375,22 +375,36 @@ class ReportDownloadController extends Controller
             $filters = json_decode($filters, true) ?: [];
         }
 
-        $query = DB::table('buildings');
+        $query = DB::table('building_records')
+            ->leftJoin('schools', 'building_records.school_id', '=', 'schools.id')
+            ->leftJoin('building_specs', 'building_records.building_spec_id', '=', 'building_specs.id')
+            ->leftJoin('building_types', 'building_specs.building_type_id', '=', 'building_types.id')
+            ->leftJoin('building_classifications', 'building_types.building_classification_id', '=', 'building_classifications.id')
+            ->select(
+                'building_records.*',
+                'schools.school_id as school_identifier',
+                'schools.name as office_name',
+                'building_specs.storeys',
+                'building_specs.classrooms',
+                'building_specs.description',
+                'building_types.name as article',
+                'building_classifications.name as classification'
+            );
 
         if (!empty($filters['classification'])) {
-            $query->where('classification', $filters['classification']);
+            $query->where('building_classifications.name', $filters['classification']);
         }
         if (!empty($filters['officeType'])) {
-            $query->where('office_type', $filters['officeType']);
+            $query->where('building_records.office_type', $filters['officeType']);
         }
         if (!empty($filters['schoolName'])) {
-            $query->where('office_name', $filters['schoolName']);
+            $query->where('schools.name', $filters['schoolName']);
         }
         if (!empty($filters['location'])) {
-            $query->where('location', $filters['location']);
+            $query->where('building_records.location', $filters['location']);
         }
         if (!empty($filters['dateAcquired'])) {
-            $query->whereDate('acquisition_date', $filters['dateAcquired']);
+            $query->whereDate('building_records.acquisition_date', $filters['dateAcquired']);
         }
 
         // Data Integrity: Empty Column check
@@ -406,11 +420,11 @@ class ReportDownloadController extends Controller
                 'school_identifier' => 'school_identifier',
                 'office_name' => 'office_name',
                 'address' => 'address',
-                'storeys' => 'storeys',
-                'classrooms' => 'classrooms',
-                'article' => 'article',
-                'description' => 'description',
-                'classification' => 'classification',
+                'storeys' => 'building_specs.storeys',
+                'classrooms' => 'building_specs.classrooms',
+                'article' => 'building_types.name',
+                'description' => 'building_specs.description',
+                'classification' => 'building_classifications.name',
                 'occupancy_nature' => 'occupancy_nature',
                 'location' => 'location',
                 'date_constructed' => 'date_constructed',
@@ -460,14 +474,18 @@ class ReportDownloadController extends Controller
 
     public function getBuildingsFilterOptions(Request $request)
     {
-        $baseQuery = DB::table('buildings');
+        $baseQuery = DB::table('building_records')
+            ->leftJoin('schools', 'building_records.school_id', '=', 'schools.id')
+            ->leftJoin('building_specs', 'building_records.building_spec_id', '=', 'building_specs.id')
+            ->leftJoin('building_types', 'building_specs.building_type_id', '=', 'building_types.id')
+            ->leftJoin('building_classifications', 'building_types.building_classification_id', '=', 'building_classifications.id');
 
-        $classifications = (clone $baseQuery)->whereNotNull('classification')->where('classification', '!=', '')->pluck('classification')->unique()->sort()->values();
-        $office_types    = (clone $baseQuery)->whereNotNull('office_type')->where('office_type', '!=', '')->pluck('office_type')->unique()->sort()->values();
-        $schools         = (clone $baseQuery)->whereNotNull('office_name')->where('office_name', '!=', '')->pluck('office_name')->unique()->sort()->values();
-        $articles        = (clone $baseQuery)->whereNotNull('article')->where('article', '!=', '')->pluck('article')->unique()->sort()->values();
-        $occupancies     = (clone $baseQuery)->whereNotNull('occupancy_nature')->where('occupancy_nature', '!=', '')->pluck('occupancy_nature')->unique()->sort()->values();
-        $locations       = (clone $baseQuery)->whereNotNull('location')->where('location', '!=', '')->pluck('location')->unique()->sort()->values();
+        $classifications = (clone $baseQuery)->whereNotNull('building_classifications.name')->where('building_classifications.name', '!=', '')->pluck('building_classifications.name')->unique()->sort()->values();
+        $office_types    = (clone $baseQuery)->whereNotNull('building_records.office_type')->where('building_records.office_type', '!=', '')->pluck('building_records.office_type')->unique()->sort()->values();
+        $schools         = (clone $baseQuery)->whereNotNull('schools.name')->where('schools.name', '!=', '')->pluck('schools.name')->unique()->sort()->values();
+        $articles        = (clone $baseQuery)->whereNotNull('building_types.name')->where('building_types.name', '!=', '')->pluck('building_types.name')->unique()->sort()->values();
+        $occupancies     = (clone $baseQuery)->whereNotNull('building_records.occupancy_nature')->where('building_records.occupancy_nature', '!=', '')->pluck('building_records.occupancy_nature')->unique()->sort()->values();
+        $locations       = (clone $baseQuery)->whereNotNull('building_records.location')->where('building_records.location', '!=', '')->pluck('building_records.location')->unique()->sort()->values();
 
         return response()->json([
             'classifications' => $classifications,
@@ -498,11 +516,8 @@ class ReportDownloadController extends Controller
                 'quadrants.name as quadrant_name'
             )
             ->addSelect([
-                'total_bldg_cost' => DB::table('buildings')
-                    ->where(function($q) {
-                        $q->whereColumn('office_name', 'schools.name')
-                          ->orWhereColumn('school_id', 'schools.school_id');
-                    })
+                'total_bldg_cost' => DB::table('building_records')
+                    ->whereColumn('school_id', 'schools.id')
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
                 'total_ppe_cost' => DB::table('asset_distributions')
                     ->where(function($q) {

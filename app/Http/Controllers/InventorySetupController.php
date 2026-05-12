@@ -289,21 +289,39 @@ class InventorySetupController extends Controller
                 $estimatedUsefulLife = !empty($row['estimated_useful_life']) ? (int)$row['estimated_useful_life'] : 25;
                 $appraisedValue  = !empty($row['appraised_value']) ? (float)str_replace(',', '', $row['appraised_value']) : null;
 
-                DB::table('buildings')->insert([
+                // Taxonomy lookup
+                $classStr = trim($row['classification'] ?? 'Unclassified');
+                $classRec = DB::table('building_classifications')->where('name', $classStr)->first();
+                $classId = $classRec ? $classRec->id : DB::table('building_classifications')->insertGetId(['name' => $classStr, 'created_at' => now(), 'updated_at' => now()]);
+
+                $typeStr = trim($row['article'] ?? 'Building');
+                $typeRec = DB::table('building_types')->where('building_classification_id', $classId)->where('name', $typeStr)->first();
+                $typeId = $typeRec ? $typeRec->id : DB::table('building_types')->insertGetId(['building_classification_id' => $classId, 'name' => $typeStr, 'created_at' => now(), 'updated_at' => now()]);
+
+                $descStr = trim($row['description'] ?? '');
+                
+                $specQuery = DB::table('building_specs')->where('building_type_id', $typeId)->where('description', $descStr);
+                if ($storeys !== null) $specQuery->where('storeys', $storeys); else $specQuery->whereNull('storeys');
+                if ($classrooms !== null) $specQuery->where('classrooms', $classrooms); else $specQuery->whereNull('classrooms');
+                $specRec = $specQuery->first();
+                
+                $specId = $specRec ? $specRec->id : DB::table('building_specs')->insertGetId([
+                    'building_type_id' => $typeId,
+                    'description' => $descStr ?: null,
+                    'storeys' => $storeys,
+                    'classrooms' => $classrooms,
+                    'created_at' => now(), 'updated_at' => now()
+                ]);
+
+                DB::table('building_records')->insert([
                     'school_id'         => $schoolId,
+                    'building_spec_id'  => $specId,
                     'region'            => trim($row['region'] ?? 'REGION IX'),
                     'division'          => trim($row['division'] ?? 'Division of Zamboanga City'),
                     'office_type'       => trim($row['office_type'] ?? '') ?: null,
-                    'school_identifier' => $schoolIdentifier ?: null,
-                    'office_name'       => $officeName,
                     'address'           => trim($row['address'] ?? '') ?: null,
-                    'storeys'           => $storeys,
-                    'classrooms'        => $classrooms,
-                    'article'           => trim($row['article'] ?? '') ?: null,
-                    'description'       => trim($row['description'] ?? '') ?: null,
-                    'classification'    => trim($row['classification'] ?? '') ?: null,
-                    'occupancy_nature'  => trim($row['occupancy_nature'] ?? '') ?: null,
                     'location'          => trim($row['location'] ?? '') ?: null,
+                    'occupancy_nature'  => trim($row['occupancy_nature'] ?? '') ?: null,
                     'date_constructed'  => !empty($row['date_constructed']) ? $row['date_constructed'] : null,
                     'acquisition_date'  => !empty($row['acquisition_date']) ? $row['acquisition_date'] : null,
                     'property_number'   => trim($row['property_number'] ?? '') ?: null,
@@ -511,11 +529,17 @@ class InventorySetupController extends Controller
      */
     public function getBuildingEditFilters(Request $request)
     {
-        $classifications = DB::table('buildings')->whereNotNull('classification')->distinct()->orderBy('classification')->pluck('classification');
-        $office_types    = DB::table('buildings')->whereNotNull('office_type')->distinct()->orderBy('office_type')->pluck('office_type');
-        $articles        = DB::table('buildings')->whereNotNull('article')->distinct()->orderBy('article')->pluck('article');
-        $schools         = DB::table('buildings')->whereNotNull('office_name')->distinct()->orderBy('office_name')->pluck('office_name');
-        $occupancies     = DB::table('buildings')->whereNotNull('occupancy_nature')->distinct()->orderBy('occupancy_nature')->pluck('occupancy_nature');
+        $baseQuery = DB::table('building_records')
+            ->leftJoin('schools', 'building_records.school_id', '=', 'schools.id')
+            ->leftJoin('building_specs', 'building_records.building_spec_id', '=', 'building_specs.id')
+            ->leftJoin('building_types', 'building_specs.building_type_id', '=', 'building_types.id')
+            ->leftJoin('building_classifications', 'building_types.building_classification_id', '=', 'building_classifications.id');
+
+        $classifications = (clone $baseQuery)->whereNotNull('building_classifications.name')->distinct()->orderBy('building_classifications.name')->pluck('building_classifications.name');
+        $office_types    = (clone $baseQuery)->whereNotNull('building_records.office_type')->distinct()->orderBy('building_records.office_type')->pluck('building_records.office_type');
+        $articles        = (clone $baseQuery)->whereNotNull('building_types.name')->distinct()->orderBy('building_types.name')->pluck('building_types.name');
+        $schools         = (clone $baseQuery)->whereNotNull('schools.name')->distinct()->orderBy('schools.name')->pluck('schools.name');
+        $occupancies     = (clone $baseQuery)->whereNotNull('building_records.occupancy_nature')->distinct()->orderBy('building_records.occupancy_nature')->pluck('building_records.occupancy_nature');
 
         return response()->json(compact('classifications', 'office_types', 'articles', 'schools', 'occupancies'));
     }
@@ -527,24 +551,28 @@ class InventorySetupController extends Controller
     {
         $filters = $request->input('filters', []);
 
-        $q = DB::table('buildings');
+        $q = DB::table('building_records')
+            ->leftJoin('schools', 'building_records.school_id', '=', 'schools.id')
+            ->leftJoin('building_specs', 'building_records.building_spec_id', '=', 'building_specs.id')
+            ->leftJoin('building_types', 'building_specs.building_type_id', '=', 'building_types.id')
+            ->leftJoin('building_classifications', 'building_types.building_classification_id', '=', 'building_classifications.id');
 
-        if (!empty($filters['classification'])) $q->where('classification', $filters['classification']);
-        if (!empty($filters['office_type']))    $q->where('office_type', $filters['office_type']);
-        if (!empty($filters['article']))        $q->where('article', $filters['article']);
-        if (!empty($filters['school']))         $q->where('office_name', $filters['school']);
-        if (!empty($filters['occupancy']))      $q->where('occupancy_nature', $filters['occupancy']);
-        if (!empty($filters['date']))           $q->whereDate('date_constructed', $filters['date']);
+        if (!empty($filters['classification'])) $q->where('building_classifications.name', $filters['classification']);
+        if (!empty($filters['office_type']))    $q->where('building_records.office_type', $filters['office_type']);
+        if (!empty($filters['article']))        $q->where('building_types.name', $filters['article']);
+        if (!empty($filters['school']))         $q->where('schools.name', $filters['school']);
+        if (!empty($filters['occupancy']))      $q->where('building_records.occupancy_nature', $filters['occupancy']);
+        if (!empty($filters['date']))           $q->whereDate('building_records.date_constructed', $filters['date']);
 
         if (!empty($filters['emptyCol'])) {
             $colMap = [
-                'classification'   => 'classification',
-                'article'          => 'article',
-                'description'      => 'description',
-                'office_name'      => 'office_name',
-                'property_number'  => 'property_number',
-                'acquisition_cost' => 'acquisition_cost',
-                'date_constructed' => 'date_constructed',
+                'classification'   => 'building_classifications.name',
+                'article'          => 'building_types.name',
+                'description'      => 'building_specs.description',
+                'office_name'      => 'schools.name',
+                'property_number'  => 'building_records.property_number',
+                'acquisition_cost' => 'building_records.acquisition_cost',
+                'date_constructed' => 'building_records.date_constructed',
             ];
             if (isset($colMap[$filters['emptyCol']])) {
                 $q->where(function($sub) use ($colMap, $filters) {
@@ -554,17 +582,17 @@ class InventorySetupController extends Controller
         }
 
         if (!empty($filters['sortCost'])) {
-            $q->orderBy('acquisition_cost', $filters['sortCost'] === 'low_to_high' ? 'asc' : 'desc');
+            $q->orderBy('building_records.acquisition_cost', $filters['sortCost'] === 'low_to_high' ? 'asc' : 'desc');
         } else {
-            $q->orderBy('id', 'asc');
+            $q->orderBy('building_records.id', 'asc');
         }
 
         $rows = $q->select([
-            'id', 'school_id', 'region', 'division', 'office_type', 'school_identifier',
-            'office_name', 'address', 'storeys', 'classrooms', 'article', 'description',
-            'classification', 'occupancy_nature', 'location', 'date_constructed',
-            'acquisition_date', 'property_number', 'acquisition_cost',
-            'estimated_useful_life', 'remarks'
+            'building_records.id', 'building_records.school_id', 'building_records.region', 'building_records.division', 'building_records.office_type', 'schools.school_id as school_identifier',
+            'schools.name as office_name', 'building_records.address', 'building_specs.storeys', 'building_specs.classrooms', 'building_types.name as article', 'building_specs.description',
+            'building_classifications.name as classification', 'building_records.occupancy_nature', 'building_records.location', 'building_records.date_constructed',
+            'building_records.acquisition_date', 'building_records.property_number', 'building_records.acquisition_cost',
+            'building_records.estimated_useful_life', 'building_records.remarks'
         ])->get();
 
         return response()->json(['rows' => $rows]);
@@ -580,27 +608,67 @@ class InventorySetupController extends Controller
             return response()->json(['success' => false, 'message' => 'No updates provided.'], 422);
         }
 
-        $allowedCols = [
-            'office_type', 'school_id', 'office_name', 'address', 'storeys', 'classrooms',
-            'article', 'description', 'classification', 'occupancy_nature', 'location',
-            'date_constructed', 'acquisition_date', 'property_number', 'acquisition_cost',
-            'estimated_useful_life', 'remarks'
-        ];
-
         DB::beginTransaction();
         try {
             $count = 0;
             foreach ($updates as $update) {
                 $id = $update['id'] ?? null;
                 if (!$id) continue;
-                $data = array_filter(
-                    array_intersect_key($update, array_flip($allowedCols)),
-                    fn($v) => $v !== null
-                );
-                if (!empty($data)) {
-                    DB::table('buildings')->where('id', $id)->update($data);
-                    $count++;
+                
+                $record = DB::table('building_records')->where('id', $id)->first();
+                if (!$record) continue;
+
+                $specId = $record->building_spec_id;
+                $needsSpecUpdate = isset($update['classification']) || isset($update['article']) || isset($update['description']) || array_key_exists('storeys', $update) || array_key_exists('classrooms', $update);
+
+                if ($needsSpecUpdate) {
+                    $oldSpec = DB::table('building_specs')->where('id', $specId)->first();
+                    $oldType = $oldSpec ? DB::table('building_types')->where('id', $oldSpec->building_type_id)->first() : null;
+                    $oldClass = $oldType ? DB::table('building_classifications')->where('id', $oldType->building_classification_id)->first() : null;
+
+                    $classStr = trim($update['classification'] ?? ($oldClass->name ?? 'Unclassified'));
+                    $classRec = DB::table('building_classifications')->where('name', $classStr)->first();
+                    $classId = $classRec ? $classRec->id : DB::table('building_classifications')->insertGetId(['name' => $classStr, 'created_at' => now(), 'updated_at' => now()]);
+
+                    $typeStr = trim($update['article'] ?? ($oldType->name ?? 'Building'));
+                    $typeRec = DB::table('building_types')->where('building_classification_id', $classId)->where('name', $typeStr)->first();
+                    $typeId = $typeRec ? $typeRec->id : DB::table('building_types')->insertGetId(['building_classification_id' => $classId, 'name' => $typeStr, 'created_at' => now(), 'updated_at' => now()]);
+
+                    $descStr = trim($update['description'] ?? ($oldSpec->description ?? ''));
+                    $st = array_key_exists('storeys', $update) ? $update['storeys'] : ($oldSpec->storeys ?? null);
+                    $cr = array_key_exists('classrooms', $update) ? $update['classrooms'] : ($oldSpec->classrooms ?? null);
+
+                    $specQuery = DB::table('building_specs')->where('building_type_id', $typeId)->where('description', $descStr);
+                    if ($st !== null) $specQuery->where('storeys', $st); else $specQuery->whereNull('storeys');
+                    if ($cr !== null) $specQuery->where('classrooms', $cr); else $specQuery->whereNull('classrooms');
+                    $specRec = $specQuery->first();
+                    
+                    $specId = $specRec ? $specRec->id : DB::table('building_specs')->insertGetId([
+                        'building_type_id' => $typeId,
+                        'description' => $descStr ?: null,
+                        'storeys' => $st,
+                        'classrooms' => $cr,
+                        'created_at' => now(), 'updated_at' => now()
+                    ]);
                 }
+
+                $recordData = [];
+                if ($needsSpecUpdate) {
+                    $recordData['building_spec_id'] = $specId;
+                }
+
+                $directCols = ['office_type', 'school_id', 'address', 'region', 'division', 'location', 'occupancy_nature', 'date_constructed', 'acquisition_date', 'property_number', 'acquisition_cost', 'estimated_useful_life', 'remarks', 'appraised_value', 'appraisal_date'];
+                
+                foreach ($directCols as $col) {
+                    if (array_key_exists($col, $update)) {
+                        $recordData[$col] = $update[$col];
+                    }
+                }
+
+                if (!empty($recordData)) {
+                    DB::table('building_records')->where('id', $id)->update($recordData);
+                }
+                $count++;
             }
             DB::commit();
             return response()->json(['success' => true, 'message' => "Updated {$count} building(s) successfully."]);
