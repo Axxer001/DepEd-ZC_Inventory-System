@@ -180,9 +180,14 @@ class AssetController extends Controller
             ->orderBy('ad.created_at', 'desc')
             ->paginate(50, ['*'], 'dist_page');
 
+        $inventoryJson   = json_encode($this->buildInventoryData());
+        $categoriesJson  = json_encode($categories->values());
+        $quadrantsJson   = json_encode($quadrants->values());
+
         return view('assets.view-all', compact(
             'assetSources', 'assetDistributions',
-            'categories', 'quadrants', 'classifications'
+            'categories', 'quadrants', 'classifications',
+            'inventoryJson', 'categoriesJson', 'quadrantsJson'
         ));
     }
 

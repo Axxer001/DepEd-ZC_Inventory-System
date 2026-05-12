@@ -73,56 +73,9 @@ Route::middleware('auth')->group(function () {
     })->name('inventory.setup');
 
 
-    // --- Schools Registry with Quadrant/LD Filters ---
-    Route::get('/admin/schools', function (Request $request) {
-        $search = $request->query('search');
-        $districtFilter = $request->query('districts');
-        $quadrantFilter = $request->query('quadrants');
-        
-        $query = DB::table('schools')
-            ->join('districts', 'schools.district_id', '=', 'districts.id')
-            ->join('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
-            ->select('schools.id', 'schools.school_id', 'schools.name', 'districts.name as district_name', 'quadrants.name as quadrant_name');
-
-        if (!empty($search)) {
-            $query->where(function($q) use ($search) {
-                $q->where('schools.school_id', 'LIKE', '%' . $search . '%')
-                  ->orWhere('schools.name', 'LIKE', '%' . $search . '%');
-            });
-        }
-
-        if (!empty($districtFilter)) {
-            $districtsArray = explode(',', $districtFilter);
-            if (count($districtsArray) > 0) {
-                $query->whereIn('districts.name', $districtsArray);
-            }
-        }
-
-        if (!empty($quadrantFilter)) {
-            $quadrantsArray = explode(',', $quadrantFilter);
-            if (count($quadrantsArray) > 0) {
-                $query->whereIn('quadrants.name', $quadrantsArray);
-            }
-        }
-
-        $schools = $query->orderBy('schools.name')->paginate(20);
-        $allSchools = DB::table('schools')->select('id', 'school_id', 'name')->orderBy('name')->get();
-        $allDistricts = DB::table('districts')->select('name')->orderBy('name')->pluck('name')->toArray();
-        $allQuadrants = DB::table('quadrants')->select('name')->orderBy('name')->pluck('name')->toArray();
-        
-        $districtQuadrantMapping = DB::table('districts')
-            ->join('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
-            ->select('districts.name as district', 'quadrants.name as quadrant')
-            ->get();
-
-        $legislativeDistricts = DB::table('legislative_districts')->get();
-        $quadrantsByLD = DB::table('quadrants')
-            ->join('legislative_districts', 'quadrants.legislative_district_id', '=', 'legislative_districts.id')
-            ->select('quadrants.name', 'legislative_districts.name as ld_name', 'legislative_districts.id as ld_id')
-            ->get()
-            ->groupBy('ld_name');
-
-        return view('admin.schools', compact('schools', 'search', 'allSchools', 'allDistricts', 'allQuadrants', 'districtQuadrantMapping', 'legislativeDistricts', 'quadrantsByLD'));
+    // --- Schools Registry ---
+    Route::get('/admin/schools', function () {
+        return view('admin.schools');
     })->name('admin.schools');
 
     Route::delete('/admin/schools/{id}', function ($id) {
@@ -190,6 +143,19 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/reports/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getPreview'])->name('api.reports.preview');
     Route::get('/api/reports/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getFilterOptions'])->name('api.reports.filters');
     Route::post('/reports/download-rpc', [\App\Http\Controllers\ReportDownloadController::class, 'download'])->name('assets.reports.download_rpc');
+
+    // --- Inventory Management (Edit) ---
+    Route::post('/api/inventory/edit-preview', [\App\Http\Controllers\ReportDownloadController::class, 'getEditPreview'])->name('api.inventory.edit_preview');
+    Route::post('/inventory-setup/edit-batch', [\App\Http\Controllers\InventorySetupController::class, 'updateBatch'])->name('inventory.setup.updateBatch');
+
+
+    // --- Building Management (View) ---
+    Route::post('/api/buildings/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getBuildingsPreview'])->name('api.buildings.preview');
+    Route::get('/api/buildings/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getBuildingsFilterOptions'])->name('api.buildings.filters');
+
+    // --- School Management (View) ---
+    Route::post('/api/schools/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getSchoolsPreview'])->name('api.schools.preview');
+    Route::get('/api/schools/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getSchoolsFilterOptions'])->name('api.schools.filters');
 
     // --- Building PIF Import ---
     Route::get('/buildings/import', [BuildingImportController::class, 'show'])->name('buildings.import');

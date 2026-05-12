@@ -26,7 +26,7 @@
 
 {{-- Sidebar --}}
 <aside id="sidebar"
-       class="fixed inset-y-0 left-0 z-50 bg-white border-r-1 border-[#c00000] flex flex-col h-screen overflow-y-auto overflow-x-hidden -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out group/sidebar"
+       class="fixed inset-y-0 left-0 z-[100] bg-white border-r-1 border-[#c00000] flex flex-col h-screen overflow-y-auto overflow-x-hidden -translate-x-full lg:translate-x-0 transition-all duration-300 ease-in-out group/sidebar"
        style="width: 80px;"
        onmouseenter="expandSidebar()" onmouseleave="collapseSidebar()">
 
@@ -109,19 +109,6 @@
 </div>
 
 
-{{-- Stakeholders Registry --}}
-<div class="relative group/navitem mt-2">
-    <a href="{{ route('recipients.index') }}" 
-       class="flex items-center gap-4 px-4 py-3 {{ request()->routeIs('recipients.*') ? 'bg-purple-50 text-purple-700 border-purple-100' : 'text-slate-500 hover:bg-slate-50 hover:text-[#c00000]' }} rounded-2xl font-bold border border-transparent transition-all" title="Stakeholders">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-        </svg>
-        <span class="sidebar-label hidden whitespace-nowrap text-sm">Stakeholders</span>
-    </a>
-    @if(request()->routeIs('recipients.*'))
-        <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-[#c00000] rounded-r-full shadow-[1px_0_10px_rgba(192,0,0,0.3)]"></div>
-    @endif
-</div>
 
 
 {{-- View Assets --}}
@@ -136,7 +123,7 @@
         <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-8 bg-[#c00000] rounded-r-full shadow-[2px_0_8px_rgba(192,0,0,0.3)]"></div>
     @else
         <a href="{{ route('assets.view') }}" class="flex items-center gap-4 px-4 py-3 text-slate-500 hover:bg-slate-50 hover:text-[#c00000] rounded-2xl font-bold transition-all" title="View Assets">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:scale-110 text-slate-400 group-hover/navitem:text-[#c00000]">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:scale-110">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 7.5l-9-5.25L3 7.5m18 0l-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" />
             </svg>
             {{-- Tinanggal ang lg:block dito rin --}}
