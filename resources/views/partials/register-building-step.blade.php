@@ -125,6 +125,125 @@
     </div>
 </div>
 
+{{-- ========================================== --}}
+{{-- BLDG BULK ADD MODAL                        --}}
+{{-- ========================================== --}}
+<div id="bldgBulkAddModal" class="fixed inset-0 z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeBldgBulkAddModal()"></div>
+    <div class="bg-white border border-slate-200 rounded-[2rem] shadow-2xl w-[90vw] max-w-5xl max-h-[90vh] flex flex-col relative z-10 transform scale-95 transition-transform duration-300">
+        
+        {{-- Header --}}
+        <div class="px-8 py-5 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h3 class="text-2xl font-black text-slate-800 uppercase tracking-tight italic">Bulk Add Rows</h3>
+                <p class="text-xs font-bold text-slate-900 uppercase tracking-widest mt-1">Pre-fill data across multiple new rows</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-200">
+                    <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest">Rows to add</label>
+                    <input type="number" id="bldgBulkCount" value="1" min="1" max="500" class="w-16 bg-transparent text-center font-black text-slate-800 outline-none">
+                </div>
+                <button onclick="closeBldgBulkAddModal()" class="px-5 py-3 rounded-xl text-sm font-bold text-slate-900 hover:bg-slate-100 transition-all">Cancel</button>
+                <button onclick="confirmBldgBulkAdd()" class="px-6 py-3 rounded-xl text-sm font-black text-white bg-[#c00000] hover:bg-red-700 shadow-lg shadow-red-500/30 transition-all">Confirm Bulk Add</button>
+            </div>
+        </div>
+
+        {{-- Body --}}
+        <div class="p-8 overflow-y-auto custom-scroll flex-1 space-y-10 bg-white">
+            
+            {{-- Building Identity --}}
+            <div>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-6 h-6 bg-amber-500/10 text-amber-600 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0">1</div>
+                    <h4 class="font-black text-slate-800 uppercase tracking-widest text-xs">Building Identity</h4>
+                </div>
+                <div class="grid grid-cols-2 gap-x-6 gap-y-5">
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Region</label>
+                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Region IX</div>
+                    </div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Division</label>
+                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Division of Zamboanga City</div>
+                    </div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Type</label><input type="text" id="bldgBulkType" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select" list="dl-bldg-type"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">School ID</label><input type="text" id="bldgBulkSchoolId" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select" list="dl-bldg-school-id"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label><input type="text" id="bldgBulkSchoolName" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select" list="dl-bldg-school-name"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Address</label><input type="text" id="bldgBulkAddress" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Leave empty to ignore"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Storeys</label><input type="number" id="bldgBulkStoreys" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50 text-right" placeholder="0" min="0" step="1"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Classrooms</label><input type="number" id="bldgBulkClassrooms" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50 text-right" placeholder="0" min="0" step="1"></div>
+                </div>
+            </div>
+
+            <div class="border-t border-slate-100"></div>
+
+            {{-- Building Details --}}
+            <div>
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-6 h-6 bg-amber-500/10 text-amber-600 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0">2</div>
+                    <h4 class="font-black text-slate-800 uppercase tracking-widest text-xs">Building Details</h4>
+                </div>
+                <div class="grid grid-cols-2 gap-x-6 gap-y-5">
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Article</label><input type="text" id="bldgBulkArticle" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Leave empty to ignore"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Description</label><input type="text" id="bldgBulkDescription" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Leave empty to ignore"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Classification</label><input type="text" id="bldgBulkClass" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select" list="dl-bldg-class"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Nature of Occupancy</label><input type="text" id="bldgBulkOccupancy" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select" list="dl-bldg-occupancy"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Location</label><input type="text" id="bldgBulkLocation" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select" list="dl-bldg-school-name"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Property Number</label><input type="text" id="bldgBulkPropertyNo" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Leave empty to ignore"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Date Constructed</label><input type="date" id="bldgBulkDateConstructed" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label><input type="date" id="bldgBulkAcqDate" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Cost (₱)</label><input type="number" id="bldgBulkAcqCost" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50 text-right" placeholder="0.00" min="0" step="0.01"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Expected Useful Life</label><input type="number" id="bldgBulkLife" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50 text-right" placeholder="25" min="0" step="1"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Appraised Value (₱)</label><input type="number" id="bldgBulkAppraisedVal" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50 text-right" placeholder="0.00" min="0" step="0.01"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Appraisal Date</label><input type="date" id="bldgBulkAppraisalDate" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50"></div>
+                    <div class="relative col-span-2">
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Remarks</label>
+                        <select id="bldgBulkRemarks" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50">
+                            <option value="">-- Ignore --</option>
+                            <option value="Good Condition">Good Condition</option>
+                            <option value="Needs Repair">Needs Repair</option>
+                            <option value="Not Useable">Not Useable</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ========================================== --}}
+{{-- BLDG BULK DELETE MODAL                     --}}
+{{-- ========================================== --}}
+<div id="bldgBulkDeleteModal" class="fixed inset-0 z-[60] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeBldgBulkDeleteModal()"></div>
+    <div class="bg-white border border-slate-200 rounded-[2rem] shadow-2xl w-full max-w-md relative z-10 transform scale-95 transition-transform duration-300">
+        <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+            <div>
+                <h3 class="text-xl font-black text-slate-800 uppercase tracking-tight italic">Bulk Delete</h3>
+                <p class="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-1">Warning: Permanent Action</p>
+            </div>
+            <div class="flex p-1 bg-slate-100 rounded-xl">
+                <button onclick="setBldgDeleteMode('rows')" id="btnBldgDelRows" class="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg bg-white shadow-sm text-slate-800 transition-all">Rows</button>
+                <button onclick="setBldgDeleteMode('pages')" id="btnBldgDelPages" class="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg text-slate-900 transition-all">Pages</button>
+            </div>
+        </div>
+        <div class="p-8 space-y-6 bg-white">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label id="lblBldgDelFrom" class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1">From Row</label>
+                    <input type="number" id="bldgDeleteFromRow" min="1" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-black text-slate-800 outline-none focus:ring-2 focus:ring-red-100 transition-all text-center" placeholder="1">
+                </div>
+                <div class="space-y-2">
+                    <label id="lblBldgDelTo" class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1">To Row</label>
+                    <input type="number" id="bldgDeleteToRow" min="1" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-black text-slate-800 outline-none focus:ring-2 focus:ring-red-100 transition-all text-center" placeholder="10">
+                </div>
+            </div>
+            <div class="flex gap-3 pt-2">
+                <button onclick="closeBldgBulkDeleteModal()" class="flex-1 py-4 rounded-2xl font-black text-sm border-2 border-slate-200 text-slate-900 hover:border-slate-300 hover:bg-slate-50 transition-all">Cancel</button>
+                <button onclick="confirmBldgBulkDelete()" class="flex-1 py-4 rounded-2xl font-black text-sm bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-100 transition-all">Delete Range</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // ── Add Building State ──
 let bldgEntryRows = [];
@@ -172,7 +291,40 @@ function deleteBldgRow(id) {
 
 function syncBldgRow(id, col, val) {
     const row = bldgEntryRows.find(r => r._id === id);
-    if (row) row[col] = val;
+    if (row) {
+        row[col] = val;
+
+        // --- Auto-fill logic for School ID <-> School Name <-> Location ---
+        if (col === 'school_identifier') {
+            const school = (typeof allSchoolsList !== 'undefined') ? allSchoolsList.find(s => String(s.school_id) === String(val)) : null;
+            if (school) {
+                row['office_name'] = school.name;
+                if (typeof cleanSchoolNameForLocation === 'function') row['location'] = cleanSchoolNameForLocation(school.name);
+                
+                // Update UI if on current page
+                const nameInp = document.querySelector(`#bldg-row-${id} input[data-bldg-col="office_name"]`);
+                const locInp = document.querySelector(`#bldg-row-${id} input[data-bldg-col="location"]`);
+                if (nameInp) nameInp.value = row['office_name'];
+                if (locInp) locInp.value = row['location'];
+            }
+        } else if (col === 'office_name') {
+            const school = (typeof allSchoolsList !== 'undefined') ? allSchoolsList.find(s => s.name.toLowerCase() === val.toLowerCase()) : null;
+            if (school) {
+                row['school_identifier'] = school.school_id;
+                if (typeof cleanSchoolNameForLocation === 'function') row['location'] = cleanSchoolNameForLocation(school.name);
+                
+                // Update UI if on current page
+                const idInp = document.querySelector(`#bldg-row-${id} input[data-bldg-col="school_identifier"]`);
+                const locInp = document.querySelector(`#bldg-row-${id} input[data-bldg-col="location"]`);
+                if (idInp) idInp.value = row['school_identifier'];
+                if (locInp) locInp.value = row['location'];
+            } else if (val.trim() !== "") {
+                if (typeof cleanSchoolNameForLocation === 'function') row['location'] = cleanSchoolNameForLocation(val);
+                const locInp = document.querySelector(`#bldg-row-${id} input[data-bldg-col="location"]`);
+                if (locInp) locInp.value = row['location'];
+            }
+        }
+    }
 }
 
 function renderBldgEntryTable() {
@@ -262,38 +414,163 @@ function escBldg(v) { return String(v ?? '').replace(/"/g, '&quot;'); }
 function bldgEntryPrev() { if (bldgEntryPage > 1) { bldgEntryPage--; renderBldgEntryTable(); } }
 function bldgEntryNext() { const t = Math.ceil(bldgEntryRows.length / BLDG_RPP); if (bldgEntryPage < t) { bldgEntryPage++; renderBldgEntryTable(); } }
 
-// Bulk Add modal
+// Bulk Add modal logic
 function bldgBulkAdd() {
-    Swal.fire({
-        title: 'Bulk Add Rows',
-        html: `<label class="text-xs font-bold text-slate-600 block mb-2">Number of rows to add:</label>
-               <input id="bldgBulkCount" type="number" min="1" max="500" value="10"
-                 class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-red-100 focus:border-red-500 outline-none">`,
-        confirmButtonText: 'Add Rows',
-        confirmButtonColor: '#c00000',
-        showCancelButton: true,
-        customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' },
-        preConfirm: () => {
-            const n = parseInt(document.getElementById('bldgBulkCount').value);
-            if (!n || n < 1) { Swal.showValidationMessage('Enter a valid number'); return false; }
-            return n;
-        }
-    }).then(r => { if (r.isConfirmed) { for (let i = 0; i < r.value; i++) addBldgRow(); } });
+    const m = document.getElementById('bldgBulkAddModal');
+    m.classList.remove('hidden');
+    // small delay for transition
+    setTimeout(() => {
+        m.classList.remove('opacity-0');
+        m.children[1].classList.remove('scale-95');
+        m.children[1].classList.add('scale-100');
+    }, 10);
+    document.getElementById('bldgBulkCount').value = 1;
 }
 
-// Bulk delete
+function closeBldgBulkAddModal() {
+    const m = document.getElementById('bldgBulkAddModal');
+    m.classList.add('opacity-0');
+    m.children[1].classList.remove('scale-100');
+    m.children[1].classList.add('scale-95');
+    setTimeout(() => m.classList.add('hidden'), 300);
+}
+
+function confirmBldgBulkAdd() {
+    const n = parseInt(document.getElementById('bldgBulkCount').value);
+    if (!n || n < 1) {
+        Swal.fire({title:'Error', text:'Please enter a valid number of rows', icon:'error', customClass:{popup:'rounded-[2rem]'}});
+        return;
+    }
+    
+    const defaults = {
+        office_type: document.getElementById('bldgBulkType').value,
+        school_identifier: document.getElementById('bldgBulkSchoolId').value,
+        office_name: document.getElementById('bldgBulkSchoolName').value,
+        address: document.getElementById('bldgBulkAddress').value,
+        storeys: document.getElementById('bldgBulkStoreys').value,
+        classrooms: document.getElementById('bldgBulkClassrooms').value,
+        article: document.getElementById('bldgBulkArticle').value,
+        description: document.getElementById('bldgBulkDescription').value,
+        classification: document.getElementById('bldgBulkClass').value,
+        occupancy_nature: document.getElementById('bldgBulkOccupancy').value,
+        location: document.getElementById('bldgBulkLocation').value,
+        property_number: document.getElementById('bldgBulkPropertyNo').value,
+        date_constructed: document.getElementById('bldgBulkDateConstructed').value,
+        acquisition_date: document.getElementById('bldgBulkAcqDate').value,
+        acquisition_cost: document.getElementById('bldgBulkAcqCost').value,
+        estimated_useful_life: document.getElementById('bldgBulkLife').value || '25',
+        appraised_value: document.getElementById('bldgBulkAppraisedVal').value,
+        appraisal_date: document.getElementById('bldgBulkAppraisalDate').value,
+        remarks: document.getElementById('bldgBulkRemarks').value,
+    };
+    
+    for (let i = 0; i < n; i++) {
+        addBldgRow(defaults);
+    }
+    closeBldgBulkAddModal();
+}
+
+// Bulk Delete modal logic
+let bldgDeleteMode = 'rows';
+function setBldgDeleteMode(mode) {
+    bldgDeleteMode = mode;
+    const btnRows = document.getElementById('btnBldgDelRows');
+    const btnPages = document.getElementById('btnBldgDelPages');
+    const lblFrom = document.getElementById('lblBldgDelFrom');
+    const lblTo = document.getElementById('lblBldgDelTo');
+    const inpFrom = document.getElementById('bldgDeleteFromRow');
+    const inpTo = document.getElementById('bldgDeleteToRow');
+
+    if(mode === 'rows') {
+        btnRows.className = 'px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg bg-white shadow-sm text-slate-800 transition-all';
+        btnPages.className = 'px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg text-slate-900 transition-all';
+        lblFrom.textContent = 'From Row';
+        lblTo.textContent = 'To Row';
+        inpFrom.placeholder = '1';
+        inpTo.placeholder = '10';
+        inpFrom.max = bldgEntryRows.length;
+        inpTo.max = bldgEntryRows.length;
+    } else {
+        btnPages.className = 'px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg bg-white shadow-sm text-slate-800 transition-all';
+        btnRows.className = 'px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg text-slate-900 transition-all';
+        lblFrom.textContent = 'From Page';
+        lblTo.textContent = 'To Page';
+        inpFrom.placeholder = '1';
+        inpTo.placeholder = '1';
+        const t = Math.ceil(bldgEntryRows.length / BLDG_RPP);
+        inpFrom.max = t;
+        inpTo.max = t;
+    }
+}
+
 function bldgBulkDelete() {
     if (bldgEntryRows.length === 0) return;
+    const m = document.getElementById('bldgBulkDeleteModal');
+    m.classList.remove('hidden');
+    setTimeout(() => {
+        m.classList.remove('opacity-0');
+        m.children[1].classList.remove('scale-95');
+        m.children[1].classList.add('scale-100');
+    }, 10);
+    setBldgDeleteMode('rows');
+    document.getElementById('bldgDeleteFromRow').value = 1;
+    document.getElementById('bldgDeleteToRow').value = bldgEntryRows.length;
+}
+
+function closeBldgBulkDeleteModal() {
+    const m = document.getElementById('bldgBulkDeleteModal');
+    m.classList.add('opacity-0');
+    m.children[1].classList.remove('scale-100');
+    m.children[1].classList.add('scale-95');
+    setTimeout(() => m.classList.add('hidden'), 300);
+}
+
+function confirmBldgBulkDelete() {
+    const f = parseInt(document.getElementById('bldgDeleteFromRow').value);
+    const t = parseInt(document.getElementById('bldgDeleteToRow').value);
+
+    if(!f || !t || f > t || f < 1) {
+        Swal.fire({title:'Invalid Range', text:'Please enter a valid from/to range.', icon:'error', customClass:{popup:'rounded-[2rem]'}});
+        return;
+    }
+
+    let startIdx, endIdx;
+    if(bldgDeleteMode === 'rows') {
+        if(t > bldgEntryRows.length) {
+            Swal.fire({title:'Invalid Range', text:`Max rows is ${bldgEntryRows.length}`, icon:'error', customClass:{popup:'rounded-[2rem]'}});
+            return;
+        }
+        startIdx = f - 1;
+        endIdx = t - 1;
+    } else {
+        const totalPages = Math.ceil(bldgEntryRows.length / BLDG_RPP);
+        if(t > totalPages) {
+            Swal.fire({title:'Invalid Range', text:`Max pages is ${totalPages}`, icon:'error', customClass:{popup:'rounded-[2rem]'}});
+            return;
+        }
+        startIdx = (f - 1) * BLDG_RPP;
+        endIdx = (t * BLDG_RPP) - 1;
+    }
+
+    // Keep elements not in range
+    const toKeep = [];
+    for(let i=0; i<bldgEntryRows.length; i++) {
+        if(i < startIdx || i > endIdx) {
+            toKeep.push(bldgEntryRows[i]);
+        }
+    }
+    bldgEntryRows = toKeep;
+    
+    // reset pagination
+    const newTotal = Math.max(1, Math.ceil(bldgEntryRows.length / BLDG_RPP));
+    if (bldgEntryPage > newTotal) bldgEntryPage = newTotal;
+    
+    renderBldgEntryTable();
+    closeBldgBulkDeleteModal();
+    
     Swal.fire({
-        title: 'Delete All Rows?',
-        text: `This will remove all ${bldgEntryRows.length} building row(s).`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Delete All',
-        confirmButtonColor: '#c00000',
-        customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' },
-    }).then(r => {
-        if (r.isConfirmed) { bldgEntryRows = []; bldgEntryPage = 1; renderBldgEntryTable(); }
+        toast: true, position: 'top-end', icon: 'success',
+        title: 'Rows deleted', showConfirmButton: false, timer: 2000
     });
 }
 

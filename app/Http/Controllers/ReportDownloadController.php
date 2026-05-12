@@ -463,17 +463,24 @@ class ReportDownloadController extends Controller
         $baseQuery = DB::table('buildings');
 
         $classifications = (clone $baseQuery)->whereNotNull('classification')->where('classification', '!=', '')->pluck('classification')->unique()->sort()->values();
-        $officeTypes = (clone $baseQuery)->whereNotNull('office_type')->where('office_type', '!=', '')->pluck('office_type')->unique()->sort()->values();
-        $schools = (clone $baseQuery)->whereNotNull('office_name')->where('office_name', '!=', '')->pluck('office_name')->unique()->sort()->values();
-        $locations = (clone $baseQuery)->whereNotNull('location')->where('location', '!=', '')->pluck('location')->unique()->sort()->values();
+        $office_types    = (clone $baseQuery)->whereNotNull('office_type')->where('office_type', '!=', '')->pluck('office_type')->unique()->sort()->values();
+        $schools         = (clone $baseQuery)->whereNotNull('office_name')->where('office_name', '!=', '')->pluck('office_name')->unique()->sort()->values();
+        $articles        = (clone $baseQuery)->whereNotNull('article')->where('article', '!=', '')->pluck('article')->unique()->sort()->values();
+        $occupancies     = (clone $baseQuery)->whereNotNull('occupancy_nature')->where('occupancy_nature', '!=', '')->pluck('occupancy_nature')->unique()->sort()->values();
+        $locations       = (clone $baseQuery)->whereNotNull('location')->where('location', '!=', '')->pluck('location')->unique()->sort()->values();
 
         return response()->json([
             'classifications' => $classifications,
-            'officeTypes' => $officeTypes,
-            'schools' => $schools,
-            'locations' => $locations
+            'office_types'    => $office_types,
+            'schools'         => $schools,
+            'articles'        => $articles,
+            'occupancies'     => $occupancies,
+            'locations'       => $locations,
+            // legacy keys kept for backward compat
+            'officeTypes'     => $office_types,
         ]);
     }
+
 
     public function getSchoolsPreview(Request $request)
     {

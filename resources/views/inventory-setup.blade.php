@@ -382,7 +382,7 @@
                     </div>
 
                     {{-- Infrastructure Management --}}
-                    <div onclick="nextStep(2, 'building')" class="group bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border-2 border-transparent hover:border-emerald-600 transition-all duration-300 cursor-pointer flex items-center justify-between relative overflow-hidden">
+                    <div onclick="nextStep(2, 'infra')" class="group bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border-2 border-transparent hover:border-emerald-600 transition-all duration-300 cursor-pointer flex items-center justify-between relative overflow-hidden">
                         <div class="flex items-center gap-5 relative z-10">
                             <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-7 h-7">
@@ -490,7 +490,6 @@
                 <span id="assetTabLabel" class="hidden md:block text-[10px] font-bold text-slate-900 uppercase tracking-widest italic">Asset Source</span>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="openBulkAddModal()"
                 <button onclick="openBulkAddModal()"
                     class="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-slate-100 transition-all active:scale-95">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
@@ -630,6 +629,7 @@
             </div>
 
             @include('partials.inventory-edit-step')
+            @include('partials.building-edit-step')
 
         </main>
     </div>
@@ -711,7 +711,17 @@
             document.getElementById('mainContent').classList.replace('max-w-5xl', 'max-w-full');
             stepHistory.push('addbuilding');
             updateBackButton();
-            if (typeof renderBldgTable === 'function') renderBldgTable();
+            return;
+        }
+
+        // Infrastructure Management (Building Editor)
+        if (value === 'infra') {
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('stepBuildingEdit').classList.add('active');
+            document.getElementById('mainContent').classList.replace('max-w-5xl', 'max-w-full');
+            stepHistory.push('infra');
+            updateBackButton();
+            if (typeof initBldgEdit === 'function') initBldgEdit();
             return;
         }
     }
@@ -735,7 +745,7 @@
                 stepHistory.pop();
                 const prevStep = stepHistory[stepHistory.length - 1];
 
-                if (leavingStep === 'addnew' || leavingStep === 'addbuilding' || leavingStep === 'edit') {
+                if (leavingStep === 'addnew' || leavingStep === 'addbuilding' || leavingStep === 'edit' || leavingStep === 'infra') {
                     document.getElementById('mainContent').classList.replace('max-w-full', 'max-w-5xl');
                     document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
                     document.getElementById('step1').classList.add('active');
@@ -916,7 +926,22 @@
                 }
                 if (col === 'property-no') {
                     if (value.trim() !== '') {
-                        row.qty = 1; renderAssetTable();
+                        row.qty = 1;
+                        const qtyInp = document.querySelector(`#src-${rowId} input[data-col="qty"]`);
+                        if (qtyInp) {
+                            qtyInp.value = 1;
+                            qtyInp.readOnly = true;
+                            qtyInp.classList.add('bg-slate-50', 'cursor-not-allowed');
+                        }
+                        const cost = parseFloat(row.cost || 0);
+                        const distInput = document.getElementById(`dst-cost-${rowId}`);
+                        if (distInput) distInput.value = (cost * 1).toFixed(2);
+                    } else {
+                        const qtyInp = document.querySelector(`#src-${rowId} input[data-col="qty"]`);
+                        if (qtyInp) {
+                            qtyInp.readOnly = false;
+                            qtyInp.classList.remove('bg-slate-50', 'cursor-not-allowed');
+                        }
                     }
                 }
             }
@@ -2490,16 +2515,32 @@
 
         function handleAutocompleteEvent(e) {
             const input = e.target;
-            if (!input || input.tagName !== 'INPUT' || !input.hasAttribute('data-col')) return;
+            if (!input || input.tagName !== 'INPUT') return;
 
-            const colName = input.getAttribute('data-col');
+            let colName = input.getAttribute('data-col');
+            let isBldgEntry = false;
+            if (!colName) {
+                colName = input.getAttribute('data-bldg-col');
+                if (colName) isBldgEntry = true;
+            }
+
+            if (!colName) return;
+
             const typedValue = input.value.toLowerCase().trim();
             
             // Detect active module
             const isBuilding = document.getElementById('stepAddBuilding')?.classList.contains('active');
-            const dataToUse = isBuilding ? bldgRowsData : allRowsData;
-            const pageToUse = isBuilding ? bldgCurrentPage : currentPage;
-            const rowsPerPageToUse = isBuilding ? bldgRowsPerPage : rowsPerPage;
+            
+            let dataToUse, pageToUse, rowsPerPageToUse;
+            if (isBldgEntry) {
+                dataToUse = typeof bldgEntryRows !== 'undefined' ? bldgEntryRows : [];
+                pageToUse = typeof bldgEntryPage !== 'undefined' ? bldgEntryPage : 1;
+                rowsPerPageToUse = typeof BLDG_RPP !== 'undefined' ? BLDG_RPP : 50;
+            } else {
+                dataToUse = isBuilding ? (typeof bldgRowsData !== 'undefined' ? bldgRowsData : []) : allRowsData;
+                pageToUse = isBuilding ? (typeof bldgCurrentPage !== 'undefined' ? bldgCurrentPage : 1) : currentPage;
+                rowsPerPageToUse = isBuilding ? (typeof bldgRowsPerPage !== 'undefined' ? bldgRowsPerPage : 50) : rowsPerPage;
+            }
 
             // Gather unique values from CURRENT PAGE only (most recent first)
             const start = (pageToUse - 1) * rowsPerPageToUse;
@@ -2515,7 +2556,8 @@
                     if (tr) {
                         const rowIdStr = tr.id.split('-').pop(); // Handle src-ID or bldg-row-ID
                         const rowId = parseInt(rowIdStr);
-                        if (pageData[i].id !== rowId) {
+                        const dataId = isBldgEntry ? pageData[i]._id : pageData[i].id;
+                        if (dataId !== rowId) {
                             localData.push(val);
                         }
                     } else {
@@ -2558,13 +2600,15 @@
                     input.value = val;
                     const tr = input.closest('tr');
                     const rowId = parseInt(tr.id.split('-').pop());
-                    if (isBuilding) {
-                        syncBldgState(rowId, colName, val);
+                    if (isBldgEntry) {
+                        if (typeof syncBldgRow === 'function') syncBldgRow(rowId, colName, val);
+                    } else if (isBuilding) {
+                        if (typeof syncBldgState === 'function') syncBldgState(rowId, colName, val);
                     } else {
                         syncState(rowId, colName, val);
                     }
                     closeAutocomplete();
-                    if (isBuilding) {
+                    if (isBldgEntry || isBuilding) {
                         if (typeof updateBldgNewLabels === 'function') updateBldgNewLabels();
                     } else {
                         updateNewLabels();
@@ -2577,10 +2621,10 @@
         }
         
         function updateNewLabels() {
-            const visibleInputs = document.querySelectorAll('input[data-col]');
+            const visibleInputs = document.querySelectorAll('input[data-col], input[data-bldg-col]');
             if (visibleInputs.length === 0) return;
 
-            const colNames = Array.from(new Set(Array.from(visibleInputs).map(el => el.getAttribute('data-col'))));
+            const colNames = Array.from(new Set(Array.from(visibleInputs).map(el => el.getAttribute('data-col') || el.getAttribute('data-bldg-col'))));
             const colContexts = {};
             colNames.forEach(cn => {
                 colContexts[cn] = {
@@ -2590,10 +2634,20 @@
             });
 
             // Process only current page state to find first occurrences
-            const isBuilding = document.getElementById('stepAddBuilding')?.classList.contains('active');
-            const dataToUse = isBuilding ? bldgRowsData : allRowsData;
-            const pageToUse = isBuilding ? bldgCurrentPage : currentPage;
-            const rowsPerPageToUse = isBuilding ? bldgRowsPerPage : rowsPerPage;
+            const isBldgStep = document.getElementById('stepAddBuilding')?.classList.contains('active');
+            
+            let dataToUse, pageToUse, rowsPerPageToUse;
+            if (isBldgStep) {
+                dataToUse = typeof bldgEntryRows !== 'undefined' ? bldgEntryRows : [];
+                pageToUse = typeof bldgEntryPage !== 'undefined' ? bldgEntryPage : 1;
+                rowsPerPageToUse = typeof BLDG_RPP !== 'undefined' ? BLDG_RPP : 50;
+            } else {
+                // Determine if we are in building management or item management
+                const isBldgMgmt = false; // Add logic if needed
+                dataToUse = isBldgMgmt ? (typeof bldgRowsData !== 'undefined' ? bldgRowsData : []) : allRowsData;
+                pageToUse = isBldgMgmt ? (typeof bldgCurrentPage !== 'undefined' ? bldgCurrentPage : 1) : currentPage;
+                rowsPerPageToUse = isBldgMgmt ? (typeof bldgRowsPerPage !== 'undefined' ? bldgRowsPerPage : 50) : rowsPerPage;
+            }
 
             const start = (pageToUse - 1) * rowsPerPageToUse;
             const end   = start + rowsPerPageToUse;
@@ -2602,8 +2656,9 @@
             pageData.forEach(row => {
                 colNames.forEach(cn => {
                     const val = (row[cn] || "").toString().trim().toLowerCase();
+                    const dataId = isBldgStep ? row._id : row.id;
                     if (val && !colContexts[cn].seen.has(val)) {
-                        colContexts[cn].firstOccurrences.set(val, row.id);
+                        colContexts[cn].firstOccurrences.set(val, dataId);
                         colContexts[cn].seen.add(val);
                     }
                 });
@@ -2611,7 +2666,7 @@
 
             // Update only visible DOM elements
             visibleInputs.forEach(input => {
-                const cn = input.getAttribute('data-col');
+                const cn = input.getAttribute('data-col') || input.getAttribute('data-bldg-col');
                 const val = input.value.trim().toLowerCase();
                 const tr = input.closest('tr');
                 if (!tr) return;

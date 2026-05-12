@@ -154,6 +154,10 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/buildings/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getBuildingsPreview'])->name('api.buildings.preview');
     Route::get('/api/buildings/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getBuildingsFilterOptions'])->name('api.buildings.filters');
 
+    // --- Building Editor (Bulk Edit) ---
+    Route::post('/api/buildings/edit-preview', [\App\Http\Controllers\InventorySetupController::class, 'getBuildingEditPreview'])->name('api.buildings.edit_preview');
+    Route::post('/api/buildings/update-batch', [\App\Http\Controllers\InventorySetupController::class, 'updateBuildingBatch'])->name('api.buildings.updateBatch');
+
     // --- School Management (View) ---
     Route::post('/api/schools/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getSchoolsPreview'])->name('api.schools.preview');
     Route::get('/api/schools/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getSchoolsFilterOptions'])->name('api.schools.filters');
