@@ -235,6 +235,53 @@ class AssetController extends Controller
         ]);
     }
 
+    public function lifecycle(Request $request)
+    {
+        $assets = DB::table('asset_distributions as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->join('items', 'asrc.item_id', '=', 'items.id')
+            ->join('categories', 'items.category_id', '=', 'categories.id')
+            ->join('acquisition_sources', 'asrc.acquisition_source_id', '=', 'acquisition_sources.id')
+            ->select(
+                'ad.id',
+                'ad.property_number',
+                'ad.office_school_name',
+                'ad.region',
+                'ad.division',
+                'ad.acquisition_date',
+                'asrc.acceptance_date',
+                DB::raw('COALESCE(asrc.description, items.name) as description'),
+                'asrc.asset_cost',
+                'asrc.quantity',
+                'asrc.mode_of_acquisition',
+                'acquisition_sources.name as source_name',
+                'items.name as item_name',
+                'categories.name as category_name'
+            )
+            ->orderByDesc('ad.created_at')
+            ->get();
+
+        $mappedAssets = $assets->map(function ($a) {
+            return [
+                'id' => $a->id,
+                'property_number' => $a->property_number ?? 'N/A',
+                'item_name' => $a->item_name,
+                'description' => $a->description,
+                'category_name' => $a->category_name,
+                'school_name' => $a->office_school_name,
+                'source_name' => $a->source_name,
+                'mode_of_acquisition' => $a->mode_of_acquisition,
+                'cost' => (float) $a->asset_cost,
+                'acceptance_date' => $a->acceptance_date,
+                'acquisition_date' => $a->acquisition_date,
+            ];
+        });
+
+        return view('assets.lifecycle', [
+            'assetsJson' => json_encode($mappedAssets->values())
+        ]);
+    }
+
     public function getSchoolAssets($id)
     {
         // Find the school and get its school_id string

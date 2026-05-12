@@ -12,14 +12,14 @@
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
-        .custom-scroll::-webkit-scrollbar { width: 5px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        .xls-th { padding: 12px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; white-space: nowrap; border-right: 1px solid #1e293b; border-bottom: 2px solid #0f172a; background: #1e293b; position: sticky; top: 0; z-index: 20; }
-        .xls-td { height: 48px; border-right: 1px solid #1e293b; border-bottom: 1px solid #1e293b; vertical-align: middle; padding: 0; background: #0f172a; }
+        .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .xls-th { padding: 12px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; white-space: nowrap; border-right: 1px solid #f1f5f9; border-bottom: 2px solid #e2e8f0; background: #f8fafc; position: sticky; top: 0; z-index: 20; }
+        .xls-td { height: 48px; border-right: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; vertical-align: middle; padding: 0; background: #ffffff; }
         .xls-row { transition: background 0.1s; }
-        .xls-row:hover .xls-td { background-color: #1e293b !important; }
-        .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: #cbd5e1; white-space: nowrap; }
-        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 620px); min-height: 350px; background: #0f172a; flex-grow: 1; transition: height 0.3s ease-in-out; }
+        .xls-row:hover .xls-td { background-color: #fff1f2 !important; }
+        .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: #334155; white-space: nowrap; }
+        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 620px); min-height: 350px; background: #ffffff; flex-grow: 1; transition: height 0.3s ease-in-out; }
         .xls-scroll-wrap.expanded { height: calc(100vh - 280px); }
         
         .pg-btn {
@@ -51,24 +51,18 @@
             background: #f1f5f9;
         }
         
-        /* Dark Mode Overrides */
-        html.dark body { background-color: #0f172a; color: #f8fafc; }
-        html.dark .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
-        html.dark .text-slate-800 { color: #f8fafc !important; }
-        html.dark .text-slate-900 { color: #f8fafc !important; }
-        html.dark .bg-slate-50 { background-color: #0f172a !important; border-color: #1e293b !important; }
-        html.dark .bg-slate-50\/50 { background-color: #1e293b !important; }
-        html.dark .border-t { border-color: #334155 !important; }
+
         
         .glass-indicator {
             display: flex;
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.05);
             border-radius: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
 
         .custom-autocomplete {
@@ -98,10 +92,7 @@
             background: #f8fafc;
             color: #c00000;
         }
-        html.dark .custom-autocomplete {
-            background: #1e293b;
-            border-color: #334155;
-        }
+
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex text-slate-900 overflow-x-hidden">
@@ -203,24 +194,24 @@
             </div>
             <div class="mt-8 flex justify-end items-center gap-8 relative z-10">
                 <button onclick="clearAssetFilters()" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-red-600 transition-all italic">Clear All Filters</button>
-                <button onclick="assetFetchData()" class="px-8 py-2.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all active:scale-95 shadow-lg shadow-slate-200 italic">Apply Configuration</button>
+                <button onclick="assetFetchData()" class="px-8 py-2.5 bg-[#c00000] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all active:scale-95 shadow-lg shadow-red-200 italic">Apply Configuration</button>
             </div>
         </div>
 
         <!-- Tab Selection -->
         <div class="flex justify-start mb-6 px-2">
-            <div class="inline-flex p-1 bg-slate-900/50 backdrop-blur-xl rounded-[1.2rem] border border-white/5 shadow-2xl relative overflow-hidden">
-                <button onclick="setAssetTab('source')" id="tabBtnSource" class="relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-slate-400 hover:text-white">
+            <div class="inline-flex p-1 bg-white rounded-[1.2rem] border border-slate-200 shadow-sm relative overflow-hidden">
+                <button onclick="setAssetTab('source')" id="tabBtnSource" class="relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-slate-500 hover:text-[#c00000]">
                     Asset Source
                 </button>
-                <button onclick="setAssetTab('distribution')" id="tabBtnDist" class="relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-white bg-red-600 shadow-lg shadow-red-600/20">
+                <button onclick="setAssetTab('distribution')" id="tabBtnDist" class="relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-white bg-[#c00000] shadow-md shadow-red-200">
                     Asset Distribution
                 </button>
             </div>
 
             {{-- PPE/Semi-PPE Dropdown --}}
             <div class="ml-4">
-                <select id="assetPropertyType" onchange="assetFetchData()" class="bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-[1.2rem] px-6 py-2.5 text-[10px] font-black text-white uppercase tracking-widest focus:ring-4 focus:ring-red-500/20 transition-all outline-none">
+                <select id="assetPropertyType" onchange="assetFetchData()" class="bg-white border border-slate-200 rounded-[1.2rem] px-6 py-2.5 text-[10px] font-black text-slate-700 uppercase tracking-widest focus:ring-4 focus:ring-red-50 focus:border-[#c00000] transition-all outline-none shadow-sm">
                     <option value="ALL">All Assets</option>
                     <option value="RPCPPE">PPE (≥ 50k)</option>
                     <option value="RPCSP">Semi-PPE (< 50k)</option>
@@ -252,17 +243,17 @@
                 </div>
             </div>
 
-            <div id="assetTableFooter" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-white dark:bg-slate-900 relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            <div id="assetTableFooter" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-white relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                 <div class="flex items-center gap-6">
                     <p id="assetRowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 Rows</p>
-                    <div id="assetPaginationControls" class="flex items-center gap-3 border-l border-slate-200 dark:border-slate-800 pl-6">
+                    <div id="assetPaginationControls" class="flex items-center gap-3 border-l border-slate-200 pl-6">
                         <button onclick="assetPrevPage()" id="assetPrevBtn" class="pg-btn">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
                             Prev
                         </button>
                         <div class="glass-indicator">
-                            <span id="assetCurrentPage" class="text-[10px] font-black text-white dark:text-blue-400">1</span>
-                            <span class="text-[10px] font-bold text-slate-500">/</span>
+                            <span id="assetCurrentPage" class="text-[10px] font-black text-[#c00000]">1</span>
+                            <span class="text-[10px] font-bold text-slate-400">/</span>
                             <span id="assetTotalPages" class="text-[10px] font-black text-slate-500">1</span>
                         </div>
                         <button onclick="assetNextPage()" id="assetNextBtn" class="pg-btn">
@@ -290,12 +281,12 @@
             const sourceBtn = document.getElementById('tabBtnSource');
             const distBtn = document.getElementById('tabBtnDist');
             if (tab === 'source') {
-                sourceBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-white bg-red-600 shadow-lg shadow-red-600/20";
-                distBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-slate-400 hover:text-white";
+                sourceBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-white bg-[#c00000] shadow-md shadow-red-200";
+                distBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-slate-500 hover:text-[#c00000]";
                 document.getElementById('assetFilterSchool').parentElement.parentElement.classList.add('opacity-30', 'pointer-events-none');
             } else {
-                distBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-white bg-red-600 shadow-lg shadow-red-600/20";
-                sourceBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-slate-400 hover:text-white";
+                distBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-white bg-[#c00000] shadow-md shadow-red-200";
+                sourceBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-slate-500 hover:text-[#c00000]";
                 document.getElementById('assetFilterSchool').parentElement.parentElement.classList.remove('opacity-30', 'pointer-events-none');
             }
             assetCurrentPage = 1;
@@ -410,20 +401,20 @@
                 const tr = document.createElement('tr');
                 tr.className = 'xls-row group border-b border-slate-100';
                 const cell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const">${val || ''}</span></td>`;
-                const costCell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const font-black text-emerald-400 italic">₱ ${Number(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></td>`;
+                const costCell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const font-black text-emerald-600 italic">₱ ${Number(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></td>`;
                 if (currentAssetTab === 'source') {
-                    tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-[#0f172a] z-10"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>${cell(row.classification, 'text-blue-400 font-bold')}${cell(row.category, 'text-slate-400')}${cell(row.article, 'font-bold text-slate-200')}${cell(row.description, 'text-slate-400 italic')}${cell(row.unit_of_measurement)}${costCell(row.asset_cost)}${cell(row.quantity, 'font-black text-amber-400')}${costCell(row.acquisition_cost, 'bg-slate-900/50')}${cell(row.mode_of_acquisition)}${cell(row.acq_source, 'font-bold text-blue-400')}${cell(row.acceptance_date)}`;
+                    tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-[#f8fafc] z-10"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>${cell(row.classification, 'text-blue-600 font-bold')}${cell(row.category, 'text-slate-500')}${cell(row.article, 'font-bold text-slate-800')}${cell(row.description, 'text-slate-600 italic')}${cell(row.unit_of_measurement)}${costCell(row.asset_cost)}${cell(row.quantity, 'font-black text-amber-600')}${costCell(row.acquisition_cost, 'bg-slate-50')}${cell(row.mode_of_acquisition)}${cell(row.acq_source, 'font-bold text-blue-600')}${cell(row.acceptance_date)}`;
                 } else {
-                    tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-[#0f172a] z-10"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
+                    tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-[#f8fafc] z-10"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
                         <td class="xls-td"><span class="xls-const">Region IX</span></td>
                         <td class="xls-td"><span class="xls-const">Division of Zamboanga City</span></td>
                         ${cell(row.school_type)}
                         ${cell(row.school_id)}
-                        ${cell(row.office_school_name, 'font-bold text-blue-400')}
+                        ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
                         ${cell(row.nature_of_occupancy)}
                         ${cell(row.location)}
                         ${cell(row.property_number)}
-                        ${costCell(row.acquisition_cost, 'bg-slate-900/50')}
+                        ${costCell(row.acquisition_cost, 'bg-slate-50')}
                         ${cell(row.acquisition_date)}`;
                 }
                 tbody.appendChild(tr);
