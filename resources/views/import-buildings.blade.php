@@ -18,6 +18,27 @@
         .preview-table th:first-child, .preview-table td:first-child { position: sticky; left: 0; z-index: 2; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
+
+        /* Dark mode overrides for Import UI - Midnight Blue Theme */
+        /* Dark mode overrides for Import UI - Midnight Blue Theme */
+        html.dark body .bg-amber-50 { background-color: rgba(30,41,59,0.6) !important; }
+        html.dark body .bg-amber-100 { background-color: rgba(15,23,42,0.8) !important; }
+        html.dark body .bg-amber-200 { background-color: rgba(30,41,59,0.9) !important; }
+        html.dark body .border-amber-200 { border-color: rgba(51,65,85,0.6) !important; }
+        html.dark body .text-amber-800 { color: #fde68a !important; }
+        html.dark body .text-amber-700 { color: #fcd34d !important; }
+        html.dark body tr.bg-amber-50:hover td { background-color: rgba(51,65,85,0.4) !important; }
+
+        html.dark body .bg-red-50 { background-color: rgba(30,41,59,0.6) !important; }
+        html.dark body .bg-red-100 { background-color: rgba(15,23,42,0.8) !important; }
+        html.dark body .bg-red-200 { background-color: rgba(30,41,59,0.9) !important; }
+        html.dark body .text-red-800 { color: #fca5a5 !important; }
+        html.dark body tr.bg-red-50:hover td { background-color: rgba(51,65,85,0.4) !important; }
+
+        html.dark body .bg-emerald-100 { background-color: rgba(15,23,42,0.8) !important; }
+        html.dark body .text-emerald-800 { color: #6ee7b7 !important; }
+        
+        html.dark body .bg-white\/50 { background-color: rgba(30,41,59,0.3) !important; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex text-slate-800 overflow-x-hidden">
@@ -38,10 +59,12 @@
                 <h1 class="text-3xl lg:text-4xl font-black text-slate-900 tracking-tight italic uppercase leading-none">Import Assets</h1>
                 <p class="text-sm font-bold text-slate-400 uppercase tracking-widest mt-2">Property Inventory Form • Multi-Template Import</p>
             </div>
-            <button onclick="window.location.href='/dashboard'" class="group px-6 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 flex items-center gap-2 shadow-sm hover:border-[#c00000] hover:text-[#c00000] transition-all active:scale-95">
+            @if(isset($allGroups) && (($totalBuildings ?? 0) > 0 || ($totalAssets ?? 0) > 0))
+            <button onclick="window.location.href='{{ route('buildings.import') }}'" class="group px-6 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold text-slate-600 flex items-center gap-2 shadow-sm hover:border-[#c00000] hover:text-[#c00000] transition-all active:scale-95">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 transition-transform group-hover:-translate-x-1"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
-                Back to Dashboard
+                Back to Import
             </button>
+            @endif
         </div>
 
         @if(session('success'))
@@ -62,6 +85,32 @@
 
         @if(isset($allGroups) && (($totalBuildings ?? 0) > 0 || ($totalAssets ?? 0) > 0))
         <div class="animate-fade max-w-[1600px] mx-auto">
+            
+            @if(isset($dbDuplicates) && $dbDuplicates > 0 || isset($fileDuplicates) && $fileDuplicates > 0)
+            <div class="mb-6 bg-amber-50 border border-amber-200 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
+                <div class="flex items-start gap-4">
+                    <div class="mt-1 w-10 h-10 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center shrink-0">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-amber-800 font-black text-lg tracking-tight">Duplicate Records Detected</h3>
+                        <div class="text-amber-700 text-sm mt-1 flex flex-wrap gap-x-6 gap-y-2">
+                            @if(isset($dbDuplicates) && $dbDuplicates > 0)
+                                <span class="font-bold bg-amber-100 px-2 py-0.5 rounded-md text-amber-800">{{ $dbDuplicates }} Already Registered</span>
+                            @endif
+                            @if(isset($fileDuplicates) && $fileDuplicates > 0)
+                                <span class="font-bold bg-red-100 px-2 py-0.5 rounded-md text-red-800">{{ $fileDuplicates }} Repeated In File</span>
+                            @endif
+                            <span class="font-bold bg-emerald-100 px-2 py-0.5 rounded-md text-emerald-800">{{ (($totalBuildings ?? 0) + ($totalAssets ?? 0)) - ($dbDuplicates ?? 0) - ($fileDuplicates ?? 0) }} New Records</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-xs text-amber-600 font-bold bg-amber-100 px-4 py-2 rounded-xl text-center md:text-right w-full md:w-auto">
+                    Please review highlighted rows below before confirming.
+                </div>
+            </div>
+            @endif
+
             <div class="flex flex-wrap items-center gap-4 mb-6">
                 @if(($totalBuildings ?? 0) > 0)
                 <div class="bg-white border border-slate-100 rounded-2xl px-6 py-4 shadow-sm flex items-center gap-3">
@@ -179,9 +228,19 @@
                 let html = '';
                 pageRows.forEach((row, idx) => {
                     const n = start + idx + 1;
+                    const isDup = duplicates.find(d => d.property_number === row.property_number);
+                    const rowClass = isDup 
+                        ? (isDup.reason === 'Exists in database' ? 'bg-amber-50 hover:bg-amber-100' : 'bg-red-50 hover:bg-red-100')
+                        : 'hover:bg-slate-50/80';
+                    const pnBadge = isDup
+                        ? (isDup.reason === 'Exists in database' 
+                            ? `<span class="ml-2 text-[9px] font-black uppercase tracking-widest bg-amber-200 text-amber-800 px-2 py-0.5 rounded-md">⚠ Registered</span>`
+                            : `<span class="ml-2 text-[9px] font-black uppercase tracking-widest bg-red-200 text-red-800 px-2 py-0.5 rounded-md">Duplicate</span>`)
+                        : '';
+
                     if (currentTab === 'buildings') {
-                        html += `<tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-50">
-                            <td class="px-4 py-4 text-slate-400 font-black italic bg-white">${n}</td>
+                        html += `<tr class="${rowClass} transition-colors border-b border-slate-50">
+                            <td class="px-4 py-4 text-slate-400 font-black italic bg-white/50">${n}</td>
                             <td class="px-4 py-4">${esc(row.region)}</td><td class="px-4 py-4">${esc(row.division)}</td>
                             <td class="px-4 py-4">${esc(row.office_type)}</td><td class="px-4 py-4">${esc(row.school_identifier)}</td>
                             <td class="px-4 py-4 font-black text-slate-900">${esc(row.office_name)}</td><td class="px-4 py-4">${esc(row.address)}</td>
@@ -190,7 +249,7 @@
                             <td class="px-4 py-4">${esc(row.classification)}</td><td class="px-4 py-4">${esc(row.occupancy_nature)}</td>
                             <td class="px-4 py-4">${esc(row.location)}</td><td class="px-4 py-4">${esc(row.date_constructed)}</td>
                             <td class="px-4 py-4">${esc(row.acquisition_date)}</td>
-                            <td class="px-4 py-4 text-[#c00000] font-black">${esc(row.property_number)}</td>
+                            <td class="px-4 py-4 text-[#c00000] font-black flex items-center whitespace-nowrap">${esc(row.property_number)}${pnBadge}</td>
                             <td class="px-4 py-4 text-right font-black">${fmtCost(row.acquisition_cost)}</td>
                             <td class="px-4 py-4 text-center font-bold">${row.estimated_useful_life ?? 25}</td>
                             <td class="px-4 py-4 text-right">${fmtCost(row.appraised_value)}</td>
@@ -198,15 +257,15 @@
                             <td class="px-4 py-4 text-slate-500 italic">${esc(row.remarks)}</td>
                         </tr>`;
                     } else {
-                        html += `<tr class="hover:bg-slate-50/80 transition-colors border-b border-slate-50">
-                            <td class="px-4 py-4 text-slate-400 font-black italic bg-white">${n}</td>
+                        html += `<tr class="${rowClass} transition-colors border-b border-slate-50">
+                            <td class="px-4 py-4 text-slate-400 font-black italic bg-white/50">${n}</td>
                             <td class="px-4 py-4">${esc(row.region)}</td><td class="px-4 py-4">${esc(row.division)}</td>
                             <td class="px-4 py-4">${esc(row.office_type)}</td><td class="px-4 py-4">${esc(row.school_identifier)}</td>
                             <td class="px-4 py-4 font-black text-slate-900">${esc(row.office_name)}</td>
                             <td class="px-4 py-4 font-black">${esc(row.article)}</td><td class="px-4 py-4">${esc(row.description)}</td>
                             <td class="px-4 py-4">${esc(row.classification)}</td><td class="px-4 py-4">${esc(row.occupancy_nature)}</td>
                             <td class="px-4 py-4">${esc(row.location)}</td><td class="px-4 py-4">${esc(row.acquisition_date)}</td>
-                            <td class="px-4 py-4 text-[#c00000] font-black">${esc(row.property_number)}</td>
+                            <td class="px-4 py-4 text-[#c00000] font-black flex items-center whitespace-nowrap">${esc(row.property_number)}${pnBadge}</td>
                             <td class="px-4 py-4 text-right font-black">${fmtCost(row.acquisition_cost)}</td>
                         </tr>`;
                     }
@@ -228,67 +287,62 @@
             function fmtCost(v) { return v != null ? '₱' + Number(v).toLocaleString('en-PH', {minimumFractionDigits: 2}) : '<span class="text-slate-300">—</span>'; }
 
             function confirmImport() {
-                const parts = [];
-                if (allGroups.buildings && allGroups.buildings.length) parts.push(`<strong>${allGroups.buildings.length.toLocaleString()}</strong> building(s)`);
-                if (allGroups.assets && allGroups.assets.length) parts.push(`<strong>${allGroups.assets.length.toLocaleString()}</strong> asset(s)`);
-                
-                if (duplicates && duplicates.length > 0) {
-                    Swal.fire({
-                        title: 'Duplicates Detected!',
-                        html: `<p class="text-sm text-slate-600 mb-4">The system found <strong>${duplicates.length}</strong> asset(s) with duplicate property numbers.</p>`,
-                        icon: 'warning',
-                        showDenyButton: true,
-                        showCancelButton: true,
-                        confirmButtonText: 'Keep Duplicates',
-                        denyButtonText: 'Remove Duplicates',
-                        cancelButtonText: 'Cancel',
-                        confirmButtonColor: '#c00000',
-                        denyButtonColor: '#f59e0b',
-                        cancelButtonColor: '#64748b',
-                        customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-4', denyButton: 'rounded-xl font-bold px-4', cancelButton: 'rounded-xl font-bold px-4' }
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            // Keep duplicates
-                            document.getElementById('duplicateAction').value = 'keep';
-                            document.getElementById('confirmForm').submit();
-                        } else if (result.isDenied) {
-                            // Remove duplicates
-                            let tableHtml = `<div class="max-h-60 overflow-y-auto custom-scroll text-left mb-4 bg-slate-50 rounded-xl p-2 border border-slate-100">
-                                <table class="w-full text-xs">
-                                    <thead class="text-[9px] uppercase tracking-widest text-slate-400 border-b border-slate-200">
-                                        <tr><th class="p-2">Row</th><th class="p-2">Property No.</th><th class="p-2">Reason</th></tr>
-                                    </thead>
-                                    <tbody class="text-slate-700">`;
-                            duplicates.forEach(d => {
-                                tableHtml += `<tr class="border-b border-slate-100"><td class="p-2">${d.index + 1}</td><td class="p-2 font-black text-[#c00000]">${d.property_number}</td><td class="p-2">${d.reason}</td></tr>`;
-                            });
-                            tableHtml += `</tbody></table></div>`;
+                const totalRecords = ((allGroups.buildings ? allGroups.buildings.length : 0) + (allGroups.assets ? allGroups.assets.length : 0));
+                const dbDups = duplicates.filter(d => d.reason === 'Exists in database');
+                const fileDups = duplicates.filter(d => d.reason === 'Repeated in file');
+                const newRecordsCount = totalRecords - dbDups.length - fileDups.length;
 
-                            Swal.fire({
-                                title: 'Remove Duplicates?',
-                                html: tableHtml + `<p class="text-sm text-slate-600">These rows will be skipped during registration. The first occurrence will be kept.</p>`,
-                                icon: 'info',
-                                showCancelButton: true,
-                                confirmButtonColor: '#f59e0b',
-                                confirmButtonText: 'Yes, Remove & Register',
-                                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
-                            }).then((res) => {
-                                if (res.isConfirmed) {
-                                    document.getElementById('duplicateAction').value = 'remove';
-                                    document.getElementById('confirmForm').submit();
-                                }
-                            });
-                        }
+                if (duplicates && duplicates.length > 0) {
+                    let confirmButtons = '';
+                    let title = 'Duplicate Records Detected';
+                    let messageHtml = '';
+
+                    if (dbDups.length > 0 && fileDups.length === 0) {
+                        messageHtml = `<p class="text-sm text-slate-600 mb-4"><strong>${dbDups.length}</strong> record(s) are already registered in the system. <strong>${newRecordsCount}</strong> record(s) are new.</p>`;
+                        confirmButtons = `<div class="flex flex-col gap-3">
+                            <button onclick="submitWithAction('skip_existing')" class="px-6 py-4 bg-[#c00000] text-white rounded-xl font-bold hover:bg-red-700 w-full">Add New Only (${newRecordsCount})</button>
+                            <button onclick="submitWithAction('overwrite')" class="px-6 py-4 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 w-full">Overwrite All Existing</button>
+                            <button onclick="Swal.close()" class="px-6 py-4 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 w-full">Cancel</button>
+                        </div>`;
+                    } else if (fileDups.length > 0 && dbDups.length === 0) {
+                        messageHtml = `<p class="text-sm text-slate-600 mb-4"><strong>${fileDups.length}</strong> record(s) have identical Property Numbers within the file itself.</p>`;
+                        confirmButtons = `<div class="flex flex-col gap-3">
+                            <button onclick="submitWithAction('skip_existing')" class="px-6 py-4 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 w-full">Keep First, Skip Duplicates</button>
+                            <button onclick="Swal.close()" class="px-6 py-4 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 w-full">Cancel</button>
+                        </div>`;
+                    } else {
+                        // Mixed
+                        messageHtml = `<p class="text-sm text-slate-600 mb-4"><strong>${dbDups.length}</strong> already registered, <strong>${fileDups.length}</strong> repeated in file, <strong>${newRecordsCount}</strong> new.</p>`;
+                        confirmButtons = `<div class="flex flex-col gap-3">
+                            <button onclick="submitWithAction('skip_existing')" class="px-6 py-4 bg-[#c00000] text-white rounded-xl font-bold hover:bg-red-700 w-full">Add New Only (${newRecordsCount})</button>
+                            <button onclick="submitWithAction('overwrite')" class="px-6 py-4 bg-amber-500 text-white rounded-xl font-bold hover:bg-amber-600 w-full">Overwrite Existing, Skip File Repeats</button>
+                            <button onclick="Swal.close()" class="px-6 py-4 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 w-full">Cancel</button>
+                        </div>`;
+                    }
+
+                    Swal.fire({
+                        title: title,
+                        html: messageHtml + confirmButtons,
+                        icon: 'warning',
+                        showConfirmButton: false,
+                        showCancelButton: false,
+                        customClass: { popup: 'rounded-[2rem]' }
                     });
                 } else {
                     Swal.fire({
                         title: 'Confirm Import?',
-                        html: `<p class="text-sm text-slate-600">You are about to register ${parts.join(' and ')} into the system database.</p><p class="text-xs text-slate-400 mt-2">This action cannot be undone.</p>`,
+                        html: `<p class="text-sm text-slate-600">You are about to register <strong>${totalRecords}</strong> records into the system database.</p><p class="text-xs text-slate-400 mt-2">This action cannot be undone.</p>`,
                         icon: 'question', showCancelButton: true, confirmButtonColor: '#c00000', cancelButtonColor: '#64748b',
                         confirmButtonText: 'Yes, Register All', cancelButtonText: 'Cancel',
                         customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6', cancelButton: 'rounded-xl font-bold px-6' }
-                    }).then(r => { if (r.isConfirmed) document.getElementById('confirmForm').submit(); });
+                    }).then(r => { if (r.isConfirmed) submitWithAction('keep'); });
                 }
+            }
+
+            function submitWithAction(action) {
+                document.getElementById('duplicateAction').value = action;
+                document.getElementById('confirmForm').submit();
+                Swal.fire({ title: 'Processing...', html: 'Please wait while records are imported.', allowOutsideClick: false, showConfirmButton: false, didOpen: () => Swal.showLoading() });
             }
 
             document.addEventListener('DOMContentLoaded', () => switchTab(tabs[0].key));

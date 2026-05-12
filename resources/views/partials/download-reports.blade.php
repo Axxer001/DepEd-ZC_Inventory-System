@@ -292,9 +292,9 @@
                             </tr>
                         </thead>
                         <tbody class="text-xs">
-                            <template x-for="(row, index) in previewRows" :key="index">
+                            <template x-for="(row, index) in paginatedRows" :key="index">
                                 <tr class="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                                    <td class="px-4 py-3 text-[10px] font-black text-slate-400" x-text="index + 1"></td>
+                                    <td class="px-4 py-3 text-[10px] font-black text-slate-400" x-text="(currentPage - 1) * itemsPerPage + index + 1"></td>
                                     <td class="px-4 py-3 text-slate-500" x-text="row.region"></td>
                                     <td class="px-4 py-3 text-slate-500" x-text="row.division"></td>
                                     <td class="px-4 py-3 text-slate-500" x-text="row.office_school_type"></td>
@@ -315,6 +315,18 @@
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                
+                {{-- Pagination Controls --}}
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between" x-show="previewRows.length > 0">
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        Showing <span x-text="((currentPage - 1) * itemsPerPage) + 1"></span> to <span x-text="Math.min(currentPage * itemsPerPage, previewRows.length)"></span> of <span x-text="previewRows.length"></span>
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <button @click="prevPage()" :disabled="currentPage === 1" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">Prev</button>
+                        <span class="text-[10px] font-bold text-slate-700 px-3">Page <span x-text="currentPage"></span> / <span x-text="totalPages"></span></span>
+                        <button @click="nextPage()" :disabled="currentPage === totalPages" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">Next</button>
+                    </div>
                 </div>
             </div>
 
@@ -347,6 +359,8 @@
             selectedReport: '',
             reportSubtext: '',
             previewRows: [],
+            currentPage: 1,
+            itemsPerPage: 50,
             filterOptions: {
                 classifications: [],
                 categories: [],
@@ -364,6 +378,23 @@
                 source: '',
                 mode: '',
                 dateAcquired: ''
+            },
+
+            get totalPages() {
+                return Math.max(1, Math.ceil(this.previewRows.length / this.itemsPerPage));
+            },
+
+            get paginatedRows() {
+                const start = (this.currentPage - 1) * this.itemsPerPage;
+                return this.previewRows.slice(start, start + this.itemsPerPage);
+            },
+
+            nextPage() {
+                if (this.currentPage < this.totalPages) this.currentPage++;
+            },
+
+            prevPage() {
+                if (this.currentPage > 1) this.currentPage--;
             },
 
             selectReport(type) {
@@ -425,6 +456,7 @@
                 .then(res => res.json())
                 .then(data => {
                     this.previewRows = data.rows || [];
+                    this.currentPage = 1;
                 })
                 .catch(err => {
                     console.error("Preview fetch error:", err);

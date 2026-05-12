@@ -77,12 +77,15 @@ class BuildingImportController extends Controller
         $seenInFile = [];
         $assetProps = [];
 
+        $dbDuplicates = [];
+        $fileDuplicates = [];
+
         foreach ($allGroups['assets'] ?? [] as $i => $row) {
             $pn = trim($row['property_number'] ?? '');
             if ($pn) {
                 $assetProps[] = $pn;
                 if (isset($seenInFile[$pn])) {
-                    $duplicates[] = ['index' => $i, 'property_number' => $pn, 'reason' => 'Repeated in file', 'article' => $row['article'] ?? ''];
+                    $fileDuplicates[] = ['index' => $i, 'property_number' => $pn, 'reason' => 'Repeated in file', 'article' => $row['article'] ?? ''];
                 }
                 $seenInFile[$pn] = true;
             }
@@ -97,16 +100,52 @@ class BuildingImportController extends Controller
             foreach ($allGroups['assets'] ?? [] as $i => $row) {
                 $pn = trim($row['property_number'] ?? '');
                 if ($pn && isset($existingInDb[$pn])) {
-                    $alreadyFlagged = false;
-                    foreach ($duplicates as $d) {
-                        if ($d['index'] === $i) { $alreadyFlagged = true; break; }
+                    $alreadyFlaggedFile = false;
+                    foreach ($fileDuplicates as $d) {
+                        if ($d['index'] === $i) { $alreadyFlaggedFile = true; break; }
                     }
-                    if (!$alreadyFlagged) {
-                        $duplicates[] = ['index' => $i, 'property_number' => $pn, 'reason' => 'Exists in database', 'article' => $row['article'] ?? ''];
+                    if (!$alreadyFlaggedFile) {
+                        $dbDuplicates[] = ['index' => $i, 'property_number' => $pn, 'reason' => 'Exists in database', 'article' => $row['article'] ?? ''];
                     }
                 }
             }
         }
+
+        // Also check building duplicates
+        $buildingProps = [];
+        $seenInFileB = [];
+        foreach ($allGroups['buildings'] ?? [] as $i => $row) {
+            $pn = trim($row['property_number'] ?? '');
+            if ($pn) {
+                $buildingProps[] = $pn;
+                if (isset($seenInFileB[$pn])) {
+                    $fileDuplicates[] = ['index' => $i, 'property_number' => $pn, 'reason' => 'Repeated in file', 'article' => $row['article'] ?? '', 'type' => 'building'];
+                }
+                $seenInFileB[$pn] = true;
+            }
+        }
+
+        if (!empty($buildingProps)) {
+            $existingInDbB = array_flip(DB::table('buildings')
+                ->whereIn('property_number', $buildingProps)
+                ->pluck('property_number')
+                ->all());
+            
+            foreach ($allGroups['buildings'] ?? [] as $i => $row) {
+                $pn = trim($row['property_number'] ?? '');
+                if ($pn && isset($existingInDbB[$pn])) {
+                    $alreadyFlaggedFile = false;
+                    foreach ($fileDuplicates as $d) {
+                        if ($d['index'] === $i && ($d['type'] ?? '') === 'building') { $alreadyFlaggedFile = true; break; }
+                    }
+                    if (!$alreadyFlaggedFile) {
+                        $dbDuplicates[] = ['index' => $i, 'property_number' => $pn, 'reason' => 'Exists in database', 'article' => $row['article'] ?? '', 'type' => 'building'];
+                    }
+                }
+            }
+        }
+
+        $duplicates = array_merge($dbDuplicates, $fileDuplicates);
 
         session(['pif_import_data' => $allGroups]);
 
@@ -114,7 +153,9 @@ class BuildingImportController extends Controller
             'allGroups'      => $allGroups,
             'totalBuildings' => count($allGroups['buildings'] ?? []),
             'totalAssets'    => count($allGroups['assets'] ?? []),
-            'duplicates'     => $duplicates
+            'duplicates'     => $duplicates,
+            'dbDuplicates'   => count($dbDuplicates),
+            'fileDuplicates' => count($fileDuplicates)
         ]);
     }
 
@@ -134,26 +175,81 @@ class BuildingImportController extends Controller
         $userName = auth()->user() ? auth()->user()->email : 'System';
         $duplicateAction = $request->input('duplicate_action', 'keep');
 
-        // Apply duplicate action if remove
-        if ($duplicateAction === 'remove' && !empty($allGroups['assets'])) {
-            $seen = [];
+        // Extract all property numbers
+        $buildingPropsToOverwrite = [];
+        $assetPropsToOverwrite = [];
+
+        // Apply duplicate action if remove or skip_existing
+        if (in_array($duplicateAction, ['remove', 'skip_existing'])) {
+            $seenAssets = [];
             $filteredAssets = [];
             
             $allProps = [];
-            foreach ($allGroups['assets'] as $row) {
+            foreach ($allGroups['assets'] ?? [] as $row) {
                 if (!empty($row['property_number'])) $allProps[] = trim($row['property_number']);
             }
             $inDb = !empty($allProps) ? array_flip(DB::table('asset_distributions')->whereIn('property_number', $allProps)->pluck('property_number')->all()) : [];
 
-            foreach ($allGroups['assets'] as $row) {
+            foreach ($allGroups['assets'] ?? [] as $row) {
                 $pn = trim($row['property_number'] ?? '');
                 if ($pn) {
-                    if (isset($inDb[$pn]) || isset($seen[$pn])) continue; // Skip duplicate
-                    $seen[$pn] = true;
+                    if (isset($inDb[$pn]) || isset($seenAssets[$pn])) continue; // Skip duplicate
+                    $seenAssets[$pn] = true;
                 }
                 $filteredAssets[] = $row;
             }
             $allGroups['assets'] = $filteredAssets;
+
+            $seenBuildings = [];
+            $filteredBuildings = [];
+            $allBProps = [];
+            foreach ($allGroups['buildings'] ?? [] as $row) {
+                if (!empty($row['property_number'])) $allBProps[] = trim($row['property_number']);
+            }
+            $inDbB = !empty($allBProps) ? array_flip(DB::table('buildings')->whereIn('property_number', $allBProps)->pluck('property_number')->all()) : [];
+
+            foreach ($allGroups['buildings'] ?? [] as $row) {
+                $pn = trim($row['property_number'] ?? '');
+                if ($pn) {
+                    if (isset($inDbB[$pn]) || isset($seenBuildings[$pn])) continue; // Skip duplicate
+                    $seenBuildings[$pn] = true;
+                }
+                $filteredBuildings[] = $row;
+            }
+            $allGroups['buildings'] = $filteredBuildings;
+        } elseif ($duplicateAction === 'overwrite') {
+            // Collect property numbers to overwrite
+            foreach ($allGroups['buildings'] ?? [] as $row) {
+                if (!empty($row['property_number'])) $buildingPropsToOverwrite[] = trim($row['property_number']);
+            }
+            foreach ($allGroups['assets'] ?? [] as $row) {
+                if (!empty($row['property_number'])) $assetPropsToOverwrite[] = trim($row['property_number']);
+            }
+
+            // Let's filter out file-level duplicates so we only insert them once during overwrite
+            $seenAssets = [];
+            $filteredAssets = [];
+            foreach ($allGroups['assets'] ?? [] as $row) {
+                $pn = trim($row['property_number'] ?? '');
+                if ($pn) {
+                    if (isset($seenAssets[$pn])) continue;
+                    $seenAssets[$pn] = true;
+                }
+                $filteredAssets[] = $row;
+            }
+            $allGroups['assets'] = $filteredAssets;
+
+            $seenBuildings = [];
+            $filteredBuildings = [];
+            foreach ($allGroups['buildings'] ?? [] as $row) {
+                $pn = trim($row['property_number'] ?? '');
+                if ($pn) {
+                    if (isset($seenBuildings[$pn])) continue;
+                    $seenBuildings[$pn] = true;
+                }
+                $filteredBuildings[] = $row;
+            }
+            $allGroups['buildings'] = $filteredBuildings;
         }
 
         // ── Pre-collect unique names for batch lookups ──
@@ -214,6 +310,37 @@ class BuildingImportController extends Controller
 
         DB::beginTransaction();
         try {
+            // ── Overwrite: Delete existing records ──
+            if ($duplicateAction === 'overwrite') {
+                if (!empty($assetPropsToOverwrite)) {
+                    $existingAssets = DB::table('asset_distributions')
+                        ->whereIn('property_number', $assetPropsToOverwrite)
+                        ->select('id', 'asset_source_id')
+                        ->get();
+                    
+                    if ($existingAssets->isNotEmpty()) {
+                        $sourceIds = $existingAssets->pluck('asset_source_id')->unique()->filter()->all();
+                        DB::table('asset_distributions')->whereIn('property_number', $assetPropsToOverwrite)->delete();
+                        if (!empty($sourceIds)) {
+                            // Check if source is still used by other distributions, if not delete it
+                            $usedSourceIds = DB::table('asset_distributions')->whereIn('asset_source_id', $sourceIds)->pluck('asset_source_id')->unique()->all();
+                            $orphanedSourceIds = array_diff($sourceIds, $usedSourceIds);
+                            if (!empty($orphanedSourceIds)) {
+                                DB::table('asset_sources')->whereIn('id', $orphanedSourceIds)->delete();
+                            }
+                        }
+                    }
+                }
+
+                if (!empty($buildingPropsToOverwrite)) {
+                    DB::table('buildings')->whereIn('property_number', $buildingPropsToOverwrite)->delete();
+                }
+
+                // Since we deleted them, we don't consider them 'existing' anymore for skipping
+                $existingBuildingProps = [];
+                $existingAssetProps = [];
+            }
+
             // ── Insert Buildings ──
             foreach ($allGroups['buildings'] ?? [] as $row) {
                 $propNo = $row['property_number'] ?? null;

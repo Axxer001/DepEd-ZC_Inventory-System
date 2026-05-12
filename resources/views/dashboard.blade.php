@@ -445,7 +445,7 @@
                             <canvas id="categoryDistributionChart"></canvas>
                             <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-4">
                                 <span class="text-xs font-black text-slate-900 uppercase tracking-tighter">Total Assets</span>
-                                <span class="text-xl font-black text-[#c00000] tracking-tighter" x-text="numberFormat(filteredStats.total)">{{ number_format($totalAssets ?? 24850) }}</span>
+                                <span class="text-xl font-black text-[#c00000] tracking-tighter" x-text="numberFormat(filteredStats.total)">{{ number_format($totalAssets) }}</span>
                             </div>
                         </div>
                         <div class="w-full space-y-2 relative z-10">
@@ -455,14 +455,14 @@
                                         <span class="w-1.5 h-1.5 rounded-full bg-slate-900"></span>
                                         <span class="text-[8px] font-black uppercase text-slate-500">Buildings</span>
                                     </div>
-                                    <span class="text-[8px] font-black text-slate-900">15%</span>
+                                    <span class="text-[8px] font-black text-slate-900">{{ $categoryPercents['buildings'] }}%</span>
                                 </div>
                                 <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl border border-slate-100 hover:bg-white hover:border-[#c00000]/20 transition-all cursor-default">
                                     <div class="flex items-center gap-2">
                                         <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
                                         <span class="text-[8px] font-black uppercase text-slate-500">Items</span>
                                     </div>
-                                    <span class="text-[8px] font-black text-slate-900">45%</span>
+                                    <span class="text-[8px] font-black text-slate-900">{{ $categoryPercents['items'] }}%</span>
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-2">
@@ -471,14 +471,14 @@
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                                         <span class="text-[8px] font-black uppercase text-slate-500">PPE</span>
                                     </div>
-                                    <span class="text-[8px] font-black text-slate-900">25%</span>
+                                    <span class="text-[8px] font-black text-slate-900">{{ $categoryPercents['ppe'] }}%</span>
                                 </div>
                                 <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl border border-slate-100 hover:bg-white hover:border-[#c00000]/20 transition-all cursor-default">
                                     <div class="flex items-center gap-2">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                         <span class="text-[8px] font-black uppercase text-slate-500">Semi-Exp</span>
                                     </div>
-                                    <span class="text-[8px] font-black text-slate-900">15%</span>
+                                    <span class="text-[8px] font-black text-slate-900">{{ $categoryPercents['semi_exp'] }}%</span>
                                 </div>
                             </div>
                         </div>
@@ -566,12 +566,12 @@
                                 <div class="grid grid-cols-1 gap-4">
                                     <div>
                                         <p class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-1 italic">Total Amount</p>
-                                        <p class="text-2xl font-black tracking-tighter leading-none text-[#c00000]">₱{{ number_format(DB::table('asset_distributions as ad')->join('schools', DB::raw('CAST(ad.school_id AS CHAR)'), '=', 'schools.school_id')->join('districts', 'schools.district_id', '=', 'districts.id')->where('districts.quadrant_id', $id)->sum('acquisition_cost') + DB::table('buildings as b')->join('schools', DB::raw('CAST(b.school_id AS CHAR)'), '=', 'schools.school_id')->join('districts', 'schools.district_id', '=', 'districts.id')->where('districts.quadrant_id', $id)->sum('acquisition_cost'), 2) }}</p>
+                                        <p class="text-2xl font-black tracking-tighter leading-none text-[#c00000]">₱{{ number_format($quadrantStats[$id]['value'] ?? 0, 2) }}</p>
                                     </div>
                                     <div>
                                         <p class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-1 italic">Quantity</p>
                                         <div class="flex items-baseline gap-2">
-                                            <p class="text-3xl font-black text-slate-800 tracking-tighter">{{ number_format($quadrantTotals[$id] ?? 4500) }}</p>
+                                            <p class="text-3xl font-black text-slate-800 tracking-tighter">{{ number_format($quadrantStats[$id]['qty'] ?? 0) }}</p>
                                             <span class="text-[8px] font-black text-slate-900 italic uppercase">Units</span>
                                         </div>
                                     </div>
@@ -604,11 +604,11 @@
                             </thead>
                             <tbody class="text-sm font-bold text-slate-700 divide-y divide-slate-50">
                                 <template x-for="log in filteredLogs" :key="log.id">
-                                    <tr class="hover:bg-slate-50/50 transition-all duration-300 group cursor-default">
+                                    <tr class="hover:bg-slate-50 transition-colors duration-200 group cursor-default">
                                         <td class="px-6 py-7 text-slate-900 font-black italic group-hover:text-[#c00000] transition-colors" x-text="'#INV-' + log.id.toString().padStart(5, '0')"></td>
-                                        <td class="px-6 py-7 font-black text-slate-900 transition-colors uppercase leading-tight group-hover:translate-x-1 transition-transform" x-text="log.school"></td>
-                                        <td class="px-6 py-7 text-slate-500 uppercase tracking-tighter" x-text="log.timestamp"></td>
-                                        <td class="px-6 py-7 font-black text-2xl tracking-tighter text-slate-900" x-text="numberFormat(log.qty)"></td>
+                                        <td class="px-6 py-7 font-black text-slate-900 transition-colors uppercase leading-tight" x-text="log.school"></td>
+                                        <td class="px-6 py-7 text-slate-500 uppercase tracking-tighter transition-colors" x-text="log.timestamp"></td>
+                                        <td class="px-6 py-7 font-black text-2xl tracking-tighter text-slate-900 transition-colors" x-text="numberFormat(log.qty)"></td>
                                         <td class="px-6 py-7 text-right">
                                             <span class="px-5 py-2.5 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase italic border border-emerald-100 shadow-sm group-hover:bg-emerald-500 group-hover:text-white transition-all">Verified</span>
                                         </td>

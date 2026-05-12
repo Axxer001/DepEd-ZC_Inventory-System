@@ -523,7 +523,8 @@ class ReportDownloadController extends Controller
             $search = $filters['search'];
             $query->where(function($q) use ($search) {
                 $q->where('schools.school_id', 'LIKE', "%$search%")
-                  ->orWhere('schools.name', 'LIKE', "%$search%");
+                  ->orWhere('schools.name', 'LIKE', "%$search%")
+                  ->orWhereRaw("CONCAT_WS(' - ', schools.school_id, schools.name) LIKE ?", ["%$search%"]);
             });
         }
 
