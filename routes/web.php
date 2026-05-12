@@ -110,6 +110,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/schools/{id}/assets', [AssetController::class, 'getSchoolAssets'])->name('api.schools.assets');
     Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('assets.history');
     Route::get('/assets/lifecycle', [AssetController::class, 'lifecycle'])->name('assets.lifecycle');
+    Route::get('/assets/{id}/profile', [AssetController::class, 'profile'])->name('assets.profile');
     Route::get('/asset-explorer', [AssetController::class, 'explorer'])->name('assets.explorer');
 
     // --- QR & Tags ---
@@ -143,6 +144,7 @@ Route::middleware('auth')->group(function () {
     
     Route::post('/api/reports/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getPreview'])->name('api.reports.preview');
     Route::get('/api/reports/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getFilterOptions'])->name('api.reports.filters');
+    Route::get('/api/assets/suggestions', [\App\Http\Controllers\ReportDownloadController::class, 'getAssetSuggestions'])->name('api.assets.suggestions');
     Route::post('/reports/download-rpc', [\App\Http\Controllers\ReportDownloadController::class, 'download'])->name('assets.reports.download_rpc');
 
     // --- Inventory Management (Edit) ---
