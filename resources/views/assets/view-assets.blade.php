@@ -14,12 +14,12 @@
         .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .xls-th { padding: 12px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; white-space: nowrap; border-right: 1px solid #f1f5f9; border-bottom: 2px solid #e2e8f0; background: inherit; position: sticky; top: 0; z-index: 20; }
-        .xls-td { height: 48px; border-right: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; vertical-align: middle; padding: 0; background: transparent; }
+        .xls-th { padding: 12px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; white-space: nowrap; border-right: 1px solid #f1f5f9; border-bottom: 2px solid #e2e8f0; background: #f8fafc; position: sticky; top: 0; z-index: 20; }
+        .xls-td { height: 48px; border-right: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; vertical-align: middle; padding: 0; background: #ffffff; }
         .xls-row { transition: background 0.1s; }
-        .xls-row:hover .xls-td { background-color: rgba(192, 0, 0, 0.05) !important; }
-        .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
-        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 620px); min-height: 350px; background: transparent; flex-grow: 1; transition: height 0.3s ease-in-out; }
+        .xls-row:hover .xls-td { background-color: #fff1f2 !important; }
+        .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: #334155; white-space: nowrap; }
+        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 620px); min-height: 350px; background: #ffffff; flex-grow: 1; transition: height 0.3s ease-in-out; }
         .xls-scroll-wrap.expanded { height: calc(100vh - 280px); }
         
         .pg-btn {
@@ -108,16 +108,12 @@
                 <p class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] mt-2">Division-Wide Property & Equipment Registry</p>
             </div>
             <div class="flex items-center gap-4">
-                <button onclick="toggleAssetColumns()" id="toggleColumnsBtn" class="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-100 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:scale-110 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
-                    View All Columns
-                </button>
-                <button onclick="toggleAssetFilters()" id="toggleFilterBtn" class="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-100 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:rotate-12 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
+                <button onclick="toggleAssetFilters()" id="toggleFilterBtn" class="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-100 hover:border-red-600 transition-all flex items-center gap-2 active:scale-95 shadow-sm italic">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
                     Show Filters
                 </button>
-                <a href="/dashboard" class="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-500 bg-white border border-slate-100 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
+                <a href="/dashboard" class="back-btn-cool px-6 py-3 rounded-2xl text-sm font-bold text-slate-600 flex items-center gap-2 shadow-sm active:scale-95 bg-white border border-slate-100 hover:border-red-600 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
                     Back
                 </a>
             </div>
@@ -197,51 +193,35 @@
                 </div>
             </div>
             <div class="mt-8 flex justify-end items-center gap-8 relative z-10">
-                <button onclick="clearAssetFilters()" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-[#c00000] hover:-translate-y-0.5 transition-all duration-300 italic">Clear All Filters</button>
-                <button onclick="assetFetchData()" class="px-8 py-2.5 bg-[#c00000] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-800 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-red-200 active:translate-y-0 transition-all duration-300 shadow-md shadow-red-200 italic group flex items-center gap-2">
-                    Apply Configuration
-                    <svg class="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                </button>
+                <button onclick="clearAssetFilters()" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-red-600 transition-all italic">Clear All Filters</button>
+                <button onclick="assetFetchData()" class="px-8 py-2.5 bg-[#c00000] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-700 transition-all active:scale-95 shadow-lg shadow-red-200 italic">Apply Configuration</button>
             </div>
         </div>
 
         <!-- Tab Selection -->
         <div class="flex justify-start mb-6 px-2">
             <div class="inline-flex p-1 bg-white rounded-[1.2rem] border border-slate-200 shadow-sm relative overflow-hidden">
-                <button onclick="setAssetTab('source')" id="tabBtnSource" class="relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-slate-500 hover:text-[#c00000] hover:-translate-y-0.5 active:translate-y-0">
+                <button onclick="setAssetTab('source')" id="tabBtnSource" class="relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-slate-500 hover:text-[#c00000]">
                     Asset Source
                 </button>
-                <button onclick="setAssetTab('distribution')" id="tabBtnDist" class="relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-white bg-[#c00000] shadow-md shadow-red-200 hover:-translate-y-0.5 active:translate-y-0 hover:shadow-lg hover:shadow-red-300">
+                <button onclick="setAssetTab('distribution')" id="tabBtnDist" class="relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-white bg-[#c00000] shadow-md shadow-red-200">
                     Asset Distribution
                 </button>
             </div>
 
             {{-- PPE/Semi-PPE Dropdown --}}
-            <div class="ml-4 shrink-0">
+            <div class="ml-4">
                 <select id="assetPropertyType" onchange="assetFetchData()" class="bg-white border border-slate-200 rounded-[1.2rem] px-6 py-2.5 text-[10px] font-black text-slate-700 uppercase tracking-widest focus:ring-4 focus:ring-red-50 focus:border-[#c00000] transition-all outline-none shadow-sm">
                     <option value="ALL">All Assets</option>
                     <option value="RPCPPE">PPE (≥ 50k)</option>
                     <option value="RPCSP">Semi-PPE (< 50k)</option>
                 </select>
             </div>
-
-            {{-- Search Bar --}}
-            <div class="ml-auto w-full max-w-md relative" id="assetSearchContainer">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </div>
-                <input type="text" id="assetSearchInput" oninput="debounceAssetSearch()" autocomplete="off" placeholder="Search Property No. or Description..." class="w-full bg-white border border-slate-200 rounded-[1.2rem] pl-10 pr-4 py-2.5 text-[10px] font-black text-slate-700 uppercase tracking-widest focus:ring-4 focus:ring-red-50 focus:border-[#c00000] transition-all outline-none shadow-sm placeholder:text-slate-400">
-                
-                {{-- Suggestions Dropdown --}}
-                <div id="assetSearchSuggestions" class="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-slate-100 z-50 overflow-hidden hidden flex-col max-h-60 overflow-y-auto custom-scroll">
-                    <!-- Suggested items populated via JS -->
-                </div>
-            </div>
         </div>
 
-        <div class="rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden flex flex-col animate-fade relative">
+        <div class="bg-white rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden flex flex-col animate-fade relative">
             <div class="xls-scroll-wrap expanded">
-                <table id="assetTable" class="w-full border-collapse" style="min-width:1000px;">
+                <table class="w-full border-collapse" style="min-width:1400px;">
                     <thead id="assetHeader"></thead>
                     <tbody id="assetBody"></tbody>
                 </table>
@@ -263,7 +243,7 @@
                 </div>
             </div>
 
-            <div id="assetTableFooter" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            <div id="assetTableFooter" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-white relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                 <div class="flex items-center gap-6">
                     <p id="assetRowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 Rows</p>
                     <div id="assetPaginationControls" class="flex items-center gap-3 border-l border-slate-200 pl-6">
@@ -295,22 +275,6 @@
         let allSchoolList = [];
         let isSchoolInit = false;
         let currentAssetTab = 'distribution';
-        let assetShowAllColumns = false;
-
-        function toggleAssetColumns() {
-            assetShowAllColumns = !assetShowAllColumns;
-            const btn = document.getElementById('toggleColumnsBtn');
-            const table = document.getElementById('assetTable');
-            
-            if (assetShowAllColumns) {
-                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" /></svg> Hide Extra Columns`;
-                table.style.minWidth = '1400px';
-            } else {
-                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg> View All Columns`;
-                table.style.minWidth = '1000px';
-            }
-            renderAssetTable();
-        }
 
         function setAssetTab(tab) {
             currentAssetTab = tab;
@@ -389,8 +353,7 @@
                 schoolName: document.getElementById('assetFilterSchool').value,
                 sortCost: document.getElementById('assetFilterSort').value,
                 emptyCol: document.getElementById('assetFilterEmptyCol').value,
-                tab: currentAssetTab,
-                search: document.getElementById('assetSearchInput')?.value || ''
+                tab: currentAssetTab
             };
             const reportType = document.getElementById('assetPropertyType').value;
             try {
@@ -408,39 +371,22 @@
         function renderAssetTable() {
             const header = document.getElementById('assetHeader');
             const tbody = document.getElementById('assetBody');
-            
             if (currentAssetTab === 'source') {
-                if (assetShowAllColumns) {
-                    header.innerHTML = `<tr><th class="xls-th w-10 text-center sticky left-0 z-10">#</th><th class="xls-th" style="min-width:150px">Classification</th><th class="xls-th" style="min-width:150px">Category</th><th class="xls-th" style="min-width:180px">Article</th><th class="xls-th" style="min-width:300px">Description</th><th class="xls-th" style="min-width:80px">Unit</th><th class="xls-th" style="min-width:120px">Unit Cost</th><th class="xls-th" style="min-width:80px">Total Qty</th><th class="xls-th" style="min-width:150px">Total Cost</th><th class="xls-th" style="min-width:150px">Mode</th><th class="xls-th" style="min-width:200px">Source/Supplier</th><th class="xls-th" style="min-width:150px">Date Acquired</th></tr>`;
-                } else {
-                    header.innerHTML = `<tr><th class="xls-th w-10 text-center sticky left-0 z-10">#</th><th class="xls-th" style="min-width:180px">Article</th><th class="xls-th" style="min-width:300px">Description</th><th class="xls-th" style="min-width:80px">Unit</th><th class="xls-th" style="min-width:80px">Total Qty</th><th class="xls-th" style="min-width:150px">Total Cost</th><th class="xls-th" style="min-width:150px">Date Acquired</th></tr>`;
-                }
+                header.innerHTML = `<tr><th class="xls-th w-10 text-center sticky left-0 z-10">#</th><th class="xls-th" style="min-width:150px">Classification</th><th class="xls-th" style="min-width:150px">Category</th><th class="xls-th" style="min-width:180px">Article</th><th class="xls-th" style="min-width:300px">Description</th><th class="xls-th" style="min-width:80px">Unit</th><th class="xls-th" style="min-width:120px">Unit Cost</th><th class="xls-th" style="min-width:80px">Total Qty</th><th class="xls-th" style="min-width:150px">Total Cost</th><th class="xls-th" style="min-width:150px">Mode</th><th class="xls-th" style="min-width:200px">Source/Supplier</th><th class="xls-th" style="min-width:150px">Date Acquired</th></tr>`;
             } else {
-                if (assetShowAllColumns) {
-                    header.innerHTML = `<tr>
-                        <th class="xls-th w-10 text-center sticky left-0 z-10">#</th>
-                        <th class="xls-th" style="min-width:100px">Region</th>
-                        <th class="xls-th" style="min-width:180px">Division</th>
-                        <th class="xls-th" style="min-width:150px">Office/School Type</th>
-                        <th class="xls-th" style="min-width:100px">School ID</th>
-                        <th class="xls-th" style="min-width:250px">Office/School Name</th>
-                        <th class="xls-th" style="min-width:150px">Nature of Occupancy</th>
-                        <th class="xls-th" style="min-width:150px">Location</th>
-                        <th class="xls-th" style="min-width:180px">Property No.</th>
-                        <th class="xls-th" style="min-width:150px">Acquisition Cost (₱)</th>
-                        <th class="xls-th" style="min-width:150px">Acquisition Date</th>
-                    </tr>`;
-                } else {
-                    header.innerHTML = `<tr>
-                        <th class="xls-th w-10 text-center sticky left-0 z-10">#</th>
-                        <th class="xls-th" style="min-width:100px">School ID</th>
-                        <th class="xls-th" style="min-width:250px">Office/School Name</th>
-                        <th class="xls-th" style="min-width:150px">Location</th>
-                        <th class="xls-th" style="min-width:180px">Property No.</th>
-                        <th class="xls-th" style="min-width:150px">Acquisition Cost (₱)</th>
-                        <th class="xls-th" style="min-width:150px">Acquisition Date</th>
-                    </tr>`;
-                }
+                header.innerHTML = `<tr>
+                    <th class="xls-th w-10 text-center sticky left-0 z-10">#</th>
+                    <th class="xls-th" style="min-width:100px">Region</th>
+                    <th class="xls-th" style="min-width:180px">Division</th>
+                    <th class="xls-th" style="min-width:150px">Office/School Type</th>
+                    <th class="xls-th" style="min-width:100px">School ID</th>
+                    <th class="xls-th" style="min-width:250px">Office/School Name</th>
+                    <th class="xls-th" style="min-width:150px">Nature of Occupancy</th>
+                    <th class="xls-th" style="min-width:150px">Location</th>
+                    <th class="xls-th" style="min-width:180px">Property No.</th>
+                    <th class="xls-th" style="min-width:150px">Acquisition Cost (₱)</th>
+                    <th class="xls-th" style="min-width:150px">Acquisition Date</th>
+                </tr>`;
             }
             tbody.innerHTML = '';
             if (assetRowsData.length === 0) {
@@ -453,38 +399,23 @@
             const pageData = assetRowsData.slice(start, start + assetRowsPerPage);
             pageData.forEach((row, idx) => {
                 const tr = document.createElement('tr');
-                tr.className = 'xls-row group border-b border-slate-100 cursor-pointer';
-                tr.onclick = () => { window.location.href = `/assets/${row.id}/profile`; };
+                tr.className = 'xls-row group border-b border-slate-100';
                 const cell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const">${val || ''}</span></td>`;
                 const costCell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const font-black text-emerald-600 italic">₱ ${Number(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></td>`;
                 if (currentAssetTab === 'source') {
-                    if (assetShowAllColumns) {
-                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-inherit z-10"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>${cell(row.classification, 'text-blue-600 font-bold')}${cell(row.category, 'text-slate-500')}${cell(row.article, 'font-bold text-slate-800')}${cell(row.description, 'text-slate-600 italic')}${cell(row.unit_of_measurement)}${costCell(row.asset_cost)}${cell(row.quantity, 'font-black text-amber-600')}${costCell(row.acquisition_cost, 'bg-inherit')}${cell(row.mode_of_acquisition)}${cell(row.acq_source, 'font-bold text-blue-600')}${cell(row.acceptance_date)}`;
-                    } else {
-                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-inherit z-10"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>${cell(row.article, 'font-bold text-slate-800')}${cell(row.description, 'text-slate-600 italic')}${cell(row.unit_of_measurement)}${cell(row.quantity, 'font-black text-amber-600')}${costCell(row.acquisition_cost, 'bg-inherit')}${cell(row.acceptance_date)}`;
-                    }
+                    tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-[#f8fafc] z-10"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>${cell(row.classification, 'text-blue-600 font-bold')}${cell(row.category, 'text-slate-500')}${cell(row.article, 'font-bold text-slate-800')}${cell(row.description, 'text-slate-600 italic')}${cell(row.unit_of_measurement)}${costCell(row.asset_cost)}${cell(row.quantity, 'font-black text-amber-600')}${costCell(row.acquisition_cost, 'bg-slate-50')}${cell(row.mode_of_acquisition)}${cell(row.acq_source, 'font-bold text-blue-600')}${cell(row.acceptance_date)}`;
                 } else {
-                    if (assetShowAllColumns) {
-                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-inherit z-10"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
-                            <td class="xls-td"><span class="xls-const">Region IX</span></td>
-                            <td class="xls-td"><span class="xls-const">Division of Zamboanga City</span></td>
-                            ${cell(row.school_type)}
-                            ${cell(row.school_id)}
-                            ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
-                            ${cell(row.nature_of_occupancy)}
-                            ${cell(row.location)}
-                            ${cell(row.property_number)}
-                            ${costCell(row.acquisition_cost, 'bg-inherit')}
-                            ${cell(row.acquisition_date)}`;
-                    } else {
-                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-inherit z-10"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
-                            ${cell(row.school_id)}
-                            ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
-                            ${cell(row.location)}
-                            ${cell(row.property_number)}
-                            ${costCell(row.acquisition_cost, 'bg-inherit')}
-                            ${cell(row.acquisition_date)}`;
-                    }
+                    tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-[#f8fafc] z-10"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
+                        <td class="xls-td"><span class="xls-const">Region IX</span></td>
+                        <td class="xls-td"><span class="xls-const">Division of Zamboanga City</span></td>
+                        ${cell(row.school_type)}
+                        ${cell(row.school_id)}
+                        ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
+                        ${cell(row.nature_of_occupancy)}
+                        ${cell(row.location)}
+                        ${cell(row.property_number)}
+                        ${costCell(row.acquisition_cost, 'bg-slate-50')}
+                        ${cell(row.acquisition_date)}`;
                 }
                 tbody.appendChild(tr);
             });
@@ -506,61 +437,9 @@
             document.getElementById('assetFilterSchool').value = '';
             document.getElementById('assetFilterSort').value = '';
             document.getElementById('assetFilterEmptyCol').value = '';
-            const searchInput = document.getElementById('assetSearchInput');
-            if(searchInput) searchInput.value = '';
+            assetCurrentPage = 1;
             assetFetchData();
         }
-
-        let searchTimeout = null;
-        async function debounceAssetSearch() {
-            clearTimeout(searchTimeout);
-            const input = document.getElementById('assetSearchInput').value;
-            const suggestionsBox = document.getElementById('assetSearchSuggestions');
-            
-            if (input.length < 2) {
-                suggestionsBox.classList.add('hidden');
-                suggestionsBox.innerHTML = '';
-                if (input.length === 0) assetFetchData();
-                return;
-            }
-
-            searchTimeout = setTimeout(async () => {
-                try {
-                    const res = await fetch(`/api/assets/suggestions?q=${encodeURIComponent(input)}&tab=${currentAssetTab}`);
-                    const data = await res.json();
-                    
-                    if (data.length > 0) {
-                        suggestionsBox.innerHTML = '<div class="px-4 py-2 text-[8px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 border-b border-slate-100 italic">Suggested Matches</div>';
-                        data.forEach(item => {
-                            const btn = document.createElement('button');
-                            btn.className = 'custom-autocomplete-item w-full text-left px-4 py-3 text-[10px] font-black text-slate-600 tracking-widest uppercase border-b border-slate-100 last:border-0 transition-all';
-                            btn.textContent = item;
-                            btn.onclick = () => {
-                                document.getElementById('assetSearchInput').value = item;
-                                suggestionsBox.classList.add('hidden');
-                                assetFetchData();
-                            };
-                            suggestionsBox.appendChild(btn);
-                        });
-                        suggestionsBox.classList.remove('hidden');
-                        suggestionsBox.classList.add('flex');
-                    } else {
-                        suggestionsBox.classList.add('hidden');
-                    }
-                    
-                    assetFetchData();
-                } catch (e) {
-                    console.error('Failed to fetch suggestions', e);
-                }
-            }, 300);
-        }
-
-        document.addEventListener('click', (e) => {
-            const searchContainer = document.getElementById('assetSearchContainer');
-            if (searchContainer && !searchContainer.contains(e.target)) {
-                document.getElementById('assetSearchSuggestions')?.classList.add('hidden');
-            }
-        });
 
         function assetPrevPage() { if (assetCurrentPage > 1) { assetCurrentPage--; renderAssetTable(); } }
         function assetNextPage() { const t = Math.ceil(assetRowsData.length/assetRowsPerPage); if (assetCurrentPage < t) { assetCurrentPage++; renderAssetTable(); } }

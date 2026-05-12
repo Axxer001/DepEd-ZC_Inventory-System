@@ -17,12 +17,13 @@
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: #f87171; border: 2px solid transparent; background-clip: padding-box; }
         .back-btn-cool { background: white; border: 1px solid #e2e8f0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .xls-th { padding: 14px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; white-space: nowrap; border-right: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: inherit; position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-        .xls-td { height: 52px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; vertical-align: middle; padding: 0; background: transparent; transition: all 0.2s ease; }
+        .back-btn-cool:hover { border-color: #ef4444; color: #ef4444; box-shadow: 0 10px 15px -3px rgba(239, 68, 68, 0.15); transform: translateY(-2px); }
+        .xls-th { padding: 14px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; white-space: nowrap; border-right: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: #ffffff; position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .xls-td { height: 52px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; vertical-align: middle; padding: 0; background: #ffffff; transition: all 0.2s ease; }
         .xls-row { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
-        .xls-row:hover .xls-td { background-color: rgba(192, 0, 0, 0.05) !important; }
-        .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
-        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 450px); min-height: 400px; background: transparent; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
+        .xls-row:hover .xls-td { background-color: #fff1f2 !important; }
+        .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: #334155; white-space: nowrap; }
+        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 450px); min-height: 400px; background: #ffffff; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
         .xls-scroll-wrap.expanded { height: calc(100vh - 250px); }
         .pg-btn {
             padding: 8px 18px;
@@ -162,16 +163,12 @@
                 </p>
             </div>
             <div class="flex items-center gap-4">
-                <button onclick="toggleBldgColumns()" id="toggleColumnsBtn" class="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 bg-white border border-slate-200 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:scale-110 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
-                    View All Columns
-                </button>
-                <button onclick="toggleBldgFilters()" id="toggleFilterBtn" class="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 bg-white border border-slate-200 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:rotate-12 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
+                <button onclick="toggleBldgFilters()" id="toggleFilterBtn" class="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 bg-white border border-slate-200 hover:border-red-500 hover:text-red-600 hover:shadow-lg hover:shadow-red-500/10 transition-all duration-300 flex items-center gap-2 active:scale-95 italic">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
                     Show Filters
                 </button>
-                <a href="/dashboard" class="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 bg-white border border-slate-200 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
+                <a href="/dashboard" class="back-btn-cool px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 flex items-center gap-2 shadow-sm italic active:scale-95">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
                     Back
                 </a>
             </div>
@@ -248,31 +245,38 @@
                 </div>
             </div>
                 <div class="mt-8 flex justify-end items-center gap-8 relative z-10 pt-6 border-t border-slate-100/60">
-                    <button onclick="clearBldgFilters()" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-[#c00000] hover:-translate-y-0.5 transition-all duration-300 italic">Clear All Filters</button>
-                    <button onclick="bldgFetchData()" class="px-8 py-3 bg-gradient-to-r from-red-700 to-red-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:from-red-800 hover:to-red-600 transition-all duration-300 active:translate-y-0 shadow-lg shadow-red-500/30 italic transform hover:-translate-y-0.5 group flex items-center gap-2">
-                        Apply Configuration
-                        <svg class="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    </button>
+                    <button onclick="clearBldgFilters()" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-red-600 transition-all italic">Clear All Filters</button>
+                    <button onclick="bldgFetchData()" class="px-8 py-3 bg-gradient-to-r from-red-700 to-red-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:from-red-600 hover:to-red-400 transition-all duration-300 active:scale-95 shadow-lg shadow-red-500/30 italic transform hover:-translate-y-0.5">Apply Configuration</button>
                 </div>
         </div>
 
-        <div class="rounded-[2rem] border border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col animate-fade relative ring-1 ring-black/5">
+        <div class="bg-white rounded-[2rem] border border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col animate-fade relative ring-1 ring-black/5">
             <div class="xls-scroll-wrap expanded">
-                <table id="bldgTable" class="w-full border-collapse" style="min-width:1200px;">
-                    <thead id="bldgHeader">
-                        <tr>
-                            <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                            <th class="xls-th" style="min-width:100px">School ID</th>
-                            <th class="xls-th" style="min-width:200px">Office/School Name</th>
-                            <th class="xls-th" style="min-width:140px">Article</th>
-                            <th class="xls-th" style="min-width:170px">Description</th>
-                            <th class="xls-th" style="min-width:130px">Property No.</th>
-                            <th class="xls-th" style="min-width:70px">Storeys</th>
-                            <th class="xls-th" style="min-width:90px">Classrooms</th>
-                            <th class="xls-th text-right" style="min-width:120px">Acq. Cost (₱)</th>
-                            <th class="xls-th" style="min-width:120px">Date Constructed</th>
-                        </tr>
-                    </thead>
+                <table class="w-full border-collapse" style="min-width:2400px;">
+                    <thead><tr>
+                        <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
+                        <th class="xls-th" style="min-width:90px">Region</th>
+                        <th class="xls-th" style="min-width:190px">Division</th>
+                        <th class="xls-th" style="min-width:140px">Office/School Type</th>
+                        <th class="xls-th" style="min-width:100px">School ID</th>
+                        <th class="xls-th" style="min-width:200px">Office/School Name</th>
+                        <th class="xls-th" style="min-width:180px">Address</th>
+                        <th class="xls-th" style="min-width:70px">Storeys</th>
+                        <th class="xls-th" style="min-width:90px">Classrooms</th>
+                        <th class="xls-th" style="min-width:140px">Article</th>
+                        <th class="xls-th" style="min-width:170px">Description</th>
+                        <th class="xls-th" style="min-width:130px">Classification</th>
+                        <th class="xls-th" style="min-width:130px">Occupancy</th>
+                        <th class="xls-th" style="min-width:150px">Location</th>
+                        <th class="xls-th" style="min-width:120px">Date Constructed</th>
+                        <th class="xls-th" style="min-width:120px">Acquisition Date</th>
+                        <th class="xls-th" style="min-width:130px">Property No.</th>
+                        <th class="xls-th text-right" style="min-width:120px">Acq. Cost (₱)</th>
+                        <th class="xls-th text-center" style="min-width:100px">Est. Useful Life</th>
+                        <th class="xls-th text-right" style="min-width:120px">Appraised Value</th>
+                        <th class="xls-th" style="min-width:120px">Appraisal Date</th>
+                        <th class="xls-th" style="min-width:140px">Remarks</th>
+                    </tr></thead>
                     <tbody id="bldgBody"></tbody>
                 </table>
                 
@@ -295,7 +299,7 @@
                 </div>
             </div>
 
-            <div id="bldgTableFooter" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+            <div id="bldgTableFooter" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-white relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
                 <div class="flex items-center gap-6">
                     <p id="bldgRowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 Rows</p>
                     <div id="bldgPaginationControls" class="flex items-center gap-3 border-l border-slate-200 pl-6">
@@ -327,60 +331,6 @@
         const bldgRowsPerPage = 50;
         let allSchools = [];
         let isAutocompleteInit = false;
-        let bldgShowAllColumns = false;
-
-        function toggleBldgColumns() {
-            bldgShowAllColumns = !bldgShowAllColumns;
-            const btn = document.getElementById('toggleColumnsBtn');
-            const table = document.getElementById('bldgTable');
-            const thead = document.getElementById('bldgHeader');
-            
-            if (bldgShowAllColumns) {
-                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" /></svg> Hide Extra Columns`;
-                table.style.minWidth = '2400px';
-                thead.innerHTML = `<tr>
-                    <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                    <th class="xls-th" style="min-width:90px">Region</th>
-                    <th class="xls-th" style="min-width:190px">Division</th>
-                    <th class="xls-th" style="min-width:140px">Office/School Type</th>
-                    <th class="xls-th" style="min-width:100px">School ID</th>
-                    <th class="xls-th" style="min-width:200px">Office/School Name</th>
-                    <th class="xls-th" style="min-width:180px">Address</th>
-                    <th class="xls-th" style="min-width:70px">Storeys</th>
-                    <th class="xls-th" style="min-width:90px">Classrooms</th>
-                    <th class="xls-th" style="min-width:140px">Article</th>
-                    <th class="xls-th" style="min-width:170px">Description</th>
-                    <th class="xls-th" style="min-width:130px">Classification</th>
-                    <th class="xls-th" style="min-width:130px">Occupancy</th>
-                    <th class="xls-th" style="min-width:150px">Location</th>
-                    <th class="xls-th" style="min-width:120px">Date Constructed</th>
-                    <th class="xls-th" style="min-width:120px">Acquisition Date</th>
-                    <th class="xls-th" style="min-width:130px">Property No.</th>
-                    <th class="xls-th text-right" style="min-width:120px">Acq. Cost (₱)</th>
-                    <th class="xls-th text-center" style="min-width:100px">Est. Useful Life</th>
-                    <th class="xls-th text-right" style="min-width:120px">Appraised Value</th>
-                    <th class="xls-th" style="min-width:120px">Appraisal Date</th>
-                    <th class="xls-th" style="min-width:140px">Remarks</th>
-                </tr>`;
-            } else {
-                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg> View All Columns`;
-                table.style.minWidth = '1200px';
-                thead.innerHTML = `<tr>
-                    <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                    <th class="xls-th" style="min-width:100px">School ID</th>
-                    <th class="xls-th" style="min-width:200px">Office/School Name</th>
-                    <th class="xls-th" style="min-width:140px">Article</th>
-                    <th class="xls-th" style="min-width:170px">Description</th>
-                    <th class="xls-th" style="min-width:130px">Property No.</th>
-                    <th class="xls-th" style="min-width:70px">Storeys</th>
-                    <th class="xls-th" style="min-width:90px">Classrooms</th>
-                    <th class="xls-th text-right" style="min-width:120px">Acq. Cost (₱)</th>
-                    <th class="xls-th" style="min-width:120px">Date Constructed</th>
-                </tr>`;
-            }
-            renderBldgTable();
-        }
-
         async function bldgFetchFilters() {
             try {
                 const res = await fetch("{{ route('api.buildings.filters') }}");
@@ -519,48 +469,33 @@
                 const numCell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const justify-center">${val || '0'}</span></td>`;
                 const costCell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const justify-end font-bold text-red-600">₱ ${val ? parseFloat(val).toLocaleString(undefined, {minimumFractionDigits: 2}) : '0.00'}</span></td>`;
 
-                if (bldgShowAllColumns) {
-                    tr.innerHTML = `
-                        <td class="xls-td text-center sticky left-0 w-10 bg-inherit z-10"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
-                        ${cell(row.region)}
-                        ${cell(row.division)}
-                        ${cell(row.office_type)}
-                        ${cell(row.school_identifier)}
-                        ${cell(row.office_name)}
-                        ${cell(row.address)}
-                        ${numCell(row.storeys)}
-                        ${numCell(row.classrooms)}
-                        ${cell(row.article)}
-                        ${cell(row.description)}
-                        ${cell(row.classification)}
-                        ${cell(row.occupancy_nature)}
-                        ${cell(row.location)}
-                        ${cell(row.date_constructed)}
-                        ${cell(row.acquisition_date)}
-                        ${cell(row.property_number)}
-                        ${costCell(row.acquisition_cost)}
-                        ${numCell(row.estimated_useful_life)}
-                        ${costCell(row.appraised_value)}
-                        ${cell(row.appraisal_date)}
-                        ${cell(row.remarks)}
-                    `;
-                    tr.onmouseenter = (e) => showDepTooltip(e, row);
-                    tr.onmouseleave = () => hideDepTooltip();
-                    tr.onmousemove = (e) => moveDepTooltip(e);
-                } else {
-                    tr.innerHTML = `
-                        <td class="xls-td text-center sticky left-0 w-10 bg-inherit z-10"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
-                        ${cell(row.school_identifier)}
-                        ${cell(row.office_name, 'font-bold text-[#c00000]')}
-                        ${cell(row.article)}
-                        ${cell(row.description)}
-                        ${cell(row.property_number)}
-                        ${numCell(row.storeys)}
-                        ${numCell(row.classrooms)}
-                        ${costCell(row.acquisition_cost)}
-                        ${cell(row.date_constructed)}
-                    `;
-                }
+                tr.innerHTML = `
+                    <td class="xls-td text-center sticky left-0 w-10 bg-[#f8fafc] z-10"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
+                    ${cell(row.region)}
+                    ${cell(row.division)}
+                    ${cell(row.office_type)}
+                    ${cell(row.school_identifier)}
+                    ${cell(row.office_name)}
+                    ${cell(row.address)}
+                    ${numCell(row.storeys)}
+                    ${numCell(row.classrooms)}
+                    ${cell(row.article)}
+                    ${cell(row.description)}
+                    ${cell(row.classification)}
+                    ${cell(row.occupancy_nature)}
+                    ${cell(row.location)}
+                    ${cell(row.date_constructed)}
+                    ${cell(row.acquisition_date)}
+                    ${cell(row.property_number)}
+                    ${costCell(row.acquisition_cost)}
+                    ${numCell(row.estimated_useful_life)}
+                    ${costCell(row.appraised_value)}
+                    ${cell(row.appraisal_date)}
+                    ${cell(row.remarks)}
+                `;
+                tr.onmouseenter = (e) => showDepTooltip(e, row);
+                tr.onmouseleave = () => hideDepTooltip();
+                tr.onmousemove = (e) => moveDepTooltip(e);
                 tbody.appendChild(tr);
             });
             const totalPages = Math.ceil(bldgRowsData.length / bldgRowsPerPage) || 1;

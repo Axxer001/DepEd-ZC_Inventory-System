@@ -101,17 +101,6 @@ class ReportDownloadController extends Controller
             $query->whereDate('asset_sources.acceptance_date', $filters['dateAcquired']);
         }
 
-        if (!empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function($q) use ($search, $tab) {
-                $q->where('asset_sources.description', 'LIKE', "%$search%")
-                  ->orWhere('items.name', 'LIKE', "%$search%");
-                if ($tab === 'distribution') {
-                    $q->orWhere('asset_distributions.property_number', 'LIKE', "%$search%");
-                }
-            });
-        }
-
         // Sorting by Cost
         $sortCost = $filters['sortCost'] ?? null;
         if ($sortCost === 'low_to_high') {
@@ -169,38 +158,6 @@ class ReportDownloadController extends Controller
         $query = $this->buildQuery($request);
         $rows = $query->limit(500)->get();
         return response()->json(['rows' => $rows]);
-    }
-
-    public function getAssetSuggestions(Request $request)
-    {
-        $search = $request->input('q');
-        $tab = $request->input('tab', 'distribution');
-        
-        if (empty($search)) return response()->json([]);
-
-        if ($tab === 'source') {
-            $results = DB::table('asset_sources')
-                ->leftJoin('items', 'asset_sources.item_id', '=', 'items.id')
-                ->where('asset_sources.description', 'LIKE', "%$search%")
-                ->orWhere('items.name', 'LIKE', "%$search%")
-                ->select(DB::raw('COALESCE(asset_sources.description, items.name) as suggestion'))
-                ->distinct()
-                ->limit(10)
-                ->pluck('suggestion');
-        } else {
-            $results = DB::table('asset_distributions')
-                ->leftJoin('asset_sources', 'asset_distributions.asset_source_id', '=', 'asset_sources.id')
-                ->leftJoin('items', 'asset_sources.item_id', '=', 'items.id')
-                ->where('asset_distributions.property_number', 'LIKE', "%$search%")
-                ->orWhere('asset_sources.description', 'LIKE', "%$search%")
-                ->orWhere('items.name', 'LIKE', "%$search%")
-                ->select(DB::raw('COALESCE(asset_distributions.property_number, asset_sources.description, items.name) as suggestion'))
-                ->distinct()
-                ->limit(10)
-                ->pluck('suggestion');
-        }
-
-        return response()->json($results);
     }
 
     public function getEditPreview(Request $request)

@@ -282,55 +282,6 @@ class AssetController extends Controller
         ]);
     }
 
-    public function profile($id)
-    {
-        $asset = DB::table('asset_distributions as ad')
-            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
-            ->join('items', 'asrc.item_id', '=', 'items.id')
-            ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->join('acquisition_sources', 'asrc.acquisition_source_id', '=', 'acquisition_sources.id')
-            ->select(
-                'ad.id',
-                'ad.property_number',
-                'ad.office_school_name',
-                'ad.region',
-                'ad.division',
-                'ad.acquisition_date',
-                'asrc.acceptance_date',
-                DB::raw('COALESCE(asrc.description, items.name) as description'),
-                'asrc.asset_cost',
-                'asrc.quantity',
-                'asrc.mode_of_acquisition',
-                'acquisition_sources.name as source_name',
-                'items.name as item_name',
-                'categories.name as category_name'
-            )
-            ->where('ad.id', $id)
-            ->first();
-
-        if (!$asset) {
-            abort(404, 'Asset not found');
-        }
-
-        // Generate dummy timeline data since there's no actual repairs table yet
-        $timeline = [
-            [
-                'date' => $asset->acceptance_date ?? 'N/A',
-                'type' => 'Procurement',
-                'user' => 'System Admin',
-                'description' => 'Asset officially procured and registered into the database from ' . $asset->source_name
-            ],
-            [
-                'date' => $asset->acquisition_date ?? 'N/A',
-                'type' => 'Transfer',
-                'user' => 'Property Officer',
-                'description' => 'Deployed and assigned to ' . $asset->office_school_name
-            ]
-        ];
-
-        return view('assets.profile', compact('asset', 'timeline'));
-    }
-
     public function getSchoolAssets($id)
     {
         // Find the school and get its school_id string
