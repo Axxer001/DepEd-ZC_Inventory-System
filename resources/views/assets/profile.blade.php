@@ -68,6 +68,9 @@
                     <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                     Edit
                 </button>
+                <button @click="isEditing = false" x-show="isEditing" x-cloak class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-500 uppercase tracking-widest hover:border-slate-300 hover:text-slate-700 transition-all duration-300 shadow-sm flex items-center gap-2">
+                    Cancel
+                </button>
                 <button @click="showConfirmModal = true" x-show="isEditing" x-cloak class="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-700 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm shadow-emerald-600/30 hover:shadow-md flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                     Save Changes
