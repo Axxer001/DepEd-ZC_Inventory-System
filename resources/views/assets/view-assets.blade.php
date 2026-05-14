@@ -14,8 +14,8 @@
         .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .xls-th { padding: 12px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; white-space: nowrap; border-right: 1px solid #f1f5f9; border-bottom: 2px solid #e2e8f0; background: inherit; position: sticky; top: 0; z-index: 20; }
-        .xls-td { height: 48px; border-right: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; vertical-align: middle; padding: 0; background: transparent; }
+        .xls-th { padding: 12px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; white-space: nowrap; border-right: 1px solid #f1f5f9; border-bottom: 2px solid #e2e8f0; background: #f8fafc; position: sticky; top: 0; z-index: 20; }
+        .xls-td { height: 48px; border-right: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; vertical-align: middle; padding: 0; }
         .xls-row { transition: background 0.1s; }
         .xls-row:hover .xls-td { background-color: rgba(192, 0, 0, 0.05) !important; }
         .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
@@ -411,14 +411,14 @@
             
             if (currentAssetTab === 'source') {
                 if (assetShowAllColumns) {
-                    header.innerHTML = `<tr><th class="xls-th w-10 text-center sticky left-0 z-10">#</th><th class="xls-th" style="min-width:150px">Classification</th><th class="xls-th" style="min-width:150px">Category</th><th class="xls-th" style="min-width:180px">Article</th><th class="xls-th" style="min-width:300px">Description</th><th class="xls-th" style="min-width:80px">Unit</th><th class="xls-th" style="min-width:120px">Unit Cost</th><th class="xls-th" style="min-width:80px">Total Qty</th><th class="xls-th" style="min-width:150px">Total Cost</th><th class="xls-th" style="min-width:150px">Mode</th><th class="xls-th" style="min-width:200px">Source/Supplier</th><th class="xls-th" style="min-width:150px">Date Acquired</th></tr>`;
+                    header.innerHTML = `<tr><th class="xls-th w-10 text-center sticky left-0 z-40">#</th><th class="xls-th" style="min-width:150px">Classification</th><th class="xls-th" style="min-width:150px">Category</th><th class="xls-th" style="min-width:180px">Article</th><th class="xls-th" style="min-width:300px">Description</th><th class="xls-th" style="min-width:80px">Unit</th><th class="xls-th" style="min-width:120px">Unit Cost</th><th class="xls-th" style="min-width:80px">Total Qty</th><th class="xls-th" style="min-width:150px">Total Cost</th><th class="xls-th" style="min-width:150px">Mode</th><th class="xls-th" style="min-width:200px">Source/Supplier</th><th class="xls-th" style="min-width:150px">Date Acquired</th></tr>`;
                 } else {
-                    header.innerHTML = `<tr><th class="xls-th w-10 text-center sticky left-0 z-10">#</th><th class="xls-th" style="min-width:180px">Article</th><th class="xls-th" style="min-width:300px">Description</th><th class="xls-th" style="min-width:80px">Unit</th><th class="xls-th" style="min-width:80px">Total Qty</th><th class="xls-th" style="min-width:150px">Total Cost</th><th class="xls-th" style="min-width:150px">Date Acquired</th></tr>`;
+                    header.innerHTML = `<tr><th class="xls-th w-10 text-center sticky left-0 z-40">#</th><th class="xls-th" style="min-width:180px">Article</th><th class="xls-th" style="min-width:300px">Description</th><th class="xls-th" style="min-width:80px">Unit</th><th class="xls-th" style="min-width:80px">Total Qty</th><th class="xls-th" style="min-width:150px">Total Cost</th><th class="xls-th" style="min-width:150px">Date Acquired</th></tr>`;
                 }
             } else {
                 if (assetShowAllColumns) {
                     header.innerHTML = `<tr>
-                        <th class="xls-th w-10 text-center sticky left-0 z-10">#</th>
+                        <th class="xls-th w-10 text-center sticky left-0 z-40">#</th>
                         <th class="xls-th" style="min-width:100px">Region</th>
                         <th class="xls-th" style="min-width:180px">Division</th>
                         <th class="xls-th" style="min-width:150px">Office/School Type</th>
@@ -432,7 +432,7 @@
                     </tr>`;
                 } else {
                     header.innerHTML = `<tr>
-                        <th class="xls-th w-10 text-center sticky left-0 z-10">#</th>
+                        <th class="xls-th w-10 text-center sticky left-0 z-40">#</th>
                         <th class="xls-th" style="min-width:100px">School ID</th>
                         <th class="xls-th" style="min-width:250px">Office/School Name</th>
                         <th class="xls-th" style="min-width:150px">Location</th>
@@ -459,13 +459,13 @@
                 const costCell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const font-black text-emerald-600 italic">₱ ${Number(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></td>`;
                 if (currentAssetTab === 'source') {
                     if (assetShowAllColumns) {
-                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-inherit z-10"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>${cell(row.classification, 'text-blue-600 font-bold')}${cell(row.category, 'text-slate-500')}${cell(row.article, 'font-bold text-slate-800')}${cell(row.description, 'text-slate-600 italic')}${cell(row.unit_of_measurement)}${costCell(row.asset_cost)}${cell(row.quantity, 'font-black text-amber-600')}${costCell(row.acquisition_cost, 'bg-inherit')}${cell(row.mode_of_acquisition)}${cell(row.acq_source, 'font-bold text-blue-600')}${cell(row.acceptance_date)}`;
+                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-slate-50 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>${cell(row.classification, 'text-blue-600 font-bold')}${cell(row.category, 'text-slate-500')}${cell(row.article, 'font-bold text-slate-800')}${cell(row.description, 'text-slate-600 italic')}${cell(row.unit_of_measurement)}${costCell(row.asset_cost)}${cell(row.quantity, 'font-black text-amber-600')}${costCell(row.acquisition_cost, 'bg-inherit')}${cell(row.mode_of_acquisition)}${cell(row.acq_source, 'font-bold text-blue-600')}${cell(row.acceptance_date)}`;
                     } else {
-                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-inherit z-10"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>${cell(row.article, 'font-bold text-slate-800')}${cell(row.description, 'text-slate-600 italic')}${cell(row.unit_of_measurement)}${cell(row.quantity, 'font-black text-amber-600')}${costCell(row.acquisition_cost, 'bg-inherit')}${cell(row.acceptance_date)}`;
+                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-slate-50 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>${cell(row.article, 'font-bold text-slate-800')}${cell(row.description, 'text-slate-600 italic')}${cell(row.unit_of_measurement)}${cell(row.quantity, 'font-black text-amber-600')}${costCell(row.acquisition_cost, 'bg-inherit')}${cell(row.acceptance_date)}`;
                     }
                 } else {
                     if (assetShowAllColumns) {
-                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-inherit z-10"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
+                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-slate-50 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
                             <td class="xls-td"><span class="xls-const">Region IX</span></td>
                             <td class="xls-td"><span class="xls-const">Division of Zamboanga City</span></td>
                             ${cell(row.school_type)}
@@ -477,7 +477,7 @@
                             ${costCell(row.acquisition_cost, 'bg-inherit')}
                             ${cell(row.acquisition_date)}`;
                     } else {
-                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-inherit z-10"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
+                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 bg-slate-50 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
                             ${cell(row.school_id)}
                             ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
                             ${cell(row.location)}

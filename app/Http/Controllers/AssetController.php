@@ -292,6 +292,7 @@ class AssetController extends Controller
             ->select(
                 'ad.id',
                 'ad.property_number',
+                'ad.photo_path',
                 'ad.office_school_name',
                 'ad.region',
                 'ad.division',
@@ -328,7 +329,9 @@ class AssetController extends Controller
             ]
         ];
 
-        return view('assets.profile', compact('asset', 'timeline'));
+        $documents = DB::table('asset_documents')->where('asset_distribution_id', $id)->orderByDesc('created_at')->get();
+
+        return view('assets.profile', compact('asset', 'timeline', 'documents'));
     }
 
     public function getSchoolAssets($id)
@@ -364,5 +367,75 @@ class AssetController extends Controller
         });
 
         return response()->json(['success' => true, 'assets' => $assets]);
+    }
+
+    public function uploadPhoto(Request $request, $id)
+    {
+        $request->validate([
+            'photo' => 'required|image|max:5120',
+        ]);
+
+        $asset = DB::table('asset_distributions')->where('id', $id)->first();
+        if (!$asset) {
+            return back()->with('error', 'Asset not found');
+        }
+
+        if ($request->hasFile('photo')) {
+            $path = $request->file('photo')->store('assets', 'public');
+            DB::table('asset_distributions')->where('id', $id)->update(['photo_path' => $path]);
+            return back()->with('success', 'Photo updated successfully!');
+        }
+
+        return back()->with('error', 'No photo uploaded.');
+    }
+
+    public function removePhoto($id)
+    {
+        $asset = DB::table('asset_distributions')->where('id', $id)->first();
+        if ($asset && $asset->photo_path) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($asset->photo_path);
+            DB::table('asset_distributions')->where('id', $id)->update(['photo_path' => null]);
+            return back()->with('success', 'Photo removed successfully!');
+        }
+        return back()->with('error', 'No photo to remove.');
+    }
+
+    public function uploadDocument(Request $request, $id)
+    {
+        $file = $request->file('document') ?? $request->file('document_camera');
+
+        if (!$file) {
+            return back()->with('error', 'No document uploaded.');
+        }
+
+        $request->validate([
+            'document' => 'nullable|file|max:10240',
+            'document_camera' => 'nullable|file|max:10240',
+        ]);
+
+        $fileName = $file->getClientOriginalName();
+        $fileSize = $file->getSize();
+        $path = $file->store('documents', 'public');
+
+        DB::table('asset_documents')->insert([
+            'asset_distribution_id' => $id,
+            'file_name' => $fileName,
+            'file_path' => $path,
+            'file_size' => $fileSize,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        return back()->with('success', 'Document uploaded successfully!');
+    }
+
+    public function removeDocument($docId)
+    {
+        $doc = DB::table('asset_documents')->where('id', $docId)->first();
+        if ($doc) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($doc->file_path);
+            DB::table('asset_documents')->where('id', $docId)->delete();
+            return back()->with('success', 'Document removed successfully!');
+        }
+        return back()->with('error', 'Document not found.');
     }
 }

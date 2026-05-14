@@ -19,8 +19,9 @@
         .back-btn-cool { background: white; border: 1px solid #e2e8f0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .xls-th { padding: 14px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; white-space: nowrap; border-right: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: inherit; position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
         .xls-td { height: 52px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; vertical-align: middle; padding: 0; background: transparent; transition: all 0.2s ease; }
-        .xls-row { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+        .xls-row { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
         .xls-row:hover .xls-td { background-color: rgba(192, 0, 0, 0.05) !important; }
+        .xls-row:active .xls-td { background-color: rgba(192, 0, 0, 0.12) !important; transform: scale(0.998); }
         .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
         .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 450px); min-height: 400px; background: transparent; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
         .xls-scroll-wrap.expanded { height: calc(100vh - 250px); }
@@ -271,6 +272,7 @@
                             <th class="xls-th" style="min-width:90px">Classrooms</th>
                             <th class="xls-th text-right" style="min-width:120px">Acq. Cost (₱)</th>
                             <th class="xls-th" style="min-width:120px">Date Constructed</th>
+                            <th class="xls-th text-center" style="min-width:100px">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="bldgBody"></tbody>
@@ -361,6 +363,7 @@
                     <th class="xls-th text-right" style="min-width:120px">Appraised Value</th>
                     <th class="xls-th" style="min-width:120px">Appraisal Date</th>
                     <th class="xls-th" style="min-width:140px">Remarks</th>
+                    <th class="xls-th text-center" style="min-width:100px">Actions</th>
                 </tr>`;
             } else {
                 btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg> View All Columns`;
@@ -376,6 +379,7 @@
                     <th class="xls-th" style="min-width:90px">Classrooms</th>
                     <th class="xls-th text-right" style="min-width:120px">Acq. Cost (₱)</th>
                     <th class="xls-th" style="min-width:120px">Date Constructed</th>
+                    <th class="xls-th text-center" style="min-width:100px">Actions</th>
                 </tr>`;
             }
             renderBldgTable();
@@ -514,6 +518,11 @@
                 const displayNum = start + idx + 1;
                 const tr = document.createElement('tr');
                 tr.className = 'xls-row group border-b border-slate-100';
+                tr.style.cursor = 'pointer';
+                tr.onclick = (e) => {
+                    if (e.target.closest('a')) return;
+                    window.location.href = `/buildings/${row.id}`;
+                };
                 
                 const cell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const">${val || ''}</span></td>`;
                 const numCell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const justify-center">${val || '0'}</span></td>`;
@@ -543,6 +552,12 @@
                         ${costCell(row.appraised_value)}
                         ${cell(row.appraisal_date)}
                         ${cell(row.remarks)}
+                        <td class="xls-td text-center">
+                            <a href="/buildings/${row.id}" onclick="event.stopPropagation()" class="px-3 py-1.5 bg-red-50 text-[#c00000] rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100 inline-flex items-center gap-1 mx-2">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                                View
+                            </a>
+                        </td>
                     `;
                     tr.onmouseenter = (e) => showDepTooltip(e, row);
                     tr.onmouseleave = () => hideDepTooltip();
@@ -559,6 +574,12 @@
                         ${numCell(row.classrooms)}
                         ${costCell(row.acquisition_cost)}
                         ${cell(row.date_constructed)}
+                        <td class="xls-td text-center">
+                            <a href="/buildings/${row.id}" onclick="event.stopPropagation()" class="px-3 py-1.5 bg-red-50 text-[#c00000] rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100 inline-flex items-center gap-1 mx-2">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                                View
+                            </a>
+                        </td>
                     `;
                 }
                 tbody.appendChild(tr);

@@ -111,6 +111,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('assets.history');
     Route::get('/assets/lifecycle', [AssetController::class, 'lifecycle'])->name('assets.lifecycle');
     Route::get('/assets/{id}/profile', [AssetController::class, 'profile'])->name('assets.profile');
+    Route::post('/assets/{id}/photo', [AssetController::class, 'uploadPhoto'])->name('assets.photo.upload');
+    Route::delete('/assets/{id}/photo', [AssetController::class, 'removePhoto'])->name('assets.photo.remove');
+    Route::post('/assets/{id}/document', [AssetController::class, 'uploadDocument'])->name('assets.document.upload');
+    Route::delete('/assets/document/{docId}', [AssetController::class, 'removeDocument'])->name('assets.document.remove');
     Route::get('/asset-explorer', [AssetController::class, 'explorer'])->name('assets.explorer');
 
     // --- QR & Tags ---
@@ -159,6 +163,9 @@ Route::middleware('auth')->group(function () {
     // --- Building Editor (Bulk Edit) ---
     Route::post('/api/buildings/edit-preview', [\App\Http\Controllers\InventorySetupController::class, 'getBuildingEditPreview'])->name('api.buildings.edit_preview');
     Route::post('/api/buildings/update-batch', [\App\Http\Controllers\InventorySetupController::class, 'updateBuildingBatch'])->name('api.buildings.updateBatch');
+
+    Route::get('/buildings/{id}', [\App\Http\Controllers\BuildingController::class, 'profile'])->name('buildings.profile');
+
 
     // --- School Management (View) ---
     Route::post('/api/schools/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getSchoolsPreview'])->name('api.schools.preview');

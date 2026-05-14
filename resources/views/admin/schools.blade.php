@@ -17,8 +17,8 @@
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: #f87171; border: 2px solid transparent; background-clip: padding-box; }
         .back-btn-cool { background: white; border: 1px solid #e2e8f0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .xls-th { padding: 14px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; white-space: nowrap; border-right: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: inherit; position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-        .xls-td { height: 52px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; vertical-align: middle; padding: 0; background: transparent; transition: all 0.2s ease; }
+        .xls-th { padding: 14px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; white-space: nowrap; border-right: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: #f8fafc; position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .xls-td { height: 52px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; vertical-align: middle; padding: 0; transition: all 0.2s ease; }
         .xls-row { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
         .xls-row:hover .xls-td { background-color: rgba(192, 0, 0, 0.05) !important; }
         .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
@@ -181,7 +181,7 @@
                 <table class="w-full border-collapse" style="min-width:1200px;">
                     <thead><tr>
                         <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                        <th class="xls-th" style="min-width:120px">School ID</th>
+                        <th class="xls-th sticky left-[40px] z-30" style="min-width:120px">School ID</th>
                         <th class="xls-th" style="min-width:300px">Institutional Name</th>
                         <th class="xls-th" style="min-width:180px">District</th>
                         <th class="xls-th" style="min-width:180px">Quadrant</th>
@@ -384,8 +384,8 @@
                 const costCell = (val, color) => `<td class="xls-td relative"><span class="xls-const font-black italic ${color}">₱ ${Number(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></td>`;
 
                 tr.innerHTML = `
-                    <td class="xls-td text-center sticky left-0 w-10 bg-inherit z-10"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
-                    ${idCell(row.school_id)}
+                    <td class="xls-td text-center sticky left-0 w-10 bg-slate-50 z-20"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
+                    ${idCell(row.school_id, 'sticky left-[40px] bg-slate-50 z-20')}
                     <td class="xls-td relative">
                         <span class="xls-const font-bold text-slate-800 uppercase">${row.name || ''}</span>
                     </td>
