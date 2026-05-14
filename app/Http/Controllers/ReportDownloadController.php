@@ -435,16 +435,22 @@ class ReportDownloadController extends Controller
             );
 
         if (!empty($filters['classification'])) {
-            $query->where('building_classifications.name', $filters['classification']);
+            $classifications = is_array($filters['classification']) ? $filters['classification'] : [$filters['classification']];
+            $query->whereIn('building_classifications.name', $classifications);
         }
         if (!empty($filters['officeType'])) {
-            $query->where('building_records.office_type', $filters['officeType']);
+            $types = is_array($filters['officeType']) ? $filters['officeType'] : [$filters['officeType']];
+            $query->whereIn('building_records.office_type', $types);
         }
         if (!empty($filters['schoolName'])) {
-            $query->where('schools.name', $filters['schoolName']);
+            $query->where(function($q) use ($filters) {
+                $q->where('schools.name', 'LIKE', '%' . $filters['schoolName'] . '%')
+                  ->orWhere('building_records.property_number', 'LIKE', '%' . $filters['schoolName'] . '%');
+            });
         }
         if (!empty($filters['location'])) {
-            $query->where('building_records.location', $filters['location']);
+            $locs = is_array($filters['location']) ? $filters['location'] : [$filters['location']];
+            $query->whereIn('building_records.location', $locs);
         }
         if (!empty($filters['dateAcquired'])) {
             $query->whereDate('building_records.acquisition_date', $filters['dateAcquired']);
@@ -579,10 +585,12 @@ class ReportDownloadController extends Controller
             ]);
 
         if (!empty($filters['quadrant'])) {
-            $query->where('quadrants.name', $filters['quadrant']);
+            $quads = is_array($filters['quadrant']) ? $filters['quadrant'] : [$filters['quadrant']];
+            $query->whereIn('quadrants.name', $quads);
         }
         if (!empty($filters['district'])) {
-            $query->where('districts.name', $filters['district']);
+            $districts = is_array($filters['district']) ? $filters['district'] : [$filters['district']];
+            $query->whereIn('districts.name', $districts);
         }
         if (!empty($filters['search'])) {
             $search = $filters['search'];
