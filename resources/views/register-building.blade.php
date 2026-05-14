@@ -18,10 +18,13 @@
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: #f87171; border: 2px solid transparent; background-clip: padding-box; }
         .back-btn-cool { background: white; border: 1px solid #e2e8f0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         .xls-th { padding: 14px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; white-space: nowrap; border-right: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: inherit; position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-        .xls-td { height: 52px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; vertical-align: middle; padding: 0; background: transparent; transition: all 0.2s ease; }
-        .xls-row { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
-        .xls-row:hover .xls-td { background-color: rgba(192, 0, 0, 0.05) !important; }
-        .xls-row:active .xls-td { background-color: rgba(192, 0, 0, 0.12) !important; transform: scale(0.998); }
+        .xls-td { height: 52px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; vertical-align: middle; padding: 0; background: transparent; transition: all 0.3s ease; }
+        .xls-row { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative; }
+        .xls-row:hover { transform: translateX(4px); z-index: 10; }
+        .xls-row:hover .xls-td { background-color: rgba(192, 0, 0, 0.03) !important; border-bottom-color: #c00000; }
+        .xls-row:hover .xls-td:first-child { box-shadow: inset 4px 0 0 #c00000; }
+        .xls-row:active { transform: scale(0.995); transition: all 0.1s; }
+        .xls-row:active .xls-td { background-color: rgba(192, 0, 0, 0.08) !important; }
         .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
         .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 450px); min-height: 400px; background: transparent; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
         .xls-scroll-wrap.expanded { height: calc(100vh - 250px); }
@@ -154,15 +157,25 @@
     <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll relative">
     <div class="w-full mx-auto p-6 lg:p-10 min-h-screen flex flex-col relative z-10">
 
-        <div class="flex justify-between items-center mb-10 px-2 animate-fade">
-            <div>
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10 px-2 animate-fade">
+            <div class="shrink-0">
                 <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-700 to-red-500 uppercase italic leading-none drop-shadow-sm tracking-tight">Building Records</h2>
                 <p class="text-slate-500 text-[11px] font-bold uppercase tracking-[0.25em] mt-3 flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>
                     Master Building Registry
                 </p>
             </div>
-            <div class="flex items-center gap-4">
+
+            <div class="flex-grow max-w-2xl relative">
+                <div class="relative group">
+                    <input type="text" id="bldgFilterSchool" oninput="bldgDebouncedSearch()" placeholder="SEARCH SCHOOL NAME OR PROPERTY #..." autocomplete="off" class="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-700 shadow-sm pr-12 group-hover:border-slate-200">
+                    <div class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-red-500 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4 shrink-0">
                 <button onclick="toggleBldgColumns()" id="toggleColumnsBtn" class="px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 bg-white border border-slate-200 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:scale-110 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                     View All Columns
@@ -176,6 +189,7 @@
                     Back
                 </a>
             </div>
+
         </div>
 
         <!-- Filter Configuration -->
@@ -193,16 +207,7 @@
                         <option value="">All Types</option>
                     </select>
                 </div>
-                <div class="relative">
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">School Name</label>
-                    <div class="relative">
-                        <input type="text" id="bldgFilterSchool" placeholder="Search School..." autocomplete="off" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500 pr-10">
-                        <div id="bldgSchoolDropdown" class="custom-autocomplete hidden"></div>
-                        <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none opacity-40">
-                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        </div>
-                    </div>
-                </div>
+
                 <div>
                     <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Cost Sorting</label>
                     <select id="bldgFilterSort" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
@@ -363,7 +368,6 @@
                     <th class="xls-th text-right" style="min-width:120px">Appraised Value</th>
                     <th class="xls-th" style="min-width:120px">Appraisal Date</th>
                     <th class="xls-th" style="min-width:140px">Remarks</th>
-                    <th class="xls-th text-center" style="min-width:100px">Actions</th>
                 </tr>`;
             } else {
                 btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg> View All Columns`;
@@ -379,7 +383,6 @@
                     <th class="xls-th" style="min-width:90px">Classrooms</th>
                     <th class="xls-th text-right" style="min-width:120px">Acq. Cost (₱)</th>
                     <th class="xls-th" style="min-width:120px">Date Constructed</th>
-                    <th class="xls-th text-center" style="min-width:100px">Actions</th>
                 </tr>`;
             }
             renderBldgTable();
@@ -408,57 +411,19 @@
                 populate('bldgFilterLoc', data.locations);
                 
                 allSchools = data.schools;
-                if (!isAutocompleteInit) {
-                    initSchoolAutocomplete();
-                    isAutocompleteInit = true;
-                }
+
             } catch (e) { console.error('Failed to fetch building filters', e); }
         }
 
-        function initSchoolAutocomplete() {
-            const input = document.getElementById('bldgFilterSchool');
-            const dropdown = document.getElementById('bldgSchoolDropdown');
-            
-            input.onfocus = () => showDropdown();
-            input.oninput = (e) => showDropdown(e.target.value);
-            
-            document.addEventListener('click', (e) => {
-                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
-                    dropdown.classList.add('hidden');
-                }
-            });
-
-            function showDropdown(query = '') {
-                const filtered = query 
-                    ? allSchools.filter(s => s.toLowerCase().includes(query.toLowerCase()))
-                    : allSchools;
-                
-                dropdown.innerHTML = '';
-                
-                // "All Schools" option
-                const allOpt = document.createElement('div');
-                allOpt.className = 'custom-autocomplete-item font-black text-slate-400 italic border-b border-slate-50 dark:border-slate-800';
-                allOpt.textContent = 'ALL SCHOOLS';
-                allOpt.onclick = () => {
-                    input.value = '';
-                    dropdown.classList.add('hidden');
-                };
-                dropdown.appendChild(allOpt);
-
-                filtered.slice(0, 15).forEach(school => {
-                    const item = document.createElement('div');
-                    item.className = 'custom-autocomplete-item';
-                    item.textContent = school;
-                    item.onclick = () => {
-                        input.value = school;
-                        dropdown.classList.add('hidden');
-                    };
-                    dropdown.appendChild(item);
-                });
-                
-                dropdown.classList.remove('hidden');
-            }
+        let bldgSearchTimer;
+        function bldgDebouncedSearch() {
+            clearTimeout(bldgSearchTimer);
+            bldgSearchTimer = setTimeout(() => {
+                bldgCurrentPage = 1;
+                bldgFetchData();
+            }, 500);
         }
+
 
         async function bldgFetchData() {
             const loading = document.getElementById('bldgLoading');
@@ -552,12 +517,6 @@
                         ${costCell(row.appraised_value)}
                         ${cell(row.appraisal_date)}
                         ${cell(row.remarks)}
-                        <td class="xls-td text-center">
-                            <a href="/buildings/${row.id}" onclick="event.stopPropagation()" class="px-3 py-1.5 bg-red-50 text-[#c00000] rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100 inline-flex items-center gap-1 mx-2">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                                View
-                            </a>
-                        </td>
                     `;
                     tr.onmouseenter = (e) => showDepTooltip(e, row);
                     tr.onmouseleave = () => hideDepTooltip();
@@ -574,12 +533,6 @@
                         ${numCell(row.classrooms)}
                         ${costCell(row.acquisition_cost)}
                         ${cell(row.date_constructed)}
-                        <td class="xls-td text-center">
-                            <a href="/buildings/${row.id}" onclick="event.stopPropagation()" class="px-3 py-1.5 bg-red-50 text-[#c00000] rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-sm border border-red-100 inline-flex items-center gap-1 mx-2">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                                View
-                            </a>
-                        </td>
                     `;
                 }
                 tbody.appendChild(tr);

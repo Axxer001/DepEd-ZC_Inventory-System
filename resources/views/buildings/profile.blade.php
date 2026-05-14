@@ -65,7 +65,10 @@
             <div class="flex items-center gap-3 shrink-0" x-data="{ open: false }">
                 <button @click="isEditing = true" x-show="!isEditing" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 uppercase tracking-widest hover:border-deped hover:text-deped hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group">
                     <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                    Edit Profile
+                    Edit
+                </button>
+                <button @click="isEditing = false" x-show="isEditing" x-cloak class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-500 uppercase tracking-widest hover:border-slate-300 hover:text-slate-700 transition-all duration-300 shadow-sm flex items-center gap-2">
+                    Cancel
                 </button>
                 <button @click="showConfirmModal = true" x-show="isEditing" x-cloak class="px-5 py-2.5 bg-emerald-600 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-700 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm shadow-emerald-600/30 hover:shadow-md flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
@@ -113,7 +116,7 @@
                     </div>
                     
                     <div class="p-5 space-y-5">
-                        <div class="bg-gradient-to-r from-red-50 to-white dark:from-red-900/20 dark:to-slate-800 border border-red-100 dark:border-red-900/30 p-4 rounded-2xl shadow-sm relative overflow-hidden group">
+                        <a href="{{ route('schools.profile', $building->school_id) }}" class="block bg-transparent border border-red-100 p-4 rounded-2xl shadow-sm relative overflow-hidden group hover:border-deped hover:shadow-md transition-all">
                             <div class="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>
                             <p class="text-[9px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
@@ -128,7 +131,7 @@
                                     <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mt-0.5">School ID: {{ $building->school_identifier }}</p>
                                 </div>
                             </div>
-                        </div>
+                        </a>
 
                         <div>
                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">District</p>

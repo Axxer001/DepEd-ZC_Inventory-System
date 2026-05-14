@@ -435,16 +435,22 @@ class ReportDownloadController extends Controller
             );
 
         if (!empty($filters['classification'])) {
-            $query->where('building_classifications.name', $filters['classification']);
+            $classifications = is_array($filters['classification']) ? $filters['classification'] : [$filters['classification']];
+            $query->whereIn('building_classifications.name', $classifications);
         }
         if (!empty($filters['officeType'])) {
-            $query->where('building_records.office_type', $filters['officeType']);
+            $types = is_array($filters['officeType']) ? $filters['officeType'] : [$filters['officeType']];
+            $query->whereIn('building_records.office_type', $types);
         }
         if (!empty($filters['schoolName'])) {
-            $query->where('schools.name', $filters['schoolName']);
+            $query->where(function($q) use ($filters) {
+                $q->where('schools.name', 'LIKE', '%' . $filters['schoolName'] . '%')
+                  ->orWhere('building_records.property_number', 'LIKE', '%' . $filters['schoolName'] . '%');
+            });
         }
         if (!empty($filters['location'])) {
-            $query->where('building_records.location', $filters['location']);
+            $locs = is_array($filters['location']) ? $filters['location'] : [$filters['location']];
+            $query->whereIn('building_records.location', $locs);
         }
         if (!empty($filters['dateAcquired'])) {
             $query->whereDate('building_records.acquisition_date', $filters['dateAcquired']);
@@ -579,10 +585,12 @@ class ReportDownloadController extends Controller
             ]);
 
         if (!empty($filters['quadrant'])) {
-            $query->where('quadrants.name', $filters['quadrant']);
+            $quads = is_array($filters['quadrant']) ? $filters['quadrant'] : [$filters['quadrant']];
+            $query->whereIn('quadrants.name', $quads);
         }
         if (!empty($filters['district'])) {
-            $query->where('districts.name', $filters['district']);
+            $districts = is_array($filters['district']) ? $filters['district'] : [$filters['district']];
+            $query->whereIn('districts.name', $districts);
         }
         if (!empty($filters['search'])) {
             $search = $filters['search'];
@@ -660,4 +668,114 @@ class ReportDownloadController extends Controller
             'allSchools' => $allSchools
         ]);
     }
+
+    public function getOfficesPreview(Request $request)
+    {
+        $filters = $request->input('filters', []);
+        if (is_string($filters)) { $filters = json_decode($filters, true) ?: []; }
+
+        // Define Offices as unique names from asset_distributions and buildings that are NOT in the schools table
+        // For now, let's pull from asset_distributions as the primary source of office names
+        $query = DB::table('asset_distributions')
+            ->whereNotNull('office_school_name')
+            ->where('office_school_name', '!=', '')
+            ->where(function($q) {
+                $q->whereNull('school_id')
+                  ->orWhere('school_id', '=', '');
+            })
+            ->select('office_school_name as name', 'office_school_type as type', 'location')
+            ->addSelect([
+                'total_ppe_cost' => DB::table('asset_distributions as ad2')
+                    ->whereColumn('ad2.office_school_name', 'asset_distributions.office_school_name')
+                    ->where('acquisition_cost', '>=', 50000)
+                    ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
+                'total_semi_ppe_cost' => DB::table('asset_distributions as ad3')
+                    ->whereColumn('ad3.office_school_name', 'asset_distributions.office_school_name')
+                    ->where('acquisition_cost', '<', 50000)
+                    ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
+                'total_bldg_cost' => DB::table('building_records as b')
+                    ->whereColumn('b.office_name', 'asset_distributions.office_school_name')
+                    ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
+            ])
+            ->groupBy('office_school_name', 'office_school_type', 'location');
+
+        if (!empty($filters['type'])) {
+            $query->where('office_school_type', $filters['type']);
+        }
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where('office_school_name', 'LIKE', "%$search%");
+        }
+
+        $rows = $query->get();
+        return response()->json(['rows' => $rows]);
+    }
+
+    public function getOfficesFilterOptions(Request $request)
+    {
+        $types = DB::table('asset_distributions')
+            ->whereNotNull('office_school_name')
+            ->where('office_school_name', '!=', '')
+            ->where(function($q) {
+                $q->whereNull('school_id')->orWhere('school_id', '');
+            })
+            ->distinct()
+            ->pluck('office_school_type')
+            ->filter()
+            ->values();
+
+        return response()->json([
+            'types' => $types
+        ]);
+    }
+
+    public function getCustodiansPreview(Request $request)
+    {
+        $filters = $request->input('filters', []);
+        if (is_string($filters)) { $filters = json_decode($filters, true) ?: []; }
+
+        $query = DB::table('custodians')
+            ->leftJoin('schools', 'custodians.school_id', '=', 'schools.id')
+            ->select(
+                'custodians.*',
+                'schools.name as school_name'
+            )
+            ->addSelect([
+                'total_assets' => DB::table('asset_distributions')
+                    ->whereColumn('custodian_id', 'custodians.id')
+                    ->selectRaw('COUNT(*)'),
+                'total_value' => DB::table('asset_distributions')
+                    ->whereColumn('custodian_id', 'custodians.id')
+                    ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
+            ]);
+
+        if (!empty($filters['status'])) {
+            $query->where('custodians.status', $filters['status']);
+        }
+        if (!empty($filters['search'])) {
+            $search = $filters['search'];
+            $query->where(function($q) use ($search) {
+                $q->where('first_name', 'LIKE', "%$search%")
+                  ->orWhere('last_name', 'LIKE', "%$search%")
+                  ->orWhere('employee_id', 'LIKE', "%$search%")
+                  ->orWhere('position', 'LIKE', "%$search%");
+            });
+        }
+
+        $rows = $query->orderBy('last_name')->get();
+        return response()->json(['rows' => $rows]);
+    }
+
+    public function getCustodiansFilterOptions(Request $request)
+    {
+        $positions = DB::table('custodians')->distinct()->pluck('position')->filter()->values();
+        $statuses = DB::table('custodians')->distinct()->pluck('status')->filter()->values();
+
+        return response()->json([
+            'positions' => $positions,
+            'statuses' => $statuses
+        ]);
+    }
 }
+
+

@@ -78,6 +78,21 @@ Route::middleware('auth')->group(function () {
         return view('admin.schools');
     })->name('admin.schools');
 
+    // --- Offices Registry ---
+    Route::get('/admin/offices', function () {
+        return view('admin.offices');
+    })->name('admin.offices');
+
+    // --- Custodians Registry ---
+    Route::get('/admin/custodians', function () {
+        return view('admin.custodians');
+    })->name('admin.custodians');
+
+    Route::post('/api/custodians/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansPreview'])->name('api.custodians.preview');
+    Route::get('/api/custodians/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansFilterOptions'])->name('api.custodians.filters');
+
+
+
     Route::delete('/admin/schools/{id}', function ($id) {
         try {
             DB::table('schools')->where('id', $id)->delete();
@@ -174,6 +189,11 @@ Route::middleware('auth')->group(function () {
     // --- School Management (View) ---
     Route::post('/api/schools/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getSchoolsPreview'])->name('api.schools.preview');
     Route::get('/api/schools/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getSchoolsFilterOptions'])->name('api.schools.filters');
+
+    // --- Office Management (View) ---
+    Route::post('/api/offices/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getOfficesPreview'])->name('api.offices.preview');
+    Route::get('/api/offices/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getOfficesFilterOptions'])->name('api.offices.filters');
+
 
     // --- Building PIF Import ---
     Route::get('/buildings/import', [BuildingImportController::class, 'show'])->name('buildings.import');
