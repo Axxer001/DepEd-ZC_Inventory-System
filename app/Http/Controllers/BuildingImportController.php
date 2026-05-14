@@ -92,7 +92,7 @@ class BuildingImportController extends Controller
         }
 
         if (!empty($assetProps)) {
-            $existingInDb = array_flip(DB::table('asset_distributions')
+            $existingInDb = array_flip(DB::table('asset_assignments')
                 ->whereIn('property_number', $assetProps)
                 ->pluck('property_number')
                 ->all());
@@ -188,7 +188,7 @@ class BuildingImportController extends Controller
             foreach ($allGroups['assets'] ?? [] as $row) {
                 if (!empty($row['property_number'])) $allProps[] = trim($row['property_number']);
             }
-            $inDb = !empty($allProps) ? array_flip(DB::table('asset_distributions')->whereIn('property_number', $allProps)->pluck('property_number')->all()) : [];
+            $inDb = !empty($allProps) ? array_flip(DB::table('asset_assignments')->whereIn('property_number', $allProps)->pluck('property_number')->all()) : [];
 
             foreach ($allGroups['assets'] ?? [] as $row) {
                 $pn = trim($row['property_number'] ?? '');
@@ -302,7 +302,7 @@ class BuildingImportController extends Controller
             : [];
 
         $existingAssetProps = !empty($assetProps)
-            ? array_flip(DB::table('asset_distributions')->whereIn('property_number', $assetProps)->pluck('property_number')->all())
+            ? array_flip(DB::table('asset_assignments')->whereIn('property_number', $assetProps)->pluck('property_number')->all())
             : [];
 
         $totalBuildings = 0;
@@ -313,17 +313,17 @@ class BuildingImportController extends Controller
             // ── Overwrite: Delete existing records ──
             if ($duplicateAction === 'overwrite') {
                 if (!empty($assetPropsToOverwrite)) {
-                    $existingAssets = DB::table('asset_distributions')
+                    $existingAssets = DB::table('asset_assignments')
                         ->whereIn('property_number', $assetPropsToOverwrite)
                         ->select('id', 'asset_source_id')
                         ->get();
                     
                     if ($existingAssets->isNotEmpty()) {
                         $sourceIds = $existingAssets->pluck('asset_source_id')->unique()->filter()->all();
-                        DB::table('asset_distributions')->whereIn('property_number', $assetPropsToOverwrite)->delete();
+                        DB::table('asset_assignments')->whereIn('property_number', $assetPropsToOverwrite)->delete();
                         if (!empty($sourceIds)) {
                             // Check if source is still used by other distributions, if not delete it
-                            $usedSourceIds = DB::table('asset_distributions')->whereIn('asset_source_id', $sourceIds)->pluck('asset_source_id')->unique()->all();
+                            $usedSourceIds = DB::table('asset_assignments')->whereIn('asset_source_id', $sourceIds)->pluck('asset_source_id')->unique()->all();
                             $orphanedSourceIds = array_diff($sourceIds, $usedSourceIds);
                             if (!empty($orphanedSourceIds)) {
                                 DB::table('asset_sources')->whereIn('id', $orphanedSourceIds)->delete();
@@ -485,18 +485,18 @@ class BuildingImportController extends Controller
                         'created_at'            => now(), 'updated_at' => now(),
                     ]);
 
-                    // asset_distributions
+                    // asset_assignments
                     if (empty($propNo)) {
                         $propNo = 'PIF-' . now()->format('Ymd') . '-' . uniqid();
                     }
 
-                    DB::table('asset_distributions')->insert([
+                    DB::table('asset_assignments')->insert([
                         'asset_source_id'     => $assetSourceId,
                         'region'              => $row['region'] ?: 'Region IX',
                         'division'            => $row['division'] ?: 'Division of Zamboanga City',
                         'office_school_type'  => $row['office_type'] ?: '',
                         'school_id'           => $row['school_identifier'] ?: null,
-                        'office_school_name'  => $row['office_name'] ?: '',
+                        'location'  => $row['office_name'] ?: '',
                         'nature_of_occupancy' => $row['occupancy_nature'] ?: '',
                         'location'            => $row['location'] ?: null,
                         'property_number'     => $propNo,

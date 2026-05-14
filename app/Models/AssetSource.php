@@ -36,8 +36,8 @@ class AssetSource extends Model
         return $this->belongsTo(AcquisitionSource::class);
     }
 
-    public function distributions(): HasMany
+    public function assignments(): HasMany
     {
-        return $this->hasMany(AssetDistribution::class);
+        return $this->hasMany(AssetAssignment::class);
     }
 }

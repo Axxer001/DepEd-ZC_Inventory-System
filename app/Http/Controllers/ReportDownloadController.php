@@ -36,21 +36,21 @@ class ReportDownloadController extends Controller
                     DB::raw("'Division of Zamboanga City' as division"),
                     DB::raw("NULL as office_school_type"),
                     DB::raw("NULL as school_id"),
-                    DB::raw("NULL as office_school_name"),
+                    DB::raw("NULL as location"),
                     DB::raw("NULL as nature_of_occupancy"),
                     DB::raw("NULL as location"),
                     DB::raw("NULL as property_number"),
                     DB::raw("NULL as acquisition_date")
                 );
         } else {
-            $query = DB::table('asset_distributions')
-                ->leftJoin('asset_sources', 'asset_distributions.asset_source_id', '=', 'asset_sources.id')
+            $query = DB::table('asset_assignments')
+                ->leftJoin('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
                 ->leftJoin('items', 'asset_sources.item_id', '=', 'items.id')
                 ->leftJoin('categories', 'items.category_id', '=', 'categories.id')
                 ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')
                 ->leftJoin('acquisition_sources', 'asset_sources.acquisition_source_id', '=', 'acquisition_sources.id')
                 ->select(
-                    'asset_distributions.*',
+                    'asset_assignments.*',
                     DB::raw("'Region IX' as region"),
                     DB::raw("'Division of Zamboanga City' as division"),
                     'asset_sources.description',
@@ -72,10 +72,10 @@ class ReportDownloadController extends Controller
         }
 
         if ($type === 'RPCPPE') {
-            $col = ($tab === 'source') ? 'asset_sources.asset_cost' : 'asset_distributions.acquisition_cost';
+            $col = ($tab === 'source') ? 'asset_sources.asset_cost' : 'asset_assignments.acquisition_cost';
             $query->where($col, '>=', 50000);
         } elseif ($type === 'RPCSP') {
-            $col = ($tab === 'source') ? 'asset_sources.asset_cost' : 'asset_distributions.acquisition_cost';
+            $col = ($tab === 'source') ? 'asset_sources.asset_cost' : 'asset_assignments.acquisition_cost';
             $query->where($col, '<', 50000);
         }
 
@@ -89,7 +89,7 @@ class ReportDownloadController extends Controller
             $query->where('items.name', $filters['article']);
         }
         if (!empty($filters['schoolName']) && $tab === 'distribution') {
-            $query->where('asset_distributions.office_school_name', $filters['schoolName']);
+            $query->where('asset_assignments.location', $filters['schoolName']);
         }
         if (!empty($filters['source'])) {
             $query->where('acquisition_sources.name', $filters['source']);
@@ -107,7 +107,7 @@ class ReportDownloadController extends Controller
                 $q->where('asset_sources.description', 'LIKE', "%$search%")
                   ->orWhere('items.name', 'LIKE', "%$search%");
                 if ($tab === 'distribution') {
-                    $q->orWhere('asset_distributions.property_number', 'LIKE', "%$search%");
+                    $q->orWhere('asset_assignments.property_number', 'LIKE', "%$search%");
                 }
             });
         }
@@ -115,13 +115,13 @@ class ReportDownloadController extends Controller
         // Sorting by Cost
         $sortCost = $filters['sortCost'] ?? null;
         if ($sortCost === 'low_to_high') {
-            $col = ($tab === 'source') ? 'asset_sources.asset_cost' : 'asset_distributions.acquisition_cost';
+            $col = ($tab === 'source') ? 'asset_sources.asset_cost' : 'asset_assignments.acquisition_cost';
             $query->orderBy($col, 'asc');
         } elseif ($sortCost === 'high_to_low') {
-            $col = ($tab === 'source') ? 'asset_sources.asset_cost' : 'asset_distributions.acquisition_cost';
+            $col = ($tab === 'source') ? 'asset_sources.asset_cost' : 'asset_assignments.acquisition_cost';
             $query->orderBy($col, 'desc');
         } else {
-            $query->orderBy($tab === 'source' ? 'asset_sources.id' : 'asset_distributions.id', 'asc');
+            $query->orderBy($tab === 'source' ? 'asset_sources.id' : 'asset_assignments.id', 'asc');
         }
 
         // Data Integrity: Empty Column check
@@ -140,12 +140,12 @@ class ReportDownloadController extends Controller
             
             // Distribution-specific columns
             if ($tab === 'distribution') {
-                if ($eCol === 'property_number') $dbCol = 'asset_distributions.property_number';
-                elseif ($eCol === 'school_id') $dbCol = 'asset_distributions.school_id';
-                elseif ($eCol === 'school_name') $dbCol = 'asset_distributions.office_school_name';
-                elseif ($eCol === 'occupancy') $dbCol = 'asset_distributions.nature_of_occupancy';
-                elseif ($eCol === 'location') $dbCol = 'asset_distributions.location';
-                elseif ($eCol === 'acquisition_date') $dbCol = 'asset_distributions.acquisition_date';
+                if ($eCol === 'property_number') $dbCol = 'asset_assignments.property_number';
+                elseif ($eCol === 'school_id') $dbCol = 'asset_assignments.school_id';
+                elseif ($eCol === 'school_name') $dbCol = 'asset_assignments.location';
+                elseif ($eCol === 'occupancy') $dbCol = 'asset_assignments.nature_of_occupancy';
+                elseif ($eCol === 'location') $dbCol = 'asset_assignments.location';
+                elseif ($eCol === 'acquisition_date') $dbCol = 'asset_assignments.acquisition_date';
             }
             
             if ($dbCol) {
@@ -188,13 +188,13 @@ class ReportDownloadController extends Controller
                 ->limit(10)
                 ->pluck('suggestion');
         } else {
-            $results = DB::table('asset_distributions')
-                ->leftJoin('asset_sources', 'asset_distributions.asset_source_id', '=', 'asset_sources.id')
+            $results = DB::table('asset_assignments')
+                ->leftJoin('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
                 ->leftJoin('items', 'asset_sources.item_id', '=', 'items.id')
-                ->where('asset_distributions.property_number', 'LIKE', "%$search%")
+                ->where('asset_assignments.property_number', 'LIKE', "%$search%")
                 ->orWhere('asset_sources.description', 'LIKE', "%$search%")
                 ->orWhere('items.name', 'LIKE', "%$search%")
-                ->select(DB::raw('COALESCE(asset_distributions.property_number, asset_sources.description, items.name) as suggestion'))
+                ->select(DB::raw('COALESCE(asset_assignments.property_number, asset_sources.description, items.name) as suggestion'))
                 ->distinct()
                 ->limit(10)
                 ->pluck('suggestion');
@@ -208,7 +208,7 @@ class ReportDownloadController extends Controller
         $query = $this->buildQuery($request);
         // Explicitly select the IDs needed for updating, overriding any conflicts
         $query->addSelect(
-            'asset_distributions.id as dist_id',
+            'asset_assignments.id as dist_id',
             'asset_sources.id as src_id',
             'items.id as item_id',
             'acquisition_sources.id as acq_source_id'
@@ -222,7 +222,7 @@ class ReportDownloadController extends Controller
         $type = $request->input('report_type');
 
         $baseQuery = DB::table('asset_sources')
-            ->leftJoin('asset_distributions', 'asset_sources.id', '=', 'asset_distributions.asset_source_id')
+            ->leftJoin('asset_assignments', 'asset_sources.id', '=', 'asset_assignments.asset_source_id')
             ->leftJoin('items', 'asset_sources.item_id', '=', 'items.id')
             ->leftJoin('categories', 'items.category_id', '=', 'categories.id')
             ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')
@@ -237,7 +237,7 @@ class ReportDownloadController extends Controller
         $classifications = (clone $baseQuery)->whereNotNull('classifications.name')->pluck('classifications.name')->unique()->sort()->values();
         $categories = (clone $baseQuery)->whereNotNull('categories.name')->pluck('categories.name')->unique()->sort()->values();
         $items = (clone $baseQuery)->whereNotNull('items.name')->pluck('items.name')->unique()->sort()->values();
-        $schools = (clone $baseQuery)->whereNotNull('asset_distributions.office_school_name')->where('asset_distributions.office_school_name', '!=', '')->pluck('asset_distributions.office_school_name')->unique()->sort()->values();
+        $schools = (clone $baseQuery)->whereNotNull('asset_assignments.location')->where('asset_assignments.location', '!=', '')->pluck('asset_assignments.location')->unique()->sort()->values();
         $sources = (clone $baseQuery)->whereNotNull('acquisition_sources.name')->pluck('acquisition_sources.name')->unique()->sort()->values();
         $modes = (clone $baseQuery)->whereNotNull('asset_sources.mode_of_acquisition')->pluck('asset_sources.mode_of_acquisition')->unique()->sort()->values();
 
@@ -356,7 +356,7 @@ class ReportDownloadController extends Controller
                 $sheet->setCellValue('B' . $currentRow, $row->division);
                 $sheet->setCellValue('C' . $currentRow, $row->office_school_type);
                 $sheet->setCellValue('D' . $currentRow, $row->school_id);
-                $sheet->setCellValue('E' . $currentRow, $row->office_school_name);
+                $sheet->setCellValue('E' . $currentRow, $row->location);
                 $sheet->setCellValue('F' . $currentRow, $row->classification);
                 $sheet->setCellValue('G' . $currentRow, $row->category);
                 $sheet->setCellValue('H' . $currentRow, $row->article);
@@ -562,16 +562,16 @@ class ReportDownloadController extends Controller
                 'total_bldg_cost' => DB::table('building_records')
                     ->whereColumn('school_id', 'schools.id')
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
-                'total_ppe_cost' => DB::table('asset_distributions')
+                'total_ppe_cost' => DB::table('asset_assignments')
                     ->where(function($q) {
-                        $q->whereColumn('office_school_name', 'schools.name')
+                        $q->whereColumn('location', 'schools.name')
                           ->orWhereColumn('school_id', 'schools.school_id');
                     })
                     ->where('acquisition_cost', '>=', 50000)
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
-                'total_semi_ppe_cost' => DB::table('asset_distributions')
+                'total_semi_ppe_cost' => DB::table('asset_assignments')
                     ->where(function($q) {
-                        $q->whereColumn('office_school_name', 'schools.name')
+                        $q->whereColumn('location', 'schools.name')
                           ->orWhereColumn('school_id', 'schools.school_id');
                     })
                     ->where('acquisition_cost', '<', 50000)

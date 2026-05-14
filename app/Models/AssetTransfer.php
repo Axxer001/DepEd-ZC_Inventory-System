@@ -5,12 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class AssetTransferHistory extends Model
+class AssetTransfer extends Model
 {
-    protected $table = 'asset_transfer_history';
+    protected $table = 'asset_transfers';
 
     protected $fillable = [
-        'asset_distribution_id',
+        'asset_assignment_id',
+        'from_office_id',
+        'to_office_id',
         'from_custodian_id',
         'to_custodian_id',
         'transfer_date',
@@ -23,9 +25,9 @@ class AssetTransferHistory extends Model
         'transfer_date' => 'date',
     ];
 
-    public function assetDistribution(): BelongsTo
+    public function assetAssignment(): BelongsTo
     {
-        return $this->belongsTo(AssetDistribution::class);
+        return $this->belongsTo(AssetAssignment::class);
     }
 
     public function fromCustodian(): BelongsTo
@@ -36,6 +38,16 @@ class AssetTransferHistory extends Model
     public function toCustodian(): BelongsTo
     {
         return $this->belongsTo(Custodian::class, 'to_custodian_id');
+    }
+
+    public function fromOffice(): BelongsTo
+    {
+        return $this->belongsTo(Office::class, 'from_office_id');
+    }
+
+    public function toOffice(): BelongsTo
+    {
+        return $this->belongsTo(Office::class, 'to_office_id');
     }
 
     public function authorizer(): BelongsTo

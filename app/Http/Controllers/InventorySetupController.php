@@ -203,13 +203,10 @@ class InventorySetupController extends Controller
                 // Allow empty property number to be null instead of empty string for unique constraint handling
                 $propertyNo = isset($row['property-no']) && trim($row['property-no']) !== '' ? trim($row['property-no']) : null;
                 
-                DB::table('asset_distributions')->insert([
+                DB::table('asset_assignments')->insert([
                     'asset_source_id' => $assetSourceId,
-                    'region' => $row['region'] ?? 'Region IX',
-                    'division' => $row['division'] ?? 'Division of Zamboanga City',
                     'office_school_type' => $row['school-type'] ?? '',
                     'school_id' => $row['school-id'] ?? null,
-                    'office_school_name' => $row['school-name'] ?? '',
                     'nature_of_occupancy' => $row['occupancy'] ?? '',
                     'location' => $row['location'] ?? null,
                     'property_number' => $propertyNo,
@@ -373,7 +370,7 @@ class InventorySetupController extends Controller
 
     /**
      * MODULE: Inventory Management (Edit)
-     * Handles batch updates to asset_sources and asset_distributions.
+     * Handles batch updates to asset_sources and asset_assignments.
      */
     public function updateBatch(Request $request)
     {
@@ -483,18 +480,17 @@ class InventorySetupController extends Controller
                     DB::table('asset_sources')->where('id', $data['src_id'])->update($srcUpdates);
                 }
 
-                // Determine if we need to update asset_distributions
+                // Determine if we need to update asset_assignments
                 $distUpdates = [];
                 if (array_key_exists('occupancy', $data)) $distUpdates['nature_of_occupancy'] = $data['occupancy'];
                 if (array_key_exists('location', $data)) $distUpdates['location'] = $data['location'];
                 if (array_key_exists('property_no', $data)) $distUpdates['property_number'] = $data['property_no'];
                 if (array_key_exists('school_type', $data)) $distUpdates['office_school_type'] = $data['school_type'];
                 if (array_key_exists('school_id', $data)) $distUpdates['school_id'] = $data['school_id'];
-                if (array_key_exists('office_school_name', $data)) $distUpdates['office_school_name'] = $data['office_school_name'];
                 if (array_key_exists('acquisition_date', $data)) $distUpdates['acquisition_date'] = $data['acquisition_date'];
 
                 if (!empty($distUpdates)) {
-                    DB::table('asset_distributions')->where('id', $data['dist_id'])->update($distUpdates);
+                    DB::table('asset_assignments')->where('id', $data['dist_id'])->update($distUpdates);
                 }
 
                 $updateCount++;

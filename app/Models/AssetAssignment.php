@@ -6,19 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class AssetDistribution extends Model
+class AssetAssignment extends Model
 {
+    protected $table = 'asset_assignments';
+
     protected $fillable = [
         'asset_source_id',
         'custodian_id',
-        'region',
-        'division',
+        'office_id',
+        'condition',
         'office_school_type',
         'school_id',
-        'office_school_name',
         'nature_of_occupancy',
         'location',
         'property_number',
+        'photo_path',
         'acquisition_cost',
         'acquisition_date',
     ];
@@ -38,8 +40,13 @@ class AssetDistribution extends Model
         return $this->belongsTo(Custodian::class);
     }
 
-    public function transferHistory(): HasMany
+    public function office(): BelongsTo
     {
-        return $this->hasMany(AssetTransferHistory::class);
+        return $this->belongsTo(Office::class);
+    }
+
+    public function transfers(): HasMany
+    {
+        return $this->hasMany(AssetTransfer::class);
     }
 }
