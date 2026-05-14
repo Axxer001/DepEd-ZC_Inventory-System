@@ -165,6 +165,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/buildings/update-batch', [\App\Http\Controllers\InventorySetupController::class, 'updateBuildingBatch'])->name('api.buildings.updateBatch');
 
     Route::get('/buildings/{id}', [\App\Http\Controllers\BuildingController::class, 'profile'])->name('buildings.profile');
+    Route::get('/schools/{id}', [\App\Http\Controllers\SchoolController::class, 'profile'])->name('schools.profile');
+
 
 
     // --- School Management (View) ---
