@@ -25,14 +25,14 @@ class InventorySetupController extends Controller
         ]);
 
         $userName = auth()->user() ? auth()->user()->name : 'System';
-        $existingItemId = $request->existing_item_id;
-        $itemName = trim($request->item_name);
+        $existingItemId = $request->input('existing_item_id');
+        $itemName = trim($request->input('item_name'));
 
         $messages = [];
 
         // ── Resolve Category ──
-        $categoryId = $request->category_id;
-        $categoryName = trim($request->category_name);
+        $categoryId = $request->input('category_id');
+        $categoryName = trim($request->input('category_name'));
 
         if (!$categoryId) {
             if (!$categoryName) {
@@ -131,49 +131,54 @@ class InventorySetupController extends Controller
                 $acqSourceId = $acqSource->id;
             }
 
+            // Pre-load caches for optimized batch processing
+            $classCache = array_change_key_case(DB::table('classifications')->pluck('id', 'name')->toArray(), CASE_LOWER);
+            $catCache   = array_change_key_case(DB::table('categories')->pluck('id', 'name')->toArray(), CASE_LOWER);
+            $itemCache  = array_change_key_case(DB::table('items')->pluck('id', 'name')->toArray(), CASE_LOWER);
+
             foreach ($payload['rows'] as $row) {
                 // 2. Resolve Classification
                 $className = trim($row['classification'] ?? '');
-                $classObj = DB::table('classifications')->whereRaw('LOWER(name) = ?', [strtolower($className)])->first();
-                if (!$classObj) {
+                $lowerClassName = strtolower($className);
+                if (!isset($classCache[$lowerClassName])) {
                     $classId = DB::table('classifications')->insertGetId([
                         'name' => $className,
                         'created_at' => now(),
                         'updated_at' => now()
                     ]);
+                    $classCache[$lowerClassName] = $classId;
                 } else {
-                    $classId = $classObj->id;
+                    $classId = $classCache[$lowerClassName];
                 }
 
                 // 3. Resolve Category
                 $catName = trim($row['category'] ?? '');
-                $catObj = DB::table('categories')->whereRaw('LOWER(name) = ?', [strtolower($catName)])->first();
-                if (!$catObj) {
+                $lowerCatName = strtolower($catName);
+                if (!isset($catCache[$lowerCatName])) {
                     $catId = DB::table('categories')->insertGetId([
                         'classification_id' => $classId,
                         'name' => $catName,
                         'created_at' => now(),
                         'updated_at' => now()
                     ]);
+                    $catCache[$lowerCatName] = $catId;
                 } else {
-                    $catId = $catObj->id;
-                    if (!$catObj->classification_id) {
-                        DB::table('categories')->where('id', $catId)->update(['classification_id' => $classId]);
-                    }
+                    $catId = $catCache[$lowerCatName];
                 }
 
                 // 4. Resolve Item
                 $itemName = trim($row['item'] ?? '');
-                $itemObj = DB::table('items')->whereRaw('LOWER(name) = ?', [strtolower($itemName)])->first();
-                if (!$itemObj) {
+                $lowerItemName = strtolower($itemName);
+                if (!isset($itemCache[$lowerItemName])) {
                     $itemId = DB::table('items')->insertGetId([
                         'category_id' => $catId,
                         'name' => $itemName,
                         'created_at' => now(),
                         'updated_at' => now()
                     ]);
+                    $itemCache[$lowerItemName] = $itemId;
                 } else {
-                    $itemId = $itemObj->id;
+                    $itemId = $itemCache[$lowerItemName];
                 }
 
                 // 5. Insert Asset Source

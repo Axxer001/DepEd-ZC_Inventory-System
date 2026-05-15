@@ -213,7 +213,7 @@ class RegistrationController extends Controller
         }
 
         // Generate 6-digit OTP
-        $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $otp = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
         // Store in session with 10 min expiry
         session([

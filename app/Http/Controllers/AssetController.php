@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class AssetController extends Controller
 {
@@ -375,6 +376,10 @@ class AssetController extends Controller
 
     public function update(Request $request, $id)
     {
+        if (!Auth::check() || !Auth::user()->approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
             'classification_id' => 'required|string',
             'category_id' => 'required|string',
@@ -517,7 +522,7 @@ class AssetController extends Controller
             
             // Log the change
             DB::table('system_logs')->insert([
-                'user' => auth()->user()->name ?? 'System',
+                'user' => Auth::user()->name ?? 'System',
                 'action_type' => 'UPDATE',
                 'module' => 'Assets',
                 'activity' => 'Updated specifications for asset ID ' . $id,
@@ -531,6 +536,10 @@ class AssetController extends Controller
 
     public function transfer(Request $request, $id)
     {
+        if (!Auth::check() || !Auth::user()->approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $validated = $request->validate([
             'office_school_type' => 'nullable|string|max:255',
             'school_id' => 'nullable|string|max:255',
@@ -604,7 +613,7 @@ class AssetController extends Controller
                 'transfer_date' => $validated['transfer_date'] ?? now(),
                 'transfer_type' => $validated['transfer_type'] ?? 'Permanent',
                 'remarks' => $validated['remarks'] ?? null,
-                'authorized_by' => auth()->id() ?? 1,
+                'authorized_by' => Auth::id() ?? 1,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

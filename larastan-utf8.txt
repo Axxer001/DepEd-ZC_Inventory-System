@@ -1,0 +1,204 @@
+﻿ ------ ------------------------------------------------------------------------ 
+  Line   Http\Controllers\AssetController.php                                    
+ ------ ------------------------------------------------------------------------ 
+  :520   Call to an undefined method Illuminate\Contracts\Auth\Factory::user().  
+         ≡ƒ¬¬  method.notFound                                                     
+  :607   Call to an undefined method Illuminate\Contracts\Auth\Factory::id().    
+         ≡ƒ¬¬  method.notFound                                                     
+ ------ ------------------------------------------------------------------------ 
+
+ ------ ------------------------------------------------------------------------ 
+  Line   Http\Controllers\AuthController.php                                     
+ ------ ------------------------------------------------------------------------ 
+  :24    Access to an undefined property Illuminate\Http\Request::$email.        
+         ≡ƒ¬¬  property.notFound                                                   
+         ≡ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-unde  
+         fined-property                                                          
+  :26    Call to an undefined static method App\Models\User::where().            
+         ≡ƒ¬¬  staticMethod.notFound                                               
+  :44    Call to an undefined static method                                      
+         App\Models\PendingRegistration::where().                                
+         ≡ƒ¬¬  staticMethod.notFound                                               
+  :49    Call to an undefined static method App\Models\BlockedAccount::where().  
+         ≡ƒ¬¬  staticMethod.notFound                                               
+  :62    Access to an undefined property                                         
+         Illuminate\Contracts\Auth\Authenticatable::$name.                       
+         ≡ƒ¬¬  property.notFound                                                   
+         ≡ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-unde  
+         fined-property                                                          
+ ------ ------------------------------------------------------------------------ 
+
+ ------ ------------------------------------------------------------------------ 
+  Line   Http\Controllers\BuildingImportController.php                           
+ ------ ------------------------------------------------------------------------ 
+  :175   Call to an undefined method Illuminate\Contracts\Auth\Factory::user().  
+         ≡ƒ¬¬  method.notFound                                                     
+  :175   Call to an undefined method Illuminate\Contracts\Auth\Factory::user().  
+         ≡ƒ¬¬  method.notFound                                                     
+  :482   Variable $cost on left side of ?? always exists and is not nullable.    
+         ≡ƒ¬¬  nullCoalesce.variable                                               
+  :499   Array has 2 duplicate keys with value 'location' ('location',           
+         'location').                                                            
+         ≡ƒ¬¬  array.duplicateKey                                                  
+  :503   Variable $cost on left side of ?? always exists and is not nullable.    
+         ≡ƒ¬¬  nullCoalesce.variable                                               
+  :508   Left side of && is always true.                                         
+         ≡ƒ¬¬  booleanAnd.leftAlwaysTrue                                           
+ ------ ------------------------------------------------------------------------ 
+
+ ------ ------------------------------------------------------------------------ 
+  Line   Http\Controllers\ImportController.php                                   
+ ------ ------------------------------------------------------------------------ 
+  :48    Access to an undefined property Illuminate\Http\Request::$rows.         
+         ≡ƒ¬¬  property.notFound                                                   
+         ≡ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-unde  
+         fined-property                                                          
+  :157   Call to an undefined method Illuminate\Contracts\Auth\Factory::user().  
+         ≡ƒ¬¬  method.notFound                                                     
+  :157   Call to an undefined method Illuminate\Contracts\Auth\Factory::user().  
+         ≡ƒ¬¬  method.notFound                                                     
+ ------ ------------------------------------------------------------------------ 
+
+ ------ ------------------------------------------------------------------------ 
+  Line   Http\Controllers\InventorySetupController.php                           
+ ------ ------------------------------------------------------------------------ 
+  :27    Call to an undefined method Illuminate\Contracts\Auth\Factory::user().  
+         ≡ƒ¬¬  method.notFound                                                     
+  :27    Call to an undefined method Illuminate\Contracts\Auth\Factory::user().  
+         ≡ƒ¬¬  method.notFound                                                     
+  :28    Access to an undefined property                                         
+         Illuminate\Http\Request::$existing_item_id.                             
+         ≡ƒ¬¬  property.notFound                                                   
+         ≡ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-unde  
+         fined-property                                                          
+  :29    Access to an undefined property Illuminate\Http\Request::$item_name.    
+         ≡ƒ¬¬  property.notFound                                                   
+         ≡ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-unde  
+         fined-property                                                          
+  :34    Access to an undefined property Illuminate\Http\Request::$category_id.  
+         ≡ƒ¬¬  property.notFound                                                   
+         ≡ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-unde  
+         fined-property                                                          
+  :35    Access to an undefined property                                         
+         Illuminate\Http\Request::$category_name.                                
+         ≡ƒ¬¬  property.notFound                                                   
+         ≡ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-unde  
+         fined-property                                                          
+  :98    Variable $messages in empty() always exists and is not falsy.           
+         ≡ƒ¬¬  empty.variable                                                      
+  :115   Call to an undefined method Illuminate\Contracts\Auth\Factory::user().  
+         ≡ƒ¬¬  method.notFound                                                     
+  :115   Call to an undefined method Illuminate\Contracts\Auth\Factory::user().  
+         ≡ƒ¬¬  method.notFound                                                     
+  :263   Call to an undefined method Illuminate\Contracts\Auth\Factory::user().  
+         ≡ƒ¬¬  method.notFound                                                     
+  :263   Call to an undefined method Illuminate\Contracts\Auth\Factory::user().  
+         ≡ƒ¬¬  method.notFound                                                     
+  :384   Call to an undefined method Illuminate\Contracts\Auth\Factory::user().  
+         ≡ƒ¬¬  method.notFound                                                     
+  :384   Call to an undefined method Illuminate\Contracts\Auth\Factory::user().  
+         ≡ƒ¬¬  method.notFound                                                     
+ ------ ------------------------------------------------------------------------ 
+
+ ------ ------------------------------------------------------------------------ 
+  Line   Http\Controllers\RegistrationController.php                             
+ ------ ------------------------------------------------------------------------ 
+  :28    Access to an undefined property Illuminate\Http\Request::$email.        
+         ≡ƒ¬¬  property.notFound                                                   
+         ≡ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-unde  
+         fined-property                                                          
+  :36    Call to an undefined static method App\Models\BlockedAccount::where().  
+         ≡ƒ¬¬  staticMethod.notFound                                               
+  :41    Call to an undefined static method App\Models\User::where().            
+         ≡ƒ¬¬  staticMethod.notFound                                               
+  :46    Call to an undefined static method                                      
+         App\Models\PendingRegistration::where().                                
+         ≡ƒ¬¬  staticMethod.notFound                                               
+  :53    Call to an undefined static method                                      
+         App\Models\PendingRegistration::create().                               
+         ≡ƒ¬¬  staticMethod.notFound                                               
+  :87    Call to an undefined static method                                      
+         App\Models\PendingRegistration::where().                                
+         ≡ƒ¬¬  staticMethod.notFound                                               
+  :111   Call to an undefined static method App\Models\User::create().           
+         ≡ƒ¬¬  staticMethod.notFound                                               
+  :157   Call to an undefined static method                                      
+         App\Models\BlockedAccount::firstOrCreate().                             
+         ≡ƒ¬¬  staticMethod.notFound                                               
+  :192   Access to an undefined property Illuminate\Http\Request::$email.        
+         ≡ƒ¬¬  property.notFound                                                   
+         ≡ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-unde  
+         fined-property                                                          
+  :195   Call to an undefined static method App\Models\BlockedAccount::where().  
+         ≡ƒ¬¬  staticMethod.notFound                                               
+  :200   Call to an undefined static method App\Models\User::where().            
+         ≡ƒ¬¬  staticMethod.notFound                                               
+  :205   Call to an undefined static method                                      
+         App\Models\PendingRegistration::where().                                
+         ≡ƒ¬¬  staticMethod.notFound                                               
+  :216   Parameter #1 $string of function str_pad expects string, int<0,         
+         999999> given.                                                          
+         ≡ƒ¬¬  argument.type                                                       
+  :244   Access to an undefined property Illuminate\Http\Request::$email.        
+         ≡ƒ¬¬  property.notFound                                                   
+         ≡ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-unde  
+         fined-property                                                          
+  :245   Access to an undefined property Illuminate\Http\Request::$otp.          
+         ≡ƒ¬¬  property.notFound                                                   
+         ≡ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-unde  
+         fined-property                                                          
+ ------ ------------------------------------------------------------------------ 
+
+ ------ ----------------------------------------------- 
+  Line   Http\Controllers\ReportDownloadController.php  
+ ------ ----------------------------------------------- 
+  :152   Anonymous function has an unused use $eCol.    
+         ≡ƒ¬¬  closure.unusedUse                          
+ ------ ----------------------------------------------- 
+
+ ------ ------------------------------------------------------------------------ 
+  Line   Http\Middleware\DbSessionContextMiddleware.php                          
+ ------ ------------------------------------------------------------------------ 
+  :21    Access to an undefined property                                         
+         Illuminate\Contracts\Auth\Authenticatable::$name.                       
+         ≡ƒ¬¬  property.notFound                                                   
+         ≡ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-unde  
+         fined-property                                                          
+ ------ ------------------------------------------------------------------------ 
+
+ ------ ------------------------------------------------------------------------ 
+  Line   Models\Custodian.php                                                    
+ ------ ------------------------------------------------------------------------ 
+  :22    Access to an undefined property App\Models\Custodian::$first_name.      
+         ≡ƒ¬¬  property.notFound                                                   
+         ≡ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-unde  
+         fined-property                                                          
+  :22    Access to an undefined property App\Models\Custodian::$last_name.       
+         ≡ƒ¬¬  property.notFound                                                   
+         ≡ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-unde  
+         fined-property                                                          
+ ------ ------------------------------------------------------------------------ 
+
+ ------ ------------------------------------------------------------------------ 
+  Line   Models\PendingRegistration.php                                          
+ ------ ------------------------------------------------------------------------ 
+  :24    Access to an undefined property                                         
+         App\Models\PendingRegistration::$expires_at.                            
+         ≡ƒ¬¬  property.notFound                                                   
+         ≡ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-unde  
+         fined-property                                                          
+ ------ ------------------------------------------------------------------------ 
+
+ ------ ---------------------------------------------------------------------- 
+  Line   Providers\AppServiceProvider.php                                      
+ ------ ---------------------------------------------------------------------- 
+  :24    Call to static method forceRootUrl() on an unknown class URL.         
+         ≡ƒ¬¬  class.notFound                                                    
+         ≡ƒÆí  Learn more at https://phpstan.org/user-guide/discovering-symbols  
+  :30    Call to static method forceScheme() on an unknown class URL.          
+         ≡ƒ¬¬  class.notFound                                                    
+         ≡ƒÆí  Learn more at https://phpstan.org/user-guide/discovering-symbols  
+ ------ ---------------------------------------------------------------------- 
+
+ [ERROR] Found 51 errors                                                        
+
