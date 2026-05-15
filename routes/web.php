@@ -61,8 +61,8 @@ Route::middleware('auth')->group(function () {
             ->select('id', 'name', DB::raw('CASE WHEN source_type = "External" THEN "Distributor" ELSE "System" END as type'))
             ->get();
             
-        // Fetch distributions (asset_distributions)
-        $stakeholderOwnerships = DB::table('asset_distributions')->get();
+        // Fetch assignments (asset_assignments)
+        $stakeholderOwnerships = DB::table('asset_assignments')->get();
 
         $allSchools = DB::table('schools')
             ->select('id', 'school_id', 'name')

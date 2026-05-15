@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 $tables = [
-    'asset_distributions',
+    'asset_assignments',
     'asset_sources',
     'acquisition_sources',
     'items',

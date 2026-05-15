@@ -674,37 +674,61 @@ class ReportDownloadController extends Controller
         $filters = $request->input('filters', []);
         if (is_string($filters)) { $filters = json_decode($filters, true) ?: []; }
 
-        // Define Offices as unique names from asset_distributions and buildings that are NOT in the schools table
-        // For now, let's pull from asset_distributions as the primary source of office names
-        $query = DB::table('asset_distributions')
-            ->whereNotNull('office_school_name')
-            ->where('office_school_name', '!=', '')
-            ->where(function($q) {
-                $q->whereNull('school_id')
-                  ->orWhere('school_id', '=', '');
-            })
-            ->select('office_school_name as name', 'office_school_type as type', 'location')
+        $query = DB::table('offices')
+            ->leftJoin('schools', 'offices.school_id', '=', 'schools.id')
+            ->select(
+                'offices.name',
+                'offices.type',
+                'offices.location',
+                'schools.name as school_name'
+            )
             ->addSelect([
-                'total_ppe_cost' => DB::table('asset_distributions as ad2')
-                    ->whereColumn('ad2.office_school_name', 'asset_distributions.office_school_name')
-                    ->where('acquisition_cost', '>=', 50000)
-                    ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
-                'total_semi_ppe_cost' => DB::table('asset_distributions as ad3')
-                    ->whereColumn('ad3.office_school_name', 'asset_distributions.office_school_name')
-                    ->where('acquisition_cost', '<', 50000)
-                    ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
+                'total_ppe_cost' => DB::table('asset_assignments as ad2')
+                    ->whereColumn('ad2.office_id', 'offices.id')
+                    ->join('asset_sources as asrc', 'ad2.asset_source_id', '=', 'asrc.id')
+                    ->where('asrc.acquisition_cost', '>=', 50000)
+                    ->selectRaw('COALESCE(SUM(asrc.acquisition_cost), 0)'),
+                'total_semi_ppe_cost' => DB::table('asset_assignments as ad3')
+                    ->whereColumn('ad3.office_id', 'offices.id')
+                    ->join('asset_sources as asrc', 'ad2.asset_source_id', '=', 'asrc.id') // Wait, alias ad3
+                    ->where('asrc.acquisition_cost', '<', 50000)
+                    ->selectRaw('COALESCE(SUM(asrc.acquisition_cost), 0)'),
                 'total_bldg_cost' => DB::table('building_records as b')
-                    ->whereColumn('b.office_name', 'asset_distributions.office_school_name')
+                    ->whereColumn('b.office_id', 'offices.id')
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
-            ])
-            ->groupBy('office_school_name', 'office_school_type', 'location');
+            ]);
+
+        // Fix the subquery aliases
+        $query = DB::table('offices')
+            ->leftJoin('schools', 'offices.school_id', '=', 'schools.id')
+            ->select(
+                'offices.name',
+                'offices.type',
+                'offices.location',
+                'schools.name as school_name'
+            )
+            ->addSelect([
+                'total_ppe_cost' => DB::table('asset_assignments as ad2')
+                    ->join('asset_sources as asrc2', 'ad2.asset_source_id', '=', 'asrc2.id')
+                    ->whereColumn('ad2.office_id', 'offices.id')
+                    ->where('asrc2.acquisition_cost', '>=', 50000)
+                    ->selectRaw('COALESCE(SUM(asrc2.acquisition_cost), 0)'),
+                'total_semi_ppe_cost' => DB::table('asset_assignments as ad3')
+                    ->join('asset_sources as asrc3', 'ad3.asset_source_id', '=', 'asrc3.id')
+                    ->whereColumn('ad3.office_id', 'offices.id')
+                    ->where('asrc3.acquisition_cost', '<', 50000)
+                    ->selectRaw('COALESCE(SUM(asrc3.acquisition_cost), 0)'),
+                'total_bldg_cost' => DB::table('building_records as b')
+                    ->whereColumn('b.office_id', 'offices.id')
+                    ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
+            ]);
 
         if (!empty($filters['type'])) {
-            $query->where('office_school_type', $filters['type']);
+            $query->where('offices.type', $filters['type']);
         }
         if (!empty($filters['search'])) {
             $search = $filters['search'];
-            $query->where('office_school_name', 'LIKE', "%$search%");
+            $query->where('offices.name', 'LIKE', "%$search%");
         }
 
         $rows = $query->get();
@@ -713,14 +737,9 @@ class ReportDownloadController extends Controller
 
     public function getOfficesFilterOptions(Request $request)
     {
-        $types = DB::table('asset_distributions')
-            ->whereNotNull('office_school_name')
-            ->where('office_school_name', '!=', '')
-            ->where(function($q) {
-                $q->whereNull('school_id')->orWhere('school_id', '');
-            })
+        $types = DB::table('offices')
             ->distinct()
-            ->pluck('office_school_type')
+            ->pluck('type')
             ->filter()
             ->values();
 
@@ -741,12 +760,13 @@ class ReportDownloadController extends Controller
                 'schools.name as school_name'
             )
             ->addSelect([
-                'total_assets' => DB::table('asset_distributions')
+                'total_assets' => DB::table('asset_assignments')
                     ->whereColumn('custodian_id', 'custodians.id')
                     ->selectRaw('COUNT(*)'),
-                'total_value' => DB::table('asset_distributions')
-                    ->whereColumn('custodian_id', 'custodians.id')
-                    ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
+                'total_value' => DB::table('asset_assignments as ad')
+                    ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+                    ->whereColumn('ad.custodian_id', 'custodians.id')
+                    ->selectRaw('COALESCE(SUM(asrc.acquisition_cost), 0)'),
             ]);
 
         if (!empty($filters['status'])) {
