@@ -110,10 +110,13 @@ class InventorySetupController extends Controller
         $payload = $request->validate([
             'source_of_acquisition' => 'required|string',
             'rows' => 'required|array|min:1',
+            'rows.*.uom' => 'required|string',
+            'rows.*.useful-life' => 'required|numeric|min:0',
         ]);
 
-        $userName = auth()->user() ? auth()->user()->name : 'System';
-
+        /** @var \App\Models\User|null $user */
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $userName = $user ? $user->name : 'System';
         try {
             DB::beginTransaction();
 
@@ -135,6 +138,7 @@ class InventorySetupController extends Controller
             $classCache = array_change_key_case(DB::table('classifications')->pluck('id', 'name')->toArray(), CASE_LOWER);
             $catCache   = array_change_key_case(DB::table('categories')->pluck('id', 'name')->toArray(), CASE_LOWER);
             $itemCache  = array_change_key_case(DB::table('items')->pluck('id', 'name')->toArray(), CASE_LOWER);
+            $modeCache  = array_change_key_case(DB::table('procurement_modes')->pluck('id', 'name')->toArray(), CASE_LOWER);
 
             foreach ($payload['rows'] as $row) {
                 // 2. Resolve Classification
@@ -181,7 +185,83 @@ class InventorySetupController extends Controller
                     $itemId = $itemCache[$lowerItemName];
                 }
 
-                // 5. Insert Asset Source
+                // 5. Resolve Procurement Mode
+                $modeName = trim($row['mode'] ?? 'Unknown');
+                $lowerModeName = strtolower($modeName);
+                if (!isset($modeCache[$lowerModeName])) {
+                    $modeId = DB::table('procurement_modes')->insertGetId([
+                        'name' => $modeName,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                    $modeCache[$lowerModeName] = $modeId;
+                } else {
+                    $modeId = $modeCache[$lowerModeName];
+                }
+
+                // 6. Resolve Acquisition Contact
+                $contactId = null;
+                $personnelName = trim($row['personnel'] ?? '');
+                $personnelPos = trim($row['position'] ?? '');
+                if ($personnelName !== '' || $personnelPos !== '') {
+                    $contact = DB::table('acquisition_contacts')
+                        ->where('acquisition_source_id', $acqSourceId)
+                        ->where('name', $personnelName)
+                        ->where('position', $personnelPos)
+                        ->first();
+                    if (!$contact) {
+                        $contactId = DB::table('acquisition_contacts')->insertGetId([
+                            'acquisition_source_id' => $acqSourceId,
+                            'name' => $personnelName ?: null,
+                            'position' => $personnelPos ?: null,
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                    } else {
+                        $contactId = $contact->id;
+                    }
+                }
+
+                // 6.5 Resolve Custodian
+                $custodianId = null;
+                $custodianFirst = trim($row['custodian-first'] ?? '');
+                $custodianMiddle = trim($row['custodian-middle'] ?? '');
+                $custodianLast = trim($row['custodian-last'] ?? '');
+                $custodianPos = trim($row['custodian-pos'] ?? '');
+                $custodianContact = trim($row['custodian-contact'] ?? '');
+
+                if ($custodianFirst !== '' || $custodianLast !== '') {
+                    $custodianQuery = DB::table('custodians')
+                        ->where('first_name', $custodianFirst)
+                        ->where('last_name', $custodianLast);
+                        
+                    if ($custodianMiddle !== '') {
+                        $custodianQuery->where('middle_name', $custodianMiddle);
+                    } else {
+                        $custodianQuery->where(function($q) {
+                            $q->whereNull('middle_name')->orWhere('middle_name', '');
+                        });
+                    }
+                    
+                    $custodian = $custodianQuery->first();
+                    
+                    if (!$custodian) {
+                        $custodianId = DB::table('custodians')->insertGetId([
+                            'first_name' => $custodianFirst ?: null,
+                            'middle_name' => $custodianMiddle ?: null,
+                            'last_name' => $custodianLast ?: null,
+                            'position' => $custodianPos ?: null,
+                            'contact_number' => $custodianContact ?: null,
+                            'status' => 'Active',
+                            'created_at' => now(),
+                            'updated_at' => now()
+                        ]);
+                    } else {
+                        $custodianId = $custodian->id;
+                    }
+                }
+
+                // 7. Insert Asset Source
                 $costPerUnit = floatval($row['cost'] ?? 0);
                 $qty = intval($row['qty'] ?? 1);
                 
@@ -190,19 +270,18 @@ class InventorySetupController extends Controller
                     'description' => $row['description'] ?? null,
                     'unit_of_measurement' => $row['uom'] ?? null,
                     'acquisition_source_id' => $acqSourceId,
-                    'mode_of_acquisition' => $row['mode'] ?? 'Unknown',
-                    'source_personnel' => !empty($row['personnel']) ? $row['personnel'] : null,
-                    'personnel_position' => !empty($row['position']) ? $row['position'] : null,
+                    'procurement_mode_id' => $modeId,
+                    'acquisition_contact_id' => $contactId,
                     'asset_cost' => $costPerUnit,
                     'quantity' => $qty,
                     'estimated_useful_life' => (isset($row['useful-life']) && $row['useful-life'] !== '') ? intval($row['useful-life']) : null,
                     'acceptance_date' => $row['acceptance-date'] ?? now()->toDateString(),
-                    'remarks' => !empty($row['remarks']) ? $row['remarks'] : 'Good Condition',
+                    'remarks' => !empty($row['condition']) ? $row['condition'] : 'Good Condition', // Keeping remarks populated for legacy compatibility
                     'created_at' => now(),
                     'updated_at' => now()
                 ]);
 
-                // 6. Insert Asset Distribution
+                // 8. Insert Asset Distribution
                 $acqCost = $costPerUnit * $qty;
                 
                 // Allow empty property number to be null instead of empty string for unique constraint handling
@@ -210,7 +289,9 @@ class InventorySetupController extends Controller
                 
                 DB::table('asset_assignments')->insert([
                     'asset_source_id' => $assetSourceId,
-                    'office_school_type' => $row['school-type'] ?? '',
+                    'custodian_id' => $custodianId,
+                    'condition' => !empty($row['condition']) ? $row['condition'] : 'Good Condition',
+                    'office_school_type' => $row['school-type'] ?? 'School',
                     'school_id' => $row['school-id'] ?? null,
                     'nature_of_occupancy' => $row['occupancy'] ?? '',
                     'location' => $row['location'] ?? null,
@@ -476,9 +557,51 @@ class InventorySetupController extends Controller
                 if (array_key_exists('qty', $data)) $srcUpdates['quantity'] = intval($data['qty']);
                 if (array_key_exists('useful_life', $data)) $srcUpdates['estimated_useful_life'] = intval($data['useful_life']);
                 if (array_key_exists('acceptance_date', $data)) $srcUpdates['acceptance_date'] = $data['acceptance_date'];
-                if (array_key_exists('mode', $data)) $srcUpdates['mode_of_acquisition'] = $data['mode'];
-                if (array_key_exists('personnel', $data)) $srcUpdates['source_personnel'] = $data['personnel'];
-                if (array_key_exists('position', $data)) $srcUpdates['personnel_position'] = $data['position'];
+                
+                // Process Mode
+                if (array_key_exists('mode', $data)) {
+                    $modeName = trim($data['mode']);
+                    if ($modeName) {
+                        $modeId = DB::table('procurement_modes')->whereRaw('LOWER(name) = ?', [strtolower($modeName)])->value('id');
+                        if (!$modeId) {
+                            $modeId = DB::table('procurement_modes')->insertGetId(['name' => $modeName, 'created_at' => now(), 'updated_at' => now()]);
+                        }
+                        $srcUpdates['procurement_mode_id'] = $modeId;
+                    } else {
+                        $srcUpdates['procurement_mode_id'] = null;
+                    }
+                }
+
+                // Process Contact
+                if (array_key_exists('personnel', $data) || array_key_exists('position', $data)) {
+                    $personnelName = trim($data['personnel'] ?? $row->source_personnel ?? '');
+                    $personnelPos = trim($data['position'] ?? $row->personnel_position ?? '');
+                    $currentAcqSource = $srcUpdates['acquisition_source_id'] ?? $row->acquisition_source_id;
+
+                    if ($personnelName !== '' || $personnelPos !== '') {
+                        $contact = DB::table('acquisition_contacts')
+                            ->where('acquisition_source_id', $currentAcqSource)
+                            ->where('name', $personnelName)
+                            ->where('position', $personnelPos)
+                            ->first();
+
+                        if (!$contact) {
+                            $contactId = DB::table('acquisition_contacts')->insertGetId([
+                                'acquisition_source_id' => $currentAcqSource,
+                                'name' => $personnelName ?: null,
+                                'position' => $personnelPos ?: null,
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ]);
+                        } else {
+                            $contactId = $contact->id;
+                        }
+                        $srcUpdates['acquisition_contact_id'] = $contactId;
+                    } else {
+                        $srcUpdates['acquisition_contact_id'] = null;
+                    }
+                }
+
                 if (array_key_exists('remarks', $data)) $srcUpdates['remarks'] = $data['remarks'];
 
                 if (!empty($srcUpdates)) {

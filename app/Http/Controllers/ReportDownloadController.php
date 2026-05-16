@@ -25,12 +25,17 @@ class ReportDownloadController extends Controller
                 ->leftJoin('categories', 'items.category_id', '=', 'categories.id')
                 ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')
                 ->leftJoin('acquisition_sources', 'asset_sources.acquisition_source_id', '=', 'acquisition_sources.id')
+                ->leftJoin('procurement_modes as pm', 'asset_sources.procurement_mode_id', '=', 'pm.id')
+                ->leftJoin('acquisition_contacts as ac', 'asset_sources.acquisition_contact_id', '=', 'ac.id')
                 ->select(
                     'asset_sources.*',
                     'items.name as article',
                     'categories.name as category',
                     'classifications.name as classification',
                     'acquisition_sources.name as acq_source',
+                    'pm.name as mode_of_acquisition',
+                    'ac.name as source_personnel',
+                    'ac.position as personnel_position',
                     DB::raw('(asset_sources.asset_cost * asset_sources.quantity) as acquisition_cost'),
                     DB::raw("'Region IX' as region"),
                     DB::raw("'Division of Zamboanga City' as division"),
@@ -49,6 +54,8 @@ class ReportDownloadController extends Controller
                 ->leftJoin('categories', 'items.category_id', '=', 'categories.id')
                 ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')
                 ->leftJoin('acquisition_sources', 'asset_sources.acquisition_source_id', '=', 'acquisition_sources.id')
+                ->leftJoin('procurement_modes as pm', 'asset_sources.procurement_mode_id', '=', 'pm.id')
+                ->leftJoin('acquisition_contacts as ac', 'asset_sources.acquisition_contact_id', '=', 'ac.id')
                 ->select(
                     'asset_assignments.*',
                     DB::raw("'Region IX' as region"),
@@ -59,9 +66,9 @@ class ReportDownloadController extends Controller
                     'asset_sources.quantity',
                     'asset_sources.quantity as source_qty',
                     'asset_sources.estimated_useful_life',
-                    'asset_sources.mode_of_acquisition',
-                    'asset_sources.source_personnel',
-                    'asset_sources.personnel_position',
+                    'pm.name as mode_of_acquisition',
+                    'ac.name as source_personnel',
+                    'ac.position as personnel_position',
                     'asset_sources.acceptance_date',
                     'asset_sources.remarks',
                     'items.name as article',
@@ -95,7 +102,7 @@ class ReportDownloadController extends Controller
             $query->where('acquisition_sources.name', $filters['source']);
         }
         if (!empty($filters['mode'])) {
-            $query->where('asset_sources.mode_of_acquisition', $filters['mode']);
+            $query->where('pm.name', $filters['mode']);
         }
         if (!empty($filters['dateAcquired'])) {
             $query->whereDate('asset_sources.acceptance_date', $filters['dateAcquired']);
@@ -135,7 +142,7 @@ class ReportDownloadController extends Controller
             elseif ($eCol === 'description') $dbCol = 'asset_sources.description';
             elseif ($eCol === 'unit_of_measurement') $dbCol = 'asset_sources.unit_of_measurement';
             elseif ($eCol === 'acq_source') $dbCol = 'acquisition_sources.name';
-            elseif ($eCol === 'mode_of_acquisition') $dbCol = 'asset_sources.mode_of_acquisition';
+            elseif ($eCol === 'mode_of_acquisition') $dbCol = 'pm.name';
             elseif ($eCol === 'acceptance_date') $dbCol = 'asset_sources.acceptance_date';
             
             // Distribution-specific columns
@@ -226,7 +233,8 @@ class ReportDownloadController extends Controller
             ->leftJoin('items', 'asset_sources.item_id', '=', 'items.id')
             ->leftJoin('categories', 'items.category_id', '=', 'categories.id')
             ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')
-            ->leftJoin('acquisition_sources', 'asset_sources.acquisition_source_id', '=', 'acquisition_sources.id');
+            ->leftJoin('acquisition_sources', 'asset_sources.acquisition_source_id', '=', 'acquisition_sources.id')
+            ->leftJoin('procurement_modes as pm', 'asset_sources.procurement_mode_id', '=', 'pm.id');
 
         if ($type === 'RPCPPE') {
             $baseQuery->where('asset_sources.asset_cost', '>=', 50000);
@@ -239,7 +247,7 @@ class ReportDownloadController extends Controller
         $items = (clone $baseQuery)->whereNotNull('items.name')->pluck('items.name')->unique()->sort()->values();
         $schools = (clone $baseQuery)->whereNotNull('asset_assignments.location')->where('asset_assignments.location', '!=', '')->pluck('asset_assignments.location')->unique()->sort()->values();
         $sources = (clone $baseQuery)->whereNotNull('acquisition_sources.name')->pluck('acquisition_sources.name')->unique()->sort()->values();
-        $modes = (clone $baseQuery)->whereNotNull('asset_sources.mode_of_acquisition')->pluck('asset_sources.mode_of_acquisition')->unique()->sort()->values();
+        $modes = (clone $baseQuery)->whereNotNull('pm.name')->pluck('pm.name')->unique()->sort()->values();
 
         return response()->json([
             'classifications' => $classifications,

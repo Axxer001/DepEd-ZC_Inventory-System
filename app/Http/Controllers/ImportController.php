@@ -296,12 +296,23 @@ class ImportController extends Controller
                     ]);
                 }
 
+                // ── Resolve Procurement Mode ──
+                $modeName = 'CSV Import';
+                $modeId = DB::table('procurement_modes')->where('name', $modeName)->value('id');
+                if (!$modeId) {
+                    $modeId = DB::table('procurement_modes')->insertGetId([
+                        'name' => $modeName,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+
                 // ── Insert Asset Source (replaces sub_items) ──
                 DB::table('asset_sources')->insert([
                     'item_id' => $itemId,
                     'description' => !empty($description) ? $description : null,
                     'acquisition_source_id' => $acquisitionSourceId,
-                    'mode_of_acquisition' => 'CSV Import',
+                    'procurement_mode_id' => $modeId,
                     'asset_cost' => $unitPrice,
                     'quantity' => $quantity,
                     'acceptance_date' => $dateAcquired,
