@@ -139,24 +139,27 @@
         {{-- ── Asset Source Table ── --}}
         <div id="editPanelAssetSource" class="flex-grow flex flex-col min-h-0">
             <div id="editSourceScroll" class="xls-scroll-wrap custom-scroll overflow-x-auto overflow-y-auto transition-all duration-300" style="max-height: calc(100vh - 450px);">
-                <table class="w-full border-collapse" style="min-width:2400px;">
+                <table class="w-full border-collapse" style="min-width:2800px;">
                     <thead class="sticky top-0 bg-slate-50 z-20 shadow-sm">
                         <tr>
                             <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                            <th class="xls-th" style="min-width:140px">Classification</th>
-                            <th class="xls-th" style="min-width:140px">Category</th>
-                            <th class="xls-th" style="min-width:140px">Item</th>
-                            <th class="xls-th text-blue-600" style="min-width:180px">Description</th>
-                            <th class="xls-th text-blue-600" style="min-width:120px">Unit</th>
-                            <th class="xls-th text-blue-600" style="min-width:160px">Acquisition Source</th>
-                            <th class="xls-th text-blue-600" style="min-width:150px">Mode</th>
-                            <th class="xls-th text-blue-600" style="min-width:160px">Source Personnel</th>
-                            <th class="xls-th text-blue-600" style="min-width:160px">Personnel Position</th>
-                            <th class="xls-th text-blue-600 text-right" style="min-width:120px">Cost / Unit (₱)</th>
-                            <th class="xls-th text-blue-600 text-right" style="min-width:80px">Qty</th>
-                            <th class="xls-th text-blue-600 text-right" style="min-width:110px">Useful Life (yrs)</th>
-                            <th class="xls-th text-blue-600" style="min-width:140px">Acceptance Date</th>
-                            <th class="xls-th text-blue-600" style="min-width:200px">Remarks</th>
+                            <th class="xls-th col-identity" style="min-width:140px">CLASSIFICATION</th>
+                            <th class="xls-th col-identity" style="min-width:140px">CATEGORY</th>
+                            <th class="xls-th col-identity" style="min-width:140px">ITEM</th>
+                            <th class="xls-th col-context" style="min-width:180px">DESCRIPTION</th>
+                            <th class="xls-th col-context" style="min-width:120px">BRAND</th>
+                            <th class="xls-th col-context" style="min-width:120px">MODEL</th>
+                            <th class="xls-th col-context" style="min-width:140px">SERIAL NO.</th>
+                            <th class="xls-th col-context" style="min-width:100px">UNIT</th>
+                            <th class="xls-th col-status" style="min-width:160px">ACQUISITION SOURCE</th>
+                            <th class="xls-th col-status" style="min-width:140px">MODE</th>
+                            <th class="xls-th col-personnel" style="min-width:160px">SOURCE PERSONNEL</th>
+                            <th class="xls-th col-personnel" style="min-width:160px">PERSONNEL POS</th>
+                            <th class="xls-th col-financial text-right" style="min-width:120px">COST / UNIT (₱)</th>
+                            <th class="xls-th col-financial text-right" style="min-width:80px">QTY</th>
+                            <th class="xls-th col-temporal text-right" style="min-width:110px">USEFUL LIFE (YRS)</th>
+                            <th class="xls-th col-temporal" style="min-width:140px">ACCEPTANCE DATE</th>
+                            <th class="xls-th col-status" style="min-width:160px">CONDITION</th>
                         </tr>
                     </thead>
                     <tbody id="editAssetSourceBody"></tbody>
@@ -171,16 +174,21 @@
                     <thead class="sticky top-0 bg-slate-50 z-20 shadow-sm">
                         <tr>
                             <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                            <th class="xls-th" style="min-width:90px">Region</th>
-                            <th class="xls-th" style="min-width:200px">Division</th>
-                            <th class="xls-th text-blue-600" style="min-width:140px">Office/School Type</th>
-                            <th class="xls-th text-blue-600" style="min-width:100px">School ID</th>
-                            <th class="xls-th text-blue-600" style="min-width:210px">Office/School Name</th>
-                            <th class="xls-th text-blue-600" style="min-width:160px">Nature of Occupancy</th>
-                            <th class="xls-th text-blue-600" style="min-width:160px">Location</th>
-                            <th class="xls-th text-blue-600" style="min-width:150px">Property No.</th>
-                            <th class="xls-th text-blue-600 text-right" style="min-width:130px">Acquisition Cost (₱)</th>
-                            <th class="xls-th text-blue-600" style="min-width:140px">Acquisition Date</th>
+                            <th class="xls-th col-context" style="min-width:120px">REGION</th>
+                            <th class="xls-th col-context" style="min-width:180px">DIVISION</th>
+                            <th class="xls-th col-context" style="min-width:160px">OFFICE/SCHOOL TYPE</th>
+                            <th class="xls-th col-identity" style="min-width:100px">SCHOOL ID</th>
+                            <th class="xls-th col-identity" style="min-width:210px">OFFICE/SCHOOL NAME</th>
+                            <th class="xls-th col-personnel" style="min-width:160px">CUSTODIAN FIRST NAME</th>
+                            <th class="xls-th col-personnel" style="min-width:160px">CUSTODIAN MIDDLE NAME</th>
+                            <th class="xls-th col-personnel" style="min-width:160px">CUSTODIAN LAST NAME</th>
+                            <th class="xls-th col-personnel" style="min-width:160px">CUSTODIAN POSITION</th>
+                            <th class="xls-th col-personnel" style="min-width:160px">CUSTODIAN CONTACT NO.</th>
+                            <th class="xls-th col-context" style="min-width:160px">NATURE OF OCCUPANCY</th>
+                            <th class="xls-th col-context" style="min-width:160px">LOCATION</th>
+                            <th class="xls-th col-identity" style="min-width:150px">PROPERTY NO.</th>
+                            <th class="xls-th col-financial text-right" style="min-width:130px">ACQUISITION COST (₱)</th>
+                            <th class="xls-th col-temporal" style="min-width:140px">ACQUISITION DATE</th>
                         </tr>
                     </thead>
                     <tbody id="editAssetDistBody"></tbody>
@@ -251,6 +259,9 @@
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Category</label><input type="text" id="ebCategory" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Item</label><input type="text" id="ebItem" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Description</label><input type="text" id="ebDescription" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Brand</label><input type="text" id="ebBrand" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Model</label><input type="text" id="ebModel" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Serial Number</label><input type="text" id="ebSerialNo" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Unit of Measurement</label><input type="text" id="ebUom" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Acquisition Source</label><input type="text" id="ebAcqSource" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Mode of Procurement</label><input type="text" id="ebMode" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
@@ -261,7 +272,7 @@
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Expected Useful Life</label><input type="number" id="ebLife" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="1"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Acceptance Date</label><input type="date" id="ebDate1" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                     <div class="relative">
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Remarks</label>
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Condition</label>
                         <select id="ebRemarks" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl bg-transparent">
                             <option value="">-- Ignore --</option>
                             <option value="Good Condition">Good Condition</option>
@@ -290,6 +301,11 @@
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Office/School Type</label><input type="text" id="ebSchoolType" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">School ID</label><input type="text" id="ebSchoolId" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore" inputmode="numeric"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Office/School Name</label><input type="text" id="ebSchoolName" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Custodian First Name</label><input type="text" id="ebCustFirst" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Custodian Middle Name</label><input type="text" id="ebCustMiddle" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Custodian Last Name</label><input type="text" id="ebCustLast" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Custodian Position</label><input type="text" id="ebCustPos" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Custodian Contact No.</label><input type="text" id="ebCustContact" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Nature of Occupancy</label><input type="text" id="ebOccupancy" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Location</label><input type="text" id="ebLocation" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Property Number</label><input type="text" id="ebPropertyNo" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
@@ -518,6 +534,9 @@
                 ${renderCell('category', row.category, false)}
                 ${renderCell('article', row.article, false)}
                 ${renderCell('description', row.description, false)}
+                ${renderCell('brand', row.brand, false)}
+                ${renderCell('model', row.model, false)}
+                ${renderCell('serial_no', row.serial_no, false)}
                 ${renderCell('unit_of_measurement', row.unit_of_measurement, false)}
                 ${renderCell('acq_source', row.acq_source, false)}
                 ${renderCell('mode_of_acquisition', row.mode_of_acquisition, false)}
@@ -544,6 +563,11 @@
                 ${renderCell('school_type', row.school_type, false)}
                 ${renderCell('school_id', row.school_id, false)}
                 ${renderCell('office_school_name', row.office_school_name, false)}
+                ${renderCell('custodian_first_name', row.custodian_first_name, false)}
+                ${renderCell('custodian_middle_name', row.custodian_middle_name, false)}
+                ${renderCell('custodian_last_name', row.custodian_last_name, false)}
+                ${renderCell('custodian_position', row.custodian_position, false)}
+                ${renderCell('custodian_contact_number', row.custodian_contact_number, false)}
                 ${renderCell('nature_of_occupancy', row.nature_of_occupancy, false)}
                 ${renderCell('location', row.location, false)}
                 ${renderCell('property_number', row.property_number, false)}
@@ -652,6 +676,9 @@
             'ebCategory': 'category',
             'ebItem': 'article',
             'ebDescription': 'description',
+            'ebBrand': 'brand',
+            'ebModel': 'model',
+            'ebSerialNo': 'serial_no',
             'ebUom': 'unit_of_measurement',
             'ebAcqSource': 'acq_source',
             'ebMode': 'mode_of_acquisition',
@@ -789,11 +816,13 @@
                 let hasChanged = false;
                 
                 const keys = [
-                    'classification', 'category', 'article', 'description', 'unit_of_measurement', 
-                    'acq_source', 'asset_cost', 'quantity', 'estimated_useful_life', 'property_number', 
-                    'location', 'nature_of_occupancy', 'mode_of_acquisition', 'source_personnel', 
-                    'personnel_position', 'acceptance_date', 'remarks', 'school_type', 'school_id', 
-                    'office_school_name', 'acquisition_date'
+                    'classification', 'category', 'article', 'description', 'brand', 'model', 'serial_no',
+                    'unit_of_measurement', 'acq_source', 'asset_cost', 'quantity', 'estimated_useful_life',
+                    'property_number', 'location', 'nature_of_occupancy', 'mode_of_acquisition', 
+                    'source_personnel', 'personnel_position', 'acceptance_date', 'remarks', 
+                    'school_type', 'school_id', 'office_school_name', 'acquisition_date', 
+                    'custodian_first_name', 'custodian_middle_name', 'custodian_last_name', 
+                    'custodian_position', 'custodian_contact_number'
                 ];
 
                 keys.forEach(k => {
@@ -816,6 +845,9 @@
                     if (changes.hasOwnProperty('category')) payload.category = changes.category;
                     if (changes.hasOwnProperty('article')) payload.article = changes.article;
                     if (changes.hasOwnProperty('description')) payload.description = changes.description;
+                    if (changes.hasOwnProperty('brand')) payload.brand = changes.brand;
+                    if (changes.hasOwnProperty('model')) payload.model = changes.model;
+                    if (changes.hasOwnProperty('serial_no')) payload.serial_no = changes.serial_no;
                     if (changes.hasOwnProperty('unit_of_measurement')) payload.uom = changes.unit_of_measurement;
                     if (changes.hasOwnProperty('acq_source')) payload.acq_source = changes.acq_source;
                     if (changes.hasOwnProperty('asset_cost')) payload.cost = changes.asset_cost;
@@ -833,6 +865,11 @@
                     if (changes.hasOwnProperty('school_id')) payload.school_id = changes.school_id;
                     if (changes.hasOwnProperty('office_school_name')) payload.office_school_name = changes.office_school_name;
                     if (changes.hasOwnProperty('acquisition_date')) payload.acquisition_date = changes.acquisition_date;
+                    if (changes.hasOwnProperty('custodian_first_name')) payload.custodian_first_name = changes.custodian_first_name;
+                    if (changes.hasOwnProperty('custodian_middle_name')) payload.custodian_middle_name = changes.custodian_middle_name;
+                    if (changes.hasOwnProperty('custodian_last_name')) payload.custodian_last_name = changes.custodian_last_name;
+                    if (changes.hasOwnProperty('custodian_position')) payload.custodian_position = changes.custodian_position;
+                    if (changes.hasOwnProperty('custodian_contact_number')) payload.custodian_contact_number = changes.custodian_contact_number;
 
                     updates.push(payload);
                 }

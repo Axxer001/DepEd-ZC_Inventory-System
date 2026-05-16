@@ -552,6 +552,9 @@ class InventorySetupController extends Controller
                 }
 
                 if (array_key_exists('description', $data)) $srcUpdates['description'] = $data['description'];
+                if (array_key_exists('brand', $data)) $srcUpdates['brand'] = $data['brand'];
+                if (array_key_exists('model', $data)) $srcUpdates['model'] = $data['model'];
+                if (array_key_exists('serial_no', $data)) $srcUpdates['serial_number'] = $data['serial_no'];
                 if (array_key_exists('uom', $data)) $srcUpdates['unit_of_measurement'] = $data['uom'];
                 if (array_key_exists('cost', $data)) $srcUpdates['asset_cost'] = floatval($data['cost']);
                 if (array_key_exists('qty', $data)) $srcUpdates['quantity'] = intval($data['qty']);
@@ -616,6 +619,62 @@ class InventorySetupController extends Controller
                 if (array_key_exists('school_type', $data)) $distUpdates['office_school_type'] = $data['school_type'];
                 if (array_key_exists('school_id', $data)) $distUpdates['school_id'] = $data['school_id'];
                 if (array_key_exists('acquisition_date', $data)) $distUpdates['acquisition_date'] = $data['acquisition_date'];
+                if (array_key_exists('remarks', $data)) $distUpdates['condition'] = $data['remarks'];
+
+                // Process Custodian
+                if (
+                    array_key_exists('custodian_first_name', $data) || 
+                    array_key_exists('custodian_middle_name', $data) || 
+                    array_key_exists('custodian_last_name', $data) || 
+                    array_key_exists('custodian_position', $data) || 
+                    array_key_exists('custodian_contact_number', $data)
+                ) {
+                    $rowDist = DB::table('asset_assignments')
+                        ->leftJoin('custodians', 'asset_assignments.custodian_id', '=', 'custodians.id')
+                        ->where('asset_assignments.id', $data['dist_id'])
+                        ->select('custodians.first_name', 'custodians.middle_name', 'custodians.last_name', 'custodians.position', 'custodians.contact_number')
+                        ->first();
+
+                    $custFirst = trim($data['custodian_first_name'] ?? $rowDist->first_name ?? '');
+                    $custMiddle = trim($data['custodian_middle_name'] ?? $rowDist->middle_name ?? '');
+                    $custLast = trim($data['custodian_last_name'] ?? $rowDist->last_name ?? '');
+                    $custPos = trim($data['custodian_position'] ?? $rowDist->position ?? '');
+                    $custContact = trim($data['custodian_contact_number'] ?? $rowDist->contact_number ?? '');
+
+                    if ($custFirst !== '' || $custLast !== '') {
+                        $custQuery = DB::table('custodians')
+                            ->where('first_name', $custFirst)
+                            ->where('last_name', $custLast);
+                            
+                        if ($custMiddle !== '') {
+                            $custQuery->where('middle_name', $custMiddle);
+                        } else {
+                            $custQuery->where(function($q) {
+                                $q->whereNull('middle_name')->orWhere('middle_name', '');
+                            });
+                        }
+                        
+                        $custodian = $custQuery->first();
+                        
+                        if (!$custodian) {
+                            $custodianId = DB::table('custodians')->insertGetId([
+                                'first_name' => $custFirst ?: null,
+                                'middle_name' => $custMiddle ?: null,
+                                'last_name' => $custLast ?: null,
+                                'position' => $custPos ?: null,
+                                'contact_number' => $custContact ?: null,
+                                'status' => 'Active',
+                                'created_at' => now(),
+                                'updated_at' => now()
+                            ]);
+                        } else {
+                            $custodianId = $custodian->id;
+                        }
+                        $distUpdates['custodian_id'] = $custodianId;
+                    } else {
+                        $distUpdates['custodian_id'] = null;
+                    }
+                }
 
                 if (!empty($distUpdates)) {
                     DB::table('asset_assignments')->where('id', $data['dist_id'])->update($distUpdates);

@@ -56,6 +56,7 @@ class ReportDownloadController extends Controller
                 ->leftJoin('acquisition_sources', 'asset_sources.acquisition_source_id', '=', 'acquisition_sources.id')
                 ->leftJoin('procurement_modes as pm', 'asset_sources.procurement_mode_id', '=', 'pm.id')
                 ->leftJoin('acquisition_contacts as ac', 'asset_sources.acquisition_contact_id', '=', 'ac.id')
+                ->leftJoin('custodians as cus', 'asset_assignments.custodian_id', '=', 'cus.id')
                 ->select(
                     'asset_assignments.*',
                     DB::raw("'Region IX' as region"),
@@ -74,7 +75,12 @@ class ReportDownloadController extends Controller
                     'items.name as article',
                     'categories.name as category',
                     'classifications.name as classification',
-                    'acquisition_sources.name as acq_source'
+                    'acquisition_sources.name as acq_source',
+                    'cus.first_name as custodian_first_name',
+                    'cus.middle_name as custodian_middle_name',
+                    'cus.last_name as custodian_last_name',
+                    'cus.position as custodian_position',
+                    'cus.contact_number as custodian_contact_number'
                 );
         }
 

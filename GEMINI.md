@@ -18,6 +18,7 @@
 - **Grid:** Strict 8px grid (multipliers of 8px/`p-2`, `p-4`, etc.).
 - **Density:** High information density; minimal unnecessary whitespace.
 - **Borders:** 1px micro-borders (`border-slate-700/50`) with transitions (`duration-200`).
+- **UI Architecture:** All data tables must have micro-borders (1px) and subtle interactive hover states. No loud saturated colors.
 
 ## 4. EXECUTION GUIDELINES
 - No conversational filler.

@@ -120,29 +120,31 @@
         {{-- ── Buildings Table ── --}}
         <div id="bldgPanel" class="flex-grow flex flex-col min-h-0">
             <div id="bldgScroll" class="xls-scroll-wrap custom-scroll overflow-x-auto overflow-y-auto transition-all duration-300" style="max-height: calc(100vh - 450px);">
-                <table class="w-full border-collapse" style="min-width:2800px;">
+                <table class="w-full border-collapse" style="min-width:3200px;">
                     <thead class="sticky top-0 bg-slate-50 z-20 shadow-sm">
                         <tr>
                             <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                            <th class="xls-th" style="min-width:90px">Region</th>
-                            <th class="xls-th" style="min-width:200px">Division</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Office Type</th>
-                            <th class="xls-th text-emerald-600" style="min-width:100px">School ID</th>
-                            <th class="xls-th text-emerald-600" style="min-width:210px">School Name</th>
-                            <th class="xls-th text-emerald-600" style="min-width:180px">Address</th>
-                            <th class="xls-th text-emerald-600 text-right" style="min-width:80px">Storeys</th>
-                            <th class="xls-th text-emerald-600 text-right" style="min-width:100px">Classrooms</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Article</th>
-                            <th class="xls-th text-emerald-600" style="min-width:200px">Description</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Classification</th>
-                            <th class="xls-th text-emerald-600" style="min-width:160px">Nature of Occupancy</th>
-                            <th class="xls-th text-emerald-600" style="min-width:160px">Location</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Date Constructed</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Acquisition Date</th>
-                            <th class="xls-th text-emerald-600" style="min-width:150px">Property No.</th>
-                            <th class="xls-th text-emerald-600 text-right" style="min-width:140px">Acquisition Cost (₱)</th>
-                            <th class="xls-th text-emerald-600 text-right" style="min-width:120px">Useful Life (yrs)</th>
-                            <th class="xls-th text-emerald-600" style="min-width:200px">Remarks</th>
+                            <th class="xls-th col-context" style="min-width:90px">REGION</th>
+                            <th class="xls-th col-context" style="min-width:200px">DIVISION</th>
+                            <th class="xls-th col-context" style="min-width:140px">OFFICE TYPE</th>
+                            <th class="xls-th col-identity" style="min-width:100px">SCHOOL ID</th>
+                            <th class="xls-th col-identity" style="min-width:210px">SCHOOL NAME</th>
+                            <th class="xls-th col-context" style="min-width:180px">ADDRESS</th>
+                            <th class="xls-th col-personnel text-right" style="min-width:80px">STOREYS</th>
+                            <th class="xls-th col-personnel text-right" style="min-width:100px">CLASSROOMS</th>
+                            <th class="xls-th col-personnel" style="min-width:140px">ARTICLE</th>
+                            <th class="xls-th col-personnel" style="min-width:200px">DESCRIPTION</th>
+                            <th class="xls-th col-identity" style="min-width:140px">CLASSIFICATION</th>
+                            <th class="xls-th col-context" style="min-width:160px">OCCUPANCY NATURE</th>
+                            <th class="xls-th col-context" style="min-width:160px">LOCATION</th>
+                            <th class="xls-th col-temporal" style="min-width:140px">DATE CONSTRUCTED</th>
+                            <th class="xls-th col-temporal" style="min-width:140px">ACQUISITION DATE</th>
+                            <th class="xls-th col-identity" style="min-width:150px">PROPERTY NO.</th>
+                            <th class="xls-th col-financial text-right" style="min-width:140px">ACQUISITION COST (₱)</th>
+                            <th class="xls-th col-temporal text-right" style="min-width:120px">USEFUL LIFE (YRS)</th>
+                            <th class="xls-th col-financial text-right" style="min-width:140px">APPRAISED VALUE (₱)</th>
+                            <th class="xls-th col-temporal" style="min-width:140px">APPRAISAL DATE</th>
+                            <th class="xls-th col-status" style="min-width:200px">REMARKS</th>
                         </tr>
                     </thead>
                     <tbody id="bldgTableBody"></tbody>
@@ -155,7 +157,7 @@
             <div class="flex items-center gap-6">
                 <p id="bldgRowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 Rows</p>
                 <div id="bldgPaginationControls" class="flex items-center gap-3 border-l border-slate-200 pl-6">
-                    <button onclick="bldgPrevPage()" id="bldgPrevBtn" class="pg-btn">
+                    <button onclick="bldgPrevPage()" id="editPrevBtn" class="pg-btn">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
                         Prev
                     </button>
@@ -164,7 +166,7 @@
                         <span class="text-[10px] font-bold text-slate-400">/</span>
                         <span id="bldgTotalPages" class="text-[10px] font-black text-slate-400">1</span>
                     </div>
-                    <button onclick="bldgNextPage()" id="bldgNextBtn" class="pg-btn">
+                    <button onclick="bldgNextPage()" id="editNextBtn" class="pg-btn">
                         Next
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
                     </button>
@@ -232,6 +234,8 @@
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Useful Life (yrs)</label><input type="number" id="bebLife" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="1"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Date Constructed</label><input type="date" id="bebDateConstructed" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Acquisition Date</label><input type="date" id="bebAcqDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Appraised Value (₱)</label><input type="number" id="bebAppraisedValue" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="0.01"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Appraisal Date</label><input type="date" id="bebAppraisalDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                     <div class="relative col-span-2">
                         <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Remarks</label>
                         <select id="bebRemarks" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl bg-transparent">
@@ -416,6 +420,8 @@
                 ${renderCell('property_number', row.property_number, false)}
                 ${renderCell('acquisition_cost', row.acquisition_cost, false)}
                 ${renderCell('estimated_useful_life', row.estimated_useful_life, false)}
+                ${renderCell('appraised_value', row.appraised_value, false)}
+                ${renderCell('appraisal_date', row.appraisal_date, false)}
                 ${renderCell('remarks', row.remarks, false)}
             `;
             tbody.appendChild(tr);
@@ -515,6 +521,8 @@
             'bebPropertyNo': 'property_number',
             'bebAcqCost': 'acquisition_cost',
             'bebLife': 'estimated_useful_life',
+            'bebAppraisedValue': 'appraised_value',
+            'bebAppraisalDate': 'appraisal_date',
             'bebRemarks': 'remarks'
         };
 
@@ -616,7 +624,7 @@
             if (!orig) return;
             const changes = {};
             let hasChanged = false;
-            const keys = ['office_type', 'school_id', 'office_name', 'address', 'storeys', 'classrooms', 'article', 'description', 'classification', 'occupancy_nature', 'location', 'date_constructed', 'acquisition_date', 'property_number', 'acquisition_cost', 'estimated_useful_life', 'remarks'];
+            const keys = ['office_type', 'school_id', 'office_name', 'address', 'storeys', 'classrooms', 'article', 'description', 'classification', 'occupancy_nature', 'location', 'date_constructed', 'acquisition_date', 'property_number', 'acquisition_cost', 'estimated_useful_life', 'appraised_value', 'appraisal_date', 'remarks'];
             keys.forEach(k => {
                 if (String(row[k] ?? '').trim() !== String(orig[k] ?? '').trim()) { changes[k] = row[k]; hasChanged = true; }
             });
