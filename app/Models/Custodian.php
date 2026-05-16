@@ -9,10 +9,10 @@ class Custodian extends Model
 {
     protected $fillable = [
         'first_name',
+        'middle_name',
         'last_name',
         'employee_id',
         'position',
-        'school_id',
         'contact_number',
         'status',
     ];
@@ -22,13 +22,13 @@ class Custodian extends Model
         return "{$this->first_name} {$this->last_name}";
     }
 
-    public function distributions(): HasMany
+    public function assignments(): HasMany
     {
-        return $this->hasMany(AssetDistribution::class);
+        return $this->hasMany(AssetAssignment::class);
     }
 
-    public function transferHistory(): HasMany
+    public function transfers(): HasMany
     {
-        return $this->hasMany(AssetTransferHistory::class, 'to_custodian_id');
+        return $this->hasMany(AssetTransfer::class, 'to_custodian_id');
     }
 }

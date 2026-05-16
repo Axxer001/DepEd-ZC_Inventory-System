@@ -52,21 +52,23 @@ class SchoolController extends Controller
             ->where('br.school_id', $id)
             ->get();
 
-        // Asset distributions for this school (match by school name)
-        $assetStats = DB::table('asset_distributions as ad')
+        // Asset assignments for this school (match via offices FK)
+        $assetStats = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->where('ad.office_school_name', $school->name)
+            ->leftJoin('offices', 'ad.office_id', '=', 'offices.id')
+            ->where('offices.school_id', $id)
             ->selectRaw('COUNT(ad.id) as total_assets, COALESCE(SUM(asrc.asset_cost), 0) as total_asset_value')
             ->first();
 
-        // Recent assets distributed to this school (up to 10)
-        $recentAssets = DB::table('asset_distributions as ad')
+        // Recent assets assigned to this school (up to 10)
+        $recentAssets = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->where('ad.office_school_name', $school->name)
+            ->leftJoin('offices', 'ad.office_id', '=', 'offices.id')
+            ->where('offices.school_id', $id)
             ->select(
                 'ad.id',
                 'ad.property_number',

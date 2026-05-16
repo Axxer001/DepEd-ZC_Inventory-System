@@ -487,6 +487,8 @@ html.dark .border-slate-50        { border-color: #1e293b !important; }
 html.dark .border-slate-100       { border-color: #334155 !important; }
 html.dark .border-slate-100\/50   { border-color: rgba(51,65,85,0.5) !important; }
 html.dark .border-slate-200       { border-color: #334155 !important; }
+html.dark .border-slate-300       { border-color: #475569 !important; }
+html.dark .border-b-white         { border-bottom-color: #1e293b !important; }
 html.dark .border-white\/10       { border-color: rgba(255,255,255,0.08) !important; }
 
 /* ── Inputs ── */
@@ -514,6 +516,7 @@ html.dark #sidebarUserProfile .text-slate-800 { color: #e2e8f0 !important; }
 /* ── Cards & Panels ── */
 html.dark .shadow-inner           { box-shadow: inset 0 2px 4px rgba(0,0,0,0.4) !important; }
 html.dark .rounded-\[3rem\]       { }  /* shape kept */
+html.dark .bg-slate-200           { background-color: #334155 !important; }
 html.dark .hover\:bg-white:hover  { background-color: #1e293b !important; }
 html.dark .hover\:bg-slate-50:hover { background-color: #0f172a !important; }
 html.dark .hover\:border-red-100:hover  { border-color: #991b1b !important; }
@@ -545,14 +548,20 @@ html.dark #sidebar .border-red-100 { border-color: rgba(192,0,0,0.3) !important;
 html.dark .backdrop-blur-md       { backdrop-filter: blur(12px); }
 html.dark .glass-red-glow         { background: radial-gradient(circle at top right, rgba(192,0,0,0.08) 0%, transparent 70%) !important; }
 html.dark .bg-emerald-50          { background-color: rgba(5,46,22,0.5) !important; }
+html.dark .bg-emerald-100         { background-color: rgba(5,46,22,0.7) !important; }
 html.dark .border-emerald-100     { border-color: #14532d !important; }
 html.dark .text-emerald-600       { color: #34d399 !important; }
+html.dark .text-emerald-700       { color: #34d399 !important; }
 html.dark .bg-blue-50             { background-color: rgba(23,37,84,0.5) !important; }
 html.dark .text-blue-600          { color: #60a5fa !important; }
 html.dark .bg-amber-50            { background-color: rgba(69,26,3,0.5) !important; }
+html.dark .bg-amber-100           { background-color: rgba(69,26,3,0.7) !important; }
 html.dark .text-amber-600         { color: #fbbf24 !important; }
+html.dark .text-amber-700         { color: #fbbf24 !important; }
 html.dark .bg-purple-50           { background-color: rgba(46,16,101,0.5) !important; }
 html.dark .text-purple-700        { color: #c084fc !important; }
+html.dark .bg-deped_light         { background-color: rgba(192,0,0,0.1) !important; }
+
 
 /* ── SweetAlert2 in dark mode ── */
 html.dark .swal2-popup             { background-color: #1e293b !important; color: #e2e8f0 !important; }

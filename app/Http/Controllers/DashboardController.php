@@ -21,9 +21,8 @@ class DashboardController extends Controller
         $totalAssets = $itemPool + $buildingPool;
 
         // 2. Distributed Assets (What is currently in schools/offices)
-        $distributedItems = DB::table('asset_distributions')
-            ->whereNotNull('office_school_name')
-            ->where('office_school_name', '!=', '')
+        $distributedItems = DB::table('asset_assignments')
+            ->whereNotNull('office_id')
             ->count();
         $distributedCount = $distributedItems + $buildingPool; // Buildings are always "distributed"
 
@@ -63,8 +62,9 @@ class DashboardController extends Controller
             ->mapWithKeys(function($q) {
                 $itemId = $q->id;
                 
-                $itemData = DB::table('asset_distributions as ad')
-                    ->join('schools', DB::raw('CAST(ad.school_id AS CHAR)'), '=', 'schools.school_id')
+                $itemData = DB::table('asset_assignments as ad')
+                    ->leftJoin('offices', 'ad.office_id', '=', 'offices.id')
+                    ->leftJoin('schools', 'offices.school_id', '=', 'schools.id')
                     ->join('districts', 'schools.district_id', '=', 'districts.id')
                     ->where('districts.quadrant_id', $itemId)
                     ->select(
@@ -91,9 +91,11 @@ class DashboardController extends Controller
             ->toArray();
 
         // 6. Recent Transaction Logs
-        $recentLogs = DB::table('asset_distributions')
-            ->select('id', 'office_school_name as school', 'acquisition_cost as value', 'created_at as timestamp')
-            ->orderByDesc('created_at')
+        $recentLogs = DB::table('asset_assignments as ad')
+            ->leftJoin('offices', 'ad.office_id', '=', 'offices.id')
+            ->leftJoin('schools', 'offices.school_id', '=', 'schools.id')
+            ->select('ad.id', DB::raw('COALESCE(schools.name, offices.name, ad.location) as school'), 'ad.acquisition_cost as value', 'ad.created_at as timestamp')
+            ->orderByDesc('ad.created_at')
             ->limit(10)
             ->get()
             ->map(function($log) {
@@ -180,14 +182,14 @@ class DashboardController extends Controller
     private function calculateGrowthData($mode, $value)
     {
         $minBldgYear = DB::table('building_records')->whereNotNull('acquisition_date')->min(DB::raw('YEAR(acquisition_date)'));
-        $minAssetYear = DB::table('asset_distributions')->whereNotNull('acquisition_date')->min(DB::raw('YEAR(acquisition_date)'));
+        $minAssetYear = DB::table('asset_assignments')->whereNotNull('acquisition_date')->min(DB::raw('YEAR(acquisition_date)'));
         $earliestYear = min($minBldgYear ?? date('Y'), $minAssetYear ?? date('Y'));
         $currentYear = date('Y');
 
         $bldgs = DB::table('building_records')->select('acquisition_cost', 'acquisition_date')->whereNotNull('acquisition_date')->get();
-        $assets = DB::table('asset_distributions as ad')
-            ->join('asset_sources as as', 'ad.asset_source_id', '=', 'as.id')
-            ->select('ad.acquisition_cost', 'ad.acquisition_date', 'as.asset_cost')
+        $assets = DB::table('asset_assignments as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->select('ad.acquisition_cost', 'ad.acquisition_date', 'asrc.asset_cost')
             ->whereNotNull('ad.acquisition_date')->get();
 
         $labels = [];

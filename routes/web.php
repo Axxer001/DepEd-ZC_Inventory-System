@@ -126,6 +126,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('assets.history');
     Route::get('/assets/lifecycle', [AssetController::class, 'lifecycle'])->name('assets.lifecycle');
     Route::get('/assets/{id}/profile', [AssetController::class, 'profile'])->name('assets.profile');
+    Route::post('/assets/{id}/update', [AssetController::class, 'update'])->name('assets.update');
+    Route::post('/assets/{id}/transfer', [AssetController::class, 'transfer'])->name('assets.transfer');
     Route::post('/assets/{id}/photo', [AssetController::class, 'uploadPhoto'])->name('assets.photo.upload');
     Route::delete('/assets/{id}/photo', [AssetController::class, 'removePhoto'])->name('assets.photo.remove');
     Route::post('/assets/{id}/document', [AssetController::class, 'uploadDocument'])->name('assets.document.upload');

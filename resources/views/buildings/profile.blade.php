@@ -118,17 +118,17 @@
                     <div class="p-5 space-y-5">
                         <a href="{{ route('schools.profile', $building->school_id) }}" class="block bg-transparent border border-red-100 p-4 rounded-2xl shadow-sm relative overflow-hidden group hover:border-deped hover:shadow-md transition-all">
                             <div class="absolute left-0 top-0 bottom-0 w-1 bg-red-500"></div>
-                            <p class="text-[9px] font-black text-red-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                            <p class="text-[9px] font-black text-red-500 dark:text-red-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                                 School Assignment
                             </p>
                             <div class="flex items-center gap-3 pl-1">
-                                <div class="w-10 h-10 rounded-full bg-white border border-red-100 flex items-center justify-center text-red-600 font-black text-xs shrink-0 shadow-sm group-hover:scale-110 transition-transform">
+                                <div class="w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-red-100 dark:border-red-900/50 flex items-center justify-center text-red-600 dark:text-red-400 font-black text-xs shrink-0 shadow-sm group-hover:scale-110 transition-transform">
                                     {{ strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $building->school_name), 0, 2)) ?: 'SC' }}
                                 </div>
                                 <div>
-                                    <p class="text-xs font-black text-slate-800 uppercase leading-tight group-hover:text-red-700 transition-colors">{{ $building->school_name }}</p>
-                                    <p class="text-[9px] font-bold text-slate-500 uppercase mt-0.5">School ID: {{ $building->school_identifier }}</p>
+                                    <p class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase leading-tight group-hover:text-red-700 dark:group-hover:text-red-400 transition-colors">{{ $building->school_name }}</p>
+                                    <p class="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase mt-0.5">School ID: {{ $building->school_identifier }}</p>
                                 </div>
                             </div>
                         </a>
