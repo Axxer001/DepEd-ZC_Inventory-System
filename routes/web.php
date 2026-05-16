@@ -124,7 +124,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/view-all-assets', [AssetController::class, 'viewAll'])->name('assets.view_all');
     Route::get('/api/schools/{id}/assets', [AssetController::class, 'getSchoolAssets'])->name('api.schools.assets');
     Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('assets.history');
-    Route::get('/assets/lifecycle', [AssetController::class, 'lifecycle'])->name('assets.lifecycle');
     Route::get('/assets/{id}/profile', [AssetController::class, 'profile'])->name('assets.profile');
     Route::post('/assets/{id}/update', [AssetController::class, 'update'])->name('assets.update');
     Route::post('/assets/{id}/transfer', [AssetController::class, 'transfer'])->name('assets.transfer');
