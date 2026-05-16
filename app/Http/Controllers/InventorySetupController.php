@@ -114,14 +114,18 @@ class InventorySetupController extends Controller
             'rows.*.useful-life' => 'required|numeric|min:0',
         ]);
 
+        $sourceOfAcquisition = $request->input('source_of_acquisition');
+        $rows = $request->input('rows');
+
         /** @var \App\Models\User|null $user */
         $user = \Illuminate\Support\Facades\Auth::user();
         $userName = $user ? $user->name : 'System';
+        
         try {
             DB::beginTransaction();
 
             // 1. Resolve Global Acquisition Source
-            $acqSourceName = trim($payload['source_of_acquisition']);
+            $acqSourceName = trim($sourceOfAcquisition);
             $acqSource = DB::table('acquisition_sources')->whereRaw('LOWER(name) = ?', [strtolower($acqSourceName)])->first();
             if (!$acqSource) {
                 $acqSourceId = DB::table('acquisition_sources')->insertGetId([
@@ -139,8 +143,26 @@ class InventorySetupController extends Controller
             $catCache   = array_change_key_case(DB::table('categories')->pluck('id', 'name')->toArray(), CASE_LOWER);
             $itemCache  = array_change_key_case(DB::table('items')->pluck('id', 'name')->toArray(), CASE_LOWER);
             $modeCache  = array_change_key_case(DB::table('procurement_modes')->pluck('id', 'name')->toArray(), CASE_LOWER);
+            
+            // Build composite caches for contacts and custodians
+            $contactCache = [];
+            DB::table('acquisition_contacts')
+                ->where('acquisition_source_id', $acqSourceId)
+                ->get()
+                ->each(function($c) use (&$contactCache) {
+                    $key = strtolower(trim($c->name ?? '')) . '|' . strtolower(trim($c->position ?? ''));
+                    $contactCache[$key] = $c->id;
+                });
 
-            foreach ($payload['rows'] as $row) {
+            $custodianCache = [];
+            DB::table('custodians')
+                ->get()
+                ->each(function($c) use (&$custodianCache) {
+                    $key = strtolower(trim($c->first_name ?? '')) . '|' . strtolower(trim($c->middle_name ?? '')) . '|' . strtolower(trim($c->last_name ?? ''));
+                    $custodianCache[$key] = $c->id;
+                });
+
+            foreach ($rows as $row) {
                 // 2. Resolve Classification
                 $className = trim($row['classification'] ?? '');
                 $lowerClassName = strtolower($className);
@@ -204,12 +226,8 @@ class InventorySetupController extends Controller
                 $personnelName = trim($row['personnel'] ?? '');
                 $personnelPos = trim($row['position'] ?? '');
                 if ($personnelName !== '' || $personnelPos !== '') {
-                    $contact = DB::table('acquisition_contacts')
-                        ->where('acquisition_source_id', $acqSourceId)
-                        ->where('name', $personnelName)
-                        ->where('position', $personnelPos)
-                        ->first();
-                    if (!$contact) {
+                    $contactKey = strtolower($personnelName) . '|' . strtolower($personnelPos);
+                    if (!isset($contactCache[$contactKey])) {
                         $contactId = DB::table('acquisition_contacts')->insertGetId([
                             'acquisition_source_id' => $acqSourceId,
                             'name' => $personnelName ?: null,
@@ -217,8 +235,9 @@ class InventorySetupController extends Controller
                             'created_at' => now(),
                             'updated_at' => now()
                         ]);
+                        $contactCache[$contactKey] = $contactId;
                     } else {
-                        $contactId = $contact->id;
+                        $contactId = $contactCache[$contactKey];
                     }
                 }
 
@@ -231,21 +250,8 @@ class InventorySetupController extends Controller
                 $custodianContact = trim($row['custodian-contact'] ?? '');
 
                 if ($custodianFirst !== '' || $custodianLast !== '') {
-                    $custodianQuery = DB::table('custodians')
-                        ->where('first_name', $custodianFirst)
-                        ->where('last_name', $custodianLast);
-                        
-                    if ($custodianMiddle !== '') {
-                        $custodianQuery->where('middle_name', $custodianMiddle);
-                    } else {
-                        $custodianQuery->where(function($q) {
-                            $q->whereNull('middle_name')->orWhere('middle_name', '');
-                        });
-                    }
-                    
-                    $custodian = $custodianQuery->first();
-                    
-                    if (!$custodian) {
+                    $custodianKey = strtolower($custodianFirst) . '|' . strtolower($custodianMiddle) . '|' . strtolower($custodianLast);
+                    if (!isset($custodianCache[$custodianKey])) {
                         $custodianId = DB::table('custodians')->insertGetId([
                             'first_name' => $custodianFirst ?: null,
                             'middle_name' => $custodianMiddle ?: null,
@@ -256,8 +262,9 @@ class InventorySetupController extends Controller
                             'created_at' => now(),
                             'updated_at' => now()
                         ]);
+                        $custodianCache[$custodianKey] = $custodianId;
                     } else {
-                        $custodianId = $custodian->id;
+                        $custodianId = $custodianCache[$custodianKey];
                     }
                 }
 

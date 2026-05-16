@@ -444,15 +444,15 @@ class AssetController extends Controller
             ]);
 
             // 4. Resolve Custodian
-            $custodianInput = $validated['custodian_id'] ?? null;
+            $custodianInput = $request->input('custodian_id');
             $finalCustodianId = $asset->custodian_id;
 
             if ($custodianInput) {
                 if (is_numeric($custodianInput) && DB::table('custodians')->where('id', $custodianInput)->exists()) {
                     $finalCustodianId = $custodianInput;
                     DB::table('custodians')->where('id', $finalCustodianId)->update([
-                        'position' => $validated['custodian_position'] ?? null,
-                        'contact_number' => $validated['custodian_contact'] ?? null,
+                        'position' => $request->input('custodian_position'),
+                        'contact_number' => $request->input('custodian_contact'),
                         'updated_at' => now(),
                     ]);
                 } else {
@@ -469,8 +469,8 @@ class AssetController extends Controller
                     if ($existing) {
                         $finalCustodianId = $existing->id;
                         DB::table('custodians')->where('id', $finalCustodianId)->update([
-                            'position' => $validated['custodian_position'] ?? null,
-                            'contact_number' => $validated['custodian_contact'] ?? null,
+                            'position' => $request->input('custodian_position'),
+                            'contact_number' => $request->input('custodian_contact'),
                             'updated_at' => now(),
                         ]);
                     } else {
@@ -478,8 +478,8 @@ class AssetController extends Controller
                             'first_name' => $firstName,
                             'middle_name' => $middleName,
                             'last_name' => $lastName,
-                            'position' => $validated['custodian_position'] ?? null,
-                            'contact_number' => $validated['custodian_contact'] ?? null,
+                            'position' => $request->input('custodian_position'),
+                            'contact_number' => $request->input('custodian_contact'),
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);
@@ -595,10 +595,10 @@ class AssetController extends Controller
 
             // Update Asset Assignment
             DB::table('asset_assignments')->where('id', $id)->update([
-                'office_school_type' => $validated['office_school_type'] ?? '',
-                'school_id' => $validated['school_id'] ?? '',
-                'nature_of_occupancy' => $validated['nature_of_occupancy'] ?? '',
-                'location' => $validated['location'] ?? '',
+                'office_school_type' => $request->input('office_school_type', ''),
+                'school_id' => $request->input('school_id', ''),
+                'nature_of_occupancy' => $request->input('nature_of_occupancy', ''),
+                'location' => $request->input('location', ''),
                 'custodian_id' => $finalCustodianId ?: $asset->custodian_id,
                 'updated_at' => now(),
             ]);
@@ -608,9 +608,9 @@ class AssetController extends Controller
                 'asset_assignment_id' => $id,
                 'from_custodian_id' => $asset->custodian_id,
                 'to_custodian_id' => $finalCustodianId,
-                'transfer_date' => $validated['transfer_date'] ?? now(),
-                'transfer_type' => $validated['transfer_type'] ?? 'Permanent',
-                'remarks' => $validated['remarks'] ?? null,
+                'transfer_date' => $request->input('transfer_date', now()),
+                'transfer_type' => $request->input('transfer_type', 'Permanent'),
+                'remarks' => $request->input('remarks'),
                 'authorized_by' => Auth::id() ?? 1,
                 'created_at' => now(),
                 'updated_at' => now(),
