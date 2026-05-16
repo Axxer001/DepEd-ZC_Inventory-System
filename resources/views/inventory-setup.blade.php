@@ -44,6 +44,16 @@
             box-shadow: 0 10px 15px -3px rgba(192, 0, 0, 0.1);
             transform: translateX(-4px);
         }
+        html.dark .back-btn-cool {
+            background: #141f33;
+            border-color: #1e2e47;
+            color: #94a3b8;
+        }
+        html.dark .back-btn-cool:hover {
+            border-color: #c00000;
+            color: white;
+            background: #c00000;
+        }
 
         /* ── Excel-like registration table ── */
         .xls-th {
@@ -273,7 +283,38 @@
         }
         .pg-btn:not(:disabled):hover { background: #f1f5f9; color: #c00000; }
         .pg-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-        html.dark .pg-btn:not(:disabled):hover { background: #1e293b; }
+        html.dark .pg-btn { background: #1e293b !important; color: #cbd5e1 !important; }
+        html.dark .pg-btn:not(:disabled):hover { background: #c00000 !important; color: white !important; }
+
+        /* Column Coloring */
+        .col-identity { background-color: #eff6ff !important; border-color: #dbeafe !important; }
+        .col-context  { background-color: #f8fafc !important; border-color: #f1f5f9 !important; }
+        .col-personnel{ background-color: #fffbeb !important; border-color: #fef3c7 !important; }
+        .col-financial{ background-color: #eef2ff !important; border-color: #e0e7ff !important; }
+        .col-temporal { background-color: #ecfdf5 !important; border-color: #d1fae5 !important; }
+        .col-status   { background-color: #f5f3ff !important; border-color: #ede9fe !important; }
+
+        html.dark .col-identity { background-color: rgba(30, 58, 138, 0.15) !important; border-color: rgba(30, 58, 138, 0.3) !important; }
+        html.dark .col-context  { background-color: rgba(30, 41, 59, 0.15) !important; border-color: rgba(30, 41, 59, 0.3) !important; }
+        html.dark .col-personnel{ background-color: rgba(120, 53, 15, 0.15) !important; border-color: rgba(120, 53, 15, 0.3) !important; }
+        html.dark .col-financial{ background-color: rgba(49, 46, 129, 0.15) !important; border-color: rgba(49, 46, 129, 0.3) !important; }
+        html.dark .col-temporal { background-color: rgba(6, 78, 59, 0.15) !important; border-color: rgba(6, 78, 59, 0.3) !important; }
+        html.dark .col-status   { background-color: rgba(76, 29, 149, 0.15) !important; border-color: rgba(76, 29, 149, 0.3) !important; }
+
+        /* Stronger background for TH */
+        th.col-identity { background-color: #dbeafe !important; }
+        th.col-context  { background-color: #f1f5f9 !important; }
+        th.col-personnel{ background-color: #fef3c7 !important; }
+        th.col-financial{ background-color: #e0e7ff !important; }
+        th.col-temporal { background-color: #d1fae5 !important; }
+        th.col-status   { background-color: #ede9fe !important; }
+
+        html.dark th.col-identity { background-color: rgba(30, 58, 138, 0.4) !important; }
+        html.dark th.col-context  { background-color: rgba(30, 41, 59, 0.4) !important; }
+        html.dark th.col-personnel{ background-color: rgba(120, 53, 15, 0.4) !important; }
+        html.dark th.col-financial{ background-color: rgba(49, 46, 129, 0.4) !important; }
+        html.dark th.col-temporal { background-color: rgba(6, 78, 59, 0.4) !important; }
+        html.dark th.col-status   { background-color: rgba(76, 29, 149, 0.4) !important; }
     </style>
 
 </head>
@@ -446,6 +487,9 @@
     <datalist id="dl-school-type"><option value="Elementary School"><option value="High School"><option value="Integrated School"><option value="Division Office"></datalist>
     <datalist id="dl-school-id">@foreach($allSchools as $s)<option value="{{ $s->school_id }}">@endforeach</datalist>
     <datalist id="dl-school-name">@foreach($allSchools as $s)<option value="{{ $s->name }}">@endforeach</datalist>
+    <datalist id="dl-custodian">@foreach($allCustodians as $c)<option value="{{ $c->first_name }} {{ $c->last_name }}">@endforeach</datalist>
+    <datalist id="dl-custodian-pos">@foreach($allCustodians as $c)@if($c->position)<option value="{{ $c->position }}">@endif@endforeach</datalist>
+    <datalist id="dl-custodian-contact">@foreach($allCustodians as $c)@if($c->contact_number)<option value="{{ $c->contact_number }}">@endif@endforeach</datalist>
     <datalist id="dl-occupancy"><option value="Owned"><option value="Leased"><option value="Borrowed"></datalist>
     <datalist id="dl-location">@foreach($allSchools as $s)<option value="{{ $s->name }}">@endforeach</datalist>
 
@@ -515,19 +559,19 @@
                 <thead>
                     <tr>
                         <th class="xls-th w-10 text-center sticky left-0" style="z-index:6">#</th>
-                        <th class="xls-th" style="min-width:140px">Classification</th>
-                        <th class="xls-th" style="min-width:140px">Category</th>
-                        <th class="xls-th" style="min-width:140px">Item</th>
-                        <th class="xls-th" style="min-width:180px">Description</th>
-                        <th class="xls-th" style="min-width:120px">Unit</th>
-                        <th class="xls-th" style="min-width:150px">Mode</th>
-                        <th class="xls-th" style="min-width:160px">Source Personnel</th>
-                        <th class="xls-th" style="min-width:160px">Personnel Position</th>
-                        <th class="xls-th text-right" style="min-width:120px">Cost / Unit (₱)</th>
-                        <th class="xls-th text-right" style="min-width:80px">Qty</th>
-                        <th class="xls-th text-right" style="min-width:110px">Useful Life (yrs)</th>
-                        <th class="xls-th" style="min-width:140px">Acceptance Date</th>
-                        <th class="xls-th" style="min-width:200px">Remarks</th>
+                        <th class="xls-th col-identity" style="min-width:140px">Classification</th>
+                        <th class="xls-th col-identity" style="min-width:140px">Category</th>
+                        <th class="xls-th col-identity" style="min-width:140px">Item</th>
+                        <th class="xls-th col-context" style="min-width:180px">Description</th>
+                        <th class="xls-th col-context" style="min-width:120px">Unit</th>
+                        <th class="xls-th col-status" style="min-width:150px">Mode of Acquisition</th>
+                        <th class="xls-th col-personnel" style="min-width:160px">Source Personnel</th>
+                        <th class="xls-th col-personnel" style="min-width:160px">Personnel Position</th>
+                        <th class="xls-th col-financial text-right" style="min-width:120px">Cost/Unit (₱)</th>
+                        <th class="xls-th col-financial text-right" style="min-width:80px">Quantity</th>
+                        <th class="xls-th col-temporal text-right" style="min-width:110px">Useful Life(Yrs)</th>
+                        <th class="xls-th col-temporal" style="min-width:140px">Acceptance Date</th>
+                        <th class="xls-th col-status" style="min-width:160px">Condition</th>
                         <th class="xls-th w-10 text-center">Del</th>
                     </tr>
                 </thead>
@@ -550,16 +594,21 @@
                 <thead>
                     <tr>
                         <th class="xls-th w-10 text-center sticky left-0 z-10">#</th>
-                        <th class="xls-th" style="min-width:90px">Region</th>
-                        <th class="xls-th" style="min-width:200px">Division</th>
-                        <th class="xls-th" style="min-width:160px">Office/School Type</th>
-                        <th class="xls-th" style="min-width:100px">School ID</th>
-                        <th class="xls-th" style="min-width:210px">Office/School Name</th>
-                        <th class="xls-th" style="min-width:160px">Nature of Occupancy</th>
-                        <th class="xls-th" style="min-width:160px">Location</th>
-                        <th class="xls-th" style="min-width:150px">Property No.</th>
-                        <th class="xls-th text-right" style="min-width:130px">Acquisition Cost (₱)</th>
-                        <th class="xls-th" style="min-width:140px">Acquisition Date</th>
+                        <th class="xls-th col-context" style="min-width:120px">Region</th>
+                        <th class="xls-th col-context" style="min-width:180px">Division</th>
+                        <th class="xls-th col-context" style="min-width:160px">Office/School Type</th>
+                        <th class="xls-th col-identity" style="min-width:100px">School ID</th>
+                        <th class="xls-th col-identity" style="min-width:210px">Office/School Name</th>
+                        <th class="xls-th col-personnel" style="min-width:160px">Custodian First Name</th>
+                        <th class="xls-th col-personnel" style="min-width:160px">Custodian Middle Name</th>
+                        <th class="xls-th col-personnel" style="min-width:160px">Custodian Last Name</th>
+                        <th class="xls-th col-personnel" style="min-width:160px">Custodian Position</th>
+                        <th class="xls-th col-personnel" style="min-width:160px">Custodian Contact No.</th>
+                        <th class="xls-th col-context" style="min-width:160px">Nature of Occupancy</th>
+                        <th class="xls-th col-context" style="min-width:160px">Location</th>
+                        <th class="xls-th col-identity" style="min-width:150px">Property No.</th>
+                        <th class="xls-th col-financial text-right" style="min-width:130px">Acquisition Cost (₱)</th>
+                        <th class="xls-th col-temporal" style="min-width:140px">Acquisition Date</th>
                         <th class="xls-th w-10 text-center">Del</th>
                     </tr>
                 </thead>
@@ -580,16 +629,16 @@
             <div class="flex items-center gap-6">
                 <p id="rowCountLabel" class="text-[9px] font-black text-slate-900 uppercase tracking-widest">0 Rows</p>
                 <div id="paginationControls" class="flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-6">
-                    <button onclick="prevPage()" id="prevBtn" class="pg-btn text-slate-900">
+                    <button onclick="prevPage()" id="prevBtn" class="pg-btn text-slate-900 dark:text-slate-100">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
                         Prev
                     </button>
-                    <div class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-[#0a101d] rounded-lg">
+                    <div class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-[#141f33] rounded-lg">
                         <span id="currentPageDisplay" class="text-[10px] font-black text-slate-800 dark:text-white">1</span>
-                        <span class="text-[10px] font-bold text-slate-900">/</span>
-                        <span id="totalPagesDisplay" class="text-[10px] font-black text-slate-900">1</span>
+                        <span class="text-[10px] font-bold text-slate-900 dark:text-slate-400">/</span>
+                        <span id="totalPagesDisplay" class="text-[10px] font-black text-slate-900 dark:text-slate-400">1</span>
                     </div>
-                    <button onclick="nextPage()" id="nextBtn" class="pg-btn text-slate-900">
+                    <button onclick="nextPage()" id="nextBtn" class="pg-btn text-slate-900 dark:text-slate-100">
                         Next
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
                     </button>
@@ -669,6 +718,7 @@
         const rawLds = @json($legislativeDistricts);
         const rawQuadrants = @json($quadrants);
         const allSchoolsList = @json($allSchools);
+        const allCustodiansList = @json($allCustodians);
         const rawStakeholders = @json($stakeholders);
         const rawOwnerships = @json($stakeholderOwnerships);
         const districtMap = {};
@@ -903,18 +953,59 @@
                 } else if (col === 'school-name') {
                     const school = allSchoolsList.find(s => s.name.toLowerCase() === value.toLowerCase());
                     if (school) {
+                        row['school-type'] = 'School';
                         row['school-id'] = school.school_id;
                         row['location'] = cleanSchoolNameForLocation(school.name);
                         // Update UI if on current page
+                        const typeInp = document.querySelector(`#dst-${rowId} select[data-col="school-type"]`);
                         const idInp = document.querySelector(`#dst-${rowId} input[data-col="school-id"]`);
                         const locInp = document.querySelector(`#dst-${rowId} input[data-col="location"]`);
+                        if (typeInp) typeInp.value = 'School';
                         if (idInp) idInp.value = school.school_id;
                         if (locInp) locInp.value = row['location'];
                     } else if (value.trim() !== "") {
-                        // Even if not a valid school, auto-fill location based on typed name
+                        row['school-type'] = 'Office';
+                        row['school-id'] = '';
                         row['location'] = cleanSchoolNameForLocation(value);
+                        
+                        const typeInp = document.querySelector(`#dst-${rowId} select[data-col="school-type"]`);
+                        const idInp = document.querySelector(`#dst-${rowId} input[data-col="school-id"]`);
                         const locInp = document.querySelector(`#dst-${rowId} input[data-col="location"]`);
+                        if (typeInp) typeInp.value = 'Office';
+                        if (idInp) idInp.value = '';
                         if (locInp) locInp.value = row['location'];
+                    }
+                } else if (col === 'custodian-first' || col === 'custodian-last') {
+                    // Smart Auto-fill: check if there is an exact unique match for the provided names
+                    const first = (row['custodian-first'] || '').toLowerCase();
+                    const last = (row['custodian-last'] || '').toLowerCase();
+                    let matches = allCustodiansList.filter(c => {
+                        let fMatch = first ? c.first_name.toLowerCase().includes(first) : true;
+                        let lMatch = last ? c.last_name.toLowerCase().includes(last) : true;
+                        return fMatch && lMatch;
+                    });
+                    
+                    // If exactly one match, auto-fill the rest
+                    if (matches.length === 1 && (first || last)) {
+                        const m = matches[0];
+                        row['custodian-first'] = m.first_name;
+                        row['custodian-middle'] = m.middle_name || '';
+                        row['custodian-last'] = m.last_name;
+                        row['custodian-pos'] = m.position || '';
+                        row['custodian-contact'] = m.contact_number || '';
+                        
+                        // Update UI
+                        const fInp = document.querySelector(`#dst-${rowId} input[data-col="custodian-first"]`);
+                        const mInp = document.querySelector(`#dst-${rowId} input[data-col="custodian-middle"]`);
+                        const lInp = document.querySelector(`#dst-${rowId} input[data-col="custodian-last"]`);
+                        const pInp = document.querySelector(`#dst-${rowId} input[data-col="custodian-pos"]`);
+                        const cInp = document.querySelector(`#dst-${rowId} input[data-col="custodian-contact"]`);
+                        
+                        if (fInp) fInp.value = row['custodian-first'];
+                        if (mInp) mInp.value = row['custodian-middle'];
+                        if (lInp) lInp.value = row['custodian-last'];
+                        if (pInp) pInp.value = row['custodian-pos'];
+                        if (cInp) cInp.value = row['custodian-contact'];
                     }
                 }
 
@@ -957,8 +1048,11 @@
                 cost: '', qty: '', 
                 'useful-life': '', 
                 'acceptance-date': today,
-                remarks: 'Good Condition',
-                'school-type': '', 'school-id': '', 'school-name': '', occupancy: '', location: '', 'property-no': '', 'acquisition-date': today
+                condition: 'Good Condition',
+                region: 'Region IX', division: 'Zamboanga City Division',
+                'school-type': 'School', 'school-id': '', 'school-name': '', 
+                'custodian-first': '', 'custodian-middle': '', 'custodian-last': '', 'custodian-pos': '', 'custodian-contact': '',
+                occupancy: '', location: '', 'property-no': '', 'acquisition-date': today
             };
             allRowsData.push(newRow);
             currentPage = Math.ceil(allRowsData.length / rowsPerPage);
@@ -978,23 +1072,23 @@
                 <td class="xls-td xls-sticky-col text-center sticky left-0 w-10" style="background:inherit">
                     <span class="row-num text-[10px] font-black text-slate-300">${displayNum}</span>
                 </td>
-                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'classification', this.value)" data-col="classification" value="${data.classification}" autocomplete="off" class="xls-input" placeholder="e.g. Semi-Expendable"></td>
-                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'category', this.value)"       data-col="category"       value="${data.category}"       autocomplete="off" class="xls-input" placeholder="Category"></td>
-                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'item', this.value)"           data-col="item"           value="${data.item}"           autocomplete="off" class="xls-input" placeholder="Item"></td>
-                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'description', this.value)"    data-col="description"    value="${data.description}"    autocomplete="off" class="xls-input" placeholder="Description"></td>
-                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'uom', this.value)"            data-col="uom"            value="${data.uom}"            autocomplete="off" class="xls-input" placeholder="e.g. Unit, Set, Pcs"></td>
-                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'mode', this.value)"           data-col="mode"           value="${data.mode}"           autocomplete="off" class="xls-input" placeholder="Mode of Procurement"></td>
-                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'personnel', this.value)"      data-col="personnel"      value="${data.personnel}"      autocomplete="off" class="xls-input" placeholder="Personnel name"></td>
-                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'position', this.value)"       data-col="position"       value="${data.position}"       autocomplete="off" class="xls-input" placeholder="Position"></td>
-                <td class="xls-td"><input type="number" oninput="syncState(${data.id}, 'cost', this.value)" data-col="cost" value="${data.cost}" class="xls-input text-right" placeholder="0.00" min="0" step="0.01"></td>
-                <td class="xls-td"><input type="number" oninput="syncState(${data.id}, 'qty', this.value)"  data-col="qty"  value="${data.qty}"  class="xls-input text-right ${data['property-no'] ? 'bg-slate-50 cursor-not-allowed' : ''}" placeholder="0" min="0" step="1" ${data['property-no'] ? 'readonly' : ''}></td>
-                <td class="xls-td"><input type="number" oninput="syncState(${data.id}, 'useful-life', this.value)" data-col="useful-life" value="${data['useful-life'] || ''}" class="xls-input text-right" placeholder="0"    min="0" step="1"></td>
-                <td class="xls-td"><input type="date"   oninput="syncState(${data.id}, 'acceptance-date', this.value)" data-col="acceptance-date" value="${data['acceptance-date']}" class="xls-input"></td>
-                <td class="xls-td">
-                    <select onchange="syncState(${data.id}, 'remarks', this.value)" data-col="remarks" class="xls-input bg-transparent">
-                        <option value="Good Condition" ${data.remarks === 'Good Condition' ? 'selected' : ''}>Good Condition</option>
-                        <option value="Needs Repair" ${data.remarks === 'Needs Repair' ? 'selected' : ''}>Needs Repair</option>
-                        <option value="Not Useable" ${data.remarks === 'Not Useable' ? 'selected' : ''}>Not Useable</option>
+                <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'classification', this.value)" data-col="classification" value="${data.classification}" autocomplete="off" class="xls-input" placeholder="e.g. Semi-Expendable"></td>
+                <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'category', this.value)"       data-col="category"       value="${data.category}"       autocomplete="off" class="xls-input" placeholder="Category"></td>
+                <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'item', this.value)"           data-col="item"           value="${data.item}"           autocomplete="off" class="xls-input" placeholder="Item"></td>
+                <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'description', this.value)"    data-col="description"    value="${data.description}"    autocomplete="off" class="xls-input" placeholder="Description"></td>
+                <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'uom', this.value)"            data-col="uom"            value="${data.uom}"            autocomplete="off" class="xls-input" placeholder="e.g. Unit, Set, Pcs"></td>
+                <td class="xls-td col-status"><input type="text" oninput="syncState(${data.id}, 'mode', this.value)"           data-col="mode"           value="${data.mode}"           autocomplete="off" class="xls-input" placeholder="Mode of Procurement"></td>
+                <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'personnel', this.value)"      data-col="personnel"      value="${data.personnel}"      autocomplete="off" class="xls-input" placeholder="Personnel name"></td>
+                <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'position', this.value)"       data-col="position"       value="${data.position}"       autocomplete="off" class="xls-input" placeholder="Position"></td>
+                <td class="xls-td col-financial"><input type="number" oninput="syncState(${data.id}, 'cost', this.value)" data-col="cost" value="${data.cost}" class="xls-input text-right" placeholder="0.00" min="0" step="0.01"></td>
+                <td class="xls-td col-financial"><input type="number" oninput="syncState(${data.id}, 'qty', this.value)"  data-col="qty"  value="${data.qty}"  class="xls-input text-right ${data['property-no'] ? 'bg-slate-50 cursor-not-allowed' : ''}" placeholder="0" min="0" step="1" ${data['property-no'] ? 'readonly' : ''}></td>
+                <td class="xls-td col-temporal"><input type="number" oninput="syncState(${data.id}, 'useful-life', this.value)" data-col="useful-life" value="${data['useful-life'] || ''}" class="xls-input text-right" placeholder="0"    min="0" step="1"></td>
+                <td class="xls-td col-temporal"><input type="date"   oninput="syncState(${data.id}, 'acceptance-date', this.value)" data-col="acceptance-date" value="${data['acceptance-date']}" class="xls-input"></td>
+                <td class="xls-td col-status">
+                    <select onchange="syncState(${data.id}, 'condition', this.value)" data-col="condition" class="xls-input bg-transparent">
+                        <option value="Good Condition" ${data.condition === 'Good Condition' ? 'selected' : ''}>Good Condition</option>
+                        <option value="Needs Repair" ${data.condition === 'Needs Repair' ? 'selected' : ''}>Needs Repair</option>
+                        <option value="Not Useable" ${data.condition === 'Not Useable' ? 'selected' : ''}>Not Useable</option>
                     </select>
                 </td>
                 <td class="xls-td text-center w-10">
@@ -1015,16 +1109,26 @@
                 <td class="xls-td xls-sticky-col text-center sticky left-0 w-10" style="background:inherit">
                     <span class="row-num text-[10px] font-black text-slate-300">${displayNum}</span>
                 </td>
-                <td class="xls-td"><span class="xls-const">Region IX</span></td>
-                <td class="xls-td"><span class="xls-const">Division of Zamboanga City</span></td>
-                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'school-type', this.value)" data-col="school-type" value="${data['school-type']}" autocomplete="off" class="xls-input" placeholder="School/Office type"></td>
-                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'school-id', this.value)"   data-col="school-id"   value="${data['school-id']}"   autocomplete="off" class="xls-input" placeholder="School ID" inputmode="numeric"></td>
-                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'school-name', this.value)" data-col="school-name" value="${data['school-name']}" autocomplete="off" class="xls-input" placeholder="School / Office name"></td>
-                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'occupancy', this.value)"   data-col="occupancy"   value="${data.occupancy}"       autocomplete="off" class="xls-input" placeholder="Nature of occupancy"></td>
-                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'location', this.value)"    data-col="location"    value="${data.location}"        autocomplete="off" class="xls-input" placeholder="Location"></td>
-                <td class="xls-td"><input type="text" oninput="syncState(${data.id}, 'property-no', this.value)" data-col="property-no" value="${data['property-no']}" autocomplete="off" class="xls-input" placeholder="Property number" id="dst-prop-${data.id}"></td>
-                <td class="xls-td"><input type="number" id="dst-cost-${data.id}" data-col="cost-total" value="${total}" autocomplete="off" class="xls-input text-right bg-slate-50 dark:bg-white/5 cursor-not-allowed" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1"></td>
-                <td class="xls-td"><input type="date"   oninput="syncState(${data.id}, 'acquisition-date', this.value)" data-col="acquisition-date" value="${data['acquisition-date']}" autocomplete="off" class="xls-input"></td>
+                <td class="xls-td col-context"><input type="text" value="${data.region}" class="xls-input bg-slate-50 dark:bg-white/5 cursor-not-allowed text-slate-500" readonly tabindex="-1"></td>
+                <td class="xls-td col-context"><input type="text" value="${data.division}" class="xls-input bg-slate-50 dark:bg-white/5 cursor-not-allowed text-slate-500" readonly tabindex="-1"></td>
+                <td class="xls-td col-context">
+                    <select onchange="syncState(${data.id}, 'school-type', this.value)" data-col="school-type" class="xls-input bg-transparent">
+                        <option value="School" ${data['school-type'] === 'School' ? 'selected' : ''}>School</option>
+                        <option value="Office" ${data['school-type'] === 'Office' ? 'selected' : ''}>Office</option>
+                    </select>
+                </td>
+                <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'school-id', this.value)"   data-col="school-id"   value="${data['school-id']}"   autocomplete="off" class="xls-input" placeholder="School ID" inputmode="numeric"></td>
+                <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'school-name', this.value)" data-col="school-name" value="${data['school-name']}" autocomplete="off" class="xls-input" placeholder="School / Office name"></td>
+                <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'custodian-first', this.value)" data-col="custodian-first" value="${data['custodian-first'] || ''}" autocomplete="off" class="xls-input" placeholder="First Name"></td>
+                <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'custodian-middle', this.value)" data-col="custodian-middle" value="${data['custodian-middle'] || ''}" autocomplete="off" class="xls-input" placeholder="Middle Name"></td>
+                <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'custodian-last', this.value)" data-col="custodian-last" value="${data['custodian-last'] || ''}" autocomplete="off" class="xls-input" placeholder="Last Name"></td>
+                <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'custodian-pos', this.value)" data-col="custodian-pos" value="${data['custodian-pos']}" autocomplete="off" class="xls-input" placeholder="Position"></td>
+                <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'custodian-contact', this.value)" data-col="custodian-contact" value="${data['custodian-contact']}" autocomplete="off" class="xls-input" placeholder="Contact No."></td>
+                <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'occupancy', this.value)"   data-col="occupancy"   value="${data.occupancy}"       autocomplete="off" class="xls-input" placeholder="Nature of occupancy"></td>
+                <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'location', this.value)"    data-col="location"    value="${data.location}"        autocomplete="off" class="xls-input" placeholder="Location"></td>
+                <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'property-no', this.value)" data-col="property-no" value="${data['property-no']}" autocomplete="off" class="xls-input" placeholder="Property number" id="dst-prop-${data.id}"></td>
+                <td class="xls-td col-financial"><input type="number" id="dst-cost-${data.id}" data-col="cost-total" value="${total}" autocomplete="off" class="xls-input text-right bg-slate-50 dark:bg-white/5 cursor-not-allowed" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1"></td>
+                <td class="xls-td col-temporal"><input type="date"   oninput="syncState(${data.id}, 'acquisition-date', this.value)" data-col="acquisition-date" value="${data['acquisition-date']}" autocomplete="off" class="xls-input"></td>
                 <td class="xls-td text-center w-10">
                     <button onclick="deleteRow(${data.id})" class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Remove row">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -1154,9 +1258,14 @@
                 date1: document.getElementById('bDate1').value,
                 remarks: document.getElementById('bRemarks').value || 'Good Condition',
 
-                schoolType: document.getElementById('bSchoolType').value,
+                schoolType: document.getElementById('bSchoolType').value || 'School',
                 schoolId: document.getElementById('bSchoolId').value,
                 schoolName: document.getElementById('bSchoolName').value,
+                custodianFirst: document.getElementById('bCustodianFirst') ? document.getElementById('bCustodianFirst').value.trim() : '',
+                custodianMiddle: document.getElementById('bCustodianMiddle') ? document.getElementById('bCustodianMiddle').value.trim() : '',
+                custodianLast: document.getElementById('bCustodianLast') ? document.getElementById('bCustodianLast').value.trim() : '',
+                custodianPos: document.getElementById('bCustodianPos') ? document.getElementById('bCustodianPos').value.trim() : '',
+                custodianContact: document.getElementById('bCustodianContact') ? document.getElementById('bCustodianContact').value.trim() : '',
                 occupancy: document.getElementById('bOccupancy').value,
                 location: document.getElementById('bLocation').value,
                 propertyNo: document.getElementById('bPropertyNo').value,
@@ -1180,10 +1289,14 @@
                     qty: data.qty1 || '', 
                     'useful-life': data.life || '', 
                     'acceptance-date': data.date1 || today,
-                    remarks: data.remarks,
-                    'school-type': data.schoolType || '',
+                    condition: data.remarks,
+                    region: 'Region IX', division: 'Zamboanga City Division',
+                    'school-type': data.schoolType || 'School',
                     'school-id': data.schoolId || '',
                     'school-name': data.schoolName || '',
+                    custodian: data.custodian || '',
+                    'custodian-pos': data.custodianPos || '',
+                    'custodian-contact': data.custodianContact || '',
                     occupancy: data.occupancy || '',
                     location: data.location || '',
                     'property-no': data.propertyNo || '',
@@ -2695,6 +2808,31 @@
             if (bCost2) bCost2.value = (cost * qty).toFixed(2);
         }
 
+        function syncBulkCustodian() {
+            const first = (document.getElementById('bCustodianFirst')?.value || '').toLowerCase();
+            const last = (document.getElementById('bCustodianLast')?.value || '').toLowerCase();
+            let matches = allCustodiansList.filter(c => {
+                let fMatch = first ? c.first_name.toLowerCase().includes(first) : true;
+                let lMatch = last ? c.last_name.toLowerCase().includes(last) : true;
+                return fMatch && lMatch;
+            });
+            
+            if (matches.length === 1 && (first || last)) {
+                const m = matches[0];
+                const fInp = document.getElementById('bCustodianFirst');
+                const mInp = document.getElementById('bCustodianMiddle');
+                const lInp = document.getElementById('bCustodianLast');
+                const pInp = document.getElementById('bCustodianPos');
+                const cInp = document.getElementById('bCustodianContact');
+                
+                if (fInp) fInp.value = m.first_name;
+                if (mInp) mInp.value = m.middle_name || '';
+                if (lInp) lInp.value = m.last_name;
+                if (pInp) pInp.value = m.position || '';
+                if (cInp) cInp.value = m.contact_number || '';
+            }
+        }
+        
         function checkBulkPropertyNumber() {
             const propInput = document.getElementById('bPropertyNo');
             const qtyInput = document.getElementById('bQty1');
@@ -2722,7 +2860,7 @@
             }
             let isValid = true;
             allRowsData.forEach(row => {
-                const required = ['classification', 'category', 'item', 'uom', 'cost', 'qty', 'acceptance-date', 'school-type', 'school-name', 'occupancy', 'location', 'acquisition-date'];
+                const required = ['classification', 'category', 'item', 'uom', 'cost', 'qty', 'useful-life', 'acceptance-date', 'school-type', 'school-name', 'occupancy', 'location', 'acquisition-date'];
                 required.forEach(field => { if (!row[field]) isValid = false; });
             });
             if (!isValid) {
@@ -2794,21 +2932,21 @@
                     <h4 class="font-black text-slate-800 uppercase tracking-widest text-xs">Asset Data Entry (Source)</h4>
                 </div>
                 <div class="grid grid-cols-2 gap-x-6 gap-y-5">
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Classification</label><input type="text" id="bClassification" data-col="classification" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Category</label><input type="text" id="bCategory" data-col="category" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Item</label><input type="text" id="bItem" data-col="item" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Description</label><input type="text" id="bDescription" data-col="description" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Unit of Measurement</label><input type="text" id="bUom" data-col="uom" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="e.g. Unit, Set, Pcs"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Mode of Procurement</label><input type="text" id="bMode" data-col="mode" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="e.g. Public Bidding"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Source Personnel</label><input type="text" id="bPersonnel" data-col="personnel" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Personnel Position</label><input type="text" id="bPosition" data-col="position" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Cost per Unit</label><input type="number" id="bCost" oninput="calcBulkCost()" class="xls-input !border border-slate-100 rounded-xl text-right bg-slate-50/50" placeholder="1" min="0" step="0.01"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Quantity</label><input type="number" id="bQty1" oninput="calcBulkCost()" class="xls-input !border border-slate-100 rounded-xl text-right bg-slate-50/50" placeholder="1" min="0" step="1"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Expected Useful Life</label><input type="number" id="bLife" class="xls-input !border border-slate-100 rounded-xl text-right bg-slate-50/50" placeholder="1" min="0" step="1"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acceptance Date</label><input type="date" id="bDate1" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50"></div>
-                    <div class="relative">
+                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Classification</label><input type="text" id="bClassification" data-col="classification" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
+                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Category</label><input type="text" id="bCategory" data-col="category" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
+                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Item</label><input type="text" id="bItem" data-col="item" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Description</label><input type="text" id="bDescription" data-col="description" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Unit of Measurement</label><input type="text" id="bUom" data-col="uom" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="e.g. Unit, Set, Pcs"></div>
+                    <div class="relative col-status p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Mode of Procurement</label><input type="text" id="bMode" data-col="mode" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="e.g. Public Bidding"></div>
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Source Personnel</label><input type="text" id="bPersonnel" data-col="personnel" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Personnel Position</label><input type="text" id="bPosition" data-col="position" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
+                    <div class="relative col-financial p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Cost per Unit</label><input type="number" id="bCost" oninput="calcBulkCost()" class="xls-input !border border-slate-100 rounded-xl text-right bg-transparent" placeholder="1" min="0" step="0.01"></div>
+                    <div class="relative col-financial p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Quantity</label><input type="number" id="bQty1" oninput="calcBulkCost()" class="xls-input !border border-slate-100 rounded-xl text-right bg-transparent" placeholder="1" min="0" step="1"></div>
+                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Expected Useful Life</label><input type="number" id="bLife" class="xls-input !border border-slate-100 rounded-xl text-right bg-transparent" placeholder="1" min="0" step="1"></div>
+                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acceptance Date</label><input type="date" id="bDate1" class="xls-input !border border-slate-100 rounded-xl bg-transparent"></div>
+                    <div class="relative col-status p-1 rounded-2xl">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Remarks</label>
-                        <select id="bRemarks" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50">
+                        <select id="bRemarks" class="xls-input !border border-slate-100 rounded-xl bg-transparent">
                             <option value="">-- Default (Good Condition) --</option>
                             <option value="Good Condition">Good Condition</option>
                             <option value="Needs Repair">Needs Repair</option>
@@ -2827,36 +2965,41 @@
                     <h4 class="font-black text-slate-800 uppercase tracking-widest text-xs">Asset Distribution (Target)</h4>
                 </div>
                 <div class="grid grid-cols-2 gap-x-6 gap-y-5">
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Region</label>
-                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Region IX <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Region</label>
+                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-white/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Region IX <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Division</label>
-                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Division of Zamboanga City <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Division</label>
+                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-white/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Division of Zamboanga City <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Type</label><input type="text" id="bSchoolType" data-col="school-type" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
-                    <div class="relative">
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Type</label><input type="text" id="bSchoolType" data-col="school-type" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
+                    <div class="relative col-identity p-1 rounded-2xl">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">School ID</label>
                         <input type="text" id="bSchoolId" data-col="school-id" autocomplete="off" 
                             oninput="const s=allSchoolsList.find(x=>String(x.school_id)===this.value); if(s){document.getElementById('bSchoolName').value=s.name; document.getElementById('bLocation').value=cleanSchoolNameForLocation(s.name);}"
-                            class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select" inputmode="numeric">
+                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select" inputmode="numeric">
                     </div>
-                    <div class="relative">
+                    <div class="relative col-identity p-1 rounded-2xl">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label>
                         <input type="text" id="bSchoolName" data-col="school-name" autocomplete="off" 
-                            oninput="const s=allSchoolsList.find(x=>x.name.toLowerCase()===this.value.toLowerCase()); if(s){document.getElementById('bSchoolId').value=s.school_id; document.getElementById('bLocation').value=cleanSchoolNameForLocation(s.name);} else if(this.value.trim()){document.getElementById('bLocation').value=cleanSchoolNameForLocation(this.value);}"
-                            class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select">
+                            oninput="const s=allSchoolsList.find(x=>x.name.toLowerCase()===this.value.toLowerCase()); if(s){document.getElementById('bSchoolType').value='School'; document.getElementById('bSchoolId').value=s.school_id; document.getElementById('bLocation').value=cleanSchoolNameForLocation(s.name);} else if(this.value.trim()){document.getElementById('bSchoolType').value='Office'; document.getElementById('bSchoolId').value=''; document.getElementById('bLocation').value=cleanSchoolNameForLocation(this.value);}"
+                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select">
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Nature of Occupancy</label><input type="text" id="bOccupancy" data-col="occupancy" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Location</label><input type="text" id="bLocation" data-col="location" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Property Number</label><input type="text" id="bPropertyNo" oninput="checkBulkPropertyNumber()" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select"></div>
-                    <div class="relative">
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">First Name</label><input type="text" id="bCustodianFirst" data-col="custodian-first" oninput="syncBulkCustodian()" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="First Name"></div>
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Middle Name</label><input type="text" id="bCustodianMiddle" data-col="custodian-middle" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Middle Name"></div>
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Last Name</label><input type="text" id="bCustodianLast" data-col="custodian-last" oninput="syncBulkCustodian()" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Last Name"></div>
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Custodian Position</label><input type="text" id="bCustodianPos" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Custodian Position"></div>
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Custodian Contact No.</label><input type="text" id="bCustodianContact" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Contact No."></div>
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Nature of Occupancy</label><input type="text" id="bOccupancy" data-col="occupancy" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Location</label><input type="text" id="bLocation" data-col="location" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
+                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Property Number</label><input type="text" id="bPropertyNo" oninput="checkBulkPropertyNumber()" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
+                    <div class="relative col-financial p-1 rounded-2xl">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Cost</label>
                         <div class="relative">
-                            <input type="number" id="bCost2" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 border border-slate-100 rounded-xl text-slate-900 cursor-not-allowed outline-none text-right pr-10" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1">
+                            <input type="number" id="bCost2" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-white/30 border border-slate-100 rounded-xl text-slate-900 cursor-not-allowed outline-none text-right pr-10" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1">
                             <svg class="w-3.5 h-3.5 opacity-50 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         </div>
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label><input type="date" id="bDate2" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50"></div>
+                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label><input type="date" id="bDate2" class="xls-input !border border-slate-100 rounded-xl bg-transparent"></div>
                 </div>
             </div>
 

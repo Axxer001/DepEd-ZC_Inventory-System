@@ -251,6 +251,7 @@ class AssetController extends Controller
             ->join('acquisition_sources', 'asrc.acquisition_source_id', '=', 'acquisition_sources.id')
             ->leftJoin('offices', 'ad.office_id', '=', 'offices.id')
             ->leftJoin('schools', 'offices.school_id', '=', 'schools.id')
+            ->leftJoin('procurement_modes as pm', 'asrc.procurement_mode_id', '=', 'pm.id')
             ->select(
                 'ad.id',
                 'ad.property_number',
@@ -261,7 +262,7 @@ class AssetController extends Controller
                 DB::raw('COALESCE(asrc.description, items.name) as description'),
                 'asrc.asset_cost',
                 'asrc.quantity',
-                'asrc.mode_of_acquisition',
+                'pm.name as mode_of_acquisition',
                 'acquisition_sources.name as source_name',
                 'items.name as item_name',
                 'categories.name as category_name',
@@ -302,6 +303,7 @@ class AssetController extends Controller
             ->leftJoin('custodians', 'ad.custodian_id', '=', 'custodians.id')
             ->leftJoin('offices', 'ad.office_id', '=', 'offices.id')
             ->leftJoin('schools', 'offices.school_id', '=', 'schools.id')
+            ->leftJoin('procurement_modes as pm', 'asrc.procurement_mode_id', '=', 'pm.id')
             ->select(
                 'ad.id',
                 'ad.property_number',
@@ -320,7 +322,7 @@ class AssetController extends Controller
                 'asrc.description',
                 'asrc.asset_cost',
                 'asrc.quantity',
-                'asrc.mode_of_acquisition',
+                'pm.name as mode_of_acquisition',
                 'acquisition_sources.name as source_name',
                 'acquisition_sources.id as acquisition_source_id',
                 'items.name as item_name',
@@ -510,19 +512,32 @@ class AssetController extends Controller
             DB::table('asset_assignments')->where('id', $id)->update($distUpdate);
 
             // 6. Update Asset Source (Description, Item link, etc.)
+            $modeName = trim($validated['mode_of_acquisition']);
+            $modeId = DB::table('procurement_modes')->whereRaw('LOWER(name) = ?', [strtolower($modeName)])->value('id');
+            if (!$modeId) {
+                $modeId = DB::table('procurement_modes')->insertGetId([
+                    'name' => $modeName,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
+
             DB::table('asset_sources')->where('id', $asset->asset_source_id)->update([
                 'item_id' => $finalItemId,
                 'description' => $validated['description'],
                 'quantity' => $validated['quantity'],
                 'asset_cost' => $validated['asset_cost'],
                 'acquisition_source_id' => $validated['acquisition_source_id'],
-                'mode_of_acquisition' => $validated['mode_of_acquisition'],
+                'procurement_mode_id' => $modeId,
                 'updated_at' => now(),
             ]);
             
+            /** @var \App\Models\User|null $user */
+            $user = \Illuminate\Support\Facades\Auth::user();
+            
             // Log the change
             DB::table('system_logs')->insert([
-                'user' => Auth::user()->name ?? 'System',
+                'user' => $user ? $user->name : 'System',
                 'action_type' => 'UPDATE',
                 'module' => 'Assets',
                 'activity' => 'Updated specifications for asset ID ' . $id,

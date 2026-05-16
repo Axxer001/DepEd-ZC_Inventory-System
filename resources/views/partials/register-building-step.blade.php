@@ -65,27 +65,27 @@
                 <thead>
                     <tr>
                         <th class="xls-th w-10 text-center sticky left-0 z-20">#</th>
-                        <th class="xls-th" style="min-width:90px">Region</th>
-                        <th class="xls-th" style="min-width:180px">Division</th>
-                        <th class="xls-th" style="min-width:150px">Office/School Type</th>
-                        <th class="xls-th" style="min-width:110px">School ID</th>
-                        <th class="xls-th" style="min-width:200px">Office/School Name *</th>
-                        <th class="xls-th" style="min-width:180px">Address</th>
-                        <th class="xls-th text-right" style="min-width:75px">Storeys</th>
-                        <th class="xls-th text-right" style="min-width:90px">Classrooms</th>
-                        <th class="xls-th" style="min-width:140px">Article</th>
-                        <th class="xls-th" style="min-width:160px">Description</th>
-                        <th class="xls-th" style="min-width:130px">Classification</th>
-                        <th class="xls-th" style="min-width:120px">Occupancy</th>
-                        <th class="xls-th" style="min-width:150px">Location</th>
-                        <th class="xls-th" style="min-width:130px">Date Constructed</th>
-                        <th class="xls-th" style="min-width:130px">Acquisition Date</th>
-                        <th class="xls-th" style="min-width:140px">Property No.</th>
-                        <th class="xls-th text-right" style="min-width:130px">Acquisition Cost (₱)</th>
-                        <th class="xls-th text-right" style="min-width:115px">Useful Life (yrs)</th>
-                        <th class="xls-th text-right" style="min-width:130px">Appraised Value (₱)</th>
-                        <th class="xls-th" style="min-width:130px">Appraisal Date</th>
-                        <th class="xls-th" style="min-width:160px">Remarks</th>
+                        <th class="xls-th col-context" style="min-width:90px">Region</th>
+                        <th class="xls-th col-context" style="min-width:180px">Division</th>
+                        <th class="xls-th col-context" style="min-width:150px">Office/School Type</th>
+                        <th class="xls-th col-identity" style="min-width:110px">School ID</th>
+                        <th class="xls-th col-identity" style="min-width:200px">Office/School Name *</th>
+                        <th class="xls-th col-context" style="min-width:180px">Address</th>
+                        <th class="xls-th col-personnel text-right" style="min-width:75px">Storeys</th>
+                        <th class="xls-th col-personnel text-right" style="min-width:90px">Classrooms</th>
+                        <th class="xls-th col-personnel" style="min-width:140px">Article</th>
+                        <th class="xls-th col-personnel" style="min-width:160px">Description</th>
+                        <th class="xls-th col-identity" style="min-width:130px">Classification</th>
+                        <th class="xls-th col-context" style="min-width:120px">Occupancy</th>
+                        <th class="xls-th col-context" style="min-width:150px">Location</th>
+                        <th class="xls-th col-temporal" style="min-width:130px">Date Constructed</th>
+                        <th class="xls-th col-temporal" style="min-width:130px">Acquisition Date</th>
+                        <th class="xls-th col-identity" style="min-width:140px">Property No.</th>
+                        <th class="xls-th col-financial text-right" style="min-width:130px">Acquisition Cost (₱)</th>
+                        <th class="xls-th col-temporal text-right" style="min-width:115px">Useful Life (yrs)</th>
+                        <th class="xls-th col-financial text-right" style="min-width:130px">Appraised Value (₱)</th>
+                        <th class="xls-th col-temporal" style="min-width:130px">Appraisal Date</th>
+                        <th class="xls-th col-status" style="min-width:160px">Remarks</th>
                         <th class="xls-th w-10 text-center">Del</th>
                     </tr>
                 </thead>
@@ -158,18 +158,18 @@
                     <h4 class="font-black text-slate-800 uppercase tracking-widest text-xs">Building Identity</h4>
                 </div>
                 <div class="grid grid-cols-2 gap-x-6 gap-y-5">
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Region</label>
-                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Region IX</div>
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Region</label>
+                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-white/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Region IX</div>
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Division</label>
-                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Division of Zamboanga City</div>
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Division</label>
+                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-white/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Division of Zamboanga City</div>
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Type</label><input type="text" id="bldgBulkType" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select" list="dl-bldg-type"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">School ID</label><input type="text" id="bldgBulkSchoolId" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select" list="dl-bldg-school-id"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label><input type="text" id="bldgBulkSchoolName" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select" list="dl-bldg-school-name"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Address</label><input type="text" id="bldgBulkAddress" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Storeys</label><input type="number" id="bldgBulkStoreys" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50 text-right" placeholder="0" min="0" step="1"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Classrooms</label><input type="number" id="bldgBulkClassrooms" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50 text-right" placeholder="0" min="0" step="1"></div>
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Type</label><input type="text" id="bldgBulkType" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select" list="dl-bldg-type"></div>
+                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">School ID</label><input type="text" id="bldgBulkSchoolId" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select" list="dl-bldg-school-id"></div>
+                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label><input type="text" id="bldgBulkSchoolName" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select" list="dl-bldg-school-name"></div>
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Address</label><input type="text" id="bldgBulkAddress" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Leave empty to ignore"></div>
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Storeys</label><input type="number" id="bldgBulkStoreys" class="xls-input !border border-slate-100 rounded-xl bg-transparent text-right" placeholder="0" min="0" step="1"></div>
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Classrooms</label><input type="number" id="bldgBulkClassrooms" class="xls-input !border border-slate-100 rounded-xl bg-transparent text-right" placeholder="0" min="0" step="1"></div>
                 </div>
             </div>
 
@@ -182,21 +182,21 @@
                     <h4 class="font-black text-slate-800 uppercase tracking-widest text-xs">Building Details</h4>
                 </div>
                 <div class="grid grid-cols-2 gap-x-6 gap-y-5">
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Article</label><input type="text" id="bldgBulkArticle" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Description</label><input type="text" id="bldgBulkDescription" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Classification</label><input type="text" id="bldgBulkClass" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select" list="dl-bldg-class"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Nature of Occupancy</label><input type="text" id="bldgBulkOccupancy" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select" list="dl-bldg-occupancy"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Location</label><input type="text" id="bldgBulkLocation" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select" list="dl-bldg-school-name"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Property Number</label><input type="text" id="bldgBulkPropertyNo" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Date Constructed</label><input type="date" id="bldgBulkDateConstructed" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label><input type="date" id="bldgBulkAcqDate" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Cost (₱)</label><input type="number" id="bldgBulkAcqCost" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50 text-right" placeholder="0.00" min="0" step="0.01"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Expected Useful Life</label><input type="number" id="bldgBulkLife" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50 text-right" placeholder="25" min="0" step="1"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Appraised Value (₱)</label><input type="number" id="bldgBulkAppraisedVal" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50 text-right" placeholder="0.00" min="0" step="0.01"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Appraisal Date</label><input type="date" id="bldgBulkAppraisalDate" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50"></div>
-                    <div class="relative col-span-2">
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Article</label><input type="text" id="bldgBulkArticle" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Leave empty to ignore"></div>
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Description</label><input type="text" id="bldgBulkDescription" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Leave empty to ignore"></div>
+                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Classification</label><input type="text" id="bldgBulkClass" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select" list="dl-bldg-class"></div>
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Nature of Occupancy</label><input type="text" id="bldgBulkOccupancy" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select" list="dl-bldg-occupancy"></div>
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Location</label><input type="text" id="bldgBulkLocation" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select" list="dl-bldg-school-name"></div>
+                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Property Number</label><input type="text" id="bldgBulkPropertyNo" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Leave empty to ignore"></div>
+                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Date Constructed</label><input type="date" id="bldgBulkDateConstructed" class="xls-input !border border-slate-100 rounded-xl bg-transparent"></div>
+                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label><input type="date" id="bldgBulkAcqDate" class="xls-input !border border-slate-100 rounded-xl bg-transparent"></div>
+                    <div class="relative col-financial p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Cost (₱)</label><input type="number" id="bldgBulkAcqCost" class="xls-input !border border-slate-100 rounded-xl bg-transparent text-right" placeholder="0.00" min="0" step="0.01"></div>
+                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Expected Useful Life</label><input type="number" id="bldgBulkLife" class="xls-input !border border-slate-100 rounded-xl bg-transparent text-right" placeholder="25" min="0" step="1"></div>
+                    <div class="relative col-financial p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Appraised Value (₱)</label><input type="number" id="bldgBulkAppraisedVal" class="xls-input !border border-slate-100 rounded-xl bg-transparent text-right" placeholder="0.00" min="0" step="0.01"></div>
+                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Appraisal Date</label><input type="date" id="bldgBulkAppraisalDate" class="xls-input !border border-slate-100 rounded-xl bg-transparent"></div>
+                    <div class="relative col-status p-1 rounded-2xl col-span-2">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Remarks</label>
-                        <select id="bldgBulkRemarks" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50">
+                        <select id="bldgBulkRemarks" class="xls-input !border border-slate-100 rounded-xl bg-transparent">
                             <option value="">-- Ignore --</option>
                             <option value="Good Condition">Good Condition</option>
                             <option value="Needs Repair">Needs Repair</option>
@@ -349,48 +349,48 @@ function renderBldgEntryTable() {
         tr.className = 'xls-row group border-b border-slate-800';
         tr.id = `bldg-row-${row._id}`;
 
-        const inp = (col, list = '', ph = '') =>
-            `<td class="xls-td"><input class="xls-input" data-bldg-col="${col}" data-bldg-id="${row._id}"
+        const inp = (col, list = '', ph = '', cls = '') =>
+            `<td class="xls-td ${cls}"><input class="xls-input" data-bldg-col="${col}" data-bldg-id="${row._id}"
                 value="${escBldg(row[col])}" placeholder="${ph}"
                 ${list ? `list="${list}"` : ''} oninput="syncBldgRow(${row._id},'${col}',this.value)"></td>`;
 
-        const numInp = (col, ph = '0') =>
-            `<td class="xls-td"><input type="number" class="xls-input text-right" data-bldg-col="${col}" data-bldg-id="${row._id}"
+        const numInp = (col, ph = '0', cls = '') =>
+            `<td class="xls-td ${cls}"><input type="number" class="xls-input text-right" data-bldg-col="${col}" data-bldg-id="${row._id}"
                 value="${escBldg(row[col])}" placeholder="${ph}"
                 oninput="syncBldgRow(${row._id},'${col}',this.value)"></td>`;
 
-        const dateInp = (col) =>
-            `<td class="xls-td"><input type="date" class="xls-input" data-bldg-col="${col}" data-bldg-id="${row._id}"
+        const dateInp = (col, cls = '') =>
+            `<td class="xls-td ${cls}"><input type="date" class="xls-input" data-bldg-col="${col}" data-bldg-id="${row._id}"
                 value="${escBldg(row[col])}"
                 oninput="syncBldgRow(${row._id},'${col}',this.value)"></td>`;
 
         tr.innerHTML = `
             <td class="xls-td text-center sticky left-0 w-10 bg-[#0f172a] z-10"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
-            ${inp('region','dl-bldg-region','REGION IX')}
-            ${inp('division','dl-bldg-division','Division of ZC')}
-            ${inp('office_type','dl-bldg-type','School Type')}
-            ${inp('school_identifier','dl-bldg-school-id','School ID')}
-            ${inp('office_name','dl-bldg-school-name','Office/School Name *')}
-            ${inp('address','','Address')}
-            ${numInp('storeys','0')}
-            ${numInp('classrooms','0')}
-            ${inp('article','','Article')}
-            ${inp('description','','Description')}
-            ${inp('classification','dl-bldg-class','Classification')}
-            ${inp('occupancy_nature','dl-bldg-occupancy','Occupancy')}
-            ${inp('location','dl-bldg-school-name','Location')}
-            ${dateInp('date_constructed')}
-            ${dateInp('acquisition_date')}
-            ${inp('property_number','','Property No.')}
-            <td class="xls-td"><input type="number" step="0.01" class="xls-input text-right" data-bldg-col="acquisition_cost" data-bldg-id="${row._id}"
+            ${inp('region','dl-bldg-region','REGION IX','col-context')}
+            ${inp('division','dl-bldg-division','Division of ZC','col-context')}
+            ${inp('office_type','dl-bldg-type','School Type','col-context')}
+            ${inp('school_identifier','dl-bldg-school-id','School ID','col-identity')}
+            ${inp('office_name','dl-bldg-school-name','Office/School Name *','col-identity')}
+            ${inp('address','','Address','col-context')}
+            ${numInp('storeys','0','col-personnel')}
+            ${numInp('classrooms','0','col-personnel')}
+            ${inp('article','','Article','col-personnel')}
+            ${inp('description','','Description','col-personnel')}
+            ${inp('classification','dl-bldg-class','Classification','col-identity')}
+            ${inp('occupancy_nature','dl-bldg-occupancy','Occupancy','col-context')}
+            ${inp('location','dl-bldg-school-name','Location','col-context')}
+            ${dateInp('date_constructed','col-temporal')}
+            ${dateInp('acquisition_date','col-temporal')}
+            ${inp('property_number','','Property No.','col-identity')}
+            <td class="xls-td col-financial"><input type="number" step="0.01" class="xls-input text-right" data-bldg-col="acquisition_cost" data-bldg-id="${row._id}"
                 value="${escBldg(row['acquisition_cost'])}" placeholder="0.00"
                 oninput="syncBldgRow(${row._id},'acquisition_cost',this.value)"></td>
-            ${numInp('estimated_useful_life','25')}
-            <td class="xls-td"><input type="number" step="0.01" class="xls-input text-right" data-bldg-col="appraised_value" data-bldg-id="${row._id}"
+            ${numInp('estimated_useful_life','25','col-temporal')}
+            <td class="xls-td col-financial"><input type="number" step="0.01" class="xls-input text-right" data-bldg-col="appraised_value" data-bldg-id="${row._id}"
                 value="${escBldg(row['appraised_value'])}" placeholder="0.00"
                 oninput="syncBldgRow(${row._id},'appraised_value',this.value)"></td>
-            ${dateInp('appraisal_date')}
-            ${inp('remarks','','Remarks')}
+            ${dateInp('appraisal_date','col-temporal')}
+            ${inp('remarks','','Remarks','col-status')}
             <td class="xls-td text-center">
                 <button onclick="deleteBldgRow(${row._id})" class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all mx-auto">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>

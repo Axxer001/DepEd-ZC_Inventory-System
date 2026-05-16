@@ -12,13 +12,15 @@ class AssetSource extends Model
         'item_id',
         'description',
         'acquisition_source_id',
-        'mode_of_acquisition',
-        'source_personnel',
-        'personnel_position',
+        'procurement_mode_id',
+        'acquisition_contact_id',
         'asset_cost',
         'quantity',
         'estimated_useful_life',
         'acceptance_date',
+        'remarks',
+        'unit_of_measurement',
+        'specs',
     ];
 
     protected $casts = [
@@ -34,6 +36,16 @@ class AssetSource extends Model
     public function acquisitionSource(): BelongsTo
     {
         return $this->belongsTo(AcquisitionSource::class);
+    }
+
+    public function procurementMode(): BelongsTo
+    {
+        return $this->belongsTo(ProcurementMode::class);
+    }
+
+    public function acquisitionContact(): BelongsTo
+    {
+        return $this->belongsTo(AcquisitionContact::class);
     }
 
     public function assignments(): HasMany

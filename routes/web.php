@@ -69,7 +69,12 @@ Route::middleware('auth')->group(function () {
             ->orderBy('name')
             ->get();
 
-        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'allSchools', 'subItems', 'stakeholders', 'stakeholderOwnerships'));
+        $allCustodians = DB::table('custodians')
+            ->select('id', 'first_name', 'middle_name', 'last_name', 'position', 'contact_number')
+            ->orderBy('last_name')
+            ->get();
+
+        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'allSchools', 'subItems', 'stakeholders', 'stakeholderOwnerships', 'allCustodians'));
     })->name('inventory.setup');
 
 
@@ -181,9 +186,13 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/buildings/edit-preview', [\App\Http\Controllers\InventorySetupController::class, 'getBuildingEditPreview'])->name('api.buildings.edit_preview');
     Route::post('/api/buildings/update-batch', [\App\Http\Controllers\InventorySetupController::class, 'updateBuildingBatch'])->name('api.buildings.updateBatch');
 
+    // --- Building PIF Import (must be before /buildings/{id} wildcard) ---
+    Route::get('/buildings/import', [BuildingImportController::class, 'show'])->name('buildings.import');
+    Route::post('/buildings/import/preview', [BuildingImportController::class, 'preview'])->name('buildings.import.preview');
+    Route::post('/buildings/import/confirm', [BuildingImportController::class, 'confirm'])->name('buildings.import.confirm');
+
     Route::get('/buildings/{id}', [\App\Http\Controllers\BuildingController::class, 'profile'])->name('buildings.profile');
     Route::get('/schools/{id}', [\App\Http\Controllers\SchoolController::class, 'profile'])->name('schools.profile');
-
 
 
     // --- School Management (View) ---
@@ -193,12 +202,6 @@ Route::middleware('auth')->group(function () {
     // --- Office Management (View) ---
     Route::post('/api/offices/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getOfficesPreview'])->name('api.offices.preview');
     Route::get('/api/offices/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getOfficesFilterOptions'])->name('api.offices.filters');
-
-
-    // --- Building PIF Import ---
-    Route::get('/buildings/import', [BuildingImportController::class, 'show'])->name('buildings.import');
-    Route::post('/buildings/import/preview', [BuildingImportController::class, 'preview'])->name('buildings.import.preview');
-    Route::post('/buildings/import/confirm', [BuildingImportController::class, 'confirm'])->name('buildings.import.confirm');
 
 
     // --- Building Registration ---

@@ -414,6 +414,19 @@ class BuildingImportController extends Controller
                         'created_at'  => now(), 'updated_at' => now(),
                     ]);
 
+                // Batch lookup for procurement mode
+                $pifModeName = 'PIF Import';
+                $pifModeId = DB::table('procurement_modes')->where('name', $pifModeName)->value('id');
+                if (!$pifModeId) {
+                    $pifModeId = DB::table('procurement_modes')->insertGetId([
+                        'name' => $pifModeName,
+                        'created_at' => now(), 'updated_at' => now(),
+                    ]);
+                }
+
+                // Batch lookup for schools
+                $schoolLookup = DB::table('schools')->pluck('id', 'school_id')->all();
+
                 foreach ($allGroups['assets'] as $row) {
                     $propNo = trim($row['property_number'] ?? '');
                     if (!empty($propNo) && isset($existingAssetProps[$propNo])) continue;
@@ -470,37 +483,44 @@ class BuildingImportController extends Controller
                         }
                     }
 
-                    $cost = $row['acquisition_cost'] ?? 0;
+                    $cost = (isset($row['acquisition_cost']) && $row['acquisition_cost'] !== '') ? $row['acquisition_cost'] : null;
                     $date = $row['acquisition_date'] ?: now()->toDateString();
 
-                    // asset_sources
+                    // asset_sources (uses normalized FKs)
                     $assetSourceId = DB::table('asset_sources')->insertGetId([
                         'item_id'               => $itemId,
                         'description'           => $row['description'] ?: null,
                         'acquisition_source_id' => $pifSourceId,
-                        'mode_of_acquisition'   => 'PIF Import',
-                        'asset_cost'            => $cost ?? 0,
+                        'procurement_mode_id'   => $pifModeId,
+                        'acquisition_contact_id'=> null,
+                        'asset_cost'            => $cost,
                         'quantity'              => 1,
                         'acceptance_date'       => $date,
                         'created_at'            => now(), 'updated_at' => now(),
                     ]);
 
-                    // asset_assignments
+                    // asset_assignments (current schema: no region/division/office_school_name)
                     if (empty($propNo)) {
                         $propNo = 'PIF-' . now()->format('Ymd') . '-' . uniqid();
                     }
 
+                    // Resolve school FK for assignment
+                    $schoolIdentifier = trim($row['school_identifier'] ?? '');
+                    $resolvedSchoolId = !empty($schoolIdentifier) && isset($schoolLookup[$schoolIdentifier])
+                        ? $schoolIdentifier
+                        : null;
+
                     DB::table('asset_assignments')->insert([
                         'asset_source_id'     => $assetSourceId,
-                        'region'              => $row['region'] ?: 'Region IX',
-                        'division'            => $row['division'] ?: 'Division of Zamboanga City',
+                        'custodian_id'        => null,
+                        'office_id'           => null,
+                        'condition'           => 'Serviceable',
                         'office_school_type'  => $row['office_type'] ?: '',
-                        'school_id'           => $row['school_identifier'] ?: null,
-                        'location'  => $row['office_name'] ?: '',
+                        'school_id'           => $resolvedSchoolId,
                         'nature_of_occupancy' => $row['occupancy_nature'] ?: '',
                         'location'            => $row['location'] ?: null,
                         'property_number'     => $propNo,
-                        'acquisition_cost'    => $cost ?? 0,
+                        'acquisition_cost'    => $cost,
                         'acquisition_date'    => $date,
                         'created_at'          => now(), 'updated_at' => now(),
                     ]);
