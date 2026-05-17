@@ -242,7 +242,7 @@
                                         {{-- Year Navigation --}}
                                         <div class="cal-year-nav">
                                             <button class="cal-year-btn" onclick="calNavYear(-1)">&#8249;</button>
-                                            <span class="cal-year-label" id="cal-year-display">{{ $availableYears->sortDesc()->first() ?? date('Y') }}</span>
+                                            <span class="cal-year-label" id="cal-year-display">{{ $availableYears->sort()->first() ?? date('Y') }}</span>
                                             <button class="cal-year-btn" onclick="calNavYear(1)">&#8250;</button>
                                         </div>
                                         {{-- Month Grid (rendered by JS) --}}
@@ -499,7 +499,7 @@
     // =========================================================
     // DATA: Available years from PHP
     // =========================================================
-    const CAL_YEARS = @json($availableYears->sortDesc()->values());
+    const CAL_YEARS = @json($availableYears->sort()->values());
     const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const MONTHS_LONG  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -682,7 +682,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         // Init calendar view year to most recent year with data
-        if (CAL_YEARS.length) calViewYear = parseInt(CAL_YEARS[0]);
+        if (CAL_YEARS.length) calViewYear = parseInt(CAL_YEARS[0]); // oldest year first
         document.getElementById('cal-year-display').textContent = calViewYear;
         applyCustodianFilters();
     });
