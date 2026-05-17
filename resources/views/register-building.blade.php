@@ -17,8 +17,8 @@
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: #f87171; border: 2px solid transparent; background-clip: padding-box; }
         .back-btn-cool { background: white; border: 1px solid #e2e8f0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .xls-th { padding: 14px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; white-space: nowrap; border-right: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: inherit; position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-        .xls-td { height: 52px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; vertical-align: middle; padding: 0; background: transparent; transition: all 0.3s ease; }
+        .xls-th { padding: 14px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; white-space: nowrap; border-right: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: #f8fafc; position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .xls-td { height: 52px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; vertical-align: middle; padding: 0; background: white; transition: all 0.3s ease; }
         .xls-row { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative; }
         .xls-row:hover { transform: translateX(4px); z-index: 10; }
         .xls-row:hover .xls-td { background-color: rgba(192, 0, 0, 0.03) !important; border-bottom-color: #c00000; }
@@ -26,7 +26,7 @@
         .xls-row:active { transform: scale(0.995); transition: all 0.1s; }
         .xls-row:active .xls-td { background-color: rgba(192, 0, 0, 0.08) !important; }
         .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
-        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 450px); min-height: 400px; background: transparent; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
+        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 450px); min-height: 400px; background: white; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
         .xls-scroll-wrap.expanded { height: calc(100vh - 250px); }
         .pg-btn {
             padding: 8px 18px;
@@ -66,6 +66,15 @@
         html.dark .bg-slate-50 { background-color: #0f172a !important; border-color: #1e293b !important; }
         html.dark .bg-slate-50\/50 { background-color: #1e293b !important; }
         html.dark .border-t { border-color: #334155 !important; }
+        html.dark .xls-td { background-color: #1e293b !important; border-color: #334155 !important; }
+        html.dark .xls-th { background-color: #0f172a !important; border-color: #334155 !important; color: #94a3b8 !important; }
+        html.dark .xls-scroll-wrap { background-color: #1e293b !important; border-color: #334155 !important; }
+        html.dark .dep-tooltip { background-color: rgba(30, 41, 59, 0.9) !important; border-color: #334155 !important; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important; }
+        html.dark .dep-stat-box { background-color: #0f172a !important; border-color: #334155 !important; }
+        html.dark .dep-tooltip p { color: #94a3b8 !important; }
+        html.dark .dep-tooltip .border-t { border-color: #334155 !important; }
+        html.dark #tipYear1 { color: #f87171 !important; }
+        html.dark #tipYear25 { color: #34d399 !important; }
         
         /* Glass Indicator Box */
         .glass-indicator {
@@ -106,6 +115,8 @@
             border-radius: 12px;
             border: 1px solid #e2e8f0;
         }
+
+
 
         /* Custom Autocomplete */
         .custom-autocomplete {
@@ -262,7 +273,7 @@
                 </div>
         </div>
 
-        <div class="rounded-[2rem] border border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col animate-fade relative ring-1 ring-black/5">
+        <div class="bg-white rounded-[2rem] border border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col animate-fade relative ring-1 ring-black/5">
             <div class="xls-scroll-wrap expanded">
                 <table id="bldgTable" class="w-full border-collapse" style="min-width:1200px;">
                     <thead id="bldgHeader">
@@ -277,7 +288,6 @@
                             <th class="xls-th" style="min-width:90px">Classrooms</th>
                             <th class="xls-th text-right" style="min-width:120px">Acq. Cost (₱)</th>
                             <th class="xls-th" style="min-width:120px">Date Constructed</th>
-                            <th class="xls-th text-center" style="min-width:100px">Actions</th>
                         </tr>
                     </thead>
                     <tbody id="bldgBody"></tbody>
@@ -495,7 +505,7 @@
 
                 if (bldgShowAllColumns) {
                     tr.innerHTML = `
-                        <td class="xls-td text-center sticky left-0 w-10 bg-inherit z-10"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
+                        <td class="xls-td text-center sticky left-0 w-10 z-10"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
                         ${cell(row.region)}
                         ${cell(row.division)}
                         ${cell(row.office_type)}
@@ -518,12 +528,9 @@
                         ${cell(row.appraisal_date)}
                         ${cell(row.remarks)}
                     `;
-                    tr.onmouseenter = (e) => showDepTooltip(e, row);
-                    tr.onmouseleave = () => hideDepTooltip();
-                    tr.onmousemove = (e) => moveDepTooltip(e);
                 } else {
                     tr.innerHTML = `
-                        <td class="xls-td text-center sticky left-0 w-10 bg-inherit z-10"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
+                        <td class="xls-td text-center sticky left-0 w-10 z-10"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
                         ${cell(row.school_identifier)}
                         ${cell(row.office_name, 'font-bold text-[#c00000]')}
                         ${cell(row.article)}
@@ -535,6 +542,9 @@
                         ${cell(row.date_constructed)}
                     `;
                 }
+                tr.onmouseenter = (e) => showDepTooltip(e, row);
+                tr.onmouseleave = () => hideDepTooltip();
+                tr.onmousemove = (e) => moveDepTooltip(e);
                 tbody.appendChild(tr);
             });
             const totalPages = Math.ceil(bldgRowsData.length / bldgRowsPerPage) || 1;
@@ -607,6 +617,8 @@
             document.getElementById('depTooltip').classList.remove('active');
         }
 
+
+
         document.addEventListener('DOMContentLoaded', () => {
             bldgFetchFilters();
             bldgFetchData();
@@ -646,5 +658,7 @@
             </div>
         </div>
     </div>
+
+
 </body>
 </html>
