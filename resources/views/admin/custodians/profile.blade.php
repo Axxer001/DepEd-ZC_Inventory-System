@@ -172,59 +172,146 @@
                     {{-- TAB: Assigned Equipment --}}
                     <div x-show="activeTab === 'assets'" class="tab-fade">
                         @if($assets->count() > 0)
-                        <div class="overflow-x-auto w-full">
-                            <table class="w-full text-left border-collapse" style="min-width: 860px;">
-                                <thead>
-                                    <tr class="border-b border-slate-100">
-                                        <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item / Category</th>
-                                        <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Property No.</th>
-                                        <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Brand · Model</th>
-                                        <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Location</th>
-                                        <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Condition</th>
-                                        <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Cost</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-50">
-                                    @foreach($assets as $asset)
-                                    <tr class="group hover:bg-slate-50/60 transition-colors">
-                                        <td class="py-4 pr-4">
-                                            <p class="text-xs font-bold text-slate-800 uppercase leading-none">{{ $asset->item_name }}</p>
-                                            <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">{{ $asset->category_name }}</p>
-                                        </td>
-                                        <td class="py-4">
-                                            <span class="text-[10px] font-black text-slate-500 uppercase block">{{ $asset->property_number }}</span>
-                                            @if($asset->serial_number)
-                                            <span class="text-[9px] font-semibold text-slate-400 block mt-0.5">SN: {{ $asset->serial_number }}</span>
+                        <div class="space-y-4">
+                            @foreach($assets as $asset)
+                            @php
+                                $assetTransfers = $transfers->get($asset->id, collect());
+                                $hasTransfers   = $assetTransfers->count() > 0;
+                                $lastTransfer   = $hasTransfers ? $assetTransfers->first() : null;
+
+                                // Determine current custody status from condition + transfers
+                                $isStillWithCustodian = true;
+                                $statusLabel  = 'Under Custody';
+                                $statusTheme  = 'bg-emerald-100 text-emerald-700';
+                                if ($lastTransfer) {
+                                    $type = strtolower($lastTransfer->transfer_type ?? '');
+                                    if (in_array($type, ['permanent', 'loan'])) {
+                                        $isStillWithCustodian = false;
+                                        $statusLabel = 'Transferred';
+                                        $statusTheme = 'bg-blue-100 text-blue-700';
+                                    } elseif ($type === 'return') {
+                                        $isStillWithCustodian = false;
+                                        $statusLabel = 'Returned';
+                                        $statusTheme = 'bg-amber-100 text-amber-700';
+                                    } elseif ($type === 'repair') {
+                                        $statusLabel = 'Out for Repair';
+                                        $statusTheme = 'bg-orange-100 text-orange-700';
+                                    }
+                                }
+                                $condLower = strtolower($asset->condition ?? '');
+                                if ($condLower === 'unserviceable') {
+                                    $statusLabel = 'Unserviceable';
+                                    $statusTheme = 'bg-red-100 text-red-700';
+                                }
+
+                                $condGood = in_array($asset->condition, ['Good', 'Serviceable']);
+                                $condTheme = $condGood ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700';
+                            @endphp
+
+                            <div class="border border-slate-100 rounded-2xl overflow-hidden hover:border-slate-200 transition-all hover:shadow-sm">
+                                {{-- Asset Header Row --}}
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-slate-50/50">
+                                    <div class="flex items-start gap-3 min-w-0">
+                                        <div class="w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center shrink-0 border border-slate-200">
+                                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"/></svg>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <h4 class="text-xs font-black text-slate-800 uppercase leading-none">{{ $asset->item_name }}</h4>
+                                            <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">{{ $asset->category_name }}{{ $asset->brand ? ' · ' . $asset->brand : '' }}{{ $asset->model ? ' · ' . $asset->model : '' }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0 flex-wrap">
+                                        <span class="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full {{ $statusTheme }}">{{ $statusLabel }}</span>
+                                        <span class="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full {{ $condTheme }}">{{ $asset->condition ?: 'Good' }}</span>
+                                        <span class="text-[9px] font-black text-deped italic">₱ {{ number_format($asset->asset_cost, 2) }}</span>
+                                    </div>
+                                </div>
+
+                                {{-- Asset Details + Timeline --}}
+                                <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {{-- Left: Asset Info --}}
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between text-[10px]">
+                                            <span class="font-bold text-slate-400 uppercase tracking-wide">Property No.</span>
+                                            <span class="font-black text-slate-700 uppercase">{{ $asset->property_number }}</span>
+                                        </div>
+                                        @if($asset->serial_number)
+                                        <div class="flex items-center justify-between text-[10px]">
+                                            <span class="font-bold text-slate-400 uppercase tracking-wide">Serial No.</span>
+                                            <span class="font-black text-slate-700">{{ $asset->serial_number }}</span>
+                                        </div>
+                                        @endif
+                                        <div class="flex items-center justify-between text-[10px]">
+                                            <span class="font-bold text-slate-400 uppercase tracking-wide">Location</span>
+                                            <span class="font-bold text-slate-600 uppercase text-right max-w-[180px] truncate">{{ $asset->school_name ?: '—' }}{{ $asset->office_name ? ' / ' . $asset->office_name : '' }}</span>
+                                        </div>
+                                        <div class="flex items-center justify-between text-[10px]">
+                                            <span class="font-bold text-slate-400 uppercase tracking-wide">Acq. Date</span>
+                                            <span class="font-bold text-slate-600">{{ $asset->acquisition_date ? \Carbon\Carbon::parse($asset->acquisition_date)->format('M d, Y') : '—' }}</span>
+                                        </div>
+                                    </div>
+
+                                    {{-- Right: Timeline --}}
+                                    <div>
+                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Movement History</p>
+                                        <div class="space-y-2">
+                                            {{-- Assigned Event (always first) --}}
+                                            <div class="flex items-start gap-2">
+                                                <div class="flex flex-col items-center shrink-0">
+                                                    <div class="w-2 h-2 rounded-full bg-emerald-400 mt-1 ring-2 ring-emerald-100"></div>
+                                                    @if($hasTransfers)<div class="w-px flex-grow bg-slate-200 mt-1 h-4"></div>@endif
+                                                </div>
+                                                <div>
+                                                    <p class="text-[10px] font-black text-slate-700 uppercase leading-none">Assigned to Custodian</p>
+                                                    <p class="text-[9px] font-semibold text-slate-400 mt-0.5">{{ $asset->assigned_at ? \Carbon\Carbon::parse($asset->assigned_at)->format('M d, Y') : '—' }}</p>
+                                                </div>
+                                            </div>
+
+                                            {{-- Transfer Events --}}
+                                            @if($hasTransfers)
+                                                @foreach($assetTransfers->reverse() as $tr)
+                                                @php
+                                                    $trType = $tr->transfer_type ?? 'Transfer';
+                                                    $isLast = $loop->last;
+                                                    $dotColor = match(strtolower($trType)) {
+                                                        'return' => 'bg-amber-400 ring-amber-100',
+                                                        'permanent', 'loan' => 'bg-blue-400 ring-blue-100',
+                                                        'repair' => 'bg-orange-400 ring-orange-100',
+                                                        default => 'bg-slate-400 ring-slate-100',
+                                                    };
+                                                @endphp
+                                                <div class="flex items-start gap-2">
+                                                    <div class="flex flex-col items-center shrink-0">
+                                                        <div class="w-2 h-2 rounded-full {{ $dotColor }} mt-1 ring-2"></div>
+                                                        @if(!$isLast)<div class="w-px flex-grow bg-slate-200 mt-1 h-4"></div>@endif
+                                                    </div>
+                                                    <div>
+                                                        <p class="text-[10px] font-black text-slate-700 uppercase leading-none">{{ $trType }}</p>
+                                                        @if($tr->to_office || $tr->to_custodian)
+                                                        <p class="text-[9px] font-semibold text-slate-500 mt-0.5 uppercase truncate max-w-[200px]">→ {{ $tr->to_office ?: $tr->to_custodian }}</p>
+                                                        @endif
+                                                        @if($tr->remarks)
+                                                        <p class="text-[9px] font-semibold text-slate-400 mt-0.5 italic truncate max-w-[200px]">{{ $tr->remarks }}</p>
+                                                        @endif
+                                                        <p class="text-[9px] font-semibold text-slate-400 mt-0.5">{{ $tr->transfer_date ? \Carbon\Carbon::parse($tr->transfer_date)->format('M d, Y') : '—' }}</p>
+                                                    </div>
+                                                </div>
+                                                @endforeach
+                                            @else
+                                            {{-- Still in custody --}}
+                                            <div class="flex items-start gap-2">
+                                                <div class="w-2 h-2 rounded-full bg-deped mt-1 ring-2 ring-red-100 shrink-0"></div>
+                                                <div>
+                                                    <p class="text-[10px] font-black text-deped uppercase leading-none">Still Under Custody</p>
+                                                    <p class="text-[9px] font-semibold text-slate-400 mt-0.5">No transfers recorded</p>
+                                                </div>
+                                            </div>
                                             @endif
-                                        </td>
-                                        <td class="py-4">
-                                            <span class="text-[10.5px] font-bold text-slate-600 uppercase">{{ $asset->brand ?: '—' }}</span>
-                                            @if($asset->model)
-                                            <span class="text-[9px] text-slate-400 mx-1">·</span>
-                                            <span class="text-[10px] font-semibold text-slate-500 uppercase">{{ $asset->model }}</span>
-                                            @endif
-                                        </td>
-                                        <td class="py-4">
-                                            <span class="text-[10.5px] font-bold text-slate-800 uppercase leading-tight block max-w-[180px] truncate">{{ $asset->school_name ?: '—' }}</span>
-                                            @if($asset->office_name)
-                                            <span class="text-[9px] font-semibold text-slate-400 uppercase block mt-0.5 max-w-[180px] truncate">{{ $asset->office_name }}</span>
-                                            @endif
-                                        </td>
-                                        <td class="py-4 text-center">
-                                            @php
-                                                $cond = $asset->condition ?: 'Good';
-                                                $isGood = in_array($cond, ['Good', 'Serviceable']);
-                                                $theme = $isGood ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700';
-                                            @endphp
-                                            <span class="px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider {{ $theme }}">{{ $cond }}</span>
-                                        </td>
-                                        <td class="py-4 text-right">
-                                            <p class="text-xs font-black text-deped italic">₱ {{ number_format($asset->asset_cost, 2) }}</p>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
                         </div>
                         @else
                         <div class="flex flex-col items-center justify-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">

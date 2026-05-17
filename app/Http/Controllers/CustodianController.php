@@ -46,6 +46,7 @@ class CustodianController extends Controller
                 'aa.acquisition_date',
                 'aa.acquisition_cost as asset_cost',
                 'aa.condition',
+                'aa.created_at as assigned_at',
                 'i.name as item_name',
                 'cat.name as category_name',
                 'asrc.brand',
@@ -57,6 +58,32 @@ class CustodianController extends Controller
             ->orderByDesc('aa.acquisition_date')
             ->get();
 
-        return view('admin.custodians.profile', compact('custodian', 'stats', 'schools', 'assets'));
+        // Fetch transfer/return/unserviceable history for this custodian's assets
+        $assignmentIds = $assets->pluck('id')->toArray();
+        $transfers = collect();
+        if (!empty($assignmentIds)) {
+            $transfers = DB::table('asset_transfers as at')
+                ->leftJoin('offices as fo', 'at.from_office_id', '=', 'fo.id')
+                ->leftJoin('offices as to', 'at.to_office_id', '=', 'to.id')
+                ->leftJoin('custodians as fc', 'at.from_custodian_id', '=', 'fc.id')
+                ->leftJoin('custodians as tc', 'at.to_custodian_id', '=', 'tc.id')
+                ->whereIn('at.asset_assignment_id', $assignmentIds)
+                ->select(
+                    'at.asset_assignment_id',
+                    'at.transfer_type',
+                    'at.transfer_date',
+                    'at.remarks',
+                    'at.authorized_by',
+                    'fo.name as from_office',
+                    'to.name as to_office',
+                    DB::raw("CONCAT(fc.first_name, ' ', fc.last_name) as from_custodian"),
+                    DB::raw("CONCAT(tc.first_name, ' ', tc.last_name) as to_custodian")
+                )
+                ->orderBy('at.transfer_date', 'desc')
+                ->get()
+                ->groupBy('asset_assignment_id');
+        }
+
+        return view('admin.custodians.profile', compact('custodian', 'stats', 'schools', 'assets', 'transfers'));
     }
 }
