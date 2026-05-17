@@ -130,23 +130,13 @@
                             <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Message Body</label>
                             <textarea x-model="editAlert.body" class="alert-field" placeholder="Alert message..."></textarea>
                         </div>
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Ref No.</label>
-                                <input x-model="editAlert.ref" type="text" class="alert-field" placeholder="#NOTICE-2026">
-                            </div>
-                            <div>
-                                <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Priority</label>
-                                <select x-model="editAlert.priority" class="alert-field">
-                                    <option>High</option>
-                                    <option>Medium</option>
-                                    <option>Low</option>
-                                </select>
-                            </div>
-                        </div>
                         <div>
-                            <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Timestamp</label>
-                            <input x-model="editAlert.time" type="text" class="alert-field" placeholder="Today • 10:45 AM">
+                            <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Priority</label>
+                            <select x-model="editAlert.priority" class="alert-field">
+                                <option>High</option>
+                                <option>Medium</option>
+                                <option>Low</option>
+                            </select>
                         </div>
                     </div>
                     <div class="flex gap-2 mt-5">
@@ -164,7 +154,6 @@
                         </div>
                         <div class="text-right">
                             <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md text-white text-[8px] font-black uppercase tracking-widest rounded-full mb-2 italic border border-white/20">System Alert</span>
-                            <p class="text-[8px] font-black text-white/40 uppercase italic leading-none" x-text="'Ref: ' + alert.ref"></p>
                         </div>
                     </div>
                     <div class="space-y-4 relative z-10">
@@ -712,9 +701,7 @@
         const ALERT_DEFAULTS = {
             title: 'Quarterly Inventory Audit Coming Up',
             body:  'All institution heads are required to verify their current asset counts by the end of the month.',
-            ref:   '#NOTICE-2026',
             priority: 'High',
-            time:  'Today \u2022 10:45 AM'
         };
 
         function dashboardFilter() {
@@ -756,13 +743,19 @@
                 },
 
                 saveAlert() {
-                    this.alert = {...this.editAlert};
+                    // Auto-generate PH timestamp on save
+                    const now = new Date().toLocaleString('en-PH', {
+                        timeZone: 'Asia/Manila',
+                        month: 'short', day: 'numeric', year: 'numeric',
+                        hour: 'numeric', minute: '2-digit', hour12: true
+                    });
+                    this.alert = { ...this.editAlert, time: now };
                     localStorage.setItem('dashAlertData', JSON.stringify(this.alert));
                     this.showEditModal = false;
                 },
 
                 resetAlert() {
-                    this.editAlert = {...ALERT_DEFAULTS};
+                    this.editAlert = { title: ALERT_DEFAULTS.title, body: ALERT_DEFAULTS.body, priority: ALERT_DEFAULTS.priority };
                 },
                 
                 get filterLabel() {
