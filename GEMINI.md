@@ -18,8 +18,16 @@
 - **Grid:** Strict 8px grid (multipliers of 8px/`p-2`, `p-4`, etc.).
 - **Density:** High information density; minimal unnecessary whitespace.
 - **Borders:** 1px micro-borders (`border-slate-700/50`) with transitions (`duration-200`).
+- **UI Architecture:** All data tables must have micro-borders (1px) and subtle interactive hover states. No loud saturated colors.
 
 ## 4. EXECUTION GUIDELINES
 - No conversational filler.
 - Only output mutated lines in code blocks (use `// ...` for unchanged blocks).
 - Prioritize structural directives over transient chat inputs.
+
+## 5. MOBILE RESPONSIVENESS & TOUCH ACCESSIBILITY
+- **Viewport Strategies:** Write mobile-first utility classes and use `md:`/`lg:` for desktop scaling (e.g., `flex-col md:flex-row`). Navigation, step indicators, and buttons must stack logically (`flex-col gap-4`) on mobile and align horizontally on desktop.
+- **Data Grid Overflow:** Use `overflow-x-auto w-full` for all complex tables to enable horizontal scrolling on small screens.
+- **Sticky References:** For horizontally scrolling tables, lock the primary identifier column (e.g., `#` or ID) in place with `sticky left-0 z-20`.
+- **Touch Target Optimization:** Increase padding on buttons and inputs for mobile (`py-3 md:py-1.5`) to ensure a minimum ~44px tap area. Maintain native behaviors for `select` dropdowns.
+- **Safe Area Margins:** Ensure main containers use adequate horizontal padding on mobile (`px-4 md:px-6`).

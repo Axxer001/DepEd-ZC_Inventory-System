@@ -88,8 +88,23 @@
     <!-- Table Section -->
     <div id="bldgAssetTableCard" class="bg-white rounded-[2.5rem] shadow-xl border border-slate-100 flex flex-col min-h-0 overflow-hidden">
         <div class="px-8 py-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/30">
-            <div class="flex items-center gap-4">
-                <span class="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Building Records</span>
+            <div class="flex items-center gap-3">
+                <div class="w-7 h-7 bg-slate-800 rounded-xl flex items-center justify-center text-white text-xs font-black shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21" />
+                    </svg>
+                </div>
+                <div class="flex bg-slate-100 rounded-xl p-1 gap-1">
+                    <button id="tabEditBldgIdentity" onclick="switchEditBldgTab('identity')"
+                        class="px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg bg-emerald-600 text-white shadow-sm transition-all">
+                        Identity & Structure
+                    </button>
+                    <button id="tabEditBldgDetails" onclick="switchEditBldgTab('details')"
+                        class="px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg text-slate-900 hover:text-slate-900 transition-all">
+                        Registry & Value
+                    </button>
+                </div>
+                <span id="editBldgTabLabel" class="hidden md:block text-[10px] font-bold text-slate-400 uppercase tracking-widest italic">Identity & Structure</span>
             </div>
 
             <div id="bldgAssetToolbar" class="flex items-center gap-3">
@@ -117,35 +132,51 @@
             </div>
         </div>
 
-        {{-- ── Buildings Table ── --}}
-        <div id="bldgPanel" class="flex-grow flex flex-col min-h-0">
-            <div id="bldgScroll" class="xls-scroll-wrap custom-scroll overflow-x-auto overflow-y-auto transition-all duration-300" style="max-height: calc(100vh - 450px);">
-                <table class="w-full border-collapse" style="min-width:2800px;">
+        {{-- ── Tab 1: Identity Table ── --}}
+        <div id="panelEditBldgIdentity" class="flex-grow flex flex-col min-h-0">
+            <div id="bldgIdentityScroll" class="xls-scroll-wrap custom-scroll overflow-x-auto overflow-y-auto transition-all duration-300" style="max-height: calc(100vh - 450px);">
+                <table class="w-full border-collapse" style="min-width:1400px;">
                     <thead class="sticky top-0 bg-slate-50 z-20 shadow-sm">
                         <tr>
                             <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                            <th class="xls-th" style="min-width:90px">Region</th>
-                            <th class="xls-th" style="min-width:200px">Division</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Office Type</th>
-                            <th class="xls-th text-emerald-600" style="min-width:100px">School ID</th>
-                            <th class="xls-th text-emerald-600" style="min-width:210px">School Name</th>
-                            <th class="xls-th text-emerald-600" style="min-width:180px">Address</th>
-                            <th class="xls-th text-emerald-600 text-right" style="min-width:80px">Storeys</th>
-                            <th class="xls-th text-emerald-600 text-right" style="min-width:100px">Classrooms</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Article</th>
-                            <th class="xls-th text-emerald-600" style="min-width:200px">Description</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Classification</th>
-                            <th class="xls-th text-emerald-600" style="min-width:160px">Nature of Occupancy</th>
-                            <th class="xls-th text-emerald-600" style="min-width:160px">Location</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Date Constructed</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Acquisition Date</th>
-                            <th class="xls-th text-emerald-600" style="min-width:150px">Property No.</th>
-                            <th class="xls-th text-emerald-600 text-right" style="min-width:140px">Acquisition Cost (₱)</th>
-                            <th class="xls-th text-emerald-600 text-right" style="min-width:120px">Useful Life (yrs)</th>
-                            <th class="xls-th text-emerald-600" style="min-width:200px">Remarks</th>
+                            <th class="xls-th col-context" style="min-width:90px">REGION</th>
+                            <th class="xls-th col-context" style="min-width:200px">DIVISION</th>
+                            <th class="xls-th col-context" style="min-width:140px">OFFICE TYPE</th>
+                            <th class="xls-th col-identity" style="min-width:100px">SCHOOL ID</th>
+                            <th class="xls-th col-identity" style="min-width:210px">SCHOOL NAME</th>
+                            <th class="xls-th col-context" style="min-width:180px">ADDRESS</th>
+                            <th class="xls-th col-personnel text-right" style="min-width:80px">STOREYS</th>
+                            <th class="xls-th col-personnel text-right" style="min-width:100px">CLASSROOMS</th>
                         </tr>
                     </thead>
-                    <tbody id="bldgTableBody"></tbody>
+                    <tbody id="bldgIdentityTbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- ── Tab 2: Details Table ── --}}
+        <div id="panelEditBldgDetails" class="hidden flex-grow flex flex-col min-h-0">
+            <div id="bldgDetailsScroll" class="xls-scroll-wrap custom-scroll overflow-x-auto overflow-y-auto transition-all duration-300" style="max-height: calc(100vh - 450px);">
+                <table class="w-full border-collapse" style="min-width:2000px;">
+                    <thead class="sticky top-0 bg-slate-50 z-20 shadow-sm">
+                        <tr>
+                            <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
+                            <th class="xls-th col-personnel" style="min-width:140px">ARTICLE</th>
+                            <th class="xls-th col-personnel" style="min-width:200px">DESCRIPTION</th>
+                            <th class="xls-th col-identity" style="min-width:140px">CLASSIFICATION</th>
+                            <th class="xls-th col-context" style="min-width:160px">OCCUPANCY NATURE</th>
+                            <th class="xls-th col-context" style="min-width:160px">LOCATION</th>
+                            <th class="xls-th col-temporal" style="min-width:140px">DATE CONSTRUCTED</th>
+                            <th class="xls-th col-temporal" style="min-width:140px">ACQUISITION DATE</th>
+                            <th class="xls-th col-identity" style="min-width:150px">PROPERTY NO.</th>
+                            <th class="xls-th col-financial text-right" style="min-width:140px">ACQUISITION COST (₱)</th>
+                            <th class="xls-th col-temporal text-right" style="min-width:120px">USEFUL LIFE (YRS)</th>
+                            <th class="xls-th col-financial text-right" style="min-width:140px">APPRAISED VALUE (₱)</th>
+                            <th class="xls-th col-temporal" style="min-width:140px">APPRAISAL DATE</th>
+                            <th class="xls-th col-status" style="min-width:200px">REMARKS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bldgDetailsTbody"></tbody>
                 </table>
             </div>
         </div>
@@ -175,7 +206,7 @@
 </div> <!-- End stepBuildingEdit -->
 
 <!-- Bulk Edit Modal -->
-<div id="bldgBulkModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+<div id="bldgBulkModal" class="fixed inset-0 z-[150] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
     <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeBldgBulkModal()"></div>
     <div class="bg-white dark:bg-[#141f33] border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-2xl w-[90vw] max-w-5xl max-h-[90vh] flex flex-col relative z-10 transform scale-95 transition-transform duration-300">
         
@@ -207,9 +238,18 @@
                     <h4 class="font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest text-xs">Building Identity</h4>
                 </div>
                 <div class="grid grid-cols-2 gap-x-6 gap-y-5">
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Office/School Type</label><input type="text" id="bebOfficeType" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
+                    <div class="relative">
+                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Office/School Type</label>
+                        <input type="text" list="dl-bldg-type" id="bebOfficeType" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl bg-transparent" placeholder="-- Ignore --">
+                    </div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">School ID</label><input type="text" id="bebSchoolId" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">School Name</label><input type="text" id="bebSchoolName" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">School Name</label><input type="text" id="bebSchoolName" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore" oninput="
+                        if(this.value.trim() && typeof detectItemSchoolType === 'function'){
+                            const t = detectItemSchoolType(this.value);
+                            if(t) document.getElementById('bebOfficeType').value = t;
+                            if(typeof cleanSchoolNameForLocation === 'function') document.getElementById('bebLocation').value = cleanSchoolNameForLocation(this.value);
+                        }
+                    "></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Address</label><input type="text" id="bebAddress" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Storeys</label><input type="number" id="bebStoreys" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="1"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Classrooms</label><input type="number" id="bebClassrooms" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="1"></div>
@@ -232,6 +272,8 @@
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Useful Life (yrs)</label><input type="number" id="bebLife" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="1"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Date Constructed</label><input type="date" id="bebDateConstructed" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Acquisition Date</label><input type="date" id="bebAcqDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Appraised Value (₱)</label><input type="number" id="bebAppraisedValue" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="0.01"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Appraisal Date</label><input type="date" id="bebAppraisalDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                     <div class="relative col-span-2">
                         <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Remarks</label>
                         <select id="bebRemarks" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl bg-transparent">
@@ -270,18 +312,35 @@
     let bldgPageNum = 1;
     const bldgRowsPerPage = 50;
 
+    function switchEditBldgTab(tab) {
+        const identPanel = document.getElementById('panelEditBldgIdentity');
+        const detPanel   = document.getElementById('panelEditBldgDetails');
+        const tabIdent   = document.getElementById('tabEditBldgIdentity');
+        const tabDet     = document.getElementById('tabEditBldgDetails');
+        const label      = document.getElementById('editBldgTabLabel');
+        const ON  = 'px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg bg-emerald-600 text-white shadow-sm transition-all';
+        const OFF = 'px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg text-slate-900 hover:text-slate-900 transition-all';
+        if (tab === 'identity') {
+            identPanel.classList.remove('hidden');
+            detPanel.classList.add('hidden');
+            tabIdent.className = ON; tabDet.className = OFF;
+            label.textContent = 'Identity & Structure';
+        } else {
+            identPanel.classList.add('hidden');
+            detPanel.classList.remove('hidden');
+            tabIdent.className = OFF; tabDet.className = ON;
+            label.textContent = 'Registry & Value';
+        }
+    }
+
     function toggleBldgFilters() {
         const section = document.getElementById('bldgFilterSection');
         const btn = document.getElementById('toggleBldgFilterBtn');
-        const srcScroll = document.getElementById('bldgScroll');
-        
         if (section.classList.contains('hidden')) {
             section.classList.remove('hidden');
-            srcScroll.classList.remove('!max-h-[750px]');
             btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg> Hide Filters`;
         } else {
             section.classList.add('hidden');
-            srcScroll.classList.add('!max-h-[750px]');
             btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg> Show Filters`;
         }
     }
@@ -361,12 +420,11 @@
         });
     }
 
-    function switchBldgTab(tab) { /* buildings use single table */ }
-
     function renderBldgTable() {
-        const tbody = document.getElementById('bldgTableBody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
+        const tbodyIdent = document.getElementById('bldgIdentityTbody');
+        const tbodyDet   = document.getElementById('bldgDetailsTbody');
+        if (!tbodyIdent || !tbodyDet) return;
+        tbodyIdent.innerHTML = ''; tbodyDet.innerHTML = '';
 
         if (bldgAllData.length === 0) {
             document.getElementById('bldgRowCountLabel').textContent = "0 Rows";
@@ -376,14 +434,13 @@
         }
 
         const start = (bldgPageNum - 1) * bldgRowsPerPage;
-        const end = start + bldgRowsPerPage;
-        const pageData = bldgAllData.slice(start, end);
+        const pageData = bldgAllData.slice(start, start + bldgRowsPerPage);
 
         pageData.forEach((row, idx) => {
             const displayNum = start + idx + 1;
             const orig = bldgOriginalData.find(o => String(o.id) === String(row.id)) || {};
 
-            const renderCell = (col, val, readonly) => {
+            const renderCell = (col, val, readonly, list = '') => {
                 const v1 = String(val ?? '').trim();
                 const v2 = String(orig[col] ?? '').trim();
                 const changed = v1 !== v2;
@@ -391,38 +448,47 @@
                 const safe = (val ?? '').toString().replace(/"/g, '&quot;');
                 if (readonly) return `<td class="xls-td p-0 relative"><input type="text" class="xls-input edit-readonly w-full h-full" value="${safe}" readonly tabindex="-1">${badge}</td>`;
                 if (col === 'remarks') return `<td class="xls-td p-0 relative"><select data-id="${row.id}" data-col="${col}" onchange="syncBldgCell(this)" class="xls-input w-full h-full bg-transparent"><option value="Good Condition" ${val==='Good Condition'?'selected':''}>Good Condition</option><option value="Needs Repair" ${val==='Needs Repair'?'selected':''}>Needs Repair</option><option value="Not Useable" ${val==='Not Useable'?'selected':''}>Not Useable</option></select>${badge}</td>`;
-                return `<td class="xls-td p-0 relative"><input type="text" data-id="${row.id}" data-col="${col}" value="${safe}" onchange="syncBldgCell(this)" class="xls-input w-full h-full bg-transparent">${badge}</td>`;
+                return `<td class="xls-td p-0 relative"><input type="text" data-id="${row.id}" data-col="${col}" value="${safe}" onchange="syncBldgCell(this)" autocomplete="off" ${list ? `list="${list}"` : ''} class="xls-input w-full h-full bg-transparent">${badge}</td>`;
             };
 
-            const tr = document.createElement('tr');
-            tr.className = 'xls-row group border-b border-slate-100';
-            tr.innerHTML = `
+            const trI = document.createElement('tr');
+            trI.className = 'xls-row group border-b border-slate-100';
+            trI.innerHTML = `
                 <td class="xls-td text-center sticky left-0 w-10 bg-white z-10"><span class="text-[10px] font-black text-slate-300">${displayNum}</span></td>
-                <td class="xls-td p-0 relative"><span class="xls-const w-full h-full flex items-center px-4">Region IX</span></td>
-                <td class="xls-td p-0 relative"><span class="xls-const w-full h-full flex items-center px-4">Division of Zamboanga City</span></td>
-                ${renderCell('office_type', row.office_type, false)}
+                <td class="xls-td col-context p-0 relative"><span class="xls-const w-full h-full flex items-center px-4">Region IX</span></td>
+                <td class="xls-td col-context p-0 relative"><span class="xls-const w-full h-full flex items-center px-4">Division of Zamboanga City</span></td>
+                ${renderCell('office_type', row.office_type, false, 'dl-bldg-type')}
                 ${renderCell('school_id', row.school_id, false)}
                 ${renderCell('office_name', row.office_name, false)}
                 ${renderCell('address', row.address, false)}
                 ${renderCell('storeys', row.storeys, false)}
                 ${renderCell('classrooms', row.classrooms, false)}
+            `;
+            tbodyIdent.appendChild(trI);
+
+            const trD = document.createElement('tr');
+            trD.className = 'xls-row group border-b border-slate-100';
+            trD.innerHTML = `
+                <td class="xls-td text-center sticky left-0 w-10 bg-white z-10"><span class="text-[10px] font-black text-slate-300">${displayNum}</span></td>
                 ${renderCell('article', row.article, false)}
                 ${renderCell('description', row.description, false)}
-                ${renderCell('classification', row.classification, false)}
-                ${renderCell('occupancy_nature', row.occupancy_nature, false)}
+                ${renderCell('classification', row.classification, false, 'dl-bldg-class')}
+                ${renderCell('occupancy_nature', row.occupancy_nature, false, 'dl-bldg-occupancy')}
                 ${renderCell('location', row.location, false)}
                 ${renderCell('date_constructed', row.date_constructed, false)}
                 ${renderCell('acquisition_date', row.acquisition_date, false)}
                 ${renderCell('property_number', row.property_number, false)}
                 ${renderCell('acquisition_cost', row.acquisition_cost, false)}
                 ${renderCell('estimated_useful_life', row.estimated_useful_life, false)}
+                ${renderCell('appraised_value', row.appraised_value, false)}
+                ${renderCell('appraisal_date', row.appraisal_date, false)}
                 ${renderCell('remarks', row.remarks, false)}
             `;
-            tbody.appendChild(tr);
+            tbodyDet.appendChild(trD);
         });
 
         const totalPages = Math.ceil(bldgAllData.length / bldgRowsPerPage) || 1;
-        document.getElementById('bldgRowCountLabel').textContent = bldgAllData.length + " Rows";
+        document.getElementById('bldgRowCountLabel').textContent = bldgAllData.length + " Rows (paired)";
         document.getElementById('bldgCurrentPageNum').textContent = bldgPageNum;
         document.getElementById('bldgTotalPages').textContent = totalPages;
         document.getElementById('bldgPrevBtn').disabled = bldgPageNum === 1;
@@ -439,9 +505,35 @@
             if (String(oldVal).trim() !== String(newVal).trim()) {
                 bldgUndoStack.push({ type: 'single', rowId: id, col: col, oldVal: oldVal, newVal: newVal });
                 row[col] = newVal;
+
+                // Targeted DOM Update Function (No focus loss)
+                const updateDOM = (column, newValue) => {
+                    const el = document.querySelector(`input[data-id="${id}"][data-col="${column}"]`);
+                    if (el && document.activeElement !== el) el.value = newValue;
+                };
+
+                if (col === 'office_name') {
+                    const trimmed = newVal.trim();
+                    if (trimmed !== '') {
+                        if (typeof detectItemSchoolType === 'function') {
+                            const detected = detectItemSchoolType(trimmed);
+                            if (detected) { row['office_type'] = detected; updateDOM('office_type', detected); }
+                        }
+                        if (typeof cleanSchoolNameForLocation === 'function') {
+                            const loc = cleanSchoolNameForLocation(trimmed);
+                            row['location'] = loc; updateDOM('location', loc);
+                        }
+                    }
+                }
+                
                 bldgRedoStack = [];
                 updateBldgUndoBtn();
-                renderBldgTable(); 
+                // We update badges visually without full re-render
+                const td = input.closest('td');
+                if (td && !td.querySelector('.update-badge')) {
+                    const badge = document.createElement('span'); badge.className = 'update-badge'; badge.textContent = 'Update';
+                    td.appendChild(badge);
+                }
             }
         }
     }
@@ -464,12 +556,6 @@
         toInput.value   = maxRows;
         toInput.max     = maxRows;
 
-        toInput.oninput = function() {
-            const val = parseInt(this.value);
-            if (val > maxRows) this.style.color = '#ef4444';
-            else this.style.color = '';
-        };
-        
         setTimeout(() => {
             m.classList.remove('opacity-0');
             m.querySelector('.transform').classList.remove('scale-95');
@@ -488,68 +574,41 @@
         const to = parseInt(document.getElementById('bldgBulkTo').value);
         const maxRows = bldgAllData.length;
 
-        if (isNaN(from) || isNaN(to) || from < 1 || to < from) {
-            return Swal.fire('Invalid Range', 'Enter a valid row range.', 'error');
-        }
+        if (isNaN(from) || isNaN(to) || from < 1 || to < from || to > maxRows) return Swal.fire('Error', 'Invalid Range', 'error');
 
-        if (to > maxRows) {
-            return Swal.fire({ icon: 'warning', title: 'Exceeds Total Rows', html: `<b>To Row</b> cannot exceed <b>${maxRows}</b>.`, confirmButtonColor: '#c00000' });
-        }
-
-        const toLimit = Math.min(to, bldgAllData.length);
-        
         const bulkMapping = {
-            'bebOfficeType': 'office_type',
-            'bebSchoolId': 'school_id',
-            'bebSchoolName': 'office_name',
-            'bebAddress': 'address',
-            'bebStoreys': 'storeys',
-            'bebClassrooms': 'classrooms',
-            'bebArticle': 'article',
-            'bebDescription': 'description',
-            'bebClassification': 'classification',
-            'bebOccupancy': 'occupancy_nature',
-            'bebLocation': 'location',
-            'bebDateConstructed': 'date_constructed',
-            'bebAcqDate': 'acquisition_date',
-            'bebPropertyNo': 'property_number',
-            'bebAcqCost': 'acquisition_cost',
-            'bebLife': 'estimated_useful_life',
-            'bebRemarks': 'remarks'
+            'bebOfficeType': 'office_type', 'bebSchoolId': 'school_id', 'bebSchoolName': 'office_name',
+            'bebAddress': 'address', 'bebStoreys': 'storeys', 'bebClassrooms': 'classrooms',
+            'bebArticle': 'article', 'bebDescription': 'description', 'bebClassification': 'classification',
+            'bebOccupancy': 'occupancy_nature', 'bebLocation': 'location', 'bebDateConstructed': 'date_constructed',
+            'bebAcqDate': 'acquisition_date', 'bebPropertyNo': 'property_number', 'bebAcqCost': 'acquisition_cost',
+            'bebLife': 'estimated_useful_life', 'bebAppraisedValue': 'appraised_value', 'bebAppraisalDate': 'appraisal_date', 'bebRemarks': 'remarks'
         };
 
-        const activeUpdates = {};
-        let hasUpdates = false;
-        for (const [inputId, colKey] of Object.entries(bulkMapping)) {
-            const val = document.getElementById(inputId).value;
-            if (val !== "") { activeUpdates[colKey] = val; hasUpdates = true; }
+        const updates = {}; let has = false;
+        for (const [id, col] of Object.entries(bulkMapping)) {
+            const v = document.getElementById(id).value;
+            if (v !== "") { updates[col] = v; has = true; }
         }
-
-        if (!hasUpdates) return Swal.fire('No Changes', 'You did not fill any fields.', 'info');
+        if (!has) return closeBldgBulkModal();
 
         const previousStates = [];
-        for (let i = from - 1; i < toLimit; i++) {
+        for (let i = from - 1; i < to; i++) {
             const row = bldgAllData[i];
-            const rowPreviousState = { rowId: row.id, changes: [] };
-            let rowChanged = false;
-
-            for (const [col, newVal] of Object.entries(activeUpdates)) {
-                const oldVal = row[col] ?? '';
-                if (String(oldVal).trim() !== String(newVal).trim()) {
-                    rowPreviousState.changes.push({ col: col, oldVal: oldVal });
-                    row[col] = newVal;
-                    rowChanged = true;
+            const rowPrev = { rowId: row.id, changes: [] };
+            let changed = false;
+            for (const [col, newVal] of Object.entries(updates)) {
+                if (String(row[col] ?? '').trim() !== String(newVal).trim()) {
+                    rowPrev.changes.push({ col: col, oldVal: row[col] });
+                    row[col] = newVal; changed = true;
                 }
             }
-            if (rowChanged) previousStates.push(rowPreviousState);
+            if (changed) previousStates.push(rowPrev);
         }
 
         if (previousStates.length > 0) {
             bldgUndoStack.push({ type: 'bulkMulti', states: previousStates });
-            bldgRedoStack = [];
-            updateBldgUndoBtn();
-            renderBldgTable();
-            Swal.fire({ icon: 'success', title: 'Bulk Edit Applied', text: `Updated ${previousStates.length} rows.`, timer: 1500, showConfirmButton: false });
+            bldgRedoStack = []; updateBldgUndoBtn(); renderBldgTable();
         }
         closeBldgBulkModal();
     }
@@ -578,8 +637,7 @@
             });
         }
         bldgRedoStack.push({ type: 'bulkMulti', states: redoStates });
-        updateBldgUndoBtn();
-        renderBldgTable();
+        updateBldgUndoBtn(); renderBldgTable();
     }
 
     function bldgRedo() {
@@ -598,13 +656,11 @@
             }
         });
         bldgUndoStack.push({ type: 'bulkMulti', states: undoStates });
-        updateBldgUndoBtn();
-        renderBldgTable();
+        updateBldgUndoBtn(); renderBldgTable();
     }
 
     function updateBldgUndoBtn() {
-        const uBtn = document.getElementById('bldgUndoBtn');
-        const rBtn = document.getElementById('bldgRedoBtn');
+        const uBtn = document.getElementById('bldgUndoBtn'), rBtn = document.getElementById('bldgRedoBtn');
         if (uBtn) uBtn.className = bldgUndoStack.length > 0 ? 'px-4 py-2 text-emerald-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all active:scale-95 flex items-center gap-2' : 'px-4 py-2 text-slate-400 rounded-xl text-[9px] font-black uppercase tracking-widest opacity-50 cursor-not-allowed flex items-center gap-2';
         if (rBtn) rBtn.className = bldgRedoStack.length > 0 ? 'px-4 py-2 text-emerald-600 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white transition-all active:scale-95 flex items-center gap-2' : 'px-4 py-2 text-slate-400 rounded-xl text-[9px] font-black uppercase tracking-widest opacity-50 cursor-not-allowed flex items-center gap-2';
     }
@@ -614,43 +670,29 @@
         bldgAllData.forEach(row => {
             const orig = bldgOriginalData.find(o => String(o.id) === String(row.id));
             if (!orig) return;
-            const changes = {};
-            let hasChanged = false;
-            const keys = ['office_type', 'school_id', 'office_name', 'address', 'storeys', 'classrooms', 'article', 'description', 'classification', 'occupancy_nature', 'location', 'date_constructed', 'acquisition_date', 'property_number', 'acquisition_cost', 'estimated_useful_life', 'remarks'];
-            keys.forEach(k => {
-                if (String(row[k] ?? '').trim() !== String(orig[k] ?? '').trim()) { changes[k] = row[k]; hasChanged = true; }
+            const changes = {}; let has = false;
+            ['office_type', 'school_id', 'office_name', 'address', 'storeys', 'classrooms', 'article', 'description', 'classification', 'occupancy_nature', 'location', 'date_constructed', 'acquisition_date', 'property_number', 'acquisition_cost', 'estimated_useful_life', 'appraised_value', 'appraisal_date', 'remarks'].forEach(k => {
+                if (String(row[k] ?? '').trim() !== String(orig[k] ?? '').trim()) { changes[k] = row[k]; has = true; }
             });
-            if (hasChanged) { updates.push({ id: row.id, ...changes }); }
+            if (has) updates.push({ id: row.id, ...changes });
         });
 
         if (updates.length === 0) return Swal.fire('No Changes', 'No records were modified.', 'info');
-
-        Swal.fire({
-            title: 'Save Changes?',
-            text: `You are about to modify ${updates.length} records.`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#10b981',
-            cancelButtonColor: '#94a3b8',
-            confirmButtonText: 'Yes, Save Updates'
-        }).then((result) => {
+        Swal.fire({ title: 'Save Changes?', text: `Modify ${updates.length} records?`, icon: 'question', showCancelButton: true, confirmButtonColor: '#10b981' }).then((result) => {
             if (result.isConfirmed) {
-                Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                Swal.fire({ title: 'Saving...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 fetch('{{ route("api.buildings.updateBatch") }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ updates: updates })
-                })
-                .then(res => res.json())
-                .then(data => {
+                }).then(res => res.json()).then(data => {
                     if (data.success) {
                         Swal.fire('Saved!', data.message, 'success').then(() => {
                             bldgOriginalData = JSON.parse(JSON.stringify(bldgAllData));
                             bldgUndoStack = []; bldgRedoStack = []; updateBldgUndoBtn(); renderBldgTable();
                         });
                     } else Swal.fire('Error', data.message, 'error');
-                })
-                .catch(err => Swal.fire('Error', 'Server error.', 'error'));
+                }).catch(() => Swal.fire('Error', 'Server error.', 'error'));
             }
         });
     }

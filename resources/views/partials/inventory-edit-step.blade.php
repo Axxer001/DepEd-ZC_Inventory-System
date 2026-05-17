@@ -139,24 +139,27 @@
         {{-- ── Asset Source Table ── --}}
         <div id="editPanelAssetSource" class="flex-grow flex flex-col min-h-0">
             <div id="editSourceScroll" class="xls-scroll-wrap custom-scroll overflow-x-auto overflow-y-auto transition-all duration-300" style="max-height: calc(100vh - 450px);">
-                <table class="w-full border-collapse" style="min-width:2400px;">
+                <table class="w-full border-collapse" style="min-width:2800px;">
                     <thead class="sticky top-0 bg-slate-50 z-20 shadow-sm">
                         <tr>
                             <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                            <th class="xls-th" style="min-width:140px">Classification</th>
-                            <th class="xls-th" style="min-width:140px">Category</th>
-                            <th class="xls-th" style="min-width:140px">Item</th>
-                            <th class="xls-th text-blue-600" style="min-width:180px">Description</th>
-                            <th class="xls-th text-blue-600" style="min-width:120px">Unit</th>
-                            <th class="xls-th text-blue-600" style="min-width:160px">Acquisition Source</th>
-                            <th class="xls-th text-blue-600" style="min-width:150px">Mode</th>
-                            <th class="xls-th text-blue-600" style="min-width:160px">Source Personnel</th>
-                            <th class="xls-th text-blue-600" style="min-width:160px">Personnel Position</th>
-                            <th class="xls-th text-blue-600 text-right" style="min-width:120px">Cost / Unit (₱)</th>
-                            <th class="xls-th text-blue-600 text-right" style="min-width:80px">Qty</th>
-                            <th class="xls-th text-blue-600 text-right" style="min-width:110px">Useful Life (yrs)</th>
-                            <th class="xls-th text-blue-600" style="min-width:140px">Acceptance Date</th>
-                            <th class="xls-th text-blue-600" style="min-width:200px">Remarks</th>
+                            <th class="xls-th col-identity" style="min-width:140px">CLASSIFICATION</th>
+                            <th class="xls-th col-identity" style="min-width:140px">CATEGORY</th>
+                            <th class="xls-th col-identity" style="min-width:140px">ITEM</th>
+                            <th class="xls-th col-context" style="min-width:180px">DESCRIPTION</th>
+                            <th class="xls-th col-context" style="min-width:120px">BRAND</th>
+                            <th class="xls-th col-context" style="min-width:120px">MODEL</th>
+                            <th class="xls-th col-context" style="min-width:140px">SERIAL NO.</th>
+                            <th class="xls-th col-context" style="min-width:100px">UNIT</th>
+                            <th class="xls-th col-status" style="min-width:160px">ACQUISITION SOURCE</th>
+                            <th class="xls-th col-status" style="min-width:140px">MODE</th>
+                            <th class="xls-th col-personnel" style="min-width:160px">SOURCE PERSONNEL</th>
+                            <th class="xls-th col-personnel" style="min-width:160px">PERSONNEL POS</th>
+                            <th class="xls-th col-financial text-right" style="min-width:120px">COST / UNIT (₱)</th>
+                            <th class="xls-th col-financial text-right" style="min-width:80px">QTY</th>
+                            <th class="xls-th col-temporal text-right" style="min-width:110px">USEFUL LIFE (YRS)</th>
+                            <th class="xls-th col-temporal" style="min-width:140px">ACCEPTANCE DATE</th>
+                            <th class="xls-th col-status" style="min-width:160px">CONDITION</th>
                         </tr>
                     </thead>
                     <tbody id="editAssetSourceBody"></tbody>
@@ -171,16 +174,21 @@
                     <thead class="sticky top-0 bg-slate-50 z-20 shadow-sm">
                         <tr>
                             <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                            <th class="xls-th" style="min-width:90px">Region</th>
-                            <th class="xls-th" style="min-width:200px">Division</th>
-                            <th class="xls-th text-blue-600" style="min-width:140px">Office/School Type</th>
-                            <th class="xls-th text-blue-600" style="min-width:100px">School ID</th>
-                            <th class="xls-th text-blue-600" style="min-width:210px">Office/School Name</th>
-                            <th class="xls-th text-blue-600" style="min-width:160px">Nature of Occupancy</th>
-                            <th class="xls-th text-blue-600" style="min-width:160px">Location</th>
-                            <th class="xls-th text-blue-600" style="min-width:150px">Property No.</th>
-                            <th class="xls-th text-blue-600 text-right" style="min-width:130px">Acquisition Cost (₱)</th>
-                            <th class="xls-th text-blue-600" style="min-width:140px">Acquisition Date</th>
+                            <th class="xls-th col-context" style="min-width:120px">REGION</th>
+                            <th class="xls-th col-context" style="min-width:180px">DIVISION</th>
+                            <th class="xls-th col-context" style="min-width:160px">OFFICE/SCHOOL TYPE</th>
+                            <th class="xls-th col-identity" style="min-width:100px">SCHOOL ID</th>
+                            <th class="xls-th col-identity" style="min-width:210px">OFFICE/SCHOOL NAME</th>
+                            <th class="xls-th col-personnel" style="min-width:160px">CUSTODIAN FIRST NAME</th>
+                            <th class="xls-th col-personnel" style="min-width:160px">CUSTODIAN MIDDLE NAME</th>
+                            <th class="xls-th col-personnel" style="min-width:160px">CUSTODIAN LAST NAME</th>
+                            <th class="xls-th col-personnel" style="min-width:160px">CUSTODIAN POSITION</th>
+                            <th class="xls-th col-personnel" style="min-width:160px">CUSTODIAN CONTACT NO.</th>
+                            <th class="xls-th col-context" style="min-width:160px">NATURE OF OCCUPANCY</th>
+                            <th class="xls-th col-context" style="min-width:160px">LOCATION</th>
+                            <th class="xls-th col-identity" style="min-width:150px">PROPERTY NO.</th>
+                            <th class="xls-th col-financial text-right" style="min-width:130px">ACQUISITION COST (₱)</th>
+                            <th class="xls-th col-temporal" style="min-width:140px">ACQUISITION DATE</th>
                         </tr>
                     </thead>
                     <tbody id="editAssetDistBody"></tbody>
@@ -213,93 +221,213 @@
 </div>
 
 <!-- Bulk Edit Modal -->
-<div id="editBulkModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeEditBulkModal()"></div>
-    <div class="bg-white dark:bg-[#141f33] border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-2xl w-[90vw] max-w-5xl max-h-[90vh] flex flex-col relative z-10 transform scale-95 transition-transform duration-300">
+<div id="editBulkModal" class="fixed inset-0 z-[150] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+    <div class="absolute inset-0 bg-slate-900/80 backdrop-blur-md" onclick="closeEditBulkModal()"></div>
+    <div class="bg-[#1e293b] border border-slate-700 rounded-[2rem] shadow-2xl w-[95vw] max-w-5xl max-h-[90vh] flex flex-col relative z-10 transform scale-95 transition-transform duration-300 overflow-hidden">
         
         {{-- Header --}}
-        <div class="px-8 py-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <div>
-                <h3 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight italic text-blue-600">Bulk Edit Rows</h3>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Update specific columns for a range of rows</p>
+        <div class="px-6 md:px-10 py-6 border-b border-slate-700/50 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-800/30">
+            <div class="flex-grow">
+                <h3 class="text-2xl md:text-3xl font-black text-blue-400 uppercase tracking-tighter italic">Bulk Edit Rows</h3>
+                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mt-1">Update specific columns for a range of rows</p>
             </div>
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-2 bg-slate-50 dark:bg-[#0a101d] px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800">
-                    <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">From Row #</label>
-                    <input type="number" id="editBulkFrom" value="1" min="1" class="w-16 bg-transparent text-center font-black text-slate-800 dark:text-white outline-none">
+            
+            <div class="flex flex-wrap items-center gap-4">
+                <div class="flex items-center gap-4 bg-slate-900/50 px-5 py-3 rounded-2xl border border-slate-700 shadow-inner">
+                    <div class="flex flex-col">
+                        <label class="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">From Row #</label>
+                        <input type="number" id="editBulkFrom" value="1" min="1" class="w-12 bg-transparent font-black text-white outline-none text-lg leading-none">
+                    </div>
+                    <div class="w-px h-6 bg-slate-700"></div>
+                    <div class="flex flex-col">
+                        <label class="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1">To Row #</label>
+                        <input type="number" id="editBulkTo" value="1" min="1" class="w-16 bg-transparent font-black text-white outline-none text-lg leading-none">
+                    </div>
                 </div>
-                <div class="flex items-center gap-2 bg-slate-50 dark:bg-[#0a101d] px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800">
-                    <label class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest">To Row #</label>
-                    <input type="number" id="editBulkTo" value="1" min="1" class="w-20 bg-transparent text-center font-black text-slate-800 dark:text-white outline-none">
+
+                <div class="flex items-center gap-2">
+                    <button onclick="closeEditBulkModal()" class="px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-white transition-all italic">Cancel</button>
+                    <button onclick="applyEditBulk()" class="px-8 py-4 rounded-2xl text-[11px] font-black text-white bg-blue-600 hover:bg-blue-500 shadow-xl shadow-blue-500/20 transition-all active:scale-95 uppercase tracking-widest italic">Apply Bulk Edit</button>
                 </div>
-                <button onclick="closeEditBulkModal()" class="px-5 py-3 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">Cancel</button>
-                <button onclick="applyEditBulk()" class="px-6 py-3 rounded-xl text-sm font-black text-white bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all">Apply Bulk Edit</button>
             </div>
         </div>
 
         {{-- Body --}}
-        <div class="p-8 overflow-y-auto custom-scroll flex-1 space-y-10">
+        <div class="p-6 md:p-10 overflow-y-auto custom-scroll flex-1 space-y-12 bg-slate-800/20">
             
             {{-- Source Section --}}
-            <div>
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-6 h-6 bg-blue-500/20 text-blue-600 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0">1</div>
-                    <h4 class="font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest text-xs">Asset Data Entry (Source)</h4>
+            <div class="animate-fade">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-8 h-8 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center text-xs font-black shrink-0 border border-blue-500/20 shadow-lg shadow-blue-500/5">1</div>
+                    <h4 class="font-black text-white uppercase tracking-[0.15em] text-sm italic">Asset Data Entry (Source)</h4>
                 </div>
-                <div class="grid grid-cols-2 gap-x-6 gap-y-5">
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Classification</label><input type="text" id="ebClassification" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Category</label><input type="text" id="ebCategory" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Item</label><input type="text" id="ebItem" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Description</label><input type="text" id="ebDescription" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Unit of Measurement</label><input type="text" id="ebUom" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Acquisition Source</label><input type="text" id="ebAcqSource" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Mode of Procurement</label><input type="text" id="ebMode" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Source Personnel</label><input type="text" id="ebPersonnel" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Personnel Position</label><input type="text" id="ebPosition" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Cost per Unit</label><input type="number" id="ebCost" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="0.01"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Quantity</label><input type="number" id="ebQty" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="1"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Expected Useful Life</label><input type="number" id="ebLife" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="1"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Acceptance Date</label><input type="date" id="ebDate1" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
-                    <div class="relative">
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Remarks</label>
-                        <select id="ebRemarks" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl bg-transparent">
-                            <option value="">-- Ignore --</option>
-                            <option value="Good Condition">Good Condition</option>
-                            <option value="Needs Repair">Needs Repair</option>
-                            <option value="Not Useable">Not Useable</option>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Classification</label>
+                        <input type="text" id="ebClassification" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Category</label>
+                        <input type="text" id="ebCategory" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Item</label>
+                        <input type="text" id="ebItem" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Description</label>
+                        <input type="text" id="ebDescription" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Brand</label>
+                        <input type="text" id="ebBrand" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Model</label>
+                        <input type="text" id="ebModel" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Serial Number</label>
+                        <input type="text" id="ebSerialNo" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Unit of Measurement</label>
+                        <input type="text" id="ebUom" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Acquisition Source</label>
+                        <input type="text" id="ebAcqSource" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Mode of Procurement</label>
+                        <input type="text" id="ebMode" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Source Personnel</label>
+                        <input type="text" id="ebPersonnel" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Personnel Position</label>
+                        <input type="text" id="ebPosition" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:col-span-2">
+                        <div class="relative space-y-2">
+                            <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Cost per Unit</label>
+                            <div class="relative">
+                                <input type="number" id="ebCost" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-right pr-12 placeholder:text-slate-700" placeholder="Leave empty to ignore" min="0" step="0.01">
+                                <span class="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-600">₱</span>
+                            </div>
+                        </div>
+                        <div class="relative space-y-2">
+                            <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Quantity</label>
+                            <input type="number" id="ebQty" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-right placeholder:text-slate-700" placeholder="Leave empty to ignore" min="0" step="1">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:col-span-2">
+                        <div class="relative space-y-2">
+                            <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Expected Useful Life</label>
+                            <div class="relative">
+                                <input type="number" id="ebLife" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all text-right pr-14 placeholder:text-slate-700" placeholder="Leave empty to ignore" min="0" step="1">
+                                <span class="absolute right-5 top-1/2 -translate-y-1/2 text-[8px] font-black text-slate-600">YRS</span>
+                            </div>
+                        </div>
+                        <div class="relative space-y-2">
+                            <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Acceptance Date</label>
+                            <input type="date" id="ebDate1" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all [color-scheme:dark]">
+                        </div>
+                    </div>
+
+                    <div class="relative space-y-2 md:col-span-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Condition</label>
+                        <select id="ebRemarks" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
+                            <option value="" class="bg-[#1e293b]">-- IGNORE CHANGES --</option>
+                            <option value="Good Condition" class="bg-[#1e293b]">GOOD CONDITION</option>
+                            <option value="Needs Repair" class="bg-[#1e293b]">NEEDS REPAIR</option>
+                            <option value="Not Useable" class="bg-[#1e293b]">NOT USEABLE</option>
                         </select>
                     </div>
                 </div>
             </div>
 
-            <div class="border-t border-slate-100 dark:border-slate-800"></div>
+            <div class="border-t border-slate-700/50"></div>
 
             {{-- Target Section --}}
-            <div>
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-6 h-6 bg-blue-500/20 text-blue-600 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0">2</div>
-                    <h4 class="font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest text-xs">Asset Distribution (Target)</h4>
+            <div class="animate-fade">
+                <div class="flex items-center gap-4 mb-8">
+                    <div class="w-8 h-8 bg-blue-500/10 text-blue-400 rounded-xl flex items-center justify-center text-xs font-black shrink-0 border border-blue-500/20 shadow-lg shadow-blue-500/5">2</div>
+                    <h4 class="font-black text-white uppercase tracking-[0.15em] text-sm italic">Asset Distribution (Target)</h4>
                 </div>
-                <div class="grid grid-cols-2 gap-x-6 gap-y-5">
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Region</label>
-                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 flex justify-between items-center cursor-not-allowed opacity-60">Region IX</div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1 block">Region</label>
+                        <div class="w-full bg-slate-900/30 border border-slate-800 rounded-xl px-5 py-4 text-xs font-black text-slate-600 uppercase tracking-widest italic opacity-50 cursor-not-allowed">Region IX</div>
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Division</label>
-                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 flex justify-between items-center cursor-not-allowed opacity-60">Division of Zamboanga City</div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1 block">Division</label>
+                        <div class="w-full bg-slate-900/30 border border-slate-800 rounded-xl px-5 py-4 text-xs font-black text-slate-600 uppercase tracking-widest italic opacity-50 cursor-not-allowed">Division of Zamboanga City</div>
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Office/School Type</label><input type="text" id="ebSchoolType" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">School ID</label><input type="text" id="ebSchoolId" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore" inputmode="numeric"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Office/School Name</label><input type="text" id="ebSchoolName" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Nature of Occupancy</label><input type="text" id="ebOccupancy" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Location</label><input type="text" id="ebLocation" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Property Number</label><input type="text" id="ebPropertyNo" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
-                    <div class="relative">
-                        <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1">Acquisition Cost</label>
-                        <div class="relative">
-                            <input type="text" id="ebCostTotal" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 cursor-not-allowed outline-none text-right pr-10 opacity-60" placeholder="Auto calculated" readonly tabindex="-1">
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Office/School Type</label>
+                        <input type="text" list="dl-school-type" id="ebSchoolType" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-600" placeholder="-- IGNORE CHANGES --">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">School ID</label>
+                        <input type="text" id="ebSchoolId" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore" inputmode="numeric">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Office/School Name</label>
+                        <input type="text" id="ebSchoolName" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore" oninput="
+                            if(typeof allSchoolsList !== 'undefined' && typeof detectItemSchoolType === 'function'){
+                                const s = allSchoolsList.find(x => x.name.toLowerCase() === this.value.toLowerCase());
+                                if(s) {
+                                    const t = detectItemSchoolType(s.name) || '';
+                                    document.getElementById('ebSchoolType').value = t;
+                                    document.getElementById('ebSchoolId').value = s.school_id;
+                                    if(typeof cleanSchoolNameForLocation === 'function') document.getElementById('ebLocation').value = cleanSchoolNameForLocation(s.name);
+                                } else if(this.value.trim()){
+                                    const t = detectItemSchoolType(this.value);
+                                    if(t) document.getElementById('ebSchoolType').value = t;
+                                    document.getElementById('ebSchoolId').value = '';
+                                    if(typeof cleanSchoolNameForLocation === 'function') document.getElementById('ebLocation').value = cleanSchoolNameForLocation(this.value);
+                                }
+                            }">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Custodian Full Name</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <input type="text" id="ebCustFirst" placeholder="First" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-3 py-4 text-[10px] font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
+                            <input type="text" id="ebCustMiddle" placeholder="Middle" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-3 py-4 text-[10px] font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
+                            <input type="text" id="ebCustLast" placeholder="Last" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-3 py-4 text-[10px] font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all">
                         </div>
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Acquisition Date</label><input type="date" id="ebDate2" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Custodian Position</label>
+                        <input type="text" id="ebCustPos" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Custodian Contact No.</label>
+                        <input type="text" id="ebCustContact" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Nature of Occupancy</label>
+                        <input type="text" id="ebOccupancy" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Location / Room</label>
+                        <input type="text" id="ebLocation" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Property Number</label>
+                        <input type="text" id="ebPropertyNo" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    </div>
+                    <div class="relative space-y-2">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Acquisition Date</label>
+                        <input type="date" id="ebDate2" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all [color-scheme:dark]">
+                    </div>
                 </div>
             </div>
 
@@ -518,6 +646,9 @@
                 ${renderCell('category', row.category, false)}
                 ${renderCell('article', row.article, false)}
                 ${renderCell('description', row.description, false)}
+                ${renderCell('brand', row.brand, false)}
+                ${renderCell('model', row.model, false)}
+                ${renderCell('serial_no', row.serial_no, false)}
                 ${renderCell('unit_of_measurement', row.unit_of_measurement, false)}
                 ${renderCell('acq_source', row.acq_source, false)}
                 ${renderCell('mode_of_acquisition', row.mode_of_acquisition, false)}
@@ -544,6 +675,11 @@
                 ${renderCell('school_type', row.school_type, false)}
                 ${renderCell('school_id', row.school_id, false)}
                 ${renderCell('office_school_name', row.office_school_name, false)}
+                ${renderCell('custodian_first_name', row.custodian_first_name, false)}
+                ${renderCell('custodian_middle_name', row.custodian_middle_name, false)}
+                ${renderCell('custodian_last_name', row.custodian_last_name, false)}
+                ${renderCell('custodian_position', row.custodian_position, false)}
+                ${renderCell('custodian_contact_number', row.custodian_contact_number, false)}
                 ${renderCell('nature_of_occupancy', row.nature_of_occupancy, false)}
                 ${renderCell('location', row.location, false)}
                 ${renderCell('property_number', row.property_number, false)}
@@ -652,6 +788,9 @@
             'ebCategory': 'category',
             'ebItem': 'article',
             'ebDescription': 'description',
+            'ebBrand': 'brand',
+            'ebModel': 'model',
+            'ebSerialNo': 'serial_no',
             'ebUom': 'unit_of_measurement',
             'ebAcqSource': 'acq_source',
             'ebMode': 'mode_of_acquisition',
@@ -789,11 +928,13 @@
                 let hasChanged = false;
                 
                 const keys = [
-                    'classification', 'category', 'article', 'description', 'unit_of_measurement', 
-                    'acq_source', 'asset_cost', 'quantity', 'estimated_useful_life', 'property_number', 
-                    'location', 'nature_of_occupancy', 'mode_of_acquisition', 'source_personnel', 
-                    'personnel_position', 'acceptance_date', 'remarks', 'school_type', 'school_id', 
-                    'office_school_name', 'acquisition_date'
+                    'classification', 'category', 'article', 'description', 'brand', 'model', 'serial_no',
+                    'unit_of_measurement', 'acq_source', 'asset_cost', 'quantity', 'estimated_useful_life',
+                    'property_number', 'location', 'nature_of_occupancy', 'mode_of_acquisition', 
+                    'source_personnel', 'personnel_position', 'acceptance_date', 'remarks', 
+                    'school_type', 'school_id', 'office_school_name', 'acquisition_date', 
+                    'custodian_first_name', 'custodian_middle_name', 'custodian_last_name', 
+                    'custodian_position', 'custodian_contact_number'
                 ];
 
                 keys.forEach(k => {
@@ -816,6 +957,9 @@
                     if (changes.hasOwnProperty('category')) payload.category = changes.category;
                     if (changes.hasOwnProperty('article')) payload.article = changes.article;
                     if (changes.hasOwnProperty('description')) payload.description = changes.description;
+                    if (changes.hasOwnProperty('brand')) payload.brand = changes.brand;
+                    if (changes.hasOwnProperty('model')) payload.model = changes.model;
+                    if (changes.hasOwnProperty('serial_no')) payload.serial_no = changes.serial_no;
                     if (changes.hasOwnProperty('unit_of_measurement')) payload.uom = changes.unit_of_measurement;
                     if (changes.hasOwnProperty('acq_source')) payload.acq_source = changes.acq_source;
                     if (changes.hasOwnProperty('asset_cost')) payload.cost = changes.asset_cost;
@@ -833,6 +977,11 @@
                     if (changes.hasOwnProperty('school_id')) payload.school_id = changes.school_id;
                     if (changes.hasOwnProperty('office_school_name')) payload.office_school_name = changes.office_school_name;
                     if (changes.hasOwnProperty('acquisition_date')) payload.acquisition_date = changes.acquisition_date;
+                    if (changes.hasOwnProperty('custodian_first_name')) payload.custodian_first_name = changes.custodian_first_name;
+                    if (changes.hasOwnProperty('custodian_middle_name')) payload.custodian_middle_name = changes.custodian_middle_name;
+                    if (changes.hasOwnProperty('custodian_last_name')) payload.custodian_last_name = changes.custodian_last_name;
+                    if (changes.hasOwnProperty('custodian_position')) payload.custodian_position = changes.custodian_position;
+                    if (changes.hasOwnProperty('custodian_contact_number')) payload.custodian_contact_number = changes.custodian_contact_number;
 
                     updates.push(payload);
                 }
