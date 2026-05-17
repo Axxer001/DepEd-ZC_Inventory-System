@@ -77,8 +77,23 @@ class OfficeController extends Controller
             ->orderByDesc('ad.acquisition_date')
             ->get();
 
+        // Fetch custodians who have assets assigned in this office
+        $custodians = DB::table('asset_assignments as ad')
+            ->join('custodians as c', 'ad.custodian_id', '=', 'c.id')
+            ->where('ad.office_id', $id)
+            ->select(
+                'c.id',
+                'c.first_name',
+                'c.last_name',
+                'c.employee_id',
+                'c.position',
+                DB::raw('COUNT(ad.id) as total_assigned_assets')
+            )
+            ->groupBy('c.id', 'c.first_name', 'c.last_name', 'c.employee_id', 'c.position')
+            ->get();
+
         return view('admin.offices.profile', compact(
-            'office', 'buildingStats', 'buildings', 'assetStats', 'recentAssets'
+            'office', 'buildingStats', 'buildings', 'assetStats', 'recentAssets', 'custodians'
         ));
     }
 }
