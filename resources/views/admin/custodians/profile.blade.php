@@ -60,6 +60,24 @@
         .sort-select { font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.06em; background: #fff; border: 1.5px solid #e5e7eb; border-radius: 0.75rem; padding: 6px 12px; outline: none; cursor: pointer; transition: border-color 0.15s; }
         .sort-select:focus { border-color: #94a3b8; }
 
+        /* Calendar Date Picker */
+        .cal-panel { position: absolute; top: calc(100% + 8px); left: 0; z-index: 9999; background: #fff; border: 1.5px solid #e5e7eb; border-radius: 1.25rem; box-shadow: 0 12px 40px rgba(0,0,0,0.12); padding: 1.1rem; width: 260px; }
+        .cal-year-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; }
+        .cal-year-btn { width: 28px; height: 28px; border-radius: 8px; border: 1.5px solid #e5e7eb; background: #f8fafc; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #64748b; font-weight: 900; font-size: 12px; transition: all 0.15s; }
+        .cal-year-btn:hover { background: #0f172a; color: #fff; border-color: #0f172a; }
+        .cal-year-label { font-size: 11px; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: 0.12em; }
+        .cal-month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+        .cal-month-btn { padding: 7px 4px; border-radius: 10px; border: 1.5px solid #f1f5f9; background: #f8fafc; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.07em; color: #64748b; cursor: pointer; text-align: center; transition: all 0.15s; }
+        .cal-month-btn:hover { border-color: #cbd5e1; background: #f1f5f9; color: #334155; }
+        .cal-month-btn.selected { background: #c00000; border-color: #c00000; color: #fff; box-shadow: 0 2px 8px rgba(192,0,0,0.25); }
+        .cal-month-btn.has-data { border-color: #e2e8f0; }
+        .cal-trigger { display: flex; align-items: center; gap: 6px; padding: 6px 14px; background: #fff; border: 1.5px solid #e5e7eb; border-radius: 9999px; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+        .cal-trigger:hover { border-color: #94a3b8; color: #334155; }
+        .cal-trigger.has-selection { background: #0f172a; color: #fff; border-color: #0f172a; }
+        .date-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px 3px 10px; background: #fef2f2; border: 1.5px solid #fecaca; border-radius: 9999px; font-size: 8.5px; font-weight: 900; color: #c00000; text-transform: uppercase; letter-spacing: 0.08em; }
+        .date-chip button { background: none; border: none; cursor: pointer; color: #c00000; font-size: 10px; line-height: 1; padding: 0; font-weight: 900; opacity: 0.7; }
+        .date-chip button:hover { opacity: 1; }
+
         /* Dark mode */
         html.dark body { background: #0b0f19; }
         html.dark .glass-card, html.dark .asset-card { background: #1e293b; border-color: #334155; }
@@ -208,38 +226,37 @@
                                 <button onclick="setCustodianFilter('unserviceable','active-red')" id="f-unserviceable" class="f-chip">Unserviceable</button>
                             </div>
 
-                            {{-- Row 2: Date filters + Sort --}}
+                            {{-- Row 2: Calendar Date Picker + Sort --}}
                             <div class="flex flex-wrap items-center gap-3">
-                                {{-- Month filter --}}
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Month:</span>
-                                    <select onchange="setCustodianMonth(this.value)" id="sel-month" class="sort-select">
-                                        <option value="all">All Months</option>
-                                        <option value="1">January</option>
-                                        <option value="2">February</option>
-                                        <option value="3">March</option>
-                                        <option value="4">April</option>
-                                        <option value="5">May</option>
-                                        <option value="6">June</option>
-                                        <option value="7">July</option>
-                                        <option value="8">August</option>
-                                        <option value="9">September</option>
-                                        <option value="10">October</option>
-                                        <option value="11">November</option>
-                                        <option value="12">December</option>
-                                    </select>
+
+                                {{-- Calendar Trigger + Floating Panel --}}
+                                <div class="relative" id="cal-wrap">
+                                    <button onclick="toggleCalPanel(event)" id="cal-trigger-btn" class="cal-trigger">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                        <span id="cal-trigger-label">Filter by Date</span>
+                                        <span id="cal-badge" class="bg-red-200 text-deped rounded-full px-1.5 py-0.5 text-[7px] font-black" style="display:none">0</span>
+                                    </button>
+
+                                    {{-- Floating Calendar Panel --}}
+                                    <div id="cal-panel" class="cal-panel" style="display:none">
+                                        {{-- Year Navigation --}}
+                                        <div class="cal-year-nav">
+                                            <button class="cal-year-btn" onclick="calNavYear(-1)">&#8249;</button>
+                                            <span class="cal-year-label" id="cal-year-display">{{ $availableYears->sortDesc()->first() ?? date('Y') }}</span>
+                                            <button class="cal-year-btn" onclick="calNavYear(1)">&#8250;</button>
+                                        </div>
+                                        {{-- Month Grid (rendered by JS) --}}
+                                        <div class="cal-month-grid" id="cal-month-grid"></div>
+                                        {{-- Footer --}}
+                                        <div class="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                                            <button onclick="clearAllDates()" class="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-colors">Clear All</button>
+                                            <button onclick="toggleCalPanel()" class="text-[9px] font-black text-slate-800 uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-lg hover:bg-slate-200 transition-colors">Done</button>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                {{-- Year filter --}}
-                                <div class="flex items-center gap-2">
-                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Year:</span>
-                                    <select onchange="setCustodianYear(this.value)" id="sel-year" class="sort-select">
-                                        <option value="all">All Years</option>
-                                        @foreach($availableYears->sortDesc() as $yr)
-                                        <option value="{{ $yr }}">{{ $yr }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                                {{-- Selected Date Chips --}}
+                                <div id="date-chips-container" class="flex flex-wrap gap-1.5"></div>
 
                                 {{-- Sort --}}
                                 <div class="ml-auto flex items-center gap-2">
@@ -251,9 +268,6 @@
                                         <option value="cost-asc">Cost: Low &rarr; High</option>
                                     </select>
                                 </div>
-
-                                {{-- Clear Date Filters --}}
-                                <button onclick="clearDateFilters()" id="clear-date-btn" class="f-chip" style="display:none;">✕ Clear Date</button>
                             </div>
                         </div>
 
@@ -482,11 +496,25 @@
     </div>
 
 <script>
+    // =========================================================
+    // DATA: Available years from PHP
+    // =========================================================
+    const CAL_YEARS = @json($availableYears->sortDesc()->values());
+    const MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const MONTHS_LONG  = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+    // =========================================================
+    // STATE
+    // =========================================================
     let custodianActiveFilter = 'all';
     let custodianSortOrder    = 'date-desc';
-    let custodianFilterMonth  = 'all';
-    let custodianFilterYear   = 'all';
+    let selectedDates         = []; // array of "YYYY-M" strings
+    let calViewYear           = CAL_YEARS.length ? parseInt(CAL_YEARS[0]) : new Date().getFullYear();
+    let calPanelOpen          = false;
 
+    // =========================================================
+    // STATUS FILTER
+    // =========================================================
     function setCustodianFilter(filter, activeClass) {
         custodianActiveFilter = filter;
         document.querySelectorAll('.f-chip').forEach(b => {
@@ -497,44 +525,131 @@
         applyCustodianFilters();
     }
 
+    // =========================================================
+    // SORT
+    // =========================================================
     function setCustodianSort(val) {
         custodianSortOrder = val;
         applyCustodianFilters();
     }
 
-    function setCustodianMonth(val) {
-        custodianFilterMonth = val;
-        updateClearDateBtn();
+    // =========================================================
+    // CALENDAR PANEL
+    // =========================================================
+    function toggleCalPanel(e) {
+        if (e) e.stopPropagation();
+        calPanelOpen = !calPanelOpen;
+        document.getElementById('cal-panel').style.display = calPanelOpen ? '' : 'none';
+        if (calPanelOpen) renderCalMonthGrid();
+    }
+
+    function calNavYear(dir) {
+        calViewYear += dir;
+        document.getElementById('cal-year-display').textContent = calViewYear;
+        renderCalMonthGrid();
+    }
+
+    function renderCalMonthGrid() {
+        const grid = document.getElementById('cal-month-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        // Collect months that have actual asset data for this year
+        const container = document.getElementById('custodian-asset-list');
+        const dataMonths = new Set();
+        if (container) {
+            container.querySelectorAll('.asset-card').forEach(card => {
+                if (card.dataset.year === String(calViewYear)) dataMonths.add(card.dataset.month);
+            });
+        }
+
+        MONTHS_SHORT.forEach((name, idx) => {
+            const m    = idx + 1;
+            const key  = `${calViewYear}-${m}`;
+            const isSel = selectedDates.includes(key);
+            const hasData = dataMonths.has(String(m));
+
+            const btn = document.createElement('button');
+            btn.textContent = name;
+            btn.className   = 'cal-month-btn' + (hasData ? ' has-data' : '') + (isSel ? ' selected' : '');
+            btn.title       = MONTHS_LONG[idx] + ' ' + calViewYear + (hasData ? '' : ' (no assets)');
+            btn.onclick     = () => toggleDateKey(key, btn);
+            grid.appendChild(btn);
+        });
+    }
+
+    function toggleDateKey(key, btn) {
+        const idx = selectedDates.indexOf(key);
+        if (idx >= 0) {
+            selectedDates.splice(idx, 1);
+            btn.classList.remove('selected');
+        } else {
+            selectedDates.push(key);
+            btn.classList.add('selected');
+        }
+        updateCalUI();
         applyCustodianFilters();
     }
 
-    function setCustodianYear(val) {
-        custodianFilterYear = val;
-        updateClearDateBtn();
+    function clearAllDates() {
+        selectedDates = [];
+        updateCalUI();
         applyCustodianFilters();
+        renderCalMonthGrid(); // re-render to clear highlights
     }
 
-    function clearDateFilters() {
-        custodianFilterMonth = 'all';
-        custodianFilterYear  = 'all';
-        document.getElementById('sel-month').value = 'all';
-        document.getElementById('sel-year').value  = 'all';
-        updateClearDateBtn();
+    function updateCalUI() {
+        const count  = selectedDates.length;
+        const badge  = document.getElementById('cal-badge');
+        const label  = document.getElementById('cal-trigger-label');
+        const trigger = document.getElementById('cal-trigger-btn');
+        const chipsContainer = document.getElementById('date-chips-container');
+
+        // Badge
+        if (badge)  { badge.textContent = count; badge.style.display = count > 0 ? '' : 'none'; }
+        // Label
+        if (label)  label.textContent = count > 0 ? count + ' Date' + (count > 1 ? 's' : '') + ' Selected' : 'Filter by Date';
+        // Trigger style
+        if (trigger) trigger.classList.toggle('has-selection', count > 0);
+
+        // Chips
+        if (chipsContainer) {
+            chipsContainer.innerHTML = '';
+            selectedDates.forEach(key => {
+                const [yr, mo] = key.split('-').map(Number);
+                const chip = document.createElement('div');
+                chip.className = 'date-chip';
+                chip.innerHTML = `<span>${MONTHS_SHORT[mo - 1]} ${yr}</span><button onclick="removeDateChip('${key}')" title="Remove">&times;</button>`;
+                chipsContainer.appendChild(chip);
+            });
+        }
+    }
+
+    function removeDateChip(key) {
+        selectedDates = selectedDates.filter(d => d !== key);
+        updateCalUI();
         applyCustodianFilters();
+        if (calPanelOpen) renderCalMonthGrid();
     }
 
-    function updateClearDateBtn() {
-        const btn = document.getElementById('clear-date-btn');
-        if (btn) btn.style.display = (custodianFilterMonth !== 'all' || custodianFilterYear !== 'all') ? '' : 'none';
-    }
+    // Close panel on outside click
+    document.addEventListener('click', e => {
+        const wrap = document.getElementById('cal-wrap');
+        if (calPanelOpen && wrap && !wrap.contains(e.target)) {
+            calPanelOpen = false;
+            document.getElementById('cal-panel').style.display = 'none';
+        }
+    });
 
+    // =========================================================
+    // MAIN FILTER + SORT ENGINE
+    // =========================================================
     function applyCustodianFilters() {
         const container = document.getElementById('custodian-asset-list');
         if (!container) return;
-
         const cards = [...container.querySelectorAll('.asset-card')];
 
-        // --- Sort ---
+        // Sort
         cards.sort((a, b) => {
             const aDate = parseFloat(a.dataset.date || 0);
             const bDate = parseFloat(b.dataset.date || 0);
@@ -548,27 +663,29 @@
                 default:          return bDate - aDate;
             }
         });
-
-        // Re-insert in sorted order
         cards.forEach(c => container.appendChild(c));
 
-        // --- Filter (status + month + year) ---
+        // Filter
         let visible = 0;
         cards.forEach(card => {
             const matchStatus = custodianActiveFilter === 'all' || card.dataset.status === custodianActiveFilter;
-            const matchMonth  = custodianFilterMonth  === 'all' || card.dataset.month  === custodianFilterMonth;
-            const matchYear   = custodianFilterYear   === 'all' || card.dataset.year   === custodianFilterYear;
-            const match = matchStatus && matchMonth && matchYear;
-            card.style.display = match ? '' : 'none';
-            if (match) visible++;
+            const cardKey     = `${card.dataset.year}-${parseInt(card.dataset.month)}`;
+            const matchDate   = selectedDates.length === 0 || selectedDates.includes(cardKey);
+            const show = matchStatus && matchDate;
+            card.style.display = show ? '' : 'none';
+            if (show) visible++;
         });
 
-        // Empty state
         const empty = document.getElementById('custodian-filter-empty');
         if (empty) empty.style.display = visible === 0 ? '' : 'none';
     }
 
-    document.addEventListener('DOMContentLoaded', () => applyCustodianFilters());
+    document.addEventListener('DOMContentLoaded', () => {
+        // Init calendar view year to most recent year with data
+        if (CAL_YEARS.length) calViewYear = parseInt(CAL_YEARS[0]);
+        document.getElementById('cal-year-display').textContent = calViewYear;
+        applyCustodianFilters();
+    });
 </script>
 </body>
 </html>
