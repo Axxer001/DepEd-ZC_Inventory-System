@@ -88,6 +88,11 @@ Route::middleware('auth')->group(function () {
         return view('admin.offices');
     })->name('admin.offices');
 
+    // --- Acquisition Contacts (Supplier Personnel) ---
+    Route::get('/admin/supplier-contacts', [\App\Http\Controllers\AcquisitionContactController::class, 'index'])->name('admin.supplier_contacts');
+    Route::get('/api/supplier-contacts/filters', [\App\Http\Controllers\AcquisitionContactController::class, 'getFilters'])->name('api.supplier_contacts.filters');
+    Route::post('/api/supplier-contacts/preview', [\App\Http\Controllers\AcquisitionContactController::class, 'getPreview'])->name('api.supplier_contacts.preview');
+
     // --- Custodians Registry ---
     Route::get('/admin/custodians', function () {
         return view('admin.custodians');
