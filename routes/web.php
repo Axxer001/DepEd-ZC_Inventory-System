@@ -197,6 +197,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/buildings/{id}', [\App\Http\Controllers\BuildingController::class, 'profile'])->name('buildings.profile');
     Route::get('/schools/{id}', [\App\Http\Controllers\SchoolController::class, 'profile'])->name('schools.profile');
+    Route::get('/offices/{id}', [\App\Http\Controllers\OfficeController::class, 'profile'])->name('offices.profile');
 
 
     // --- School Management (View) ---
