@@ -174,12 +174,13 @@
                 <div class="p-5 flex-grow overflow-y-auto custom-scroll">
                     <div x-show="activeTab === 'assets'" class="tab-fade">
                         @if($assets->count() > 0)
-                        <div class="space-y-4">
+                        <div class="space-y-3">
                             @foreach($assets as $asset)
                             @php
                                 $assetTransfers = $transfers->get($asset->id, collect());
                                 $hasTransfers   = $assetTransfers->count() > 0;
                                 $lastTransfer   = $hasTransfers ? $assetTransfers->first() : null;
+                                $totalEvents    = $assetTransfers->count() + 1; // +1 for the initial assignment
 
                                 $statusLabel = 'Under Custody';
                                 $statusDot   = 'bg-emerald-500';
@@ -211,120 +212,156 @@
                                 $condBadge = $condGood ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200';
                             @endphp
 
-                            <div class="asset-card">
+                            {{-- Each card has its own Alpine state --}}
+                            <div class="asset-card" x-data="{ showHistory: false }">
 
-                                {{-- Header --}}
-                                <div class="asset-card-header">
-                                    <div class="flex items-center gap-3 min-w-0">
-                                        <div class="w-9 h-9 bg-white border border-slate-200 rounded-xl flex items-center justify-center shrink-0 shadow-sm">
-                                            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"/></svg>
+                                {{-- ===== MAIN ASSET ROW ===== --}}
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-4 px-4 py-3.5">
+
+                                    {{-- Icon + Name --}}
+                                    <div class="flex items-center gap-3 flex-grow min-w-0">
+                                        <div class="w-9 h-9 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center shrink-0">
+                                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"/></svg>
                                         </div>
                                         <div class="min-w-0">
-                                            <h4 class="text-xs font-black text-slate-800 uppercase leading-none tracking-wide">{{ $asset->item_name }}</h4>
-                                            <p class="text-[9px] font-bold text-slate-400 uppercase mt-1 tracking-wide">{{ $asset->category_name }}{{ $asset->brand ? ' · ' . $asset->brand : '' }}{{ $asset->model ? ' · ' . $asset->model : '' }}</p>
+                                            <h4 class="text-xs font-black text-slate-800 uppercase leading-none">{{ $asset->item_name }}</h4>
+                                            <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">
+                                                {{ $asset->category_name }}
+                                                {{ $asset->brand ? ' · ' . $asset->brand : '' }}
+                                                {{ $asset->model ? ' · ' . $asset->model : '' }}
+                                            </p>
                                         </div>
                                     </div>
+
+                                    {{-- Meta columns --}}
+                                    <div class="hidden md:flex items-center gap-6 text-right shrink-0">
+                                        <div>
+                                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Property No.</p>
+                                            <p class="text-[10px] font-black text-slate-700 uppercase mt-0.5 font-mono">{{ $asset->property_number }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Location</p>
+                                            <p class="text-[10px] font-bold text-slate-700 uppercase mt-0.5 max-w-[150px] truncate">{{ $asset->school_name ?: '—' }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Cost</p>
+                                            <p class="text-[11px] font-black text-deped italic mt-0.5">₱ {{ number_format($asset->asset_cost, 2) }}</p>
+                                        </div>
+                                    </div>
+
+                                    {{-- Badges + Toggle --}}
                                     <div class="flex items-center gap-2 flex-wrap shrink-0">
-                                        <span class="flex items-center gap-1.5 text-[8.5px] font-black uppercase tracking-wide px-2.5 py-1 rounded-lg border {{ $statusBg }}">
+                                        <span class="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-wide px-2 py-1 rounded-lg border {{ $statusBg }}">
                                             <span class="w-1.5 h-1.5 rounded-full {{ $statusDot }}"></span>
                                             {{ $statusLabel }}
                                         </span>
-                                        <span class="text-[8.5px] font-black uppercase tracking-wide px-2.5 py-1 rounded-lg border {{ $condBadge }}">{{ $asset->condition ?: 'Good' }}</span>
-                                        <span class="text-[11px] font-black text-deped italic font-mono">₱ {{ number_format($asset->asset_cost, 2) }}</span>
+                                        <span class="text-[8px] font-black uppercase tracking-wide px-2 py-1 rounded-lg border {{ $condBadge }}">{{ $asset->condition ?: 'Good' }}</span>
+
+                                        {{-- Movement History Toggle Button --}}
+                                        <button
+                                            @click="showHistory = !showHistory"
+                                            :class="showHistory ? 'bg-slate-800 text-white border-slate-700' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'"
+                                            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-[8px] font-black uppercase tracking-widest transition-all duration-200">
+                                            <svg class="w-3 h-3 transition-transform duration-200" :class="showHistory ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+                                            </svg>
+                                            <span x-text="showHistory ? 'Hide History' : 'View History'"></span>
+                                            <span class="bg-slate-200 text-slate-600 rounded-full px-1.5 py-0.5 text-[7px] font-black" :class="showHistory ? 'bg-slate-600 text-white' : ''">{{ $totalEvents }}</span>
+                                        </button>
                                     </div>
                                 </div>
 
-                                {{-- Body: 2-col grid —— info | timeline --}}
-                                <div class="grid grid-cols-1 md:grid-cols-5 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+                                {{-- ===== COLLAPSIBLE HISTORY PANEL ===== --}}
+                                <div
+                                    x-show="showHistory"
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 -translate-y-1"
+                                    x-transition:enter-end="opacity-100 translate-y-0"
+                                    x-transition:leave="transition ease-in duration-150"
+                                    x-transition:leave-start="opacity-100 translate-y-0"
+                                    x-transition:leave-end="opacity-0 -translate-y-1"
+                                    x-cloak
+                                    class="border-t border-slate-100 bg-slate-50/60 px-5 py-4">
 
-                                    {{-- Left: Asset Info (2 of 5) --}}
-                                    <div class="md:col-span-2 p-4 space-y-0">
-                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.16em] mb-3">Asset Details</p>
-                                        <div class="info-row">
-                                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Property No.</span>
-                                            <span class="text-[10px] font-black text-slate-700 uppercase font-mono">{{ $asset->property_number }}</span>
-                                        </div>
-                                        @if($asset->serial_number)
-                                        <div class="info-row">
-                                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Serial No.</span>
-                                            <span class="text-[10px] font-black text-slate-700 font-mono">{{ $asset->serial_number }}</span>
-                                        </div>
-                                        @endif
-                                        <div class="info-row">
-                                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Location</span>
-                                            <span class="text-[10px] font-bold text-slate-700 uppercase text-right max-w-[140px] leading-tight">{{ $asset->school_name ?: '—' }}@if($asset->office_name)<br><span class="text-[9px] text-slate-400">{{ $asset->office_name }}</span>@endif</span>
-                                        </div>
-                                        <div class="info-row">
-                                            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Acquired</span>
-                                            <span class="text-[10px] font-bold text-slate-700">{{ $asset->acquisition_date ? \Carbon\Carbon::parse($asset->acquisition_date)->format('M d, Y') : '—' }}</span>
-                                        </div>
+                                    <div class="flex items-center gap-2 mb-4">
+                                        <p class="text-[9px] font-black text-slate-500 uppercase tracking-[0.16em]">Movement History</p>
+                                        <div class="flex-grow h-px bg-slate-200"></div>
+                                        <span class="text-[8px] font-black text-slate-400 uppercase">{{ $totalEvents }} Event(s)</span>
                                     </div>
 
-                                    {{-- Right: Movement Timeline (3 of 5) --}}
-                                    <div class="md:col-span-3 p-4">
-                                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.16em] mb-4">Movement History</p>
+                                    <div class="relative pl-5">
+                                        {{-- Vertical connector --}}
+                                        <div class="absolute left-[9px] top-2 w-px bg-gradient-to-b from-slate-300 to-transparent" style="height: calc(100% - 1rem);"></div>
 
-                                        <div class="relative pl-4">
-                                            {{-- Vertical line --}}
-                                            <div class="absolute left-[7px] top-2 bottom-2 w-px bg-gradient-to-b from-slate-200 to-transparent"></div>
+                                        <div class="space-y-4">
 
-                                            <div class="space-y-4">
-                                                {{-- STEP 1: Assigned --}}
-                                                <div class="relative flex items-start gap-3">
-                                                    <div class="timeline-dot bg-emerald-500 text-emerald-500 mt-0.5 absolute -left-4"></div>
-                                                    <div class="pl-1">
-                                                        <p class="text-[10px] font-black text-slate-800 uppercase leading-none">Assigned to Custodian</p>
-                                                        <p class="text-[9px] font-semibold text-slate-400 mt-1">{{ $asset->assigned_at ? \Carbon\Carbon::parse($asset->assigned_at)->format('M d, Y') : '—' }}</p>
+                                            {{-- EVENT: Assigned --}}
+                                            <div class="relative flex items-start gap-3">
+                                                <div class="timeline-dot bg-emerald-500 text-emerald-500 mt-0.5 absolute -left-5 shrink-0"></div>
+                                                <div class="pl-1 pb-1">
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <p class="text-[10px] font-black text-slate-800 uppercase">Assigned to Custodian</p>
+                                                        <span class="text-[8px] font-black text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md uppercase">Initial</span>
                                                     </div>
+                                                    <p class="text-[9px] font-semibold text-slate-400 mt-0.5">{{ $asset->assigned_at ? \Carbon\Carbon::parse($asset->assigned_at)->format('M d, Y') : '—' }}</p>
                                                 </div>
-
-                                                @if($hasTransfers)
-                                                    @foreach($assetTransfers->reverse() as $tr)
-                                                    @php
-                                                        $trType = $tr->transfer_type ?? 'Transfer';
-                                                        $trDot  = match(strtolower($trType)) {
-                                                            'return'            => 'bg-amber-500 text-amber-500',
-                                                            'permanent', 'loan' => 'bg-blue-500 text-blue-500',
-                                                            'repair'            => 'bg-orange-500 text-orange-500',
-                                                            default             => 'bg-slate-400 text-slate-400',
-                                                        };
-                                                        $trLabel = match(strtolower($trType)) {
-                                                            'return'    => 'Returned',
-                                                            'permanent' => 'Permanently Transferred',
-                                                            'loan'      => 'Loaned Out',
-                                                            'repair'    => 'Sent for Repair',
-                                                            default     => $trType,
-                                                        };
-                                                    @endphp
-                                                    <div class="relative flex items-start gap-3">
-                                                        <div class="timeline-dot {{ $trDot }} mt-0.5 absolute -left-4"></div>
-                                                        <div class="pl-1 min-w-0">
-                                                            <p class="text-[10px] font-black text-slate-800 uppercase leading-none">{{ $trLabel }}</p>
-                                                            @if($tr->to_office || $tr->to_custodian)
-                                                            <p class="text-[9px] font-semibold text-slate-500 mt-0.5 uppercase">→ {{ $tr->to_office ?: $tr->to_custodian }}</p>
-                                                            @endif
-                                                            @if($tr->remarks)
-                                                            <p class="text-[9px] text-slate-400 italic mt-0.5 truncate max-w-xs">{{ $tr->remarks }}</p>
-                                                            @endif
-                                                            <p class="text-[9px] font-semibold text-slate-400 mt-1">{{ $tr->transfer_date ? \Carbon\Carbon::parse($tr->transfer_date)->format('M d, Y') : '—' }}</p>
-                                                        </div>
-                                                    </div>
-                                                    @endforeach
-                                                @else
-                                                {{-- Still in custody --}}
-                                                <div class="relative flex items-start gap-3">
-                                                    <div class="timeline-dot bg-deped text-deped mt-0.5 absolute -left-4"></div>
-                                                    <div class="pl-1">
-                                                        <p class="text-[10px] font-black text-deped uppercase leading-none">Currently Under Custody</p>
-                                                        <p class="text-[9px] font-semibold text-slate-400 mt-1">No transfers on record</p>
-                                                    </div>
-                                                </div>
-                                                @endif
                                             </div>
+
+                                            @if($hasTransfers)
+                                                @foreach($assetTransfers->reverse() as $tr)
+                                                @php
+                                                    $trType  = $tr->transfer_type ?? 'Transfer';
+                                                    $trDot   = match(strtolower($trType)) {
+                                                        'return'            => 'bg-amber-500 text-amber-500',
+                                                        'permanent', 'loan' => 'bg-blue-500 text-blue-500',
+                                                        'repair'            => 'bg-orange-500 text-orange-500',
+                                                        default             => 'bg-slate-400 text-slate-400',
+                                                    };
+                                                    $trLabel = match(strtolower($trType)) {
+                                                        'return'    => 'Returned',
+                                                        'permanent' => 'Permanently Transferred',
+                                                        'loan'      => 'Loaned Out',
+                                                        'repair'    => 'Sent for Repair',
+                                                        default     => $trType,
+                                                    };
+                                                    $trBadge = match(strtolower($trType)) {
+                                                        'return'            => 'text-amber-600 bg-amber-50 border-amber-200',
+                                                        'permanent', 'loan' => 'text-blue-600 bg-blue-50 border-blue-200',
+                                                        'repair'            => 'text-orange-600 bg-orange-50 border-orange-200',
+                                                        default             => 'text-slate-600 bg-slate-100 border-slate-200',
+                                                    };
+                                                @endphp
+                                                <div class="relative flex items-start gap-3">
+                                                    <div class="timeline-dot {{ $trDot }} mt-0.5 absolute -left-5 shrink-0"></div>
+                                                    <div class="pl-1 pb-1 min-w-0 flex-grow">
+                                                        <div class="flex items-center gap-2 flex-wrap">
+                                                            <p class="text-[10px] font-black text-slate-800 uppercase">{{ $trLabel }}</p>
+                                                            <span class="text-[8px] font-black {{ $trBadge }} border px-1.5 py-0.5 rounded-md uppercase">{{ $trType }}</span>
+                                                        </div>
+                                                        @if($tr->to_office || $tr->to_custodian)
+                                                        <p class="text-[9px] font-semibold text-slate-600 uppercase mt-0.5">→ {{ $tr->to_office ?: $tr->to_custodian }}</p>
+                                                        @endif
+                                                        @if($tr->remarks)
+                                                        <p class="text-[9px] text-slate-400 italic mt-0.5">{{ $tr->remarks }}</p>
+                                                        @endif
+                                                        <p class="text-[9px] font-semibold text-slate-400 mt-0.5">{{ $tr->transfer_date ? \Carbon\Carbon::parse($tr->transfer_date)->format('M d, Y') : '—' }}</p>
+                                                    </div>
+                                                </div>
+                                                @endforeach
+                                            @else
+                                            <div class="relative flex items-start gap-3">
+                                                <div class="timeline-dot bg-deped text-deped mt-0.5 absolute -left-5 shrink-0"></div>
+                                                <div class="pl-1 pb-1">
+                                                    <p class="text-[10px] font-black text-deped uppercase">Currently Under Custody</p>
+                                                    <p class="text-[9px] font-semibold text-slate-400 mt-0.5">No transfers on record</p>
+                                                </div>
+                                            </div>
+                                            @endif
+
                                         </div>
                                     </div>
-
                                 </div>
+
                             </div>
                             @endforeach
                         </div>
