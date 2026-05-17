@@ -6,199 +6,309 @@
     <title>{{ $contact->name }} | Supplier Profile</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        deped: '#c00000',
-                        deped_hover: '#9e0000',
-                        deped_light: '#fef2f2',
-                    }
-                }
-            }
-        }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,800;1,900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        * { box-sizing: border-box; }
+        :root {
+            --deped: #c00000;
+            --deped-dark: #900000;
+            --deped-light: #ff2020;
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f7f7f8; margin: 0; }
+
+        /* =========== HERO BANNER =========== */
+        .hero-banner {
+            background: linear-gradient(135deg, #c00000 0%, #7a0000 60%, #3a0000 100%);
+            position: relative;
+            overflow: hidden;
+            border-radius: 2.5rem;
+            box-shadow: 0 25px 60px -15px rgba(192,0,0,0.40);
+        }
+        .hero-banner::before {
+            content: '';
+            position: absolute;
+            top: -60%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255,90,90,0.20) 0%, transparent 65%);
+            pointer-events: none;
+        }
+        .hero-banner::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 65%);
+            pointer-events: none;
+        }
+        .hero-noise {
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            opacity: 0.25;
+            pointer-events: none;
+        }
+        .hero-grid-lines {
+            position: absolute;
+            inset: 0;
+            background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 40px),
+                              repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 40px);
+            pointer-events: none;
+        }
+        .avatar-ring {
+            background: conic-gradient(from 180deg, #ff6b6b, #c00000, #ff6b6b);
+            padding: 3px;
+            border-radius: 50%;
+            animation: spin-slow 8s linear infinite;
+        }
+        @keyframes spin-slow { to { transform: rotate(360deg); } }
+        .avatar-inner { background: #7a0000; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+        /* =========== CARDS =========== */
+        .card {
+            background: #fff;
+            border-radius: 2rem;
+            border: 1px solid #f1f1f3;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.04);
+            overflow: hidden;
+        }
+        .card-label {
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--deped);
+        }
+        .stat-card {
+            border-radius: 1.75rem;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card-red {
+            background: linear-gradient(135deg, #c00000, #820000);
+            color: white;
+        }
+        .stat-card-white {
+            background: #fff;
+            border: 1px solid #f1e8e8;
+            color: #1e293b;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -30%;
+            right: -20%;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* =========== TABLE =========== */
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table thead th {
+            padding: 10px 16px;
+            font-size: 9px;
+            font-weight: 900;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            background: #fafafa;
+            border-bottom: 1px solid #f1f5f9;
+            white-space: nowrap;
+        }
+        .data-table tbody tr {
+            border-bottom: 1px solid #f8fafc;
+            transition: background 0.15s;
+            cursor: default;
+        }
+        .data-table tbody tr:hover { background: #fef2f2; }
+        .data-table tbody td { padding: 14px 16px; vertical-align: middle; }
+
+        /* =========== SCROLLBAR =========== */
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid rgba(226, 232, 240, 0.8); }
-        .bento-glow-red { position: relative; overflow: hidden; }
-        .bento-glow-red::after { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(192, 0, 0, 0.04) 0%, transparent 60%); pointer-events: none; }
-        
+        .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #c00000; }
+
+        /* =========== ANIMATION =========== */
+        .animate-in { animation: slideUp 0.45s ease-out forwards; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+        .delay-1 { animation-delay: 0.05s; opacity: 0; }
+        .delay-2 { animation-delay: 0.10s; opacity: 0; }
+        .delay-3 { animation-delay: 0.15s; opacity: 0; }
+        .delay-4 { animation-delay: 0.20s; opacity: 0; }
+
         /* Dark Mode */
-        html.dark body { background-color: #0b0f19; color: #f8fafc; }
-        html.dark .glass-card { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(255, 255, 255, 0.05); }
+        html.dark body { background: #0b0f19; }
+        html.dark .card { background: #1e293b; border-color: #334155; }
+        html.dark .stat-card-white { background: #1e293b; border-color: #334155; color: #e2e8f0; }
+        html.dark .data-table thead th { background: #0f172a; color: #475569; border-color: #1e293b; }
+        html.dark .data-table tbody tr { border-color: #1e293b; }
+        html.dark .data-table tbody tr:hover { background: #2d1b1b; }
     </style>
 </head>
-<body class="flex min-h-screen text-slate-800 dark:text-slate-100 overflow-hidden">
+<body class="flex min-h-screen text-slate-800 overflow-hidden">
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll p-4 lg:p-8">
-        
-        {{-- Elegant Red & White Header Card --}}
-        <header class="relative overflow-hidden bg-deped text-white rounded-3xl p-8 mb-6 shadow-xl border border-red-700/20 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-            {{-- Radial Crimson Glow --}}
-            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.15),transparent_60%)] pointer-events-none"></div>
-            
-            <div class="flex items-center gap-6 relative z-10">
-                <div class="w-16 h-16 bg-white/10 border border-white/20 rounded-2xl flex items-center justify-center shadow-inner shrink-0">
-                    <!-- Professional Partner/Supplier Icon -->
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
-                    </svg>
-                </div>
-                <div>
-                    <span class="text-[10px] font-extrabold text-red-100 uppercase tracking-[0.2em] bg-white/10 px-2 py-0.5 rounded">Supplier Representative</span>
-                    <h1 class="text-3xl font-extrabold tracking-tight mt-2 uppercase italic">{{ $contact->name }}</h1>
-                    <div class="flex flex-wrap items-center gap-3 mt-3">
-                        <span class="text-xs font-black bg-white text-deped border border-white px-3 py-1 rounded-xl uppercase shadow-sm">{{ $contact->organization ?? 'External Provider' }}</span>
-                        <span class="text-xs font-semibold bg-red-800/40 text-red-50 border border-red-550 px-3 py-1 rounded-xl uppercase">{{ $contact->position ?? 'Personnel' }}</span>
-                    </div>
-                </div>
-            </div>
+    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll" style="padding: 1.75rem; gap: 1.5rem;">
 
-            <div class="relative z-10 flex items-center gap-3 shrink-0">
-                <a href="{{ route('admin.supplier_contacts') }}" class="px-5 py-3 bg-white hover:bg-slate-50 text-deped border border-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2 group shadow-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:-translate-x-1 transition-transform"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
-                    Back to Registry
-                </a>
-            </div>
-        </header>
-
-        {{-- Bento Grid Dashboard Layout --}}
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pb-12">
-            
-            {{-- BENTO ITEM 1: Profile Details Card (Span 4) --}}
-            <section class="lg:col-span-4 flex flex-col gap-6">
-                <div class="glass-card rounded-[2.5rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-800 space-y-6">
-                    <div class="pb-4 border-b border-slate-100 dark:border-slate-800">
-                        <h3 class="text-xs font-extrabold text-red-500 uppercase tracking-widest">Representative Card</h3>
-                        <p class="text-lg font-black text-slate-900 dark:text-slate-100 uppercase mt-1">Personnel Info</p>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="p-4 bg-red-50/30 dark:bg-red-950/10 rounded-2xl border border-red-100/50 dark:border-red-900/20">
-                            <span class="text-[9px] font-black text-red-500 uppercase block tracking-wider">Representative Name</span>
-                            <span class="text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-1 block uppercase">{{ $contact->name }}</span>
-                        </div>
-                        <div class="p-4 bg-red-50/30 dark:bg-red-950/10 rounded-2xl border border-red-100/50 dark:border-red-900/20">
-                            <span class="text-[9px] font-black text-red-500 uppercase block tracking-wider">Assigned Position</span>
-                            <span class="text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-1 block uppercase">{{ $contact->position ?: 'Personnel' }}</span>
-                        </div>
-                        <div class="p-4 bg-red-50/30 dark:bg-red-950/10 rounded-2xl border border-red-100/50 dark:border-red-900/20">
-                            <span class="text-[9px] font-black text-red-500 uppercase block tracking-wider">Affiliated Supplier / Company</span>
-                            <span class="text-sm font-extrabold text-slate-800 dark:text-slate-200 mt-1 block uppercase">{{ $contact->organization ?: 'N/A' }}</span>
-                        </div>
-                    </div>
-
-                    {{-- Action Quick-Contacts --}}
-                    <div class="pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                        <a href="tel:{{ $contact->contact_number }}" class="w-full py-3 px-4 bg-deped hover:bg-deped_hover text-white rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-500/10">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
-                            Call: {{ $contact->contact_number ?: 'N/A' }}
-                        </a>
-                        <a href="mailto:{{ $contact->email }}" class="w-full py-3 px-4 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-deped dark:text-red-400 rounded-2xl text-xs font-black uppercase tracking-wider transition-all flex items-center justify-center gap-2 border border-red-200 dark:border-slate-700">
-                            <svg class="w-4 h-4 text-deped dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                            Email: {{ $contact->email ?: 'N/A' }}
-                        </a>
-                    </div>
-                </div>
-            </section>
-
-            {{-- BENTO ITEM 2: Content (Span 8) --}}
-            <main class="lg:col-span-8 flex flex-col gap-6">
-                
-                {{-- Dynamic Bento Stats Cards --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="glass-card bento-glow-red rounded-[2rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-800 flex justify-between items-center relative overflow-hidden">
-                        <div class="relative z-10">
-                            <p class="text-[10px] font-black text-red-500 uppercase tracking-widest">Total Supplies Distributed</p>
-                            <p class="text-4xl font-extrabold text-slate-900 dark:text-slate-100 mt-2">{{ $stats->total_supplied }}</p>
-                            <p class="text-[10.5px] font-semibold text-slate-500 dark:text-slate-400 mt-2">Active assigned assets in DepEd schools</p>
-                        </div>
-                        <div class="w-14 h-14 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/40 text-deped dark:text-red-400 rounded-2xl flex items-center justify-center shrink-0">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" /></svg>
-                        </div>
-                    </div>
-
-                    <div class="glass-card bento-glow-red rounded-[2rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-800 flex justify-between items-center relative overflow-hidden">
-                        <div class="relative z-10">
-                            <p class="text-[10px] font-black text-red-500 uppercase tracking-widest">Supplied Inventory Value</p>
-                            <p class="text-4xl font-extrabold text-red-600 dark:text-red-400 mt-2">₱ {{ number_format($stats->total_value, 2) }}</p>
-                            <p class="text-[10.5px] font-semibold text-red-650 dark:text-red-450 mt-2">Cumulative procurement cost stats</p>
-                        </div>
-                        <div class="w-14 h-14 bg-red-50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/40 text-deped dark:text-red-400 rounded-2xl flex items-center justify-center shrink-0">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Supplied Assets Bento Section --}}
-                <div class="glass-card rounded-[2.5rem] p-6 shadow-sm border border-slate-200/60 dark:border-slate-800 flex flex-col flex-grow">
-                    <div class="pb-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center mb-6">
-                        <div>
-                            <h3 class="text-xs font-extrabold text-red-500 uppercase tracking-widest">DepEd Inventory Integration</h3>
-                            <p class="text-lg font-black text-slate-900 dark:text-slate-100 uppercase mt-1">Supplied Equipment Registry</p>
-                        </div>
-                        <span class="px-3 py-1 bg-red-50 dark:bg-red-950 text-deped dark:text-red-400 text-[10px] font-black rounded-xl uppercase tracking-wider">{{ $assets->count() }} Items</span>
-                    </div>
-
-                    <div class="overflow-x-auto w-full flex-grow custom-scroll">
-                        @if($assets->count() > 0)
-                        <table class="w-full text-left border-collapse" style="min-width: 800px;">
-                            <thead>
-                                <tr class="border-b border-slate-100 dark:border-slate-800">
-                                    <th class="pb-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Item details</th>
-                                    <th class="pb-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Property & Serial</th>
-                                    <th class="pb-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Current Location</th>
-                                    <th class="pb-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Condition</th>
-                                    <th class="pb-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">Cost</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-50 dark:divide-slate-800/60">
-                                @foreach($assets as $asset)
-                                <tr class="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
-                                    <td class="py-4 pr-4">
-                                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase leading-none">{{ $asset->item_name }}</p>
-                                        <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-1">{{ $asset->category_name }}</p>
-                                        <p class="text-[9px] text-slate-500 dark:text-slate-400 mt-1 uppercase font-semibold">Brand: {{ $asset->brand ?: 'N/A' }} | Model: {{ $asset->model ?: 'N/A' }}</p>
-                                    </td>
-                                    <td class="py-4">
-                                        <span class="text-[10px] font-black text-slate-800 dark:text-slate-200 block uppercase">{{ $asset->property_number }}</span>
-                                        <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 block mt-0.5">SN: {{ $asset->serial_number ?: 'N/A' }}</span>
-                                    </td>
-                                    <td class="py-4">
-                                        <span class="text-[10px] font-bold text-slate-700 dark:text-slate-300 block uppercase leading-tight truncate max-w-[200px]">{{ $asset->school_name ?: 'N/A' }}</span>
-                                        <span class="text-[9px] font-semibold text-slate-400 dark:text-slate-500 block mt-0.5 uppercase truncate max-w-[200px]">{{ $asset->office_name ?: 'N/A' }}</span>
-                                    </td>
-                                    <td class="py-4 text-center">
-                                        @php
-                                            $cond = $asset->condition ?: 'Good';
-                                            $theme = $cond === 'Good' || $cond === 'Serviceable' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400';
-                                        @endphp
-                                        <span class="px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider {{ $theme }}">{{ $cond }}</span>
-                                    </td>
-                                    <td class="py-4 text-right">
-                                        <p class="text-xs font-black text-emerald-600 dark:text-emerald-400 italic">₱ {{ number_format($asset->asset_cost, 2) }}</p>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                        @else
-                        <div class="flex flex-col items-center justify-center py-16 bg-slate-50 dark:bg-slate-900/20 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
-                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest italic">No assets registered to have been supplied by this personnel</p>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-            </main>
-
+        {{-- BACK BUTTON --}}
+        <div class="animate-in">
+            <a href="{{ route('admin.supplier_contacts') }}" class="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-slate-500 hover:text-deped transition-colors group">
+                <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+                Back to Supplier Registry
+            </a>
         </div>
+
+        {{-- HERO BANNER --}}
+        <div class="hero-banner p-8 lg:p-10 animate-in delay-1">
+            <div class="hero-noise"></div>
+            <div class="hero-grid-lines"></div>
+            <div class="relative z-10 flex flex-col lg:flex-row items-start lg:items-center gap-8">
+
+                {{-- Avatar Ring --}}
+                <div class="avatar-ring w-24 h-24 shrink-0">
+                    <div class="avatar-inner w-full h-full">
+                        <span class="text-2xl font-black text-white uppercase">{{ substr($contact->name, 0, 1) }}</span>
+                    </div>
+                </div>
+
+                {{-- Identity --}}
+                <div class="flex-grow">
+                    <div class="flex items-center gap-3 mb-3">
+                        <span style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2);" class="text-[9px] font-black text-red-100 uppercase tracking-[0.2em] px-3 py-1 rounded-full">
+                            Acquisition Representative
+                        </span>
+                        <span style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2);" class="text-[9px] font-black text-red-100 uppercase tracking-[0.2em] px-3 py-1 rounded-full flex items-center gap-1.5">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></span>
+                            Active Supplier
+                        </span>
+                    </div>
+                    <h1 class="text-4xl font-black text-white uppercase italic tracking-tight leading-none">{{ $contact->name }}</h1>
+                    <div class="flex flex-wrap items-center gap-4 mt-4">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15"/></svg>
+                            <span class="text-sm font-semibold text-red-100 uppercase">{{ $contact->organization ?? 'External Provider' }}</span>
+                        </div>
+                        <div class="w-1 h-1 rounded-full bg-red-400 opacity-50"></div>
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+                            <span class="text-sm font-semibold text-red-100 uppercase">{{ $contact->position ?? 'Personnel' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Quick Contact Badges --}}
+                <div class="flex flex-col gap-3 shrink-0">
+                    <a href="tel:{{ $contact->contact_number }}" style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2);" class="flex items-center gap-3 px-5 py-3 rounded-2xl text-white text-xs font-bold uppercase tracking-wide hover:bg-white hover:text-deped transition-all duration-200 group">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 0 0 2.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 0 1-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 0 0-1.091-.852H4.5A2.25 2.25 0 0 0 2.25 4.5v2.25Z"/></svg>
+                        {{ $contact->contact_number ?: 'No number' }}
+                    </a>
+                    <a href="mailto:{{ $contact->email }}" style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2);" class="flex items-center gap-3 px-5 py-3 rounded-2xl text-white text-xs font-bold lowercase tracking-wide hover:bg-white hover:text-deped transition-all duration-200 group">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"/></svg>
+                        {{ $contact->email ?: 'No email' }}
+                    </a>
+                </div>
+
+            </div>
+        </div>
+
+        {{-- STATS ROW --}}
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 animate-in delay-2">
+            <div class="stat-card stat-card-red">
+                <p class="text-[9px] font-black uppercase tracking-[0.2em] text-red-200 mb-2">Total Items Supplied</p>
+                <p class="text-5xl font-black text-white leading-none">{{ $stats->total_supplied }}</p>
+                <p class="text-[10px] font-semibold text-red-200 mt-3 uppercase">Active in DepEd Inventory</p>
+                <div class="absolute top-5 right-5 opacity-20">
+                    <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"/></svg>
+                </div>
+            </div>
+
+            <div class="stat-card stat-card-white sm:col-span-2" style="box-shadow: 0 2px 20px rgba(192,0,0,0.06);">
+                <p class="card-label mb-2">Total Supplied Inventory Value</p>
+                <p class="font-black leading-none" style="font-size: 2.8rem; color: var(--deped);">₱ {{ number_format($stats->total_value, 2) }}</p>
+                <p class="text-[10px] font-semibold text-slate-400 mt-3 uppercase tracking-wider">Cumulative Procurement Cost — All Time</p>
+                <div class="absolute top-5 right-5 opacity-5" style="color: var(--deped);">
+                    <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                </div>
+            </div>
+        </div>
+
+        {{-- SUPPLIED ASSETS TABLE --}}
+        <div class="card animate-in delay-3" style="padding-bottom: 2rem;">
+            <div style="padding: 1.5rem 1.75rem; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between;">
+                <div>
+                    <p class="card-label mb-1">DepEd Inventory Integration</p>
+                    <h2 style="font-size: 1.2rem; font-weight: 900; color: #0f172a; text-transform: uppercase; letter-spacing: -0.01em;">Supplied Equipment Registry</h2>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="background: #fef2f2; color: var(--deped); border: 1px solid #fecaca; font-size: 9px; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; padding: 6px 14px; border-radius: 999px;">{{ $assets->count() }} ASSETS</span>
+                </div>
+            </div>
+
+            @if($assets->count() > 0)
+            <div class="custom-scroll" style="overflow-x: auto;">
+                <table class="data-table" style="min-width: 860px;">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;">#</th>
+                            <th>Item / Category</th>
+                            <th>Property & S/N</th>
+                            <th>Brand · Model</th>
+                            <th>Deployed To</th>
+                            <th style="text-align: center;">Condition</th>
+                            <th style="text-align: right;">Cost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($assets as $i => $asset)
+                        <tr>
+                            <td style="text-align: center; font-size: 10px; font-weight: 900; color: #94a3b8;">{{ $i + 1 }}</td>
+                            <td>
+                                <span style="display: block; font-size: 11.5px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.02em;">{{ $asset->item_name }}</span>
+                                <span style="display: block; font-size: 9px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-top: 2px; letter-spacing: 0.08em;">{{ $asset->category_name }}</span>
+                            </td>
+                            <td>
+                                <span style="display: block; font-size: 10.5px; font-weight: 800; color: #334155; text-transform: uppercase;">{{ $asset->property_number }}</span>
+                                <span style="display: block; font-size: 9px; font-weight: 600; color: #94a3b8; margin-top: 2px;">S/N: {{ $asset->serial_number ?: '—' }}</span>
+                            </td>
+                            <td>
+                                <span style="font-size: 10.5px; font-weight: 700; color: #475569; text-transform: uppercase;">{{ $asset->brand ?: '—' }}</span>
+                                <span style="font-size: 10px; color: #94a3b8; margin: 0 4px;">·</span>
+                                <span style="font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase;">{{ $asset->model ?: '—' }}</span>
+                            </td>
+                            <td>
+                                <span style="display: block; font-size: 10.5px; font-weight: 700; color: #1e293b; text-transform: uppercase; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $asset->school_name ?: '—' }}</span>
+                                <span style="display: block; font-size: 9px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-top: 2px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $asset->office_name ?: '—' }}</span>
+                            </td>
+                            <td style="text-align: center;">
+                                @php
+                                    $cond = $asset->condition ?: 'Good';
+                                    $isGood = in_array($cond, ['Good', 'Serviceable']);
+                                @endphp
+                                <span style="padding: 3px 10px; border-radius: 999px; font-size: 8px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; background: {{ $isGood ? '#dcfce7' : '#fef9c3' }}; color: {{ $isGood ? '#15803d' : '#92400e' }};">{{ $cond }}</span>
+                            </td>
+                            <td style="text-align: right;">
+                                <span style="font-size: 11.5px; font-weight: 900; color: var(--deped); font-style: italic;">₱ {{ number_format($asset->asset_cost, 2) }}</span>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <div style="padding: 4rem 2rem; text-align: center; background: #fafafa; margin: 1.5rem; border-radius: 1.5rem; border: 1.5px dashed #e2e8f0;">
+                <p style="font-size: 11px; font-weight: 900; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.15em;">No supplied assets recorded in the system yet.</p>
+            </div>
+            @endif
+        </div>
+
+        <div style="height: 2rem;"></div>
     </div>
 
 </body>
