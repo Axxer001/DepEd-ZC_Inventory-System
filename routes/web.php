@@ -101,6 +101,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/api/custodians/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansPreview'])->name('api.custodians.preview');
     Route::get('/api/custodians/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansFilterOptions'])->name('api.custodians.filters');
+    Route::get('/admin/custodians/{id}', [\App\Http\Controllers\CustodianController::class, 'profile'])->name('custodians.profile');
 
 
 
