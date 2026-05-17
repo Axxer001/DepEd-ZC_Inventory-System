@@ -41,6 +41,12 @@
         .notification-drawer.open {
             transform: translateX(0);
         }
+        /* Alert Edit Modal */
+        .alert-modal-overlay { position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;padding:1.5rem; }
+        .alert-modal { background:#fff;border-radius:2rem;padding:2rem;width:100%;max-width:420px;box-shadow:0 30px 80px rgba(0,0,0,0.18);border:1.5px solid #f1f5f9; }
+        .alert-field { width:100%;border:1.5px solid #e2e8f0;border-radius:0.75rem;padding:10px 14px;font-size:11px;font-weight:700;color:#0f172a;outline:none;font-family:inherit;transition:border-color .15s; }
+        .alert-field:focus { border-color:#c00000; }
+        textarea.alert-field { resize:vertical;min-height:80px; }
     </style>
 </head>
 <body class="min-h-screen flex animate-fade-in text-slate-800 overflow-x-hidden" x-data="dashboardFilter()">
@@ -63,14 +69,91 @@
         {{-- Notification Drawer --}}
         <aside :class="showNotifications ? 'open' : ''" 
                class="notification-drawer fixed right-0 top-0 bottom-0 w-full md:w-96 bg-white z-[70] shadow-2xl flex flex-col overflow-hidden border-l border-slate-100">
-            <div class="p-8 flex items-center justify-between border-b border-slate-50">
+            <div class="p-6 flex items-center justify-between border-b border-slate-50">
                 <div>
                     <h3 class="text-2xl font-black tracking-tight italic uppercase leading-none text-slate-900">Notifications</h3>
-                    <p class="text-[10px] font-bold text-[#c00000] uppercase tracking-widest mt-2">System Alerts & Notices</p>
+                    <p class="text-[10px] font-bold text-[#c00000] uppercase tracking-widest mt-1.5">System Alerts & Notices</p>
                 </div>
-                <button @click="showNotifications = false" class="p-3 bg-slate-50 text-slate-900 rounded-2xl hover:text-red-600 hover:bg-red-50 transition-all">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
+                <div class="flex items-center gap-2">
+                    {{-- Customize lock button --}}
+                    <button @click="openPasswordModal()" title="Customize Alert" class="p-2.5 bg-slate-50 text-slate-500 rounded-xl hover:bg-amber-50 hover:text-amber-600 border border-slate-100 hover:border-amber-200 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                    </button>
+                    <button @click="showNotifications = false" class="p-2.5 bg-slate-50 text-slate-900 rounded-xl hover:text-red-600 hover:bg-red-50 border border-slate-100 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+            </div>
+
+            {{-- PASSWORD MODAL --}}
+            <div x-show="showPwModal" class="alert-modal-overlay" x-cloak @click.self="showPwModal=false"
+                 x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                <div class="alert-modal">
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-10 h-10 bg-amber-50 border border-amber-100 rounded-xl flex items-center justify-center">
+                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-black text-slate-800 uppercase tracking-widest">Alert Customization</p>
+                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Enter admin password to proceed</p>
+                        </div>
+                    </div>
+                    <input x-ref="pwInput" x-model="pwInput" type="password" placeholder="Password" class="alert-field mb-2"
+                           @keyup.enter="verifyPassword()">
+                    <p x-show="pwError" class="text-[9px] font-black text-red-500 uppercase tracking-widest mb-3" x-cloak x-text="pwError"></p>
+                    <div class="flex gap-2 mt-4">
+                        <button @click="showPwModal=false;pwInput='';pwError='';" class="flex-1 py-2.5 border border-slate-200 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-50 transition-all">Cancel</button>
+                        <button @click="verifyPassword()" class="flex-1 py-2.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#c00000] transition-all">Unlock</button>
+                    </div>
+                </div>
+            </div>
+
+            {{-- EDIT ALERT MODAL --}}
+            <div x-show="showEditModal" class="alert-modal-overlay" x-cloak @click.self="showEditModal=false"
+                 x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+                <div class="alert-modal">
+                    <div class="flex items-center justify-between mb-5">
+                        <div>
+                            <p class="text-xs font-black text-slate-800 uppercase tracking-widest">Edit System Alert</p>
+                            <p class="text-[9px] font-bold text-[#c00000] uppercase tracking-widest mt-0.5">Changes apply immediately</p>
+                        </div>
+                        <button @click="showEditModal=false" class="p-2 bg-slate-50 rounded-xl hover:bg-red-50 hover:text-red-500 transition-all">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                        </button>
+                    </div>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Alert Title</label>
+                            <input x-model="editAlert.title" type="text" class="alert-field" placeholder="e.g. Quarterly Audit">
+                        </div>
+                        <div>
+                            <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Message Body</label>
+                            <textarea x-model="editAlert.body" class="alert-field" placeholder="Alert message..."></textarea>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Ref No.</label>
+                                <input x-model="editAlert.ref" type="text" class="alert-field" placeholder="#NOTICE-2026">
+                            </div>
+                            <div>
+                                <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Priority</label>
+                                <select x-model="editAlert.priority" class="alert-field">
+                                    <option>High</option>
+                                    <option>Medium</option>
+                                    <option>Low</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Timestamp</label>
+                            <input x-model="editAlert.time" type="text" class="alert-field" placeholder="Today • 10:45 AM">
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-5">
+                        <button @click="resetAlert()" class="flex-1 py-2.5 border border-slate-200 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-50 transition-all">Reset</button>
+                        <button @click="saveAlert()" class="flex-1 py-2.5 bg-[#c00000] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-800 transition-all">Save Changes</button>
+                    </div>
+                </div>
             </div>
             
             <div class="flex-grow overflow-y-auto custom-scroll p-8 space-y-8">
@@ -81,21 +164,19 @@
                         </div>
                         <div class="text-right">
                             <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md text-white text-[8px] font-black uppercase tracking-widest rounded-full mb-2 italic border border-white/20">System Alert</span>
-                            <p class="text-[8px] font-black text-white/40 uppercase italic leading-none">Ref: #NOTICE-2026</p>
+                            <p class="text-[8px] font-black text-white/40 uppercase italic leading-none" x-text="'Ref: ' + alert.ref"></p>
                         </div>
                     </div>
                     <div class="space-y-4 relative z-10">
-                        <h3 class="text-lg font-black text-white uppercase italic leading-tight">Quarterly Inventory Audit Coming Up</h3>
-                        <p class="text-[10px] font-bold text-white/70 leading-relaxed uppercase pr-4">
-                            All institution heads are required to verify their current asset counts by the end of the month.
-                        </p>
+                        <h3 class="text-lg font-black text-white uppercase italic leading-tight" x-text="alert.title"></h3>
+                        <p class="text-[10px] font-bold text-white/70 leading-relaxed uppercase pr-4" x-text="alert.body"></p>
                     </div>
                     <div class="mt-8 pt-6 border-t border-white/10 flex justify-between items-center relative z-10">
                         <div class="flex items-center gap-2">
                             <div class="w-1.5 h-1.5 bg-white rounded-full animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]"></div>
-                            <span class="text-[8px] font-black text-white/60 uppercase italic">Priority: High</span>
+                            <span class="text-[8px] font-black text-white/60 uppercase italic" x-text="'Priority: ' + alert.priority"></span>
                         </div>
-                        <span class="text-[9px] font-black text-white/40 uppercase italic">Today • 10:45 AM</span>
+                        <span class="text-[9px] font-black text-white/40 uppercase italic" x-text="alert.time"></span>
                     </div>
                     <div class="absolute -right-4 -bottom-4 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors"></div>
                 </div>
@@ -627,6 +708,15 @@
     </div>
 
     <script>
+        const ALERT_PW = 'deped@ims';
+        const ALERT_DEFAULTS = {
+            title: 'Quarterly Inventory Audit Coming Up',
+            body:  'All institution heads are required to verify their current asset counts by the end of the month.',
+            ref:   '#NOTICE-2026',
+            priority: 'High',
+            time:  'Today \u2022 10:45 AM'
+        };
+
         function dashboardFilter() {
             return {
                 availableYears: [2026, 2025, 2024],
@@ -635,6 +725,45 @@
                 selectedMonths: [],
                 cardFilter: 'Overall',
                 showNotifications: false,
+
+                // Alert state
+                alert: JSON.parse(localStorage.getItem('dashAlertData') || 'null') || {...ALERT_DEFAULTS},
+                editAlert: {...ALERT_DEFAULTS},
+                showPwModal: false,
+                showEditModal: false,
+                pwInput: '',
+                pwError: '',
+
+                openPasswordModal() {
+                    this.pwInput = '';
+                    this.pwError = '';
+                    this.showPwModal = true;
+                    this.$nextTick(() => this.$refs.pwInput && this.$refs.pwInput.focus());
+                },
+
+                verifyPassword() {
+                    if (this.pwInput === ALERT_PW) {
+                        this.showPwModal = false;
+                        this.pwInput = '';
+                        this.pwError = '';
+                        this.editAlert = {...this.alert};
+                        this.showEditModal = true;
+                    } else {
+                        this.pwError = 'Incorrect password. Try again.';
+                        this.pwInput = '';
+                        this.$nextTick(() => this.$refs.pwInput && this.$refs.pwInput.focus());
+                    }
+                },
+
+                saveAlert() {
+                    this.alert = {...this.editAlert};
+                    localStorage.setItem('dashAlertData', JSON.stringify(this.alert));
+                    this.showEditModal = false;
+                },
+
+                resetAlert() {
+                    this.editAlert = {...ALERT_DEFAULTS};
+                },
                 
                 get filterLabel() {
                     if (this.selectedYears.length === 0 && this.selectedMonths.length === 0) {
