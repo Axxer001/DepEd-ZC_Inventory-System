@@ -187,9 +187,19 @@
                         @if($assets->count() > 0)
 
                         {{-- ===== FILTER & SORT TOOLBAR ===== --}}
-                        <div class="flex flex-wrap items-center gap-3 mb-5 pb-4 border-b border-slate-100">
-                            <div class="flex items-center gap-1.5 flex-wrap">
-                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-1">Status:</span>
+                        @php
+                            $availableYears = $assets
+                                ->map(fn($a) => $a->acquisition_date ? (int)date('Y', strtotime($a->acquisition_date)) : null)
+                                ->filter()
+                                ->unique()
+                                ->sort()
+                                ->values();
+                        @endphp
+                        <div class="space-y-3 mb-5 pb-4 border-b border-slate-100">
+
+                            {{-- Row 1: Status chips --}}
+                            <div class="flex flex-wrap items-center gap-2">
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-1 shrink-0">Status:</span>
                                 <button onclick="setCustodianFilter('all','all')" id="f-all" class="f-chip active">All</button>
                                 <button onclick="setCustodianFilter('under-custody','')" id="f-under-custody" class="f-chip">Under Custody</button>
                                 <button onclick="setCustodianFilter('transferred','active-blue')" id="f-transferred" class="f-chip">Transferred</button>
@@ -197,18 +207,53 @@
                                 <button onclick="setCustodianFilter('repair','active-gray')" id="f-repair" class="f-chip">Out for Repair</button>
                                 <button onclick="setCustodianFilter('unserviceable','active-red')" id="f-unserviceable" class="f-chip">Unserviceable</button>
                             </div>
-                            <div class="ml-auto flex items-center gap-2">
-                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sort:</span>
-                                <select onchange="setCustodianSort(this.value)" class="sort-select">
-                                    <option value="date-desc">Date: Newest First</option>
-                                    <option value="date-asc">Date: Oldest First</option>
-                                    <option value="cost-desc">Cost: High → Low</option>
-                                    <option value="cost-asc">Cost: Low → High</option>
-                                    <option value="year-desc">Year: Newest First</option>
-                                    <option value="year-asc">Year: Oldest First</option>
-                                    <option value="month-asc">Month: Jan → Dec</option>
-                                    <option value="month-desc">Month: Dec → Jan</option>
-                                </select>
+
+                            {{-- Row 2: Date filters + Sort --}}
+                            <div class="flex flex-wrap items-center gap-3">
+                                {{-- Month filter --}}
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Month:</span>
+                                    <select onchange="setCustodianMonth(this.value)" id="sel-month" class="sort-select">
+                                        <option value="all">All Months</option>
+                                        <option value="1">January</option>
+                                        <option value="2">February</option>
+                                        <option value="3">March</option>
+                                        <option value="4">April</option>
+                                        <option value="5">May</option>
+                                        <option value="6">June</option>
+                                        <option value="7">July</option>
+                                        <option value="8">August</option>
+                                        <option value="9">September</option>
+                                        <option value="10">October</option>
+                                        <option value="11">November</option>
+                                        <option value="12">December</option>
+                                    </select>
+                                </div>
+
+                                {{-- Year filter --}}
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Year:</span>
+                                    <select onchange="setCustodianYear(this.value)" id="sel-year" class="sort-select">
+                                        <option value="all">All Years</option>
+                                        @foreach($availableYears->sortDesc() as $yr)
+                                        <option value="{{ $yr }}">{{ $yr }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- Sort --}}
+                                <div class="ml-auto flex items-center gap-2">
+                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sort:</span>
+                                    <select onchange="setCustodianSort(this.value)" class="sort-select">
+                                        <option value="date-desc">Date: Newest First</option>
+                                        <option value="date-asc">Date: Oldest First</option>
+                                        <option value="cost-desc">Cost: High &rarr; Low</option>
+                                        <option value="cost-asc">Cost: Low &rarr; High</option>
+                                    </select>
+                                </div>
+
+                                {{-- Clear Date Filters --}}
+                                <button onclick="clearDateFilters()" id="clear-date-btn" class="f-chip" style="display:none;">✕ Clear Date</button>
                             </div>
                         </div>
 
@@ -438,12 +483,12 @@
 
 <script>
     let custodianActiveFilter = 'all';
-    let custodianActiveClass  = 'all';
     let custodianSortOrder    = 'date-desc';
+    let custodianFilterMonth  = 'all';
+    let custodianFilterYear   = 'all';
 
     function setCustodianFilter(filter, activeClass) {
         custodianActiveFilter = filter;
-        // Reset all chips
         document.querySelectorAll('.f-chip').forEach(b => {
             b.classList.remove('active', 'active-red', 'active-blue', 'active-amber', 'active-gray');
         });
@@ -457,6 +502,32 @@
         applyCustodianFilters();
     }
 
+    function setCustodianMonth(val) {
+        custodianFilterMonth = val;
+        updateClearDateBtn();
+        applyCustodianFilters();
+    }
+
+    function setCustodianYear(val) {
+        custodianFilterYear = val;
+        updateClearDateBtn();
+        applyCustodianFilters();
+    }
+
+    function clearDateFilters() {
+        custodianFilterMonth = 'all';
+        custodianFilterYear  = 'all';
+        document.getElementById('sel-month').value = 'all';
+        document.getElementById('sel-year').value  = 'all';
+        updateClearDateBtn();
+        applyCustodianFilters();
+    }
+
+    function updateClearDateBtn() {
+        const btn = document.getElementById('clear-date-btn');
+        if (btn) btn.style.display = (custodianFilterMonth !== 'all' || custodianFilterYear !== 'all') ? '' : 'none';
+    }
+
     function applyCustodianFilters() {
         const container = document.getElementById('custodian-asset-list');
         if (!container) return;
@@ -465,44 +536,38 @@
 
         // --- Sort ---
         cards.sort((a, b) => {
-            const aDate  = parseFloat(a.dataset.date  || 0);
-            const bDate  = parseFloat(b.dataset.date  || 0);
-            const aCost  = parseFloat(a.dataset.cost  || 0);
-            const bCost  = parseFloat(b.dataset.cost  || 0);
-            const aYear  = parseInt(a.dataset.year  || 0);
-            const bYear  = parseInt(b.dataset.year  || 0);
-            const aMonth = parseInt(a.dataset.month || 0);
-            const bMonth = parseInt(b.dataset.month || 0);
+            const aDate = parseFloat(a.dataset.date || 0);
+            const bDate = parseFloat(b.dataset.date || 0);
+            const aCost = parseFloat(a.dataset.cost || 0);
+            const bCost = parseFloat(b.dataset.cost || 0);
             switch (custodianSortOrder) {
-                case 'date-asc':   return aDate  - bDate;
-                case 'date-desc':  return bDate  - aDate;
-                case 'cost-asc':   return aCost  - bCost;
-                case 'cost-desc':  return bCost  - aCost;
-                case 'year-asc':   return aYear  - bYear;
-                case 'year-desc':  return bYear  - aYear;
-                case 'month-asc':  return aMonth - bMonth;
-                case 'month-desc': return bMonth - aMonth;
-                default:           return bDate  - aDate;
+                case 'date-asc':  return aDate - bDate;
+                case 'date-desc': return bDate - aDate;
+                case 'cost-asc':  return aCost - bCost;
+                case 'cost-desc': return bCost - aCost;
+                default:          return bDate - aDate;
             }
         });
 
         // Re-insert in sorted order
         cards.forEach(c => container.appendChild(c));
 
-        // --- Filter (show/hide) ---
+        // --- Filter (status + month + year) ---
         let visible = 0;
         cards.forEach(card => {
-            const match = custodianActiveFilter === 'all' || card.dataset.status === custodianActiveFilter;
+            const matchStatus = custodianActiveFilter === 'all' || card.dataset.status === custodianActiveFilter;
+            const matchMonth  = custodianFilterMonth  === 'all' || card.dataset.month  === custodianFilterMonth;
+            const matchYear   = custodianFilterYear   === 'all' || card.dataset.year   === custodianFilterYear;
+            const match = matchStatus && matchMonth && matchYear;
             card.style.display = match ? '' : 'none';
             if (match) visible++;
         });
 
-        // Empty state for filter
+        // Empty state
         const empty = document.getElementById('custodian-filter-empty');
         if (empty) empty.style.display = visible === 0 ? '' : 'none';
     }
 
-    // Init on DOM ready
     document.addEventListener('DOMContentLoaded', () => applyCustodianFilters());
 </script>
 </body>
