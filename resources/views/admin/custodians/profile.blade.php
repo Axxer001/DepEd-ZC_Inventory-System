@@ -49,6 +49,17 @@
         .info-row { display: flex; align-items: center; justify-content: space-between; padding: 0.45rem 0; border-bottom: 1px dashed #f0f2f5; }
         .info-row:last-child { border-bottom: none; }
 
+        /* Filter & Sort toolbar */
+        .f-chip { padding: 5px 14px; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 9999px; border: 1.5px solid #e5e7eb; background: #fff; color: #64748b; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+        .f-chip:hover { border-color: #94a3b8; color: #334155; }
+        .f-chip.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+        .f-chip.active-red { background: #c00000; color: #fff; border-color: #c00000; }
+        .f-chip.active-blue { background: #2563eb; color: #fff; border-color: #2563eb; }
+        .f-chip.active-amber { background: #d97706; color: #fff; border-color: #d97706; }
+        .f-chip.active-gray { background: #64748b; color: #fff; border-color: #64748b; }
+        .sort-select { font-size: 10px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.06em; background: #fff; border: 1.5px solid #e5e7eb; border-radius: 0.75rem; padding: 6px 12px; outline: none; cursor: pointer; transition: border-color 0.15s; }
+        .sort-select:focus { border-color: #94a3b8; }
+
         /* Dark mode */
         html.dark body { background: #0b0f19; }
         html.dark .glass-card, html.dark .asset-card { background: #1e293b; border-color: #334155; }
@@ -174,7 +185,34 @@
                 <div class="p-5 flex-grow overflow-y-auto custom-scroll">
                     <div x-show="activeTab === 'assets'" class="tab-fade">
                         @if($assets->count() > 0)
-                        <div class="space-y-3">
+
+                        {{-- ===== FILTER & SORT TOOLBAR ===== --}}
+                        <div class="flex flex-wrap items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-1">Status:</span>
+                                <button onclick="setCustodianFilter('all','all')" id="f-all" class="f-chip active">All</button>
+                                <button onclick="setCustodianFilter('under-custody','')" id="f-under-custody" class="f-chip">Under Custody</button>
+                                <button onclick="setCustodianFilter('transferred','active-blue')" id="f-transferred" class="f-chip">Transferred</button>
+                                <button onclick="setCustodianFilter('returned','active-amber')" id="f-returned" class="f-chip">Returned</button>
+                                <button onclick="setCustodianFilter('repair','active-gray')" id="f-repair" class="f-chip">Out for Repair</button>
+                                <button onclick="setCustodianFilter('unserviceable','active-red')" id="f-unserviceable" class="f-chip">Unserviceable</button>
+                            </div>
+                            <div class="ml-auto flex items-center gap-2">
+                                <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Sort:</span>
+                                <select onchange="setCustodianSort(this.value)" class="sort-select">
+                                    <option value="date-desc">Date: Newest First</option>
+                                    <option value="date-asc">Date: Oldest First</option>
+                                    <option value="cost-desc">Cost: High → Low</option>
+                                    <option value="cost-asc">Cost: Low → High</option>
+                                    <option value="year-desc">Year: Newest First</option>
+                                    <option value="year-asc">Year: Oldest First</option>
+                                    <option value="month-asc">Month: Jan → Dec</option>
+                                    <option value="month-desc">Month: Dec → Jan</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3" id="custodian-asset-list">
                             @foreach($assets as $asset)
                             @php
                                 $assetTransfers = $transfers->get($asset->id, collect());
@@ -213,7 +251,23 @@
                             @endphp
 
                             {{-- Each card has its own Alpine state --}}
-                            <div class="asset-card" x-data="{ showHistory: false }">
+                            @php
+                                $statusKey = 'under-custody';
+                                if ($statusLabel === 'Transferred') $statusKey = 'transferred';
+                                elseif ($statusLabel === 'Returned') $statusKey = 'returned';
+                                elseif ($statusLabel === 'Out for Repair') $statusKey = 'repair';
+                                elseif ($statusLabel === 'Unserviceable') $statusKey = 'unserviceable';
+                                $ts    = $asset->acquisition_date ? strtotime($asset->acquisition_date) : 0;
+                                $yr    = $asset->acquisition_date ? date('Y', $ts) : 0;
+                                $mo    = $asset->acquisition_date ? date('n', $ts) : 0;
+                            @endphp
+                            <div class="asset-card"
+                                 x-data="{ showHistory: false }"
+                                 data-status="{{ $statusKey }}"
+                                 data-cost="{{ $asset->asset_cost }}"
+                                 data-date="{{ $ts }}"
+                                 data-year="{{ $yr }}"
+                                 data-month="{{ $mo }}">
 
                                 {{-- ===== MAIN ASSET ROW ===== --}}
                                 <div class="flex flex-col sm:flex-row sm:items-center gap-4 px-4 py-3.5">
@@ -365,6 +419,11 @@
                             </div>
                             @endforeach
                         </div>
+                        {{-- Empty message when filter matches nothing --}}
+                        <div id="custodian-filter-empty" style="display:none;" class="flex flex-col items-center justify-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 mt-4">
+                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest italic">No assets match the selected filter.</p>
+                        </div>
+
                         @else
                         <div class="flex flex-col items-center justify-center py-16 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
                             <p class="text-xs font-black text-slate-400 uppercase tracking-widest italic">No assets assigned to this custodian yet.</p>
@@ -377,5 +436,74 @@
         </div>
     </div>
 
+<script>
+    let custodianActiveFilter = 'all';
+    let custodianActiveClass  = 'all';
+    let custodianSortOrder    = 'date-desc';
+
+    function setCustodianFilter(filter, activeClass) {
+        custodianActiveFilter = filter;
+        // Reset all chips
+        document.querySelectorAll('.f-chip').forEach(b => {
+            b.classList.remove('active', 'active-red', 'active-blue', 'active-amber', 'active-gray');
+        });
+        const btn = document.getElementById('f-' + filter);
+        if (btn) btn.classList.add(activeClass || 'active');
+        applyCustodianFilters();
+    }
+
+    function setCustodianSort(val) {
+        custodianSortOrder = val;
+        applyCustodianFilters();
+    }
+
+    function applyCustodianFilters() {
+        const container = document.getElementById('custodian-asset-list');
+        if (!container) return;
+
+        const cards = [...container.querySelectorAll('.asset-card')];
+
+        // --- Sort ---
+        cards.sort((a, b) => {
+            const aDate  = parseFloat(a.dataset.date  || 0);
+            const bDate  = parseFloat(b.dataset.date  || 0);
+            const aCost  = parseFloat(a.dataset.cost  || 0);
+            const bCost  = parseFloat(b.dataset.cost  || 0);
+            const aYear  = parseInt(a.dataset.year  || 0);
+            const bYear  = parseInt(b.dataset.year  || 0);
+            const aMonth = parseInt(a.dataset.month || 0);
+            const bMonth = parseInt(b.dataset.month || 0);
+            switch (custodianSortOrder) {
+                case 'date-asc':   return aDate  - bDate;
+                case 'date-desc':  return bDate  - aDate;
+                case 'cost-asc':   return aCost  - bCost;
+                case 'cost-desc':  return bCost  - aCost;
+                case 'year-asc':   return aYear  - bYear;
+                case 'year-desc':  return bYear  - aYear;
+                case 'month-asc':  return aMonth - bMonth;
+                case 'month-desc': return bMonth - aMonth;
+                default:           return bDate  - aDate;
+            }
+        });
+
+        // Re-insert in sorted order
+        cards.forEach(c => container.appendChild(c));
+
+        // --- Filter (show/hide) ---
+        let visible = 0;
+        cards.forEach(card => {
+            const match = custodianActiveFilter === 'all' || card.dataset.status === custodianActiveFilter;
+            card.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+
+        // Empty state for filter
+        const empty = document.getElementById('custodian-filter-empty');
+        if (empty) empty.style.display = visible === 0 ? '' : 'none';
+    }
+
+    // Init on DOM ready
+    document.addEventListener('DOMContentLoaded', () => applyCustodianFilters());
+</script>
 </body>
 </html>
