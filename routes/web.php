@@ -92,6 +92,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/supplier-contacts', [\App\Http\Controllers\AcquisitionContactController::class, 'index'])->name('admin.supplier_contacts');
     Route::get('/api/supplier-contacts/filters', [\App\Http\Controllers\AcquisitionContactController::class, 'getFilters'])->name('api.supplier_contacts.filters');
     Route::post('/api/supplier-contacts/preview', [\App\Http\Controllers\AcquisitionContactController::class, 'getPreview'])->name('api.supplier_contacts.preview');
+    Route::get('/admin/supplier-contacts/{id}', [\App\Http\Controllers\AcquisitionContactController::class, 'profile'])->name('supplier_contacts.profile');
 
     // --- Custodians Registry ---
     Route::get('/admin/custodians', function () {

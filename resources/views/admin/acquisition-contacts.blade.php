@@ -177,6 +177,7 @@
             contactRowsData.forEach((row, idx) => {
                 const tr = document.createElement('tr');
                 tr.className = 'xls-row group border-b border-slate-100';
+                tr.onclick = () => window.location.href = '/admin/supplier-contacts/' + row.id;
                 tr.innerHTML = `
                     <td class="xls-td text-center sticky left-0 w-10 bg-slate-50 z-20"><span class="text-[10px] font-black text-slate-500">${idx + 1}</span></td>
                     <td class="xls-td relative sticky left-[40px] bg-slate-50 z-20">
