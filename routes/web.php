@@ -212,6 +212,7 @@ Route::middleware('auth')->group(function () {
             ->where('offices.id', $id)
             ->select(
                 'offices.id',
+                'offices.school_id',
                 'offices.name',
                 'offices.office_code',
                 'offices.room_number',
@@ -239,12 +240,11 @@ Route::middleware('auth')->group(function () {
         $buildings = DB::table('building_records')
             ->leftJoin('building_specs', 'building_records.building_spec_id', '=', 'building_specs.id')
             ->leftJoin('building_types', 'building_specs.building_type_id', '=', 'building_types.id')
-            ->where('building_records.office_id', $id)
+            ->where('building_records.school_id', $office->school_id)
             ->select(
                 'building_records.property_number',
                 'building_types.name as type',
-                'building_records.acquisition_cost',
-                'building_records.condition'
+                'building_records.acquisition_cost'
             )
             ->get();
 

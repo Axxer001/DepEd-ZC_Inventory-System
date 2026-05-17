@@ -602,14 +602,15 @@
                         const tr = document.createElement('tr');
                         tr.className = 'border-b border-slate-100 dark:border-slate-800/40 hover:bg-slate-50/50 dark:hover:bg-slate-800/20';
                         
-                        const conditionTheme = b.condition === 'Good' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400';
+                        const bCond = b.condition || 'Good';
+                        const conditionTheme = bCond === 'Good' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-400';
 
                         tr.innerHTML = `
                             <td class="p-3 font-semibold text-slate-600 dark:text-slate-400">${b.property_number || '-'}</td>
                             <td class="p-3 font-bold text-slate-800 dark:text-slate-200 uppercase">${b.type || '-'}</td>
                             <td class="p-3 text-right font-black italic text-slate-700 dark:text-slate-300">${formatCost(b.acquisition_cost)}</td>
                             <td class="p-3 text-center">
-                                <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase ${conditionTheme}">${b.condition || 'Good'}</span>
+                                <span class="px-2 py-0.5 rounded-full text-[8px] font-black uppercase ${conditionTheme}">${bCond}</span>
                             </td>
                         `;
                         bldgTbody.appendChild(tr);
