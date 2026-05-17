@@ -206,6 +206,54 @@ Route::middleware('auth')->group(function () {
     // --- Office Management (View) ---
     Route::post('/api/offices/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getOfficesPreview'])->name('api.offices.preview');
     Route::get('/api/offices/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getOfficesFilterOptions'])->name('api.offices.filters');
+    Route::get('/api/offices/{id}/details', function ($id) {
+        $office = DB::table('offices')
+            ->leftJoin('schools', 'offices.school_id', '=', 'schools.id')
+            ->where('offices.id', $id)
+            ->select(
+                'offices.id',
+                'offices.name',
+                'offices.office_code',
+                'offices.room_number',
+                'schools.name as school_name'
+            )
+            ->first();
+
+        if (!$office) {
+            return response()->json(['error' => 'Office not found'], 404);
+        }
+
+        $assets = DB::table('asset_assignments')
+            ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+            ->leftJoin('items', 'asset_sources.item_id', '=', 'items.id')
+            ->where('asset_assignments.office_id', $id)
+            ->select(
+                'asset_assignments.property_number',
+                'items.name as article',
+                'asset_sources.description',
+                'asset_assignments.acquisition_cost',
+                'asset_assignments.condition'
+            )
+            ->get();
+
+        $buildings = DB::table('building_records')
+            ->leftJoin('building_specs', 'building_records.building_spec_id', '=', 'building_specs.id')
+            ->leftJoin('building_types', 'building_specs.building_type_id', '=', 'building_types.id')
+            ->where('building_records.office_id', $id)
+            ->select(
+                'building_records.property_number',
+                'building_types.name as type',
+                'building_records.acquisition_cost',
+                'building_records.condition'
+            )
+            ->get();
+
+        return response()->json([
+            'office' => $office,
+            'assets' => $assets,
+            'buildings' => $buildings
+        ]);
+    })->name('api.offices.details');
 
 
     // --- Building Registration ---
