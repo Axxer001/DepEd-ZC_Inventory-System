@@ -242,7 +242,7 @@
                                         {{-- Year Navigation --}}
                                         <div class="cal-year-nav">
                                             <button class="cal-year-btn" onclick="calNavYear(-1)">&#8249;</button>
-                                            <span class="cal-year-label" id="cal-year-display">{{ $availableYears->sort()->first() ?? date('Y') }}</span>
+                                            <span class="cal-year-label" id="cal-year-display">{{ $availableYears->sort()->last() ?? date('Y') }}</span>
                                             <button class="cal-year-btn" onclick="calNavYear(1)">&#8250;</button>
                                         </div>
                                         {{-- Month Grid (rendered by JS) --}}
@@ -681,8 +681,14 @@
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        // Init calendar view year to most recent year with data
-        if (CAL_YEARS.length) calViewYear = parseInt(CAL_YEARS[0]); // oldest year first
+        // Default to most recent year that has actual asset data for this custodian
+        const list = document.getElementById('custodian-asset-list');
+        if (list) {
+            const years = [...list.querySelectorAll('.asset-card')]
+                .map(c => parseInt(c.dataset.year || 0))
+                .filter(y => y > 0);
+            if (years.length) calViewYear = Math.max(...years);
+        }
         document.getElementById('cal-year-display').textContent = calViewYear;
         applyCustodianFilters();
     });
