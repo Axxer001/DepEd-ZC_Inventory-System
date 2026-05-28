@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>DepEd ZC IMS | Inventory Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -202,7 +203,7 @@
                 </div>
             </div>
             <div class="p-8 border-t border-slate-50">
-                <button class="w-full py-4 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] hover:bg-[#c00000] transition-all shadow-lg shadow-slate-200">Mark All as Read</button>
+                <button @click="markAlertRead()" class="w-full py-4 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] hover:bg-[#c00000] transition-all shadow-lg shadow-slate-200">Mark All as Read</button>
             </div>
         </aside>
 
@@ -277,9 +278,9 @@
                         </div>
                     </div>
 
-                    <button @click="showNotifications = true" class="relative p-3 bg-white border border-slate-200 text-slate-900 rounded-2xl hover:text-[#c00000] hover:border-[#c00000]/30 hover:shadow-lg hover:shadow-red-50 transition-all shadow-sm group active:scale-90">
+                    <button @click="openNotifications()" class="relative p-3 bg-white border border-slate-200 text-slate-900 rounded-2xl hover:text-[#c00000] hover:border-[#c00000]/30 hover:shadow-lg hover:shadow-red-50 transition-all shadow-sm group active:scale-90">
                         <svg class="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                        <span class="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full animate-pulse group-hover:scale-125 transition-transform"></span>
+                        <span x-show="hasUnread" x-cloak class="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full animate-pulse group-hover:scale-125 transition-transform"></span>
                     </button>
                 </div>
             </header>
@@ -712,14 +713,59 @@
                 selectedMonths: [],
                 cardFilter: 'Overall',
                 showNotifications: false,
+                hasUnread: false,
 
                 // Alert state
-                alert: JSON.parse(localStorage.getItem('dashAlertData') || 'null') || {...ALERT_DEFAULTS},
+                alert: {...ALERT_DEFAULTS},
                 editAlert: {...ALERT_DEFAULTS},
                 showPwModal: false,
                 showEditModal: false,
                 pwInput: '',
                 pwError: '',
+
+                init() {
+                    this.loadAlertFromServer();
+                },
+
+                async loadAlertFromServer() {
+                    try {
+                        const res = await fetch('/api/system-alert', { headers: { 'Accept': 'application/json' } });
+                        if (!res.ok) return;
+                        const data = await res.json();
+                        if (data.alert) {
+                            const a = data.alert;
+                            const time = a.updated_at ? new Date(a.updated_at).toLocaleString('en-PH', {
+                                timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric',
+                                hour: 'numeric', minute: '2-digit', hour12: true
+                            }) : '';
+                            this.alert = { title: a.title, body: a.body, priority: a.priority, time: time };
+                        }
+                        this.hasUnread = data.hasUnread || false;
+                    } catch(e) { console.error('Failed to load alert:', e); }
+                },
+
+                async openNotifications() {
+                    this.showNotifications = true;
+                    if (this.hasUnread) {
+                        this.hasUnread = false;
+                        try {
+                            await fetch('/api/system-alert/read', {
+                                method: 'POST',
+                                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+                            });
+                        } catch(e) { console.error('Failed to mark alert read:', e); }
+                    }
+                },
+
+                async markAlertRead() {
+                    this.hasUnread = false;
+                    try {
+                        await fetch('/api/system-alert/read', {
+                            method: 'POST',
+                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+                        });
+                    } catch(e) { console.error('Failed to mark alert read:', e); }
+                },
 
                 openPasswordModal() {
                     this.pwInput = '';
@@ -742,16 +788,20 @@
                     }
                 },
 
-                saveAlert() {
-                    // Auto-generate PH timestamp on save
-                    const now = new Date().toLocaleString('en-PH', {
-                        timeZone: 'Asia/Manila',
-                        month: 'short', day: 'numeric', year: 'numeric',
-                        hour: 'numeric', minute: '2-digit', hour12: true
-                    });
-                    this.alert = { ...this.editAlert, time: now };
-                    localStorage.setItem('dashAlertData', JSON.stringify(this.alert));
-                    this.showEditModal = false;
+                async saveAlert() {
+                    try {
+                        const res = await fetch('/api/system-alert', {
+                            method: 'POST',
+                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
+                            body: JSON.stringify({ title: this.editAlert.title, body: this.editAlert.body, priority: this.editAlert.priority })
+                        });
+                        if (!res.ok) throw new Error('Save failed');
+                        // Reload alert from server to get the fresh timestamp
+                        await this.loadAlertFromServer();
+                        this.showEditModal = false;
+                    } catch(e) {
+                        console.error('Failed to save alert:', e);
+                    }
                 },
 
                 resetAlert() {

@@ -38,6 +38,69 @@ Route::middleware('auth')->group(function () {
         $user->save();
         return response()->json(['dark_mode' => $user->dark_mode]);
     })->name('user.dark-mode');
+
+    // --- System Alert / Notification API ---
+    Route::get('/api/system-alert', function () {
+        $alert = DB::table('system_alerts')->orderByDesc('updated_at')->first();
+        $user = auth()->user();
+        $hasUnread = false;
+        if ($alert) {
+            $hasUnread = is_null($user->alert_read_at) || $user->alert_read_at < $alert->updated_at;
+        }
+        return response()->json([
+            'alert'     => $alert,
+            'hasUnread' => $hasUnread,
+        ]);
+    })->name('api.system_alert');
+
+    Route::post('/api/system-alert', function (Request $request) {
+        $request->validate([
+            'title'    => 'required|string|max:255',
+            'body'     => 'required|string|max:2000',
+            'priority' => 'required|in:High,Medium,Low',
+        ]);
+
+        $alert = DB::table('system_alerts')->orderByDesc('updated_at')->first();
+        $user = auth()->user();
+
+        if ($alert) {
+            DB::table('system_alerts')->where('id', $alert->id)->update([
+                'title'      => $request->title,
+                'body'       => $request->body,
+                'priority'   => $request->priority,
+                'updated_by' => $user->name,
+                'updated_at' => now(),
+            ]);
+        } else {
+            DB::table('system_alerts')->insert([
+                'title'      => $request->title,
+                'body'       => $request->body,
+                'priority'   => $request->priority,
+                'updated_by' => $user->name,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        DB::table('system_logs')->insert([
+            'user'        => $user->name,
+            'activity'    => 'Updated system alert: "' . $request->title . '"',
+            'module'      => 'Notifications',
+            'action_type' => 'Update',
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+
+        return response()->json(['success' => true]);
+    })->name('api.system_alert.save');
+
+    Route::post('/api/system-alert/read', function () {
+        $user = auth()->user();
+        DB::table('users')->where('id', $user->id)->update([
+            'alert_read_at' => now(),
+        ]);
+        return response()->json(['success' => true]);
+    })->name('api.system_alert.read');
     
     Route::get('/inventory-setup', function () {
         set_time_limit(300);
