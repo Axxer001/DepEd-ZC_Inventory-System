@@ -92,6 +92,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/supplier-contacts', [\App\Http\Controllers\AcquisitionContactController::class, 'index'])->name('admin.supplier_contacts');
     Route::get('/api/supplier-contacts/filters', [\App\Http\Controllers\AcquisitionContactController::class, 'getFilters'])->name('api.supplier_contacts.filters');
     Route::post('/api/supplier-contacts/preview', [\App\Http\Controllers\AcquisitionContactController::class, 'getPreview'])->name('api.supplier_contacts.preview');
+    Route::get('/admin/supplier-contacts/{id}', [\App\Http\Controllers\AcquisitionContactController::class, 'profile'])->name('supplier_contacts.profile');
 
     // --- Custodians Registry ---
     Route::get('/admin/custodians', function () {
@@ -100,6 +101,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/api/custodians/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansPreview'])->name('api.custodians.preview');
     Route::get('/api/custodians/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansFilterOptions'])->name('api.custodians.filters');
+    Route::get('/admin/custodians/{id}', [\App\Http\Controllers\CustodianController::class, 'profile'])->name('custodians.profile');
 
 
 
@@ -197,6 +199,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/buildings/{id}', [\App\Http\Controllers\BuildingController::class, 'profile'])->name('buildings.profile');
     Route::get('/schools/{id}', [\App\Http\Controllers\SchoolController::class, 'profile'])->name('schools.profile');
+    Route::get('/offices/{id}', [\App\Http\Controllers\OfficeController::class, 'profile'])->name('offices.profile');
 
 
     // --- School Management (View) ---
@@ -206,6 +209,54 @@ Route::middleware('auth')->group(function () {
     // --- Office Management (View) ---
     Route::post('/api/offices/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getOfficesPreview'])->name('api.offices.preview');
     Route::get('/api/offices/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getOfficesFilterOptions'])->name('api.offices.filters');
+    Route::get('/api/offices/{id}/details', function ($id) {
+        $office = DB::table('offices')
+            ->leftJoin('schools', 'offices.school_id', '=', 'schools.id')
+            ->where('offices.id', $id)
+            ->select(
+                'offices.id',
+                'offices.school_id',
+                'offices.name',
+                'offices.office_code',
+                'offices.room_number',
+                'schools.name as school_name'
+            )
+            ->first();
+
+        if (!$office) {
+            return response()->json(['error' => 'Office not found'], 404);
+        }
+
+        $assets = DB::table('asset_assignments')
+            ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+            ->leftJoin('items', 'asset_sources.item_id', '=', 'items.id')
+            ->where('asset_assignments.office_id', $id)
+            ->select(
+                'asset_assignments.property_number',
+                'items.name as article',
+                'asset_sources.description',
+                'asset_assignments.acquisition_cost',
+                'asset_assignments.condition'
+            )
+            ->get();
+
+        $buildings = DB::table('building_records')
+            ->leftJoin('building_specs', 'building_records.building_spec_id', '=', 'building_specs.id')
+            ->leftJoin('building_types', 'building_specs.building_type_id', '=', 'building_types.id')
+            ->where('building_records.school_id', $office->school_id)
+            ->select(
+                'building_records.property_number',
+                'building_types.name as type',
+                'building_records.acquisition_cost'
+            )
+            ->get();
+
+        return response()->json([
+            'office' => $office,
+            'assets' => $assets,
+            'buildings' => $buildings
+        ]);
+    })->name('api.offices.details');
 
 
     // --- Building Registration ---

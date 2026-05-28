@@ -694,7 +694,9 @@ class ReportDownloadController extends Controller
                 'offices.id',
                 'offices.name',
                 'offices.office_code',
+                'offices.office_code as type',
                 'offices.room_number',
+                'schools.name as location',
                 'schools.name as school_name'
             )
             ->addSelect([

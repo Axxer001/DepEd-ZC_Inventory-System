@@ -325,6 +325,7 @@
                 const displayNum = start + idx + 1;
                 const tr = document.createElement('tr');
                 tr.className = 'xls-row group border-b border-slate-100';
+                tr.onclick = () => window.location.href = '/admin/custodians/' + row.id;
                 
                 const cell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const uppercase">${val || ''}</span></td>`;
                 const costCell = (val, color) => `<td class="xls-td relative text-right"><span class="xls-const font-black italic ${color} justify-end">₱ ${Number(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></td>`;

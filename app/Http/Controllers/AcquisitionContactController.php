@@ -64,4 +64,60 @@ class AcquisitionContactController extends Controller
 
         return response()->json(['rows' => $rows]);
     }
+    /**
+     * Display the profile page for a specific supplier personnel.
+     */
+    public function profile($id)
+    {
+        $contact = DB::table('acquisition_contacts as ac')
+            ->leftJoin('acquisition_sources as as', 'ac.acquisition_source_id', '=', 'as.id')
+            ->select([
+                'ac.id',
+                'ac.name',
+                'ac.position',
+                'ac.contact_number',
+                'ac.email',
+                'as.name as organization'
+            ])
+            ->where('ac.id', $id)
+            ->first();
+
+        if (!$contact) {
+            abort(404, 'Supplier Personnel not found');
+        }
+
+        // Stats of supplied assets
+        $stats = DB::table('asset_assignments as aa')
+            ->join('asset_sources as asrc', 'aa.asset_source_id', '=', 'asrc.id')
+            ->where('asrc.acquisition_contact_id', $id)
+            ->selectRaw('COUNT(aa.id) as total_supplied, COALESCE(SUM(aa.acquisition_cost), 0) as total_value')
+            ->first();
+
+        // List of all assets supplied by this person
+        $assets = DB::table('asset_assignments as aa')
+            ->join('asset_sources as asrc', 'aa.asset_source_id', '=', 'asrc.id')
+            ->join('items as i', 'asrc.item_id', '=', 'i.id')
+            ->join('categories as cat', 'i.category_id', '=', 'cat.id')
+            ->leftJoin('offices as o', 'aa.office_id', '=', 'o.id')
+            ->leftJoin('schools as s', 'o.school_id', '=', 's.id')
+            ->where('asrc.acquisition_contact_id', $id)
+            ->select(
+                'aa.id',
+                'aa.property_number',
+                'aa.acquisition_date',
+                'aa.acquisition_cost as asset_cost',
+                'i.name as item_name',
+                'cat.name as category_name',
+                'asrc.brand',
+                'asrc.model',
+                'asrc.serial_number',
+                'aa.condition',
+                'o.name as office_name',
+                's.name as school_name'
+            )
+            ->orderByDesc('aa.acquisition_date')
+            ->get();
+
+        return view('admin.supplier-contacts.profile', compact('contact', 'stats', 'assets'));
+    }
 }
