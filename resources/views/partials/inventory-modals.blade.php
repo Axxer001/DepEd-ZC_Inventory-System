@@ -72,18 +72,20 @@
                     </div>
                     <div class="relative col-context p-1 rounded-2xl">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Type</label>
-                        <input type="text" list="dl-school-type" id="bSchoolType" data-col="school-type" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select">
+                        <input type="text" list="dl-school-type" id="bSchoolType" data-col="school-type" autocomplete="off" 
+                            oninput="const isSchool=this.value.toLowerCase().includes('school'); if(!isSchool){document.getElementById('bLocation').value='Zamboanga City';}else{const sName=document.getElementById('bSchoolName').value; if(sName && typeof cleanSchoolNameForLocation==='function'){document.getElementById('bLocation').value=cleanSchoolNameForLocation(sName);}}"
+                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select">
                     </div>
                     <div class="relative col-identity p-1 rounded-2xl">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">School ID</label>
                         <input type="text" id="bSchoolId" data-col="school-id" autocomplete="off" 
-                            oninput="const s=allSchoolsList.find(x=>String(x.school_id)===this.value); if(s){document.getElementById('bSchoolName').value=s.name; document.getElementById('bLocation').value=cleanSchoolNameForLocation(s.name);}"
+                            oninput="const s=allSchoolsList.find(x=>String(x.school_id)===this.value); if(s){document.getElementById('bSchoolName').value=s.name; const t=typeof detectItemSchoolType==='function'?detectItemSchoolType(s.name):''; document.getElementById('bSchoolType').value=t; const isSchool=t.toLowerCase().includes('school'); document.getElementById('bLocation').value=isSchool?cleanSchoolNameForLocation(s.name):'Zamboanga City';}"
                             class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select" inputmode="numeric">
                     </div>
                     <div class="relative col-identity p-1 rounded-2xl">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label>
                         <input type="text" id="bSchoolName" data-col="school-name" autocomplete="off" 
-                            oninput="const s=allSchoolsList.find(x=>x.name.toLowerCase()===this.value.toLowerCase()); if(s){ const t = detectItemSchoolType(s.name); document.getElementById('bSchoolType').value=t; document.getElementById('bSchoolId').value=s.school_id; document.getElementById('bLocation').value=cleanSchoolNameForLocation(s.name);} else if(this.value.trim()){ const t = detectItemSchoolType(this.value); if(t) document.getElementById('bSchoolType').value=t; document.getElementById('bSchoolId').value=''; document.getElementById('bLocation').value=cleanSchoolNameForLocation(this.value);}"
+                            oninput="const s=allSchoolsList.find(x=>x.name.toLowerCase()===this.value.toLowerCase()); if(s){ const t = detectItemSchoolType(s.name); document.getElementById('bSchoolType').value=t; document.getElementById('bSchoolId').value=s.school_id; const isSchool=t.toLowerCase().includes('school'); document.getElementById('bLocation').value=isSchool?cleanSchoolNameForLocation(s.name):'Zamboanga City';} else if(this.value.trim()){ const t = detectItemSchoolType(this.value); if(t) document.getElementById('bSchoolType').value=t; document.getElementById('bSchoolId').value=''; const isSchool=t.toLowerCase().includes('school'); document.getElementById('bLocation').value=isSchool?cleanSchoolNameForLocation(this.value):'Zamboanga City';}"
                             class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select">
                     </div>
                     <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">First Name</label><input type="text" id="bCustodianFirst" data-col="custodian-first" oninput="syncBulkCustodian()" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="First Name"></div>

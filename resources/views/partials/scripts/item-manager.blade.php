@@ -124,7 +124,8 @@
                     if (school) {
                         row['school-name'] = school.name;
                         row['school-type'] = detectItemSchoolType(school.name);
-                        row['location'] = cleanSchoolNameForLocation(school.name);
+                        const isSchool = row['school-type'].toLowerCase().includes('school');
+                        row['location'] = isSchool ? cleanSchoolNameForLocation(school.name) : 'Zamboanga City';
                         // Update UI if on current page
                         const nameInp = document.querySelector(`#dst-${rowId} input[data-col="school-name"]`);
                         const typeInp = document.querySelector(`#dst-${rowId} input[data-col="school-type"]`);
@@ -138,7 +139,8 @@
                     if (school) {
                         row['school-type'] = detectItemSchoolType(school.name);
                         row['school-id'] = school.school_id;
-                        row['location'] = cleanSchoolNameForLocation(school.name);
+                        const isSchool = row['school-type'].toLowerCase().includes('school');
+                        row['location'] = isSchool ? cleanSchoolNameForLocation(school.name) : 'Zamboanga City';
                         // Update UI if on current page
                         const typeInp = document.querySelector(`#dst-${rowId} input[data-col="school-type"]`);
                         const idInp = document.querySelector(`#dst-${rowId} input[data-col="school-id"]`);
@@ -149,7 +151,8 @@
                     } else if (value.trim() !== "") {
                         row['school-type'] = detectItemSchoolType(value);
                         row['school-id'] = '';
-                        row['location'] = cleanSchoolNameForLocation(value);
+                        const isSchool = row['school-type'].toLowerCase().includes('school');
+                        row['location'] = isSchool ? cleanSchoolNameForLocation(value) : 'Zamboanga City';
                         
                         const typeInp = document.querySelector(`#dst-${rowId} input[data-col="school-type"]`);
                         const idInp = document.querySelector(`#dst-${rowId} input[data-col="school-id"]`);
@@ -157,6 +160,19 @@
                         if (typeInp) typeInp.value = row['school-type'];
                         if (idInp) idInp.value = '';
                         if (locInp) locInp.value = row['location'];
+                    }
+                } else if (col === 'school-type') {
+                    const isSchool = value.toLowerCase().includes('school');
+                    if (!isSchool) {
+                        row['location'] = 'Zamboanga City';
+                        const locInp = document.querySelector(`#dst-${rowId} input[data-col="location"]`);
+                        if (locInp) locInp.value = 'Zamboanga City';
+                    } else {
+                        if (row['school-name']) {
+                            row['location'] = cleanSchoolNameForLocation(row['school-name']);
+                            const locInp = document.querySelector(`#dst-${rowId} input[data-col="location"]`);
+                            if (locInp) locInp.value = row['location'];
+                        }
                     }
                 } else if (col === 'custodian-first' || col === 'custodian-last') {
                     // Smart Auto-fill: check if there is an exact unique match for the provided names
@@ -235,7 +251,7 @@
                 region: 'Region IX', division: 'Zamboanga City Division',
                 'school-type': '', 'school-id': '', 'school-name': '', 
                 'custodian-first': '', 'custodian-middle': '', 'custodian-last': '', 'custodian-pos': '', 'custodian-contact': '',
-                occupancy: '', location: '', 'property-no': '', 'acquisition-date': today
+                occupancy: '', location: 'Zamboanga City', 'property-no': '', 'acquisition-date': today
             };
             allRowsData.push(newRow);
             currentPage = Math.ceil(allRowsData.length / rowsPerPage);
@@ -447,7 +463,7 @@
                 custodianPos: document.getElementById('bCustodianPos') ? document.getElementById('bCustodianPos').value.trim() : '',
                 custodianContact: document.getElementById('bCustodianContact') ? document.getElementById('bCustodianContact').value.trim() : '',
                 occupancy: document.getElementById('bOccupancy').value,
-                location: document.getElementById('bLocation').value,
+                location: document.getElementById('bLocation') ? (document.getElementById('bLocation').value || 'Zamboanga City') : 'Zamboanga City',
                 propertyNo: document.getElementById('bPropertyNo').value,
                 cost2: document.getElementById('bCost2').value,
                 date2: document.getElementById('bDate2').value
@@ -478,7 +494,7 @@
                     'custodian-pos': data.custodianPos || '',
                     'custodian-contact': data.custodianContact || '',
                     occupancy: data.occupancy || '',
-                    location: data.location || '',
+                    location: data.location || 'Zamboanga City',
                     'property-no': data.propertyNo || '',
                     'acquisition-date': data.date2 || today
                 };
