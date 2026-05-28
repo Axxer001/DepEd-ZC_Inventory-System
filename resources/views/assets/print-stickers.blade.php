@@ -15,32 +15,34 @@
         /* ── Checkbox custom ── */
         .asset-checkbox:checked { accent-color: #c00000; }
 
-        /* ── Sticker card (bond paper layout) ── */
+        /* ── Sticker card (64mm × 60mm) ── */
         .sticker-card {
-            width: 95mm;
-            min-height: 55mm;
-            border: 1.5px solid #16a34a;
-            padding: 4mm;
+            width: 64mm;
+            height: 60mm;
+            border: 2px solid #c00000;
+            padding: 0;
             box-sizing: border-box;
             page-break-inside: avoid;
             background: #fff;
             position: relative;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
-        /* ── A4 bond paper container ── */
+        /* ── Long bond paper container (216mm × 330mm) ── */
         .bond-paper {
-            width: 210mm;
-            min-height: 297mm;
+            width: 216mm;
+            height: 330mm;
             margin: 0 auto;
             background: white;
-            padding: 10mm;
+            padding: 7mm 8mm;
             box-shadow: 0 10px 40px rgba(0,0,0,0.12);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4mm;
-            align-content: flex-start;
+            display: grid;
+            grid-template-columns: repeat(3, 64mm);
+            grid-template-rows: repeat(5, 60mm);
+            gap: 3mm;
+            box-sizing: border-box;
         }
 
         /* ── Print media ── */
@@ -418,7 +420,7 @@ window.addEventListener('afterprint', () => {
 @media print {
     body > * { display: none !important; }
     #printArea { display: block !important; }
-    .sticker-card { border-color: #16a34a !important; }
+    .sticker-card { border-color: #c00000 !important; }
     .bond-paper { box-shadow: none !important; }
 }
 body { display: flex; }
