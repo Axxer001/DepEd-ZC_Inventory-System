@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $contact->name }} | Supplier Profile</title>
+    <title>{{ $contact->name }} | Acquisition Source Profile</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -80,7 +80,7 @@
                         <span class="text-xs font-bold text-slate-500 uppercase tracking-widest bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">{{ $contact->organization ?? 'External Provider' }}</span>
                         <span class="text-xs font-bold text-slate-500 uppercase tracking-widest bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">{{ $contact->position ?? 'Personnel' }}</span>
                         <span class="text-[10px] font-black text-emerald-700 uppercase tracking-widest bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm">
-                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Active Supplier
+                            <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Active Acquisition Source
                         </span>
                     </div>
                 </div>
@@ -224,7 +224,7 @@
                         </div>
                         @else
                         <div class="flex flex-col items-center justify-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest italic">No assets recorded for this supplier yet.</p>
+                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest italic">No assets recorded for this acquisition source yet.</p>
                         </div>
                         @endif
                     </div>

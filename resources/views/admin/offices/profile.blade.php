@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -20,25 +21,81 @@
         }
     </script>
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        /* === CSS Custom Properties for Light/Dark Theming === */
+        :root {
+            --bg-page:        #f8fafc;
+            --bg-card:        #ffffff;
+            --bg-secondary:   #f8fafc;
+            --bg-hover:       rgba(241,245,249,0.6);
+            --border-primary: #e2e8f0;
+            --border-subtle:  #f1f5f9;
+            --text-primary:   #0f172a;
+            --text-secondary: #1e293b;
+            --text-muted:     #64748b;
+            --text-faint:     #94a3b8;
+            --scrollbar-thumb: #cbd5e1;
+        }
+        html.dark {
+            --bg-page:        #0f172a;
+            --bg-card:        #1e293b;
+            --bg-secondary:   #0f172a;
+            --bg-hover:       rgba(51,65,85,0.3);
+            --border-primary: #334155;
+            --border-subtle:  #334155;
+            --text-primary:   #f8fafc;
+            --text-secondary: #e2e8f0;
+            --text-muted:     #94a3b8;
+            --text-faint:     #64748b;
+            --scrollbar-thumb: #475569;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+        }
+
+        /* Adaptive card/panel surfaces */
+        .card-surface {
+            background-color: var(--bg-card);
+            border-color: var(--border-primary);
+        }
+        .page-surface {
+            background-color: var(--bg-secondary);
+        }
+
+        /* Scrollbar */
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
+
         [x-cloak] { display: none !important; }
         .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Dark Mode Overrides */
-        html.dark body { background-color: #0f172a; color: #f8fafc; }
-        html.dark .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
-        html.dark .text-slate-900 { color: #f8fafc !important; }
-        html.dark .text-slate-800 { color: #e2e8f0 !important; }
-        html.dark .text-slate-700 { color: #cbd5e1 !important; }
-        html.dark .bg-slate-50 { background-color: #0f172a !important; border-color: #1e293b !important; }
-        html.dark .bg-slate-100 { background-color: #334155 !important; border-color: #475569 !important; text-color: #e2e8f0; }
-        html.dark .border-slate-200 { border-color: #334155 !important; }
-        html.dark .border-slate-100 { border-color: #334155 !important; }
-        html.dark .divide-slate-50 { divide-color: #334155 !important; }
-        html.dark .hover\:bg-slate-50:hover { background-color: #334155/30 !important; }
+
+        /* --- Adaptive Tailwind overrides for bg-white / bg-slate-* --- */
+        /* These override Tailwind's hardcoded color classes so they adapt */
+        .bg-white  { background-color: var(--bg-card)  !important; }
+        .bg-slate-50 { background-color: var(--bg-secondary) !important; }
+        .bg-slate-100 { background-color: color-mix(in srgb, var(--bg-card) 70%, var(--border-primary)) !important; }
+
+        .border-slate-200 { border-color: var(--border-primary) !important; }
+        .border-slate-100 { border-color: var(--border-subtle)  !important; }
+        .divide-slate-50  > * + * { border-color: var(--border-subtle) !important; }
+
+        .text-slate-900 { color: var(--text-primary)   !important; }
+        .text-slate-800 { color: var(--text-secondary) !important; }
+        .text-slate-700 { color: var(--text-muted)     !important; }
+        .text-slate-500, .text-slate-400 { color: var(--text-faint) !important; }
+
+        /* Tab strip background */
+        .tab-strip-bg {
+            background-color: color-mix(in srgb, var(--bg-secondary) 80%, var(--bg-card) 20%);
+        }
+
+        /* Hover rows in tables */
+        tr.group:hover td {
+            background-color: var(--bg-hover) !important;
+        }
     </style>
 </head>
 <body class="flex min-h-screen text-slate-800 overflow-hidden">
@@ -134,14 +191,14 @@
             {{-- Main Content --}}
             <div class="lg:col-span-9 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 {{-- Office Custom Tabs --}}
-                <div class="flex border-b border-slate-200 bg-slate-50/50 dark:bg-slate-900/50 px-2 pt-2">
-                    <button @click="activeTab = 'assets'" :class="{'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-b-white dark:border-b-transparent text-deped dark:text-red-500 shadow-[0_-2px_4px_rgba(0,0,0,0.02)]': activeTab === 'assets', 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800/40': activeTab !== 'assets'}" class="px-6 py-3.5 text-xs font-black uppercase tracking-widest border border-b-0 rounded-t-xl transition-all relative top-[1px]">
+                <div class="flex border-b border-slate-200 tab-strip-bg px-2 pt-2">
+                    <button @click="activeTab = 'assets'" :class="{'bg-white border-slate-200 border-b-white text-deped shadow-[0_-2px_4px_rgba(0,0,0,0.02)]': activeTab === 'assets', 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100': activeTab !== 'assets'}" class="px-6 py-3.5 text-xs font-black uppercase tracking-widest border border-b-0 rounded-t-xl transition-all relative top-[1px]">
                         Office Equipment
                     </button>
-                    <button @click="activeTab = 'custodians'" :class="{'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-b-white dark:border-b-transparent text-deped dark:text-red-500 shadow-[0_-2px_4px_rgba(0,0,0,0.02)]': activeTab === 'custodians', 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800/40': activeTab !== 'custodians'}" class="px-6 py-3.5 text-xs font-black uppercase tracking-widest border border-b-0 rounded-t-xl transition-all relative top-[1px]">
+                    <button @click="activeTab = 'custodians'" :class="{'bg-white border-slate-200 border-b-white text-deped shadow-[0_-2px_4px_rgba(0,0,0,0.02)]': activeTab === 'custodians', 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100': activeTab !== 'custodians'}" class="px-6 py-3.5 text-xs font-black uppercase tracking-widest border border-b-0 rounded-t-xl transition-all relative top-[1px]">
                         Office Custodians
                     </button>
-                    <button @click="activeTab = 'buildings'" :class="{'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 border-b-white dark:border-b-transparent text-deped dark:text-red-500 shadow-[0_-2px_4px_rgba(0,0,0,0.02)]': activeTab === 'buildings', 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800/40': activeTab !== 'buildings'}" class="px-6 py-3.5 text-xs font-black uppercase tracking-widest border border-b-0 rounded-t-xl transition-all relative top-[1px]">
+                    <button @click="activeTab = 'buildings'" :class="{'bg-white border-slate-200 border-b-white text-deped shadow-[0_-2px_4px_rgba(0,0,0,0.02)]': activeTab === 'buildings', 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100': activeTab !== 'buildings'}" class="px-6 py-3.5 text-xs font-black uppercase tracking-widest border border-b-0 rounded-t-xl transition-all relative top-[1px]">
                         School Buildings
                     </button>
                 </div>
