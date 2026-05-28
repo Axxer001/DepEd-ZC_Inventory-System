@@ -12,13 +12,56 @@
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
 
-        /* ── Checkbox custom ── */
-        .asset-checkbox:checked { accent-color: #c00000; }
+        /* Custom Scrollbar Styles for modern premium feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
 
-        /* ── Sticker card (64mm × 60mm) ── */
+        /* ── Checkbox custom ── */
+        .asset-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #cbd5e1;
+            border-radius: 4px;
+            outline: none;
+            background-color: #fff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .asset-checkbox:checked {
+            border-color: #c00000;
+            background-color: #c00000;
+        }
+        .asset-checkbox:checked::after {
+            content: '';
+            width: 4px;
+            height: 8px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+            margin-bottom: 2px;
+        }
+
+        /* ── Sticker card (75mm × 50mm) ── */
         .sticker-card {
-            width: 64mm;
-            height: 60mm;
+            width: 75mm;
+            height: 50mm;
             border: 2px solid #c00000;
             padding: 0;
             box-sizing: border-box;
@@ -30,18 +73,18 @@
             overflow: hidden;
         }
 
-        /* ── Long bond paper container (216mm × 330mm) ── */
+        /* ── Long bond paper container (227mm × 355.6mm - Legal Page) ── */
         .bond-paper {
-            width: 216mm;
-            height: 330mm;
+            width: 227mm;
+            height: 355.6mm;
             margin: 0 auto;
             background: white;
-            padding: 7mm 8mm;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+            padding: 2.8mm 1mm;
+            box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
             display: grid;
-            grid-template-columns: repeat(3, 64mm);
-            grid-template-rows: repeat(5, 60mm);
-            gap: 3mm;
+            grid-template-columns: repeat(3, 75mm);
+            grid-template-rows: repeat(7, 50mm);
+            gap: 0.6mm 0.8mm;
             box-sizing: border-box;
         }
 
@@ -53,26 +96,18 @@
             .print-area { padding: 0; }
         }
 
-        /* ── Sticker inner layout ── */
-        .sticker-header { display: flex; align-items: center; gap: 3mm; border-bottom: 1px solid #16a34a; padding-bottom: 2mm; margin-bottom: 2mm; }
-        .sticker-logo { width: 12mm; height: auto; }
-        .sticker-agency { font-size: 5.5pt; color: #1e3a5f; text-align: right; line-height: 1.3; }
-        .sticker-agency strong { display: block; font-size: 6.5pt; color: #c00000; }
-        .sticker-title { font-size: 8pt; font-weight: 900; color: #c00000; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; margin: 1mm 0; }
-        .sticker-body { display: flex; gap: 3mm; flex: 1; }
-        .sticker-info { flex: 1; }
-        .sticker-label { font-size: 5pt; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
-        .sticker-value { font-size: 7.5pt; font-weight: 800; color: #0f172a; line-height: 1.2; margin-bottom: 1.5mm; }
-        .sticker-qr-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 22mm; }
-        .sticker-qr-wrap canvas, .sticker-qr-wrap img { width: 22mm !important; height: 22mm !important; }
-        .sticker-scan-label { font-size: 5pt; font-weight: 700; color: #334155; text-align: center; margin-top: 1mm; }
-        .sticker-footer { border-top: 1px solid #16a34a; margin-top: 2mm; padding-top: 1.5mm; text-align: center; font-size: 5.5pt; font-weight: 700; color: #c00000; text-transform: uppercase; }
-        .sticker-footer small { display: block; color: #64748b; font-size: 4.5pt; font-style: italic; font-weight: 400; }
-
         /* ── Selection panel ── */
-        .asset-row { transition: background 0.15s; cursor: pointer; }
-        .asset-row:hover { background: #fef2f2; }
-        .asset-row.selected { background: #fef2f2; border-left: 3px solid #c00000; }
+        .asset-row {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .asset-row:hover {
+            background: #f8fafc;
+        }
+        .asset-row.selected {
+            background: #fff5f5;
+            border-left: 3px solid #c00000;
+        }
         .selected-badge { animation: pop 0.2s ease; }
         @keyframes pop { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); } }
     </style>
@@ -81,67 +116,58 @@
 
 @include('partials.sidebar')
 
-<div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto" style="margin-left: 0;">
+<div class="flex-grow flex flex-col min-w-0 h-screen overflow-hidden pl-20 bg-slate-50">
 
     {{-- ── Fixed Top Bar ── --}}
-    <div class="no-print sticky top-0 z-50 bg-white border-b border-slate-100 shadow-sm px-6 py-3 flex items-center justify-between gap-4" style="margin-left:80px;">
-        <div class="flex items-center gap-4">
-            <a href="{{ route('assets.view') }}" class="text-slate-400 hover:text-[#c00000] transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
-            </a>
-            <div>
-                <h1 class="text-lg font-black tracking-tight text-slate-900 uppercase italic">Print QR Stickers</h1>
-                <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-widest">Select assets → preview → print</p>
-            </div>
+    <div class="no-print sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100 shadow-sm px-6 py-4 flex items-center justify-between gap-4">
+        <div>
+            <h1 class="text-base font-extrabold tracking-tight text-slate-900 uppercase">Print QR Stickers</h1>
+            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Select assets → Generate Stickers</p>
         </div>
         <div class="flex items-center gap-3">
-            <span id="selectedCount" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-[#c00000] border border-red-100 rounded-full text-[11px] font-black">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <span id="selectedCount" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-[#c00000] border border-red-100 rounded-full text-[10px] font-black uppercase tracking-wider">
                 <span id="countNum">0</span> Selected
             </span>
             <button onclick="showPreview()" id="previewBtn"
-                class="px-5 py-2 bg-[#c00000] text-white rounded-xl text-[11px] font-black uppercase tracking-wider hover:bg-red-800 transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                class="px-5 py-2.5 bg-[#c00000] hover:bg-red-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none flex items-center gap-2"
                 disabled>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                Preview & Print
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.227v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5zM13.5 16.5a.75.75 0 01.75-.75h.75a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75v-.75zM13.5 13.5a.75.75 0 01.75-.75h.75a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75v-.75zM16.5 13.5a.75.75 0 01.75-.75h.75a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75v-.75zM16.5 16.5a.75.75 0 01.75-.75h.75a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75v-.75zM19.5 13.5a.75.75 0 01.75-.75h.75a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75v-.75zM19.5 16.5a.75.75 0 01.75-.75h.75a.75.75 0 01.75.75v.75a.75.75 0 01-.75.75h-.75a.75.75 0 01-.75-.75v-.75z"/></svg>
+                Generate QR
             </button>
         </div>
     </div>
 
     {{-- ── Main Content ── --}}
-    <div class="flex gap-0 h-full" style="margin-left:80px;">
+    <div class="flex gap-0 h-[calc(100vh-73px)] overflow-hidden">
 
         {{-- ── LEFT: Asset Selector ── --}}
-        <div class="no-print w-full xl:w-3/5 p-6 border-r border-slate-100 overflow-y-auto">
+        <div class="no-print w-full xl:w-3/5 p-6 border-r border-slate-100 overflow-y-auto h-full">
 
             {{-- Search & Filters --}}
-            <div class="flex gap-3 mb-5">
+            <div class="flex gap-3 mb-6">
                 <div class="relative flex-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-300"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
-                    <input id="searchInput" type="text" placeholder="Search property number, item, serial..." class="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[11px] font-semibold outline-none focus:border-[#c00000] focus:ring-2 focus:ring-red-100 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/></svg>
+                    <input id="searchInput" type="text" placeholder="Search property number, item, serial..." class="w-full pl-9 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[11px] font-semibold outline-none focus:border-[#c00000] focus:ring-4 focus:ring-red-50 transition-all shadow-sm">
                 </div>
-                <button onclick="selectAll()" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-600 hover:border-[#c00000] hover:text-[#c00000] transition-all">Select All</button>
-                <button onclick="clearAll()" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[11px] font-black text-slate-600 hover:border-red-200 hover:text-red-400 transition-all">Clear</button>
+                <button onclick="selectAll()" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-extrabold text-slate-700 hover:border-[#c00000] hover:text-[#c00000] transition-all shadow-sm hover:shadow active:scale-[0.98]">Select All</button>
+                <button onclick="clearAll()" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-extrabold text-slate-600 hover:border-red-200 hover:text-red-500 transition-all shadow-sm hover:shadow active:scale-[0.98]">Clear</button>
             </div>
 
-            {{-- Loading State --}}
-            <div id="loadingState" class="flex flex-col items-center justify-center py-20 gap-3">
-                <div class="w-8 h-8 border-4 border-red-100 border-t-[#c00000] rounded-full animate-spin"></div>
-                <p class="text-[11px] text-slate-400 font-semibold uppercase tracking-widest">Fetching assets...</p>
-            </div>
+            {{-- Dummy loadingState to prevent JS errors --}}
+            <div id="loadingState" class="hidden"></div>
 
             {{-- Asset Table --}}
-            <div id="assetTableWrap" class="hidden bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div id="assetTableWrap" class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
                 <div class="px-5 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Asset Records</p>
                     <span id="tableCount" class="text-[10px] font-bold text-slate-500"></span>
                 </div>
-                <div class="overflow-x-auto max-h-[65vh] overflow-y-auto">
+                <div class="overflow-x-auto overflow-y-auto max-h-[65vh]">
                     <table class="w-full text-left">
-                        <thead class="sticky top-0 bg-slate-50 z-10">
+                        <thead class="sticky top-0 bg-slate-50 z-10 border-b border-slate-100">
                             <tr>
                                 <th class="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest w-8">
-                                    <input type="checkbox" id="checkAll" class="asset-checkbox w-4 h-4 rounded" onchange="toggleAll(this)">
+                                    <input type="checkbox" id="checkAll" class="asset-checkbox" onchange="toggleAll(this)">
                                 </th>
                                 <th class="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Property No.</th>
                                 <th class="px-4 py-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Item / Description</th>
@@ -162,14 +188,19 @@
             </div>
         </div>
 
-        {{-- ── RIGHT: Preview Panel (hidden on small screens, shown before print) ── --}}
-        <div id="previewPanel" class="hidden xl:flex w-2/5 flex-col bg-slate-100 p-4 overflow-y-auto">
-            <div class="flex items-center justify-between mb-4">
-                <p class="text-[11px] font-black text-slate-500 uppercase tracking-widest">Bond Paper Preview</p>
-                <button onclick="window.print()" class="flex items-center gap-2 px-4 py-2 bg-[#c00000] text-white rounded-xl text-[11px] font-black hover:bg-red-800 transition-all shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0v2.796c0 1.176.836 2.19 2.013 2.342a40.52 40.52 0 006.474 0 2.25 2.25 0 002.013-2.342V9.034z"/></svg>
-                    Print
-                </button>
+        {{-- ── RIGHT: Preview Panel (modern light workspace layout) ── --}}
+        <div id="previewPanel" class="hidden xl:flex w-2/5 flex-col bg-slate-100 p-6 overflow-y-auto h-full border-l border-slate-200/80">
+            <div class="flex items-center justify-between mb-6 border-b border-slate-200 pb-4">
+                <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Bond Paper Preview</p>
+                <div class="flex items-center gap-2">
+                    <button onclick="closePreview()" class="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-[10px] font-bold transition-all shadow-sm active:scale-[0.98]">
+                        Cancel
+                    </button>
+                    <button onclick="window.print()" class="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-[#c00000] to-red-700 hover:from-red-700 hover:to-red-800 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md hover:shadow-lg active:scale-[0.98]">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0v2.796c0 1.176.836 2.19 2.013 2.342a40.52 40.52 0 006.474 0 2.25 2.25 0 002.013-2.342V9.034z"/></svg>
+                        Print Sheets
+                    </button>
+                </div>
             </div>
             <div id="bondPaperPreview" class="scale-[0.55] origin-top-left" style="width:182%;">
                 {{-- Bond paper pages rendered here by JS --}}
@@ -179,7 +210,7 @@
 </div>
 
 {{-- ── PRINT AREA (hidden on screen, shown when printing) ── --}}
-<div id="printArea" class="print-area hidden">
+<div id="printArea" class="print-area print-only">
     {{-- Bond paper pages generated by JS --}}
 </div>
 
@@ -187,15 +218,16 @@
 /* ═══════════════════════════════════════
    DATA & STATE
 ═══════════════════════════════════════ */
-let allAssets = [];
+let allAssets = @json($assets);
 let selectedIds = new Set();
 
 /* ═══════════════════════════════════════
    BOOTSTRAP
 ═══════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-    loadAssets();
+    // loadAssets preloaded
     document.getElementById('searchInput').addEventListener('input', renderTable);
+    renderTable();
 });
 
 async function loadAssets(isRetry = false) {
@@ -342,8 +374,8 @@ function showPreview() {
     const selected = allAssets.filter(a => selectedIds.has(a.id));
     if (selected.length === 0) return;
 
-    // Generate bond paper pages (2 stickers per row, ~5 rows per page)
-    const STICKERS_PER_PAGE = 10;
+    // Generate bond paper pages (3 columns × 7 rows = 21 stickers per page)
+    const STICKERS_PER_PAGE = 21;
     const chunks = [];
     for (let i = 0; i < selected.length; i += STICKERS_PER_PAGE) {
         chunks.push(selected.slice(i, i + STICKERS_PER_PAGE));
@@ -358,10 +390,16 @@ function showPreview() {
 
     // Update print area
     document.getElementById('printArea').innerHTML = pagesHTML;
-    document.getElementById('printArea').classList.remove('hidden');
 
     // Generate QRs after DOM renders
     setTimeout(() => generateAllQRs(selected), 100);
+}
+
+function closePreview() {
+    document.getElementById('previewPanel').classList.remove('flex');
+    document.getElementById('previewPanel').classList.add('hidden');
+    document.getElementById('bondPaperPreview').innerHTML = '';
+    document.getElementById('printArea').innerHTML = '';
 }
 
 function buildBondPaperHTML(assets) {
@@ -374,64 +412,56 @@ function buildStickerHTML(a) {
     const itemBrand = [a.item_name, a.brand, a.model].filter(Boolean).map(s => s.toUpperCase()).join(' / ');
     const serial = (a.serial_number || 'N/A').toUpperCase();
 
-    return `<div class="sticker-card" style="width: 64mm; height: 60mm; border: 4.5px solid #c00000; padding: 1.5mm; box-sizing: border-box; background: #fff; display: flex; flex-direction: column; justify-content: space-between; font-family: 'Plus Jakarta Sans', sans-serif;">
-        
+    return `<div class="sticker-card" style="width: 75mm; height: 50mm; border: 2.5px solid #c00000; padding: 0; box-sizing: border-box; background: white; display: flex; flex-direction: column; overflow: hidden; font-family: Arial, sans-serif; position: relative;">
         <!-- Header -->
-        <div style="display: flex; align-items: center; border-bottom: 1.2px solid #cbd5e1; padding-bottom: 1mm; gap: 1.5mm;">
-            <img src="/images/deped_logo.png" style="width: 13.5mm; height: auto;" alt="DepEd" onerror="this.style.opacity='0'">
-            <div style="flex: 1; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                <div style="font-size: 4.5pt; color: #1e3a5f; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1px; line-height: 1.2;">Republic of the Philippines</div>
-                <div style="font-size: 4.5pt; color: #1e3a5f; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1px; line-height: 1.2;">Department of Education</div>
-                <div style="font-size: 5.5pt; color: #002f6c; font-weight: 900; letter-spacing: 0.2px; line-height: 1.3; margin: 0.2mm 0;">DIVISION OF ZAMBOANGA CITY</div>
-                <div style="font-size: 4.5pt; color: #475569; font-weight: 700; line-height: 1.2;">Region IX-Zamboanga Peninsula</div>
+        <div style="display: flex; align-items: center; border-bottom: 1.5px solid #c00000; padding: 4px 8px; gap: 6px; background: #fff; flex-shrink: 0; min-height: 40px; box-sizing: border-box; overflow: hidden;">
+            <img src="/images/deped_logo.png" style="height: 30px; width: auto; flex-shrink: 0;" onerror="this.style.display='none'">
+            <div style="flex-grow: 1; text-align: center; display: flex; flex-direction: column; justify-content: center; line-height: 1.15;">
+                <div style="font-size: 7.5px; color: #000; font-weight: normal; font-family: Arial, sans-serif; text-transform: none;">Republic of the Philippines</div>
+                <div style="font-size: 7.5px; color: #000; font-weight: normal; font-family: Arial, sans-serif; text-transform: none;">Department of Education</div>
+                <div style="font-size: 9.5px; color: #1e3a8a; font-weight: bold; font-family: Arial, sans-serif; letter-spacing: 0.1px; text-transform: none;">DIVISION OF ZAMBOANGA CITY</div>
+                <div style="font-size: 7.5px; color: #000; font-weight: normal; font-family: Arial, sans-serif; text-transform: none;">Region IX-Zamboanga Peninsula</div>
             </div>
         </div>
 
         <!-- Title -->
-        <div style="font-size: 8pt; font-weight: 900; color: #c00000; text-align: center; text-transform: uppercase; letter-spacing: 0.4px; margin: 0.8mm 0 0.5mm 0; line-height: 1;">
+        <div style="text-align: center; color: #c00000; font-size: 9px; font-weight: bold; letter-spacing: 0.5px; padding: 3px 0; border-bottom: 1.5px solid #c00000; background: #fff; text-transform: uppercase; font-family: Arial, sans-serif; flex-shrink: 0; box-sizing: border-box;">
             PROPERTY INVENTORY STICKER
         </div>
 
-        <!-- Details & QR Body -->
-        <div style="display: flex; flex: 1; border: 1.2px solid #cbd5e1; border-radius: 2px; overflow: hidden; margin-bottom: 1mm; min-height: 25mm;">
-            
-            <!-- Specs Left Side -->
-            <div style="flex: 1.4; display: flex; flex-direction: column; border-right: 1.2px solid #cbd5e1;">
-                
-                <!-- Property Number -->
-                <div style="flex: 1; padding: 0.8mm 1.5mm; display: flex; flex-direction: column; justify-content: center; border-bottom: 1.2px solid #cbd5e1;">
-                    <span style="font-size: 4.8pt; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1px; line-height: 1;">PROPERTY NUMBER</span>
-                    <span style="font-size: 7.2pt; font-weight: 900; color: #0f172a; line-height: 1.1; margin-top: 0.5mm; word-break: break-all;">${propNum}</span>
+        <!-- Body -->
+        <div style="display: flex; flex-grow: 1; background: #fff; overflow: hidden; box-sizing: border-box;">
+            <!-- Left Side (Property details) -->
+            <div style="display: flex; flex-direction: column; width: 64%; border-right: 1px solid #cbd5e1; box-sizing: border-box;">
+                <!-- Row 1: Property Number -->
+                <div style="flex: 1; border-bottom: 1px solid #cbd5e1; padding: 4px 6px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: hidden;">
+                    <div style="font-size: 7.5px; font-weight: bold; color: #64748b; letter-spacing: 0.2px; text-transform: uppercase; line-height: 1;">PROPERTY NUMBER</div>
+                    <div style="font-size: 10.5px; font-weight: bold; color: #000; line-height: 1.2; word-break: break-all; margin-top: 1px;">${propNum}</div>
                 </div>
-
-                <!-- Item / Brand / Model -->
-                <div style="flex: 1.2; padding: 0.8mm 1.5mm; display: flex; flex-direction: column; justify-content: center; border-bottom: 1.2px solid #cbd5e1;">
-                    <span style="font-size: 4.8pt; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1px; line-height: 1;">ITEM/BRAND/MODEL</span>
-                    <span style="font-size: 6.8pt; font-weight: 900; color: #0f172a; line-height: 1.2; margin-top: 0.5mm; word-break: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${itemBrand || '—'}</span>
+                <!-- Row 2: Item Brand Model -->
+                <div style="flex: 1; border-bottom: 1px solid #cbd5e1; padding: 4px 6px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: hidden;">
+                    <div style="font-size: 7.5px; font-weight: bold; color: #64748b; letter-spacing: 0.2px; text-transform: uppercase; line-height: 1;">ITEM/BRAND/MODEL</div>
+                    <div style="font-size: 10.5px; font-weight: bold; color: #000; line-height: 1.2; word-break: break-word; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${itemBrand}</div>
                 </div>
-
-                <!-- Serial Number -->
-                <div style="flex: 1; padding: 0.8mm 1.5mm; display: flex; flex-direction: column; justify-content: center;">
-                    <span style="font-size: 4.8pt; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1px; line-height: 1;">SERIAL NUMBER</span>
-                    <span style="font-size: 7.2pt; font-weight: 900; color: #0f172a; line-height: 1.1; margin-top: 0.5mm; word-break: break-all;">${serial}</span>
+                <!-- Row 3: Serial Number -->
+                <div style="flex: 1; padding: 4px 6px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: hidden;">
+                    <div style="font-size: 7.5px; font-weight: bold; color: #64748b; letter-spacing: 0.2px; text-transform: uppercase; line-height: 1;">SERIAL NUMBER</div>
+                    <div style="font-size: 10.5px; font-weight: bold; color: #000; line-height: 1.2; word-break: break-all; margin-top: 1px;">${serial}</div>
                 </div>
-
             </div>
 
-            <!-- QR Right Side -->
-            <div style="flex: 0.8; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; padding: 1.2mm;">
-                <div id="qr-${a.id}" class="qr-target" style="width: 20mm; height: 20mm; display: flex; align-items: center; justify-content: center;"></div>
-                <span style="font-size: 5pt; font-weight: 900; color: #000; text-align: center; margin-top: 1.2mm; letter-spacing: 0.1px; text-transform: uppercase; white-space: nowrap;">SCAN FOR DETAILS</span>
+            <!-- Right Side (QR & Scan Me) -->
+            <div style="width: 36%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px; box-sizing: border-box; background: #fff; overflow: hidden;">
+                <div id="qr-${a.id}" style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; background: #fff; overflow: hidden; flex-shrink: 0;"></div>
+                <div style="font-size: 8px; font-weight: bold; color: #64748b; letter-spacing: 0.2px; text-transform: uppercase; line-height: 1; text-align: center;">SCAN ME</div>
+                <div style="font-size: 8px; font-weight: bold; color: #000; line-height: 1; text-align: center; margin-top: 2px;">FOR INFO</div>
             </div>
-
         </div>
 
         <!-- Footer -->
-        <div style="text-align: center; border-top: 1.2px solid #cbd5e1; padding-top: 0.8mm; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-            <span style="font-size: 6.2pt; font-weight: 900; color: #000; letter-spacing: 0.2px; text-transform: uppercase;">NOTE - PLEASE DO NOT REMOVE</span>
-            <span style="font-size: 5pt; font-style: italic; color: #000; margin-top: 0.2mm; font-weight: 700; line-height: 1;">"Unauthorized removal or tampering will be subject to disciplinary action."</span>
+        <div style="border-top: 1.5px solid #c00000; padding: 4px 6px; text-align: center; line-height: 1.1; background: #fff; box-sizing: border-box; flex-shrink: 0; min-height: 24px; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
+            <div style="font-size: 9px; font-weight: bold; color: #c00000; letter-spacing: 0.3px; text-transform: uppercase; font-family: Arial, sans-serif; line-height: 1;">DO NOT REMOVE UNDER PENALTY OF LAW</div>
         </div>
-
     </div>`;
 }
 
@@ -444,8 +474,8 @@ function generateAllQRs(assets) {
             try {
                 new QRCode(el, {
                     text: qrData,
-                    width: 76,   // ~20mm at 96dpi
-                    height: 76,
+                    width: 56,
+                    height: 56,
                     colorDark: '#000000',
                     colorLight: '#ffffff',
                     correctLevel: QRCode.CorrectLevel.M
@@ -465,10 +495,12 @@ window.addEventListener('afterprint', () => {
 </script>
 
 <style>
+.print-only { display: none !important; }
 /* Print: show only the print area */
 @media print {
     body > * { display: none !important; }
     #printArea { display: block !important; }
+    .print-only { display: block !important; }
     .sticker-card { border-color: #c00000 !important; }
     .bond-paper { box-shadow: none !important; }
 }
@@ -477,4 +509,6 @@ body > div:first-child { flex-shrink: 0; }
 </style>
 
 </body>
+</html>
+
 </html>

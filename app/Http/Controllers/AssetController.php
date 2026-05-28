@@ -45,7 +45,7 @@ class AssetController extends Controller
         $allItems = DB::table('items')
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->leftJoin(DB::raw('(SELECT item_id, SUM(quantity) as sourced_qty FROM asset_sources GROUP BY item_id) as src'), 'items.id', '=', 'src.item_id')
-            ->leftJoin(DB::raw('(SELECT asrc.item_id, COUNT(ad.id) as distributed_qty FROM asset_assignments ad JOIN asset_sources asrc ON ad.asset_source_id = asrc.id GROUP BY asrc.item_id) as dist'), 'items.id', '=', 'dist.item_id')
+            ->leftJoin(DB::raw('(SELECT asrc.item_id, COUNT(ad.id) as distributed_qty FROM asset_assignments ad JOIN asset_sources asrc ON ad.asset_source_id = asrc.id WHERE ad.location != "AMU Warehouse" OR ad.location IS NULL GROUP BY asrc.item_id) as dist'), 'items.id', '=', 'dist.item_id')
             ->select(
                 'items.id',
                 'items.name as item_name',
@@ -93,6 +93,10 @@ class AssetController extends Controller
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->leftJoin('offices', 'ad.office_id', '=', 'offices.id')
             ->leftJoin('schools', 'offices.school_id', '=', 'schools.id')
+            ->where(function($q) {
+                $q->where('ad.location', '!=', 'AMU Warehouse')
+                  ->orWhereNull('ad.location');
+            })
             ->select(
                 DB::raw('COALESCE(schools.name, offices.name, ad.location) as school_name'),
                 'categories.name as category_name',
@@ -347,14 +351,60 @@ class AssetController extends Controller
                 'type' => 'Procurement',
                 'user' => 'System Admin',
                 'description' => 'Asset officially procured and registered into the database from ' . $asset->source_name
-            ],
-            [
+            ]
+        ];
+        
+        // Fetch transfer history with office/school names
+        $transfers = DB::table('asset_transfers')
+            ->leftJoin('users', 'asset_transfers.authorized_by', '=', 'users.id')
+            ->leftJoin('custodians as to_custodian', 'asset_transfers.to_custodian_id', '=', 'to_custodian.id')
+            ->leftJoin('offices as from_off', 'asset_transfers.from_office_id', '=', 'from_off.id')
+            ->leftJoin('schools as from_sch', 'from_off.school_id', '=', 'from_sch.id')
+            ->leftJoin('offices as to_off', 'asset_transfers.to_office_id', '=', 'to_off.id')
+            ->leftJoin('schools as to_sch', 'to_off.school_id', '=', 'to_sch.id')
+            ->where('asset_assignment_id', $id)
+            ->select(
+                'asset_transfers.*',
+                'users.name as user_name',
+                'to_custodian.first_name', 'to_custodian.last_name',
+                DB::raw('COALESCE(from_sch.name, from_off.name) as from_school_name'),
+                DB::raw('COALESCE(to_sch.name, to_off.name) as to_school_name')
+            )
+            ->orderBy('asset_transfers.created_at', 'asc')
+            ->get();
+
+        if ($transfers->isEmpty() && !empty($asset->office_school_name) && $asset->office_school_name !== 'AMU Warehouse') {
+            $timeline[] = [
                 'date' => $asset->acquisition_date ?? 'N/A',
                 'type' => 'Transfer',
                 'user' => 'Property Officer',
-                'description' => 'Deployed and assigned to ' . ($asset->office_school_name ?? 'Unknown')
-            ]
-        ];
+                'description' => 'Deployed and assigned to ' . $asset->office_school_name
+            ];
+        } else {
+            foreach ($transfers as $t) {
+                $fromName = $t->from_school_name ?? 'AMU Warehouse';
+                $toName = $t->to_school_name ?? 'AMU Warehouse';
+
+                if ($t->transfer_type === 'Return') {
+                    $desc = 'Returned from ' . $fromName . ' to AMU / Warehouse.';
+                    if ($t->remarks) $desc .= ' Reason: ' . $t->remarks;
+                } else {
+                    $desc = 'Transferred from ' . $fromName . ' to ' . $toName;
+                    $custName = trim(($t->first_name ?? '') . ' ' . ($t->last_name ?? ''));
+                    if ($custName) $desc .= ' (Custodian: ' . $custName . ')';
+                    if ($t->transfer_type === 'Temporary Borrow' && $t->return_date) {
+                        $desc .= '. Borrowed until: ' . \Carbon\Carbon::parse($t->return_date)->format('F d, Y');
+                    }
+                }
+
+                $timeline[] = [
+                    'date' => $t->transfer_date ? \Carbon\Carbon::parse($t->transfer_date)->format('Y-m-d') : 'N/A',
+                    'type' => in_array($t->transfer_type, ['Temporary Borrow', 'Return']) ? $t->transfer_type : 'Transfer',
+                    'user' => $t->user_name ?? 'Property Officer',
+                    'description' => $desc
+                ];
+            }
+        }
 
         $documents = DB::table('asset_documents')->where('asset_distribution_id', $id)->orderByDesc('created_at')->get();
 
@@ -553,6 +603,8 @@ class AssetController extends Controller
             'custodian_contact' => 'nullable|string|max:255',
             'transfer_date' => 'nullable|date',
             'transfer_type' => 'nullable|string|max:255',
+            'condition' => 'required|string|max:255',
+            'return_date' => 'nullable|date',
             'remarks' => 'nullable|string|max:1000',
         ]);
 
@@ -595,23 +647,50 @@ class AssetController extends Controller
                 }
             }
 
+            // Resolve office_id
+            $officeId = $asset->office_id; // Default to current
+            $schoolIdStr = $request->input('school_id');
+            $officeSchoolName = $request->input('office_school_name');
+            
+            if ($schoolIdStr) {
+                $school = DB::table('schools')->where('school_id', $schoolIdStr)->first();
+                if ($school) {
+                    $office = DB::table('offices')->where('school_id', $school->id)->first();
+                    $officeId = $office ? $office->id : null;
+                }
+            } elseif ($officeSchoolName) {
+                $school = DB::table('schools')->where('name', $officeSchoolName)->first();
+                if ($school) {
+                    $office = DB::table('offices')->where('school_id', $school->id)->first();
+                    $officeId = $office ? $office->id : null;
+                } else {
+                    $office = DB::table('offices')->where('name', $officeSchoolName)->first();
+                    $officeId = $office ? $office->id : null;
+                }
+            }
+
             // Update Asset Assignment
             DB::table('asset_assignments')->where('id', $id)->update([
-                'office_school_type' => $request->input('office_school_type', ''),
-                'school_id' => $request->input('school_id', ''),
-                'nature_of_occupancy' => $request->input('nature_of_occupancy', ''),
-                'location' => $request->input('location', ''),
+                'office_id' => $officeId,
+                'office_school_type' => $request->input('office_school_type') ?? '',
+                'school_id' => $schoolIdStr ?? '',
+                'nature_of_occupancy' => $request->input('nature_of_occupancy') ?? '',
+                'location' => $request->input('location') ?? '',
                 'custodian_id' => $finalCustodianId ?: $asset->custodian_id,
+                'condition' => $request->input('condition'),
                 'updated_at' => now(),
             ]);
 
             // Log Transfer
             DB::table('asset_transfers')->insert([
                 'asset_assignment_id' => $id,
+                'from_office_id' => $asset->office_id,
+                'to_office_id' => $officeId,
                 'from_custodian_id' => $asset->custodian_id,
                 'to_custodian_id' => $finalCustodianId,
                 'transfer_date' => $request->input('transfer_date', now()),
-                'transfer_type' => $request->input('transfer_type', 'Permanent'),
+                'return_date' => $request->input('return_date'),
+                'transfer_type' => $request->input('transfer_type', 'Permanent Reassignment'),
                 'remarks' => $request->input('remarks'),
                 'authorized_by' => Auth::id() ?? 1,
                 'created_at' => now(),
@@ -620,6 +699,56 @@ class AssetController extends Controller
         });
 
         return back()->with('success', 'Asset successfully transferred!');
+    }
+
+    public function returnAmu(Request $request, $id)
+    {
+        if (!Auth::check() || !Auth::user()->approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'return_date' => 'required|date',
+            'condition' => 'required|string|max:255',
+            'remarks' => 'nullable|string|max:1000',
+        ]);
+
+        $asset = DB::table('asset_assignments')->where('id', $id)->first();
+        if (!$asset) {
+            return back()->with('error', 'Asset not found');
+        }
+
+        DB::transaction(function () use ($id, $asset, $validated) {
+            // Log the return
+            DB::table('asset_transfers')->insert([
+                'asset_assignment_id' => $id,
+                'from_office_id' => $asset->office_id,
+                'to_office_id' => null,
+                'from_custodian_id' => $asset->custodian_id,
+                'to_custodian_id' => null,
+                'transfer_date' => $validated['return_date'],
+                'transfer_type' => 'Return',
+                'remarks' => $validated['remarks'],
+                'authorized_by' => Auth::id() ?? 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // We do NOT delete the assignment, we instead nullify fields so the asset retains its history 
+            // but is no longer distributed (location = AMU Warehouse).
+            DB::table('asset_assignments')->where('id', $id)->update([
+                'custodian_id' => null,
+                'office_id' => null,
+                'office_school_type' => '',
+                'school_id' => '',
+                'nature_of_occupancy' => '',
+                'location' => 'AMU Warehouse',
+                'condition' => $validated['condition'],
+                'updated_at' => now(),
+            ]);
+        });
+
+        return redirect()->route('assets.view_all')->with('success', 'Asset successfully returned to AMU / Warehouse!');
     }
 
     public function getSchoolAssets($id)
