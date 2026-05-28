@@ -202,9 +202,6 @@
 
                 <div class="p-5 flex-grow overflow-y-auto custom-scroll">
                     <div x-show="activeTab === 'assets'" class="tab-fade">
-                        @if($assets->count() > 0)
-
-                        {{-- ===== FILTER & SORT TOOLBAR ===== --}}
                         @php
                             $availableYears = $assets
                                 ->map(fn($a) => $a->acquisition_date ? (int)date('Y', strtotime($a->acquisition_date)) : null)
@@ -213,6 +210,9 @@
                                 ->sort()
                                 ->values();
                         @endphp
+                        @if($assets->count() > 0)
+
+                        {{-- ===== FILTER & SORT TOOLBAR ===== --}}
                         <div class="space-y-3 mb-5 pb-4 border-b border-slate-100">
 
                             {{-- Row 1: Status chips --}}
