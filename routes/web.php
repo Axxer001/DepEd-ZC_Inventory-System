@@ -198,6 +198,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/buildings/import/confirm', [BuildingImportController::class, 'confirm'])->name('buildings.import.confirm');
 
     Route::get('/buildings/{id}', [\App\Http\Controllers\BuildingController::class, 'profile'])->name('buildings.profile');
+    Route::post('/buildings/{id}/update', [\App\Http\Controllers\BuildingController::class, 'update'])->name('buildings.update');
     Route::get('/schools/{id}', [\App\Http\Controllers\SchoolController::class, 'profile'])->name('schools.profile');
     Route::get('/offices/{id}', [\App\Http\Controllers\OfficeController::class, 'profile'])->name('offices.profile');
 

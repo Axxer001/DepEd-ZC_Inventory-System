@@ -297,6 +297,8 @@ class AssetController extends Controller
                 'ad.location',
                 'ad.acquisition_date',
                 'ad.custodian_id',
+                DB::raw("'Region IX' as region"),
+                DB::raw("'Division of Zamboanga City' as division"),
                 DB::raw('COALESCE(schools.name, offices.name, ad.location) as office_school_name'),
                 'offices.name as office_name',
                 'schools.name as school_name',
@@ -386,7 +388,7 @@ class AssetController extends Controller
             return back()->with('error', 'Asset not found');
         }
 
-        DB::transaction(function () use ($id, $asset, $validated) {
+        DB::transaction(function () use ($id, $asset, $validated, $request) {
 
             // 1. Resolve Classification
             $classInput = $validated['classification_id'];
@@ -559,7 +561,7 @@ class AssetController extends Controller
             return back()->with('error', 'Asset not found');
         }
 
-        DB::transaction(function () use ($id, $asset, $validated) {
+        DB::transaction(function () use ($id, $asset, $validated, $request) {
             $finalCustodianId = null;
 
             // Handle Custodian Find or Create
@@ -657,6 +659,10 @@ class AssetController extends Controller
 
     public function uploadPhoto(Request $request, $id)
     {
+        if (!Auth::check() || !Auth::user()->approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $request->validate([
             'photo' => 'required|image|max:5120',
         ]);
@@ -677,6 +683,10 @@ class AssetController extends Controller
 
     public function removePhoto($id)
     {
+        if (!Auth::check() || !Auth::user()->approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $asset = DB::table('asset_assignments')->where('id', $id)->first();
         if ($asset && $asset->photo_path) {
             \Illuminate\Support\Facades\Storage::disk('public')->delete($asset->photo_path);
@@ -688,6 +698,10 @@ class AssetController extends Controller
 
     public function uploadDocument(Request $request, $id)
     {
+        if (!Auth::check() || !Auth::user()->approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $file = $request->file('document') ?? $request->file('document_camera');
 
         if (!$file) {
@@ -716,6 +730,10 @@ class AssetController extends Controller
 
     public function removeDocument($docId)
     {
+        if (!Auth::check() || !Auth::user()->approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $doc = DB::table('asset_documents')->where('id', $docId)->first();
         if ($doc) {
             \Illuminate\Support\Facades\Storage::disk('public')->delete($doc->file_path);

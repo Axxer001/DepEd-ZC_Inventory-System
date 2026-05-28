@@ -178,35 +178,83 @@
                 <div class="p-6 lg:p-8 flex-grow overflow-y-auto custom-scroll bg-white">
                     
                     {{-- TAB 1: Infrastructure Details --}}
-                    <div x-show="activeTab === 'specs'" class="animate-fade space-y-8">
+                    <form id="update-building-form" action="{{ route('buildings.update', $building->id) }}" method="POST" x-show="activeTab === 'specs'" class="animate-fade space-y-8">
+                        @csrf
                         <div>
                             <h3 class="text-xs font-black text-slate-800 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 rounded-full bg-deped"></span> Technical Specifications
                             </h3>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-y-6 gap-x-8 bg-slate-50 rounded-xl p-6 border border-slate-100">
-                                <div>
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Classification</p>
-                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $building->classification_name }}</p>
+                                {{-- Searchable Classification --}}
+                                <div x-data="{ open: false, search: '{{ $building->classification_name }}', options: @js($classifications) }" class="relative" @click.away="open = false">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Classification</p>
+                                    <p x-show="!isEditing" class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $building->classification_name }}</p>
+                                    <div x-show="isEditing" class="relative group" x-cloak>
+                                        <input type="text" x-model="search" name="classification" @focus="open = true" @input="open = true" placeholder="Search or type new..." class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl px-4 py-3 text-xs font-black text-slate-100 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">
+                                        <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                        <div x-show="open" x-cloak class="absolute z-50 w-full mt-2 bg-slate-800 border-2 border-slate-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto custom-scroll p-1">
+                                            <template x-for="opt in options.filter(o => o.name.toLowerCase().includes(search.toLowerCase()))" :key="opt.id">
+                                                <div @click="search = opt.name; open = false;" class="px-4 py-2.5 text-[10px] font-black text-slate-300 uppercase hover:bg-slate-700 hover:text-white rounded-lg cursor-pointer transition-colors" x-text="opt.name"></div>
+                                            </template>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Type / Structure</p>
-                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $building->type_name }}</p>
+
+                                {{-- Searchable Type --}}
+                                <div x-data="{ open: false, search: '{{ $building->type_name }}', options: @js($types) }" class="relative" @click.away="open = false">
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Type / Structure</p>
+                                    <p x-show="!isEditing" class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $building->type_name }}</p>
+                                    <div x-show="isEditing" class="relative group" x-cloak>
+                                        <input type="text" x-model="search" name="type_name" @focus="open = true" @input="open = true" placeholder="Search or type new..." class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl px-4 py-3 text-xs font-black text-slate-100 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">
+                                        <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                        <div x-show="open" x-cloak class="absolute z-50 w-full mt-2 bg-slate-800 border-2 border-slate-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto custom-scroll p-1">
+                                            <template x-for="opt in options.filter(o => o.name.toLowerCase().includes(search.toLowerCase()))" :key="opt.id">
+                                                <div @click="search = opt.name; open = false;" class="px-4 py-2.5 text-[10px] font-black text-slate-300 uppercase hover:bg-slate-700 hover:text-white rounded-lg cursor-pointer transition-colors" x-text="opt.name"></div>
+                                            </template>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                {{-- Occupancy Nature Select --}}
                                 <div>
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Occupancy Nature</p>
-                                    <p class="text-xs font-black text-deped mt-1 uppercase">{{ $building->occupancy_nature ?: 'NOT SPECIFIED' }}</p>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Occupancy Nature</p>
+                                    <p x-show="!isEditing" class="text-xs font-black text-deped mt-1 uppercase px-1">{{ $building->occupancy_nature ?: 'NOT SPECIFIED' }}</p>
+                                    <div x-show="isEditing" class="relative group" x-cloak>
+                                        <select name="occupancy_nature" class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl px-4 py-3 text-xs font-black text-slate-100 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">
+                                            <option value="OWNED" {{ $building->occupancy_nature === 'OWNED' ? 'selected' : '' }}>OWNED</option>
+                                            <option value="DONATED" {{ $building->occupancy_nature === 'DONATED' ? 'selected' : '' }}>DONATED</option>
+                                            <option value="USUFRUCT" {{ $building->occupancy_nature === 'USUFRUCT' ? 'selected' : '' }}>USUFRUCT</option>
+                                            <option value="LEASED" {{ $building->occupancy_nature === 'LEASED' ? 'selected' : '' }}>LEASED</option>
+                                            <option value="NOT SPECIFIED" {{ !$building->occupancy_nature ? 'selected' : '' }}>NOT SPECIFIED</option>
+                                        </select>
+                                    </div>
                                 </div>
+
+                                {{-- Storeys --}}
                                 <div>
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Number of Storeys</p>
-                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $building->storeys }} Storey(s)</p>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Number of Storeys</p>
+                                    <p x-show="!isEditing" class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $building->storeys }} Storey(s)</p>
+                                    <div x-show="isEditing" class="relative group" x-cloak>
+                                        <input type="number" name="storeys" min="1" value="{{ $building->storeys }}" class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl px-4 py-3 text-xs font-black text-slate-100 focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">
+                                    </div>
                                 </div>
+
+                                {{-- Classrooms --}}
                                 <div>
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Classrooms</p>
-                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $building->classrooms }} Classroom(s)</p>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Total Classrooms</p>
+                                    <p x-show="!isEditing" class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $building->classrooms }} Classroom(s)</p>
+                                    <div x-show="isEditing" class="relative group" x-cloak>
+                                        <input type="number" name="classrooms" min="0" value="{{ $building->classrooms }}" class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl px-4 py-3 text-xs font-black text-slate-100 focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">
+                                    </div>
                                 </div>
+
+                                {{-- Property Number --}}
                                 <div>
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Property Number</p>
-                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $building->property_number }}</p>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Property Number</p>
+                                    <p x-show="!isEditing" class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $building->property_number }}</p>
+                                    <div x-show="isEditing" class="relative group" x-cloak>
+                                        <input type="text" name="property_number" value="{{ $building->property_number }}" class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl px-4 py-3 text-xs font-black text-slate-100 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -216,36 +264,56 @@
                                 <span class="w-1.5 h-1.5 rounded-full bg-deped"></span> Procurement & Construction
                             </h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+                                {{-- Date Constructed --}}
                                 <div>
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Date Constructed</p>
-                                    <p class="text-sm font-black text-slate-800 mt-1 uppercase">{{ $building->date_constructed ? \Carbon\Carbon::parse($building->date_constructed)->format('F d, Y') : 'N/A' }}</p>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Date Constructed</p>
+                                    <p x-show="!isEditing" class="text-sm font-black text-slate-800 mt-1 uppercase px-1">{{ $building->date_constructed ? \Carbon\Carbon::parse($building->date_constructed)->format('F d, Y') : 'N/A' }}</p>
+                                    <div x-show="isEditing" class="relative group" x-cloak>
+                                        <input type="date" name="date_constructed" value="{{ $building->date_constructed ? \Carbon\Carbon::parse($building->date_constructed)->format('Y-m-d') : '' }}" class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl px-4 py-3 text-xs font-black text-slate-100 focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">
+                                    </div>
                                 </div>
+
+                                {{-- Acquisition Cost --}}
                                 <div>
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Acquisition Cost</p>
-                                    <p class="text-lg font-black text-emerald-600 mt-0.5 tracking-tighter">₱ {{ number_format($building->acquisition_cost, 2) }}</p>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Acquisition Cost</p>
+                                    <p x-show="!isEditing" class="text-lg font-black text-emerald-600 mt-0.5 tracking-tighter px-1">₱ {{ number_format($building->acquisition_cost, 2) }}</p>
+                                    <div x-show="isEditing" class="relative group" x-cloak>
+                                        <input type="number" name="acquisition_cost" step="0.01" min="0" value="{{ $building->acquisition_cost }}" class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl px-4 py-3 text-xs font-black text-slate-100 focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">
+                                    </div>
                                 </div>
+
+                                {{-- Useful Life --}}
                                 <div>
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Estimated Useful Life</p>
-                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $building->estimated_useful_life }} Year(s)</p>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Estimated Useful Life</p>
+                                    <p x-show="!isEditing" class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $building->estimated_useful_life }} Year(s)</p>
+                                    <div x-show="isEditing" class="relative group" x-cloak>
+                                        <input type="number" name="estimated_useful_life" min="0" value="{{ $building->estimated_useful_life }}" class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl px-4 py-3 text-xs font-black text-slate-100 focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">
+                                    </div>
                                 </div>
+
+                                {{-- Appraised Value --}}
                                 <div>
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Appraised Value</p>
-                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase">₱ {{ number_format($building->appraised_value, 2) }}</p>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Appraised Value</p>
+                                    <p x-show="!isEditing" class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">₱ {{ number_format($building->appraised_value, 2) }}</p>
+                                    <div x-show="isEditing" class="relative group" x-cloak>
+                                        <input type="number" name="appraised_value" step="0.01" min="0" value="{{ $building->appraised_value }}" class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl px-4 py-3 text-xs font-black text-slate-100 focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        @if($building->remarks)
                         <div>
                             <h3 class="text-xs font-black text-slate-800 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                                 <span class="w-1.5 h-1.5 rounded-full bg-deped"></span> Remarks / Notes
                             </h3>
                             <div class="bg-slate-50 rounded-xl p-6 border border-slate-100">
-                                <p class="text-xs font-medium text-slate-600 leading-relaxed italic">"{{ $building->remarks }}"</p>
+                                <p x-show="!isEditing" class="text-xs font-medium text-slate-600 leading-relaxed italic px-1">"{{ $building->remarks ?: 'No remarks recorded.' }}"</p>
+                                <div x-show="isEditing" class="relative group" x-cloak>
+                                    <textarea name="remarks" rows="3" class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl px-4 py-3 text-xs font-black text-slate-100 focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">{{ $building->remarks }}</textarea>
+                                </div>
                             </div>
                         </div>
-                        @endif
-                    </div>
+                    </form>
 
                     {{-- TAB 2: Lifecycle & History --}}
                     <div x-show="activeTab === 'history'" class="animate-fade relative" x-cloak>
@@ -305,7 +373,7 @@
                 <p class="text-xs font-bold text-slate-500 mb-8 leading-relaxed">Confirm to update the building records. This action will be logged.</p>
                 <div class="flex items-center gap-3 w-full">
                     <button @click="showConfirmModal = false" class="flex-1 py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-widest transition-colors">Cancel</button>
-                    <button @click="isEditing = false; showConfirmModal = false" class="flex-1 py-3.5 px-4 bg-deped hover:bg-red-800 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-deped/30 transition-all active:scale-95">Yes, Save</button>
+                    <button @click="document.getElementById('update-building-form').submit();" class="flex-1 py-3.5 px-4 bg-deped hover:bg-red-800 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-deped/30 transition-all active:scale-95">Yes, Save</button>
                 </div>
             </div>
         </div>

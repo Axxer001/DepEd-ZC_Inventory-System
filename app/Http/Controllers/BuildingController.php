@@ -34,6 +34,9 @@ class BuildingController extends Controller
             abort(404, 'Building not found');
         }
 
+        $classifications = DB::table('building_classifications')->select('id', 'name')->orderBy('name')->get();
+        $types = DB::table('building_types')->select('id', 'name')->orderBy('name')->get();
+
         // Generate dummy timeline data
         $timeline = [
             [
@@ -52,6 +55,105 @@ class BuildingController extends Controller
 
         $documents = collect(); // empty for now
 
-        return view('buildings.profile', compact('building', 'timeline', 'documents'));
+        return view('buildings.profile', compact('building', 'timeline', 'documents', 'classifications', 'types'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        if (!auth()->check() || !auth()->user()->approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'classification' => 'required|string|max:255',
+            'type_name' => 'required|string|max:255',
+            'occupancy_nature' => 'nullable|string|max:255',
+            'storeys' => 'required|integer|min:1',
+            'classrooms' => 'required|integer|min:0',
+            'property_number' => 'nullable|string|max:255',
+            'date_constructed' => 'nullable|date',
+            'acquisition_cost' => 'nullable|numeric|min:0',
+            'estimated_useful_life' => 'nullable|integer|min:0',
+            'appraised_value' => 'nullable|numeric|min:0',
+            'remarks' => 'nullable|string|max:1000',
+        ]);
+
+        $building = DB::table('building_records')->where('id', $id)->first();
+        if (!$building) {
+            return back()->with('error', 'Building not found');
+        }
+
+        DB::transaction(function () use ($id, $building, $validated, $request) {
+            // 1. Resolve Classification
+            $classInput = trim($validated['classification']);
+            $classification = DB::table('building_classifications')
+                ->whereRaw('LOWER(name) = ?', [strtolower($classInput)])
+                ->first();
+            $finalClassId = $classification ? $classification->id : DB::table('building_classifications')->insertGetId([
+                'name' => strtoupper($classInput),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // 2. Resolve Type
+            $typeInput = trim($validated['type_name']);
+            $type = DB::table('building_types')
+                ->whereRaw('LOWER(name) = ?', [strtolower($typeInput)])
+                ->where('building_classification_id', $finalClassId)
+                ->first();
+            $finalTypeId = $type ? $type->id : DB::table('building_types')->insertGetId([
+                'building_classification_id' => $finalClassId,
+                'name' => strtoupper($typeInput),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // 3. Resolve Spec
+            $storeys = intval($validated['storeys']);
+            $classrooms = intval($validated['classrooms']);
+            
+            $spec = DB::table('building_specs')
+                ->where('building_type_id', $finalTypeId)
+                ->where('storeys', $storeys)
+                ->where('classrooms', $classrooms)
+                ->first();
+
+            $finalSpecId = $spec ? $spec->id : DB::table('building_specs')->insertGetId([
+                'building_type_id' => $finalTypeId,
+                'storeys' => $storeys,
+                'classrooms' => $classrooms,
+                'description' => "{$storeys} STOREY - {$classrooms} CLASSROOM " . strtoupper($typeInput),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // 4. Update Building Record
+            DB::table('building_records')->where('id', $id)->update([
+                'building_spec_id' => $finalSpecId,
+                'occupancy_nature' => $validated['occupancy_nature'],
+                'property_number' => $validated['property_number'],
+                'date_constructed' => $validated['date_constructed'],
+                'acquisition_cost' => $validated['acquisition_cost'],
+                'estimated_useful_life' => $validated['estimated_useful_life'],
+                'appraised_value' => $validated['appraised_value'],
+                'remarks' => $validated['remarks'],
+                'updated_at' => now(),
+            ]);
+
+            /** @var \App\Models\User|null $user */
+            $user = auth()->user();
+
+            // Log the activity
+            DB::table('system_logs')->insert([
+                'user' => $user ? $user->name : 'System',
+                'action_type' => 'UPDATE',
+                'module' => 'Buildings',
+                'activity' => 'Updated building record ID ' . $id . ' (Spec ID ' . $finalSpecId . ')',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
+
+        return back()->with('success', 'Building specifications updated successfully!');
     }
 }
