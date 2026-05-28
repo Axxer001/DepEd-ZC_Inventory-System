@@ -37,7 +37,7 @@ class AuthController extends Controller
                 'updated_at' => now()
             ]);
             
-            return redirect('/dashboard');
+            return redirect()->intended('/dashboard');
         }
 
         // Check if pending approval

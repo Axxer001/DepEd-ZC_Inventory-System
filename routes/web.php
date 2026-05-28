@@ -163,9 +163,9 @@ Route::middleware('auth')->group(function () {
                 'ad.location',
                 'items.name as item_name',
                 DB::raw('COALESCE(asrc.description, items.name) as description'),
-                DB::raw('NULL as serial_number'),
-                DB::raw('NULL as brand'),
-                DB::raw('NULL as model'),
+                'asrc.serial_number',
+                'asrc.brand',
+                'asrc.model',
                 DB::raw('COALESCE(schools.name, offices.name, ad.location) as school_name')
             )
             ->orderBy('ad.id', 'desc')

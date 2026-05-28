@@ -127,7 +127,7 @@
             {{-- Loading State --}}
             <div id="loadingState" class="flex flex-col items-center justify-center py-20 gap-3">
                 <div class="w-8 h-8 border-4 border-red-100 border-t-[#c00000] rounded-full animate-spin"></div>
-                <p class="text-[11px] text-slate-400 font-semibold">Loading assets...</p>
+                <p class="text-[11px] text-slate-400 font-semibold uppercase tracking-widest">Fetching assets...</p>
             </div>
 
             {{-- Asset Table --}}
@@ -198,17 +198,41 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('searchInput').addEventListener('input', renderTable);
 });
 
-async function loadAssets() {
+async function loadAssets(isRetry = false) {
+    // Delay by 1.5s on first load so the initial page render completes
+    // before firing the AJAX — prevents single-threaded server lock on php artisan serve
+    if (!isRetry) {
+        await new Promise(r => setTimeout(r, 1500));
+    }
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000); // 20s timeout
+
     try {
         const res = await fetch('/api/assets/print-list', {
-            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+            signal: controller.signal,
+            headers: { 'Accept': 'application/json' }
         });
-        if (!res.ok) throw new Error('Failed to load');
+        clearTimeout(timeout);
+
+        if (!res.ok) throw new Error(`Server error: ${res.status} ${res.statusText}`);
+
         const data = await res.json();
         allAssets = data.assets || [];
         renderTable();
     } catch (e) {
-        document.getElementById('loadingState').innerHTML = `<p class="text-red-500 font-bold text-sm">Error loading assets. Please refresh.</p>`;
+        clearTimeout(timeout);
+        const msg = e.name === 'AbortError' ? 'Request timed out. Server may be busy.' : (e.message || 'Unknown error');
+        document.getElementById('loadingState').innerHTML = `
+            <div class="flex flex-col items-center gap-2 text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8 text-red-300">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                </svg>
+                <p class="text-[11px] font-black text-red-500 uppercase tracking-widest">Failed to load assets</p>
+                <p class="text-[10px] text-slate-400 font-semibold max-w-xs">${msg}</p>
+                <button onclick="loadAssets(true)" class="mt-1 px-5 py-2 bg-[#c00000] text-white rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-red-800 transition-all">Retry</button>
+            </div>
+        `;
     }
 }
 
@@ -346,43 +370,68 @@ function buildBondPaperHTML(assets) {
 }
 
 function buildStickerHTML(a) {
-    const propNum = a.property_number || 'N/A';
-    const itemBrand = [a.item_name, a.brand, a.model].filter(Boolean).join(' / ');
-    const serial = a.serial_number || 'N/A';
-    const qrData = `${window.location.origin}/assets/${a.id}/profile`;
+    const propNum = (a.property_number || 'N/A').toUpperCase();
+    const itemBrand = [a.item_name, a.brand, a.model].filter(Boolean).map(s => s.toUpperCase()).join(' / ');
+    const serial = (a.serial_number || 'N/A').toUpperCase();
 
-    return `<div class="sticker-card">
-        <div class="sticker-header">
-            <img src="/images/deped_logo.png" class="sticker-logo" alt="DepEd" onerror="this.style.display='none'">
-            <div style="flex:1;">
-                <div style="font-size:5pt; color:#1e3a5f; font-weight:700;">Republic of the Philippines</div>
-                <div style="font-size:5pt; color:#1e3a5f; font-weight:700;">Department of Education</div>
-                <div style="font-size:6pt; color:#c00000; font-weight:900;">DIVISION OF ZAMBOANGA CITY</div>
-                <div style="font-size:4.5pt; color:#475569;">Region IX-Zamboanga Peninsula</div>
-            </div>
-            <div style="width:18mm; height:12mm; background:#ffd700; border:1px solid #e5c100; border-radius:2px; display:flex; align-items:center; justify-content:center;">
-                <span style="font-size:4pt; color:#1e3a5f; font-weight:700;">LOGO/SEAL</span>
-            </div>
-        </div>
-        <div class="sticker-title">Property Inventory Sticker</div>
-        <div class="sticker-body">
-            <div class="sticker-info">
-                <div class="sticker-label">Property Number</div>
-                <div class="sticker-value">${propNum}</div>
-                <div class="sticker-label">Item / Brand / Model</div>
-                <div class="sticker-value">${itemBrand || '—'}</div>
-                <div class="sticker-label">Serial Number</div>
-                <div class="sticker-value">${serial}</div>
-            </div>
-            <div class="sticker-qr-wrap">
-                <div id="qr-${a.id}" style="width:22mm; height:22mm; display:flex; align-items:center; justify-content:center; background:#f8fafc; border:0.5px solid #e2e8f0; border-radius:2px;"></div>
-                <div class="sticker-scan-label">SCAN FOR DETAILS</div>
+    return `<div class="sticker-card" style="width: 64mm; height: 60mm; border: 4.5px solid #c00000; padding: 1.5mm; box-sizing: border-box; background: #fff; display: flex; flex-direction: column; justify-content: space-between; font-family: 'Plus Jakarta Sans', sans-serif;">
+        
+        <!-- Header -->
+        <div style="display: flex; align-items: center; border-bottom: 1.2px solid #cbd5e1; padding-bottom: 1mm; gap: 1.5mm;">
+            <img src="/images/deped_logo.png" style="width: 13.5mm; height: auto;" alt="DepEd" onerror="this.style.opacity='0'">
+            <div style="flex: 1; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <div style="font-size: 4.5pt; color: #1e3a5f; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1px; line-height: 1.2;">Republic of the Philippines</div>
+                <div style="font-size: 4.5pt; color: #1e3a5f; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1px; line-height: 1.2;">Department of Education</div>
+                <div style="font-size: 5.5pt; color: #002f6c; font-weight: 900; letter-spacing: 0.2px; line-height: 1.3; margin: 0.2mm 0;">DIVISION OF ZAMBOANGA CITY</div>
+                <div style="font-size: 4.5pt; color: #475569; font-weight: 700; line-height: 1.2;">Region IX-Zamboanga Peninsula</div>
             </div>
         </div>
-        <div class="sticker-footer">
-            NOTE - PLEASE DO NOT REMOVE
-            <small>"Unauthorized removal or tampering will be subject to disciplinary action."</small>
+
+        <!-- Title -->
+        <div style="font-size: 8pt; font-weight: 900; color: #c00000; text-align: center; text-transform: uppercase; letter-spacing: 0.4px; margin: 0.8mm 0 0.5mm 0; line-height: 1;">
+            PROPERTY INVENTORY STICKER
         </div>
+
+        <!-- Details & QR Body -->
+        <div style="display: flex; flex: 1; border: 1.2px solid #cbd5e1; border-radius: 2px; overflow: hidden; margin-bottom: 1mm; min-height: 25mm;">
+            
+            <!-- Specs Left Side -->
+            <div style="flex: 1.4; display: flex; flex-direction: column; border-right: 1.2px solid #cbd5e1;">
+                
+                <!-- Property Number -->
+                <div style="flex: 1; padding: 0.8mm 1.5mm; display: flex; flex-direction: column; justify-content: center; border-bottom: 1.2px solid #cbd5e1;">
+                    <span style="font-size: 4.8pt; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1px; line-height: 1;">PROPERTY NUMBER</span>
+                    <span style="font-size: 7.2pt; font-weight: 900; color: #0f172a; line-height: 1.1; margin-top: 0.5mm; word-break: break-all;">${propNum}</span>
+                </div>
+
+                <!-- Item / Brand / Model -->
+                <div style="flex: 1.2; padding: 0.8mm 1.5mm; display: flex; flex-direction: column; justify-content: center; border-bottom: 1.2px solid #cbd5e1;">
+                    <span style="font-size: 4.8pt; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1px; line-height: 1;">ITEM/BRAND/MODEL</span>
+                    <span style="font-size: 6.8pt; font-weight: 900; color: #0f172a; line-height: 1.2; margin-top: 0.5mm; word-break: break-word; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${itemBrand || '—'}</span>
+                </div>
+
+                <!-- Serial Number -->
+                <div style="flex: 1; padding: 0.8mm 1.5mm; display: flex; flex-direction: column; justify-content: center;">
+                    <span style="font-size: 4.8pt; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.1px; line-height: 1;">SERIAL NUMBER</span>
+                    <span style="font-size: 7.2pt; font-weight: 900; color: #0f172a; line-height: 1.1; margin-top: 0.5mm; word-break: break-all;">${serial}</span>
+                </div>
+
+            </div>
+
+            <!-- QR Right Side -->
+            <div style="flex: 0.8; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fff; padding: 1.2mm;">
+                <div id="qr-${a.id}" class="qr-target" style="width: 20mm; height: 20mm; display: flex; align-items: center; justify-content: center;"></div>
+                <span style="font-size: 5pt; font-weight: 900; color: #000; text-align: center; margin-top: 1.2mm; letter-spacing: 0.1px; text-transform: uppercase; white-space: nowrap;">SCAN FOR DETAILS</span>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div style="text-align: center; border-top: 1.2px solid #cbd5e1; padding-top: 0.8mm; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <span style="font-size: 6.2pt; font-weight: 900; color: #000; letter-spacing: 0.2px; text-transform: uppercase;">NOTE - PLEASE DO NOT REMOVE</span>
+            <span style="font-size: 5pt; font-style: italic; color: #000; margin-top: 0.2mm; font-weight: 700; line-height: 1;">"Unauthorized removal or tampering will be subject to disciplinary action."</span>
+        </div>
+
     </div>`;
 }
 
@@ -395,8 +444,8 @@ function generateAllQRs(assets) {
             try {
                 new QRCode(el, {
                     text: qrData,
-                    width: 83,   // ~22mm at 96dpi
-                    height: 83,
+                    width: 76,   // ~20mm at 96dpi
+                    height: 76,
                     colorDark: '#000000',
                     colorLight: '#ffffff',
                     correctLevel: QRCode.CorrectLevel.M
