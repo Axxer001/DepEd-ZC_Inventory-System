@@ -5,29 +5,78 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Office Registry | DepEd Zamboanga City</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        /* === CSS Custom Properties for Light/Dark Theming === */
+        :root {
+            --bg-page:        #f8fafc;
+            --bg-card:        #ffffff;
+            --bg-secondary:   #f8fafc;
+            --border-primary: #e2e8f0;
+            --border-strong:  #cbd5e1;
+            --text-primary:   #0f172a;
+            --text-secondary: #1e293b;
+            --text-muted:     #64748b;
+            --text-faint:     #94a3b8;
+            --scrollbar-thumb: #cbd5e1;
+            --row-hover-bg:   rgba(192,0,0,0.03);
+            --row-hover-border: #c00000;
+            --row-active-bg:  rgba(192,0,0,0.08);
+        }
+        html.dark {
+            --bg-page:        #0f172a;
+            --bg-card:        #1e293b;
+            --bg-secondary:   #0f172a;
+            --border-primary: #334155;
+            --border-strong:  #475569;
+            --text-primary:   #f8fafc;
+            --text-secondary: #e2e8f0;
+            --text-muted:     #94a3b8;
+            --text-faint:     #64748b;
+            --scrollbar-thumb: #475569;
+            --row-hover-bg:   rgba(192,0,0,0.07);
+            --row-hover-border: #ef4444;
+            --row-active-bg:  rgba(192,0,0,0.14);
+        }
+
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-page); color: var(--text-primary); }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
         .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
         .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: #f87171; border: 2px solid transparent; background-clip: padding-box; }
-        .back-btn-cool { background: white; border: 1px solid #e2e8f0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .xls-th { padding: 14px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; white-space: nowrap; border-right: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: #f8fafc; position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
-        .xls-td { height: 52px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; vertical-align: middle; padding: 0; background: white; transition: all 0.3s ease; }
+
+        .back-btn-cool { background: var(--bg-card); border: 1px solid var(--border-primary); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .xls-th { padding: 14px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); white-space: nowrap; border-right: 1px solid var(--border-primary); border-bottom: 2px solid var(--border-strong); background: var(--bg-secondary); position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .xls-td { height: 52px; border-right: 1px solid var(--border-primary); border-bottom: 1px solid var(--border-primary); vertical-align: middle; padding: 0; background: var(--bg-card); transition: all 0.3s ease; color: var(--text-secondary); }
         .xls-row { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative; }
         .xls-row:hover { transform: translateX(4px); z-index: 10; }
-        .xls-row:hover .xls-td { background-color: rgba(192, 0, 0, 0.03) !important; border-bottom-color: #c00000; }
-        .xls-row:hover .xls-td:first-child { box-shadow: inset 4px 0 0 #c00000; }
+        .xls-row:hover .xls-td { background-color: var(--row-hover-bg) !important; border-bottom-color: var(--row-hover-border); }
+        .xls-row:hover .xls-td:first-child { box-shadow: inset 4px 0 0 var(--row-hover-border); }
         .xls-row:active { transform: scale(0.995); transition: all 0.1s; }
-        .xls-row:active .xls-td { background-color: rgba(192, 0, 0, 0.08) !important; }
+        .xls-row:active .xls-td { background-color: var(--row-active-bg) !important; }
         .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
-        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 350px); min-height: 400px; background: white; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
+        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 350px); min-height: 400px; background: var(--bg-card); flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid var(--border-primary); }
         .xls-scroll-wrap.expanded { height: calc(100vh - 250px); }
+
+        /* Adaptive Tailwind overrides */
+        .bg-white  { background-color: var(--bg-card)      !important; }
+        .bg-slate-50 { background-color: var(--bg-secondary) !important; }
+        .border-slate-200 { border-color: var(--border-primary) !important; }
+        .border-slate-100 { border-color: var(--border-primary) !important; }
+        .text-slate-900 { color: var(--text-primary)   !important; }
+        .text-slate-800 { color: var(--text-secondary) !important; }
+        .text-slate-700 { color: var(--text-muted)     !important; }
+        .text-slate-600 { color: var(--text-muted)     !important; }
+        .text-slate-500, .text-slate-400 { color: var(--text-faint) !important; }
+
         .pg-btn {
             padding: 8px 18px;
             font-size: 10px;
@@ -36,9 +85,9 @@
             letter-spacing: 0.1em;
             border-radius: 9999px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid #e2e8f0;
-            background: white;
-            color: #475569;
+            border: 1px solid var(--border-primary);
+            background: var(--bg-card);
+            color: var(--text-muted);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -55,7 +104,7 @@
         .pg-btn:disabled {
             opacity: 0.3;
             cursor: not-allowed;
-            background: #f1f5f9;
+            background: var(--bg-secondary);
         }
 
         /* Glass Indicator Box */
@@ -64,8 +113,8 @@
             align-items: center;
             gap: 8px;
             padding: 8px 16px;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
             border-radius: 12px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
@@ -78,9 +127,9 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             border-radius: 12px;
-            border: 1px solid rgba(226, 232, 240, 0.5);
+            border: 1px solid var(--border-primary);
             background: transparent;
-            color: inherit;
+            color: var(--text-muted);
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             white-space: nowrap;
@@ -100,17 +149,15 @@
             padding: 4px;
         }
 
-        /* Dark Mode Overrides */
-        html.dark body { background-color: #0f172a; color: #f8fafc; }
-        html.dark .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
-        html.dark .text-slate-800 { color: #f8fafc !important; }
-        html.dark .text-slate-900 { color: #f8fafc !important; }
-        html.dark .bg-slate-50 { background-color: #0f172a !important; border-color: #1e293b !important; }
-        html.dark .bg-slate-50\/50 { background-color: #1e293b !important; }
-        html.dark .border-t { border-color: #334155 !important; }
-        html.dark .xls-td { background-color: #1e293b !important; border-color: #334155 !important; }
-        html.dark .xls-th { background-color: #0f172a !important; border-color: #334155 !important; color: #94a3b8 !important; }
-        html.dark .xls-scroll-wrap { background-color: #1e293b !important; border-color: #334155 !important; }
+        /* Filter panel background */
+        #officeFilterSection {
+            background: var(--bg-card);
+            border-color: var(--border-primary);
+        }
+        #officeTableFooter {
+            background: var(--bg-card);
+            border-color: var(--border-primary);
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex text-slate-900 overflow-x-hidden selection:bg-red-100 selection:text-red-900 relative">

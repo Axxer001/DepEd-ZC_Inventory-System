@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -20,20 +21,61 @@
         }
     </script>
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        /* === CSS Custom Properties for Light/Dark Theming === */
+        :root {
+            --bg-page:        #f8fafc;
+            --bg-card:        #ffffff;
+            --bg-secondary:   #f8fafc;
+            --border-primary: #e2e8f0;
+            --border-subtle:  #f1f5f9;
+            --text-primary:   #0f172a;
+            --text-secondary: #1e293b;
+            --text-muted:     #64748b;
+            --text-faint:     #94a3b8;
+            --scrollbar-thumb: #cbd5e1;
+            --timeline-line:  #e2e8f0;
+        }
+        html.dark {
+            --bg-page:        #0f172a;
+            --bg-card:        #1e293b;
+            --bg-secondary:   #0f172a;
+            --border-primary: #334155;
+            --border-subtle:  #334155;
+            --text-primary:   #f8fafc;
+            --text-secondary: #e2e8f0;
+            --text-muted:     #94a3b8;
+            --text-faint:     #64748b;
+            --scrollbar-thumb: #475569;
+            --timeline-line:  #334155;
+        }
+
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: var(--bg-page); color: var(--text-primary); }
+
+        /* Adaptive Tailwind overrides */
+        .bg-white     { background-color: var(--bg-card)      !important; }
+        .bg-slate-50  { background-color: var(--bg-secondary) !important; }
+        .bg-slate-100 { background-color: color-mix(in srgb, var(--bg-card) 70%, var(--border-primary)) !important; }
+        .border-slate-200 { border-color: var(--border-primary) !important; }
+        .border-slate-100 { border-color: var(--border-subtle)  !important; }
+        .text-slate-900 { color: var(--text-primary)   !important; }
+        .text-slate-800 { color: var(--text-secondary) !important; }
+        .text-slate-700 { color: var(--text-muted)     !important; }
+        .text-slate-600 { color: var(--text-muted)     !important; }
+        .text-slate-500, .text-slate-400 { color: var(--text-faint) !important; }
+
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
         [x-cloak] { display: none !important; }
         .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
+
         .timeline-line {
             position: absolute;
             left: 11px;
             top: 24px;
             bottom: 0;
             width: 2px;
-            background: #e2e8f0;
+            background: var(--timeline-line);
             z-index: 0;
         }
     </style>

@@ -88,7 +88,7 @@ Route::middleware('auth')->group(function () {
         return view('admin.offices');
     })->name('admin.offices');
 
-    // --- Acquisition Contacts (Supplier Personnel) ---
+    // --- Acquisition Source Registry ---
     Route::get('/admin/supplier-contacts', [\App\Http\Controllers\AcquisitionContactController::class, 'index'])->name('admin.supplier_contacts');
     Route::get('/api/supplier-contacts/filters', [\App\Http\Controllers\AcquisitionContactController::class, 'getFilters'])->name('api.supplier_contacts.filters');
     Route::post('/api/supplier-contacts/preview', [\App\Http\Controllers\AcquisitionContactController::class, 'getPreview'])->name('api.supplier_contacts.preview');
@@ -144,6 +144,35 @@ Route::middleware('auth')->group(function () {
     Route::post('/assets/{id}/document', [AssetController::class, 'uploadDocument'])->name('assets.document.upload');
     Route::delete('/assets/document/{docId}', [AssetController::class, 'removeDocument'])->name('assets.document.remove');
     Route::get('/asset-explorer', [AssetController::class, 'explorer'])->name('assets.explorer');
+
+    // --- Print QR Stickers ---
+    Route::get('/assets/print-stickers', function () {
+        return view('assets.print-stickers');
+    })->name('assets.print_stickers');
+
+    Route::get('/api/assets/print-list', function () {
+        $assets = DB::table('asset_assignments as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->join('items', 'asrc.item_id', '=', 'items.id')
+            ->leftJoin('offices', 'ad.office_id', '=', 'offices.id')
+            ->leftJoin('schools', 'offices.school_id', '=', 'schools.id')
+            ->select(
+                'ad.id',
+                'ad.property_number',
+                'ad.condition',
+                'ad.location',
+                'items.name as item_name',
+                DB::raw('COALESCE(asrc.description, items.name) as description'),
+                DB::raw('NULL as serial_number'),
+                DB::raw('NULL as brand'),
+                DB::raw('NULL as model'),
+                DB::raw('COALESCE(schools.name, offices.name, ad.location) as school_name')
+            )
+            ->orderBy('ad.id', 'desc')
+            ->get();
+
+        return response()->json(['assets' => $assets]);
+    })->name('api.assets.print_list');
 
     // --- QR & Tags ---
     Route::get('/assets/print-tags', function (Illuminate\Http\Request $request) {
