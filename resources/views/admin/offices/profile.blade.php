@@ -221,9 +221,11 @@
                                 </thead>
                                 <tbody class="divide-y divide-slate-50 dark:divide-slate-800/60">
                                     @foreach($recentAssets as $asset)
-                                    <tr class="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
+                                    <tr onclick="window.location='{{ route('assets.profile', $asset->id) }}'" class="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors cursor-pointer">
                                         <td class="py-4 pr-4">
-                                            <p class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase leading-none">{{ $asset->item_name }}</p>
+                                            <a href="{{ route('assets.profile', $asset->id) }}" class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase leading-none hover:text-deped dark:hover:text-red-500 transition-colors">
+                                                {{ $asset->item_name }}
+                                            </a>
                                             <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-1">{{ $asset->category_name }}</p>
                                         </td>
                                         <td class="py-4">
@@ -259,7 +261,7 @@
                         @if($custodians->count() > 0)
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             @foreach($custodians as $cust)
-                            <a href="{{ route('admin.custodians') }}" class="group p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl hover:border-deped dark:hover:border-red-500 hover:shadow-md transition-all flex flex-col gap-3">
+                            <a href="{{ route('custodians.profile', $cust->id) }}" class="group p-5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl hover:border-deped dark:hover:border-red-500 hover:shadow-md transition-all flex flex-col gap-3">
                                 <div class="flex justify-between items-start">
                                     <div class="flex items-center gap-3">
                                         <div class="w-10 h-10 rounded-full bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400 flex items-center justify-center font-black text-sm uppercase shrink-0">
