@@ -122,14 +122,8 @@
                         <button @click="showTransferModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 hover:pl-5 transition-all flex items-center gap-2 border-b border-slate-100">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg> Initiate Transfer
                         </button>
-                        <button @click="showReturnAmuModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-emerald-600 hover:pl-5 transition-all flex items-center gap-2 border-b border-slate-100">
+                        <button @click="showReturnAmuModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-emerald-600 hover:pl-5 transition-all flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg> Return to AMU
-                        </button>
-                        <button class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-amber-600 hover:pl-5 transition-all flex items-center gap-2 border-b border-slate-100">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Log Repair
-                        </button>
-                        <button class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-slate-900 hover:pl-5 transition-all flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg> Print QR/Tag
                         </button>
                     </div>
                 </div>
@@ -216,18 +210,18 @@
                     </div>
                     
                     <div class="p-5 space-y-5">
-                        <div class="bg-slate-800 border border-slate-700/50 p-4 rounded-2xl shadow-sm relative overflow-hidden group">
+                        <div class="bg-slate-50 border border-slate-100 p-4 rounded-2xl shadow-sm relative overflow-hidden group">
                             <div class="absolute left-0 top-0 bottom-0 w-1 bg-deped"></div>
                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
                                 <svg class="w-3 h-3 text-deped" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                                 Current Custodian
                             </p>
                             <div class="flex items-center gap-3 pl-1">
-                                <div class="w-10 h-10 rounded-full bg-slate-700 border border-slate-600 flex items-center justify-center text-white font-black text-xs shrink-0 shadow-sm group-hover:scale-110 group-hover:bg-deped group-hover:border-deped transition-all">
+                                <div class="w-10 h-10 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-600 font-black text-xs shrink-0 shadow-sm group-hover:scale-110 group-hover:bg-deped group-hover:border-deped group-hover:text-white transition-all">
                                     {{ strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $asset->office_school_name), 0, 2)) ?: 'NA' }}
                                 </div>
                                 <div>
-                                    <p class="text-xs font-black text-white uppercase leading-tight group-hover:text-deped transition-colors">{{ $asset->office_school_name }}</p>
+                                    <p class="text-xs font-black text-slate-700 uppercase leading-tight group-hover:text-deped transition-colors">{{ $asset->office_school_name }}</p>
                                     <p class="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Designated Custodian</p>
                                 </div>
                             </div>
@@ -456,18 +450,26 @@
                             
                             <div class="space-y-6">
                                 @foreach($timeline as $event)
+                                @php
+                                    $colors = match($event['type']) {
+                                        'Transfer' => ['border' => 'border-deped', 'bg' => 'bg-deped'],
+                                        'Return' => ['border' => 'border-amber-500', 'bg' => 'bg-amber-500'],
+                                        'Temporary Borrow' => ['border' => 'border-blue-500', 'bg' => 'bg-blue-500'],
+                                        default => ['border' => 'border-emerald-500', 'bg' => 'bg-emerald-500'],
+                                    };
+                                @endphp
                                 <div class="relative pl-8 group">
-                                    <div class="absolute left-[-2px] top-1 w-6 h-6 rounded-full bg-white border-2 {{ $event['type'] == 'Transfer' ? 'border-deped' : 'border-emerald-500' }} flex items-center justify-center shadow-sm z-10">
-                                        <div class="w-2 h-2 {{ $event['type'] == 'Transfer' ? 'bg-deped' : 'bg-emerald-500' }} rounded-full"></div>
+                                    <div class="absolute left-[-2px] top-1 w-6 h-6 rounded-full bg-white border-2 {{ $colors['border'] }} flex items-center justify-center shadow-sm z-10">
+                                        <div class="w-2 h-2 {{ $colors['bg'] }} rounded-full"></div>
                                     </div>
                                     <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
                                         <div class="flex justify-between items-start mb-2">
                                             <div class="flex items-center gap-2">
-                                                <span class="text-[9px] font-black text-white uppercase tracking-widest {{ $event['type'] == 'Transfer' ? 'bg-deped' : 'bg-emerald-500' }} px-2 py-0.5 rounded">{{ $event['type'] }}</span>
+                                                <span class="text-[9px] font-black text-white uppercase tracking-widest {{ $colors['bg'] }} px-2 py-0.5 rounded">{{ $event['type'] }}</span>
                                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ $event['date'] }}</span>
                                             </div>
                                         </div>
-                                        <p class="text-sm font-bold text-slate-800 uppercase mt-2">{{ $event['description'] }}</p>
+                                        <p class="text-sm font-bold text-slate-800 mt-2">{{ $event['description'] }}</p>
                                         <div class="mt-3 flex items-center gap-2 border-t border-slate-100 pt-2">
                                             <div class="w-4 h-4 rounded-full bg-slate-200 flex items-center justify-center">
                                                 <svg class="w-2.5 h-2.5 text-slate-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
@@ -610,6 +612,7 @@
                         schools: @js($schools),
                         selectedSchoolId: '',
                         selectedOfficeSchoolName: '',
+                        transferType: 'Permanent Reassignment',
                         
                         autofillLocation(schoolName) {
                             let base = schoolName.replace(/\s*(Elem|Elementary|National|High|Central|School|Main|Annex|\(.*\)).*/gi, '').trim();
@@ -726,13 +729,30 @@
                             <div>
                                 <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Transfer Type</label>
                                 <div class="relative group">
-                                    <select name="transfer_type" class="w-full appearance-none bg-white border-2 border-slate-200 rounded-xl pl-4 pr-10 py-3.5 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
-                                        <option>Permanent Reassignment</option>
-                                        <option>Temporary Borrow</option>
-                                        <option>Turn-over</option>
+                                    <select name="transfer_type" x-model="transferType" class="w-full appearance-none bg-white border-2 border-slate-200 rounded-xl pl-4 pr-10 py-3.5 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
+                                        <option value="Permanent Reassignment">Permanent Reassignment</option>
+                                        <option value="Temporary Borrow">Temporary Borrow</option>
                                     </select>
                                     <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div x-show="transferType === 'Temporary Borrow'" x-cloak>
+                            <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Borrowed Until</label>
+                            <input type="date" name="return_date" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Asset Condition <span class="text-deped">*</span></label>
+                            <div class="relative group">
+                                <select name="condition" required class="w-full appearance-none bg-white border-2 border-slate-200 rounded-xl pl-4 pr-10 py-3.5 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
+                                    <option value="" disabled selected>Select condition...</option>
+                                    <option value="Serviceable">Serviceable</option>
+                                    <option value="For Repair">For Repair</option>
+                                    <option value="Unserviceable">Unserviceable</option>
+                                </select>
+                                <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                             </div>
                         </div>
 
@@ -758,8 +778,8 @@
         {{-- Return to AMU Modal --}}
         <div x-show="showReturnAmuModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center">
             <div x-show="showReturnAmuModal" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showReturnAmuModal = false"></div>
-            <div x-show="showReturnAmuModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 translate-y-8 scale-95" class="bg-white rounded-3xl shadow-2xl w-full max-w-xl mx-4 relative z-10 flex flex-col overflow-hidden border border-slate-100">
-                
+            <form action="{{ route('assets.return', $asset->id) }}" method="POST" x-show="showReturnAmuModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 translate-y-8 scale-95" class="bg-white rounded-3xl shadow-2xl w-full max-w-xl mx-4 relative z-10 flex flex-col overflow-hidden border border-slate-100">
+                @csrf
                 {{-- Modal Header --}}
                 <div class="bg-slate-50 border-b border-slate-100 px-6 py-5 flex items-center justify-between">
                     <div class="flex items-center gap-4">
@@ -771,7 +791,7 @@
                             <p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Surrender asset back to division</p>
                         </div>
                     </div>
-                    <button @click="showReturnAmuModal = false" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-2.5 rounded-full transition-colors active:scale-95">
+                    <button type="button" @click="showReturnAmuModal = false" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-2.5 rounded-full transition-colors active:scale-95">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
@@ -795,17 +815,16 @@
                     <div class="grid grid-cols-2 gap-5">
                         <div>
                             <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Date of Return <span class="text-deped">*</span></label>
-                            <input type="date" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
+                            <input type="date" name="return_date" value="{{ date('Y-m-d') }}" required class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
                         </div>
                         <div>
                             <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Asset Condition <span class="text-deped">*</span></label>
                             <div class="relative group">
-                                <select class="w-full appearance-none bg-white border-2 border-slate-200 rounded-xl pl-4 pr-10 py-3 text-xs font-black text-slate-700 uppercase focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
+                                <select name="condition" required class="w-full appearance-none bg-white border-2 border-slate-200 rounded-xl pl-4 pr-10 py-3 text-xs font-black text-slate-700 uppercase focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
                                     <option value="" disabled selected>Select condition...</option>
-                                    <option>Serviceable / Working</option>
-                                    <option>Needs Repair</option>
-                                    <option>Unserviceable (For Disposal)</option>
-                                    <option>Damaged / Beyond Repair</option>
+                                    <option value="Serviceable">Serviceable</option>
+                                    <option value="For Repair">For Repair</option>
+                                    <option value="Unserviceable">Unserviceable</option>
                                 </select>
                                 <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-emerald-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                             </div>
@@ -814,21 +833,21 @@
 
                     <div>
                         <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Reason for Return</label>
-                        <textarea rows="3" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-bold text-slate-700 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm resize-none hover:border-slate-300" placeholder="State reason why the asset is being surrendered..."></textarea>
+                        <textarea name="remarks" rows="3" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-bold text-slate-700 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm resize-none hover:border-slate-300" placeholder="State reason why the asset is being surrendered..."></textarea>
                     </div>
 
                 </div>
 
                 {{-- Modal Footer --}}
                 <div class="bg-slate-50 border-t border-slate-100 p-6 flex items-center justify-end gap-3">
-                    <button @click="showReturnAmuModal = false" class="px-6 py-3 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest transition-colors shadow-sm active:scale-95">Cancel</button>
-                    <button @click="showReturnAmuModal = false" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-600/30 transition-all active:scale-95 flex items-center gap-2">
+                    <button type="button" @click="showReturnAmuModal = false" class="px-6 py-3 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest transition-colors shadow-sm active:scale-95">Cancel</button>
+                    <button type="submit" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-600/30 transition-all active:scale-95 flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                         Confirm Return
                     </button>
                 </div>
 
-            </div>
+            </form>
         </div>
 
         {{-- Hidden Form for Photo Removal --}}

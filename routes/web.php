@@ -202,6 +202,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/assets/{id}/profile', [AssetController::class, 'profile'])->name('assets.profile');
     Route::post('/assets/{id}/update', [AssetController::class, 'update'])->name('assets.update');
     Route::post('/assets/{id}/transfer', [AssetController::class, 'transfer'])->name('assets.transfer');
+    Route::post('/assets/{id}/return', [AssetController::class, 'returnAmu'])->name('assets.return');
     Route::post('/assets/{id}/photo', [AssetController::class, 'uploadPhoto'])->name('assets.photo.upload');
     Route::delete('/assets/{id}/photo', [AssetController::class, 'removePhoto'])->name('assets.photo.remove');
     Route::post('/assets/{id}/document', [AssetController::class, 'uploadDocument'])->name('assets.document.upload');
@@ -210,7 +211,27 @@ Route::middleware('auth')->group(function () {
 
     // --- Print QR Stickers ---
     Route::get('/assets/print-stickers', function () {
-        return view('assets.print-stickers');
+        $assets = DB::table('asset_assignments as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->join('items', 'asrc.item_id', '=', 'items.id')
+            ->leftJoin('offices', 'ad.office_id', '=', 'offices.id')
+            ->leftJoin('schools', 'offices.school_id', '=', 'schools.id')
+            ->select(
+                'ad.id',
+                'ad.property_number',
+                'ad.condition',
+                'ad.location',
+                'items.name as item_name',
+                DB::raw('COALESCE(asrc.description, items.name) as description'),
+                'asrc.serial_number',
+                'asrc.brand',
+                'asrc.model',
+                DB::raw('COALESCE(schools.name, offices.name, ad.location) as school_name')
+            )
+            ->orderBy('ad.id', 'desc')
+            ->get();
+
+        return view('assets.print-stickers', compact('assets'));
     })->name('assets.print_stickers');
 
     Route::get('/api/assets/print-list', function () {
