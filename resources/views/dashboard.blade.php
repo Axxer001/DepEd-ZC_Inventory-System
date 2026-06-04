@@ -310,7 +310,7 @@
                     </div>
 
                     {{-- Not Yet Distributed Assets --}}
-                    <div onclick="window.location.href='{{ url('/view-assets?tab=distribution&condition=not_distributed') }}'" class="p-8 rounded-[2.5rem] bg-white border-l-[12px] border-[#c00000] shadow-2xl flex flex-col justify-between h-56 group hover:-translate-y-2 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out cursor-pointer relative overflow-hidden border-r border-y border-slate-50">
+                    <div onclick="window.location.href='{{ url('/view-assets?tab=source&condition=not_distributed') }}'" class="p-8 rounded-[2.5rem] bg-white border-l-[12px] border-[#c00000] shadow-2xl flex flex-col justify-between h-56 group hover:-translate-y-2 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out cursor-pointer relative overflow-hidden border-r border-y border-slate-50">
                         <div class="flex justify-between items-start relative z-10">
                             <div class="flex flex-col">
                                 <span class="text-xs font-black uppercase tracking-[0.2em] text-slate-900 group-hover:text-[#c00000] transition-colors">Assets Not Yet Distributed</span>
