@@ -23,10 +23,10 @@
         <option value="Borrowed">
     </datalist>
     <datalist id="dl-bldg-school-id">
-        @foreach($allSchools as $s)<option value="{{ $s->school_id }}">@endforeach
+        @foreach($allSchools->unique('school_id') as $s)<option value="{{ $s->school_id }}">@endforeach
     </datalist>
     <datalist id="dl-bldg-school-name">
-        @foreach($allSchools as $s)<option value="{{ $s->name }}">@endforeach
+        @foreach($allSchools->unique('name') as $s)<option value="{{ $s->name }}">@endforeach
     </datalist>
 
     {{-- ── Tabbed Building Registry Card ── --}}

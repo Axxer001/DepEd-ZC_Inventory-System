@@ -57,10 +57,16 @@ class ReportDownloadController extends Controller
                 ->leftJoin('procurement_modes as pm', 'asset_sources.procurement_mode_id', '=', 'pm.id')
                 ->leftJoin('acquisition_contacts as ac', 'asset_sources.acquisition_contact_id', '=', 'ac.id')
                 ->leftJoin('custodians as cus', 'asset_assignments.custodian_id', '=', 'cus.id')
+                ->leftJoin('offices', 'cus.office_id', '=', 'offices.id')
+                ->leftJoin('schools', 'cus.school_id', '=', 'schools.school_id')
                 ->select(
                     'asset_assignments.*',
                     DB::raw("'Region IX' as region"),
                     DB::raw("'Division of Zamboanga City' as division"),
+                    'cus.school_id as school_id',
+                    DB::raw('COALESCE(schools.name, offices.name, asset_assignments.location) as location'),
+                    DB::raw('COALESCE(schools.name, offices.name, asset_assignments.location) as office_school_name'),
+                    DB::raw('NULL as nature_of_occupancy'),
                     'asset_sources.description',
                     'asset_sources.unit_of_measurement',
                     'asset_sources.asset_cost',
@@ -154,9 +160,9 @@ class ReportDownloadController extends Controller
             // Distribution-specific columns
             if ($tab === 'distribution') {
                 if ($eCol === 'property_number') $dbCol = 'asset_assignments.property_number';
-                elseif ($eCol === 'school_id') $dbCol = 'asset_assignments.school_id';
+                elseif ($eCol === 'school_id') $dbCol = 'cus.school_id';
                 elseif ($eCol === 'school_name') $dbCol = 'asset_assignments.location';
-                elseif ($eCol === 'occupancy') $dbCol = 'asset_assignments.nature_of_occupancy';
+                elseif ($eCol === 'occupancy') $dbCol = DB::raw('NULL');
                 elseif ($eCol === 'location') $dbCol = 'asset_assignments.location';
                 elseif ($eCol === 'acquisition_date') $dbCol = 'asset_assignments.acquisition_date';
             }
@@ -583,16 +589,18 @@ class ReportDownloadController extends Controller
                     ->whereColumn('school_id', 'schools.id')
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
                 'total_ppe_cost' => DB::table('asset_assignments')
+                    ->leftJoin('custodians', 'asset_assignments.custodian_id', '=', 'custodians.id')
                     ->where(function($q) {
-                        $q->whereColumn('location', 'schools.name')
-                          ->orWhereColumn('school_id', 'schools.school_id');
+                        $q->whereColumn('asset_assignments.location', 'schools.name')
+                          ->orWhereColumn('custodians.school_id', 'schools.school_id');
                     })
                     ->where('acquisition_cost', '>=', 50000)
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
                 'total_semi_ppe_cost' => DB::table('asset_assignments')
+                    ->leftJoin('custodians', 'asset_assignments.custodian_id', '=', 'custodians.id')
                     ->where(function($q) {
-                        $q->whereColumn('location', 'schools.name')
-                          ->orWhereColumn('school_id', 'schools.school_id');
+                        $q->whereColumn('asset_assignments.location', 'schools.name')
+                          ->orWhereColumn('custodians.school_id', 'schools.school_id');
                     })
                     ->where('acquisition_cost', '<', 50000)
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
@@ -702,16 +710,19 @@ class ReportDownloadController extends Controller
             ->addSelect([
                 'total_ppe_cost' => DB::table('asset_assignments as ad2')
                     ->join('asset_sources as asrc2', 'ad2.asset_source_id', '=', 'asrc2.id')
-                    ->whereColumn('ad2.office_id', 'offices.id')
+                    ->join('custodians as c2', 'ad2.custodian_id', '=', 'c2.id')
+                    ->whereColumn('c2.office_id', 'offices.id')
                     ->where('asrc2.asset_cost', '>=', 50000)
                     ->selectRaw('COALESCE(SUM(asrc2.asset_cost), 0)'),
                 'total_semi_ppe_cost' => DB::table('asset_assignments as ad3')
                     ->join('asset_sources as asrc3', 'ad3.asset_source_id', '=', 'asrc3.id')
-                    ->whereColumn('ad3.office_id', 'offices.id')
+                    ->join('custodians as c3', 'ad3.custodian_id', '=', 'c3.id')
+                    ->whereColumn('c3.office_id', 'offices.id')
                     ->where('asrc3.asset_cost', '<', 50000)
                     ->selectRaw('COALESCE(SUM(asrc3.asset_cost), 0)'),
                 'total_assets' => DB::table('asset_assignments as ad4')
-                    ->whereColumn('ad4.office_id', 'offices.id')
+                    ->join('custodians as c4', 'ad4.custodian_id', '=', 'c4.id')
+                    ->whereColumn('c4.office_id', 'offices.id')
                     ->selectRaw('COUNT(*)'),
             ]);
 

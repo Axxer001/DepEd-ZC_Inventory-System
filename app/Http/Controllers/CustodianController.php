@@ -23,13 +23,12 @@ class CustodianController extends Controller
             ->selectRaw('COUNT(aa.id) as total_assets, COALESCE(SUM(aa.acquisition_cost), 0) as total_value')
             ->first();
 
-        // Schools and offices associated (via assignments)
-        $schools = DB::table('asset_assignments as aa')
-            ->leftJoin('schools as s', 'aa.school_id', '=', 's.id')
-            ->where('aa.custodian_id', $id)
+        // Schools and offices associated (via custodian's school_id)
+        $schools = DB::table('custodians as c')
+            ->leftJoin('schools as s', 'c.school_id', '=', 's.school_id')
+            ->where('c.id', $id)
             ->whereNotNull('s.id')
-            ->select('s.id', 's.name', DB::raw('COUNT(aa.id) as asset_count'))
-            ->groupBy('s.id', 's.name')
+            ->select('s.id', 's.name', DB::raw('(SELECT COUNT(*) FROM asset_assignments WHERE custodian_id = c.id) as asset_count'))
             ->get();
 
         // All assets assigned to this custodian
@@ -37,8 +36,9 @@ class CustodianController extends Controller
             ->join('asset_sources as asrc', 'aa.asset_source_id', '=', 'asrc.id')
             ->join('items as i', 'asrc.item_id', '=', 'i.id')
             ->join('categories as cat', 'i.category_id', '=', 'cat.id')
-            ->leftJoin('offices as o', 'aa.office_id', '=', 'o.id')
-            ->leftJoin('schools as s', 'aa.school_id', '=', 's.id')
+            ->leftJoin('custodians as c', 'aa.custodian_id', '=', 'c.id')
+            ->leftJoin('offices as o', 'c.office_id', '=', 'o.id')
+            ->leftJoin('schools as s', 'c.school_id', '=', 's.school_id')
             ->where('aa.custodian_id', $id)
             ->select(
                 'aa.id',

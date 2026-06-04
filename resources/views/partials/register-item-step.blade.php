@@ -14,8 +14,8 @@
         <option value="Non-Expendable">
         <option value="Expendable">
     </datalist>
-    <datalist id="dl-category">@foreach($categories as $c)<option value="{{ $c->name }}">@endforeach</datalist>
-    <datalist id="dl-item">@foreach($items as $i)<option value="{{ $i->name }}">@endforeach</datalist>
+    <datalist id="dl-category">@foreach($categories->unique('name') as $c)<option value="{{ $c->name }}">@endforeach</datalist>
+    <datalist id="dl-item">@foreach($items->unique('name') as $i)<option value="{{ $i->name }}">@endforeach</datalist>
     <datalist id="dl-description"><option value="General"><option value="Specific"></datalist>
     <datalist id="dl-mode">
         <option value="Deped Central Office">
@@ -33,13 +33,13 @@
         <option value="Division Office">
         <option value="Government Building">
     </datalist>
-    <datalist id="dl-school-id">@foreach($allSchools as $s)<option value="{{ $s->school_id }}">@endforeach</datalist>
-    <datalist id="dl-school-name">@foreach($allSchools as $s)<option value="{{ $s->name }}">@endforeach</datalist>
-    <datalist id="dl-custodian">@foreach($allCustodians as $c)<option value="{{ $c->first_name }} {{ $c->last_name }}">@endforeach</datalist>
-    <datalist id="dl-custodian-pos">@foreach($allCustodians as $c)@if($c->position)<option value="{{ $c->position }}">@endif@endforeach</datalist>
-    <datalist id="dl-custodian-contact">@foreach($allCustodians as $c)@if($c->contact_number)<option value="{{ $c->contact_number }}">@endif@endforeach</datalist>
+    <datalist id="dl-school-id">@foreach($allSchools->unique('school_id') as $s)<option value="{{ $s->school_id }}">@endforeach</datalist>
+    <datalist id="dl-school-name">@foreach($allSchools->unique('name') as $s)<option value="{{ $s->name }}">@endforeach</datalist>
+    <datalist id="dl-custodian">@foreach($allCustodians->unique(fn($c) => $c->first_name . $c->last_name) as $c)<option value="{{ $c->first_name }} {{ $c->last_name }}">@endforeach</datalist>
+    <datalist id="dl-custodian-pos">@foreach($allCustodians->unique('position') as $c)@if($c->position)<option value="{{ $c->position }}">@endif@endforeach</datalist>
+    <datalist id="dl-custodian-contact">@foreach($allCustodians->unique('contact_number') as $c)@if($c->contact_number)<option value="{{ $c->contact_number }}">@endif@endforeach</datalist>
     <datalist id="dl-occupancy"><option value="Owned"><option value="Leased"><option value="Borrowed"></datalist>
-    <datalist id="dl-location">@foreach($allSchools as $s)<option value="{{ $s->name }}">@endforeach</datalist>
+    <datalist id="dl-location">@foreach($allSchools->unique('name') as $s)<option value="{{ $s->name }}">@endforeach</datalist>
 
     {{-- ── Section 1: Acquisition Source ── --}}
     <div id="acqSourceCard" class="mb-6 bg-white rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden">

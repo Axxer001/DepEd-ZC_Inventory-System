@@ -22,19 +22,16 @@ class BuildingImportController extends Controller
      */
     public function preview(Request $request)
     {
-        set_time_limit(300);
-        $request->validate([
-            'xlsx_file' => 'required|file|mimes:xlsx,xls|max:51200',
-        ]);
+        set_time_limit(600);
+        $request->validate(['xlsx_file' => 'required|file|mimes:xlsx,xls|max:51200']);
 
-        $file = $request->file('xlsx_file');
         try {
-            $spreadsheet = IOFactory::load($file->getRealPath());
+            $spreadsheet = IOFactory::load($request->file('xlsx_file')->getRealPath());
         } catch (\Exception $e) {
             return back()->withErrors(['xlsx_file' => 'Unable to read the uploaded file: ' . $e->getMessage()]);
         }
 
-        $allGroups  = [];
+        $allGroups  = ['buildings' => [], 'assets' => []];
         $skipSheets = ['instruction', 'dropdown', 'sheet1'];
 
         foreach ($spreadsheet->getSheetNames() as $sheetName) {
@@ -44,118 +41,71 @@ class BuildingImportController extends Controller
 
             $type = $this->detectTemplateType($sheet);
             if ($type === 'buildings') {
-                $rows = $this->parseBuildingSheet($sheet);
-                if (!empty($rows)) {
-                    $allGroups['buildings'] = array_merge($allGroups['buildings'] ?? [], $rows);
-                }
+                $allGroups['buildings'] = array_merge($allGroups['buildings'], $this->parseBuildingSheet($sheet));
             } elseif ($type === 'assets') {
-                $rows = $this->parseAssetSheet($sheet, $sheetName);
-                if (!empty($rows)) {
-                    $allGroups['assets'] = array_merge($allGroups['assets'] ?? [], $rows);
-                }
+                $allGroups['assets'] = array_merge($allGroups['assets'], $this->parseAssetSheet($sheet, $sheetName));
             }
         }
 
-        // Fallback: single-sheet file
-        if (empty($allGroups)) {
-            $sheet = $spreadsheet->getActiveSheet();
-            $type  = $this->detectTemplateType($sheet);
-            if ($type === 'buildings') {
-                $rows = $this->parseBuildingSheet($sheet);
-                if (!empty($rows)) $allGroups['buildings'] = $rows;
-            } elseif ($type === 'assets') {
-                $rows = $this->parseAssetSheet($sheet, $sheet->getTitle());
-                if (!empty($rows)) $allGroups['assets'] = $rows;
-            }
+        // Release spreadsheet memory immediately to protect the 4GB local limit
+        $spreadsheet->disconnectWorksheets();
+        unset($spreadsheet);
+
+        if (empty($allGroups['buildings']) && empty($allGroups['assets'])) {
+            return back()->withErrors(['xlsx_file' => 'No valid data rows found.']);
         }
 
-        if (empty($allGroups)) {
-            return back()->withErrors(['xlsx_file' => 'No valid data rows found. Please ensure the file follows the DepEd PIF template format.']);
-        }
+        $gemini = new \App\Services\GeminiService();
+        $allGroups['buildings'] = $gemini->sanitizeRows($allGroups['buildings'], 'buildings');
+        $allGroups['assets']    = $gemini->sanitizeRows($allGroups['assets'], 'assets');
 
+        // High-density memory maps for duplicate detection
         $duplicates = [];
-        $seenInFile = [];
-        $assetProps = [];
+        $caches = [
+            'db_assets'    => array_change_key_case(DB::table('asset_assignments')->whereIn('property_number', collect($allGroups['assets'])->pluck('property_number')->filter()->toArray())->pluck('id', 'property_number')->toArray(), CASE_LOWER),
+            'db_buildings' => array_change_key_case(DB::table('building_records')->whereIn('property_number', collect($allGroups['buildings'])->pluck('property_number')->filter()->toArray())->pluck('id', 'property_number')->toArray(), CASE_LOWER),
+            'file_assets'  => [],
+            'file_bldgs'   => [],
+        ];
 
-        $dbDuplicates = [];
-        $fileDuplicates = [];
+        $dbDuplicates = 0;
+        $fileDuplicates = 0;
 
-        foreach ($allGroups['assets'] ?? [] as $i => $row) {
-            $pn = trim($row['property_number'] ?? '');
-            if ($pn) {
-                $assetProps[] = $pn;
-                if (isset($seenInFile[$pn])) {
-                    $fileDuplicates[] = ['index' => $i, 'property_number' => $pn, 'reason' => 'Repeated in file', 'article' => $row['article'] ?? ''];
-                }
-                $seenInFile[$pn] = true;
+        foreach ($allGroups['assets'] as $i => $row) {
+            $pn = strtolower(trim($row['property_number'] ?? ''));
+            if (!$pn) continue;
+            if (isset($caches['file_assets'][$pn])) {
+                $duplicates[] = ['index' => $i, 'property_number' => $row['property_number'], 'reason' => 'Repeated in file', 'article' => $row['article'] ?? '', 'type' => 'asset'];
+                $fileDuplicates++;
+            } elseif (isset($caches['db_assets'][$pn])) {
+                $duplicates[] = ['index' => $i, 'property_number' => $row['property_number'], 'reason' => 'Exists in database', 'article' => $row['article'] ?? '', 'type' => 'asset'];
+                $dbDuplicates++;
             }
+            $caches['file_assets'][$pn] = true;
         }
 
-        if (!empty($assetProps)) {
-            $existingInDb = array_flip(DB::table('asset_assignments')
-                ->whereIn('property_number', $assetProps)
-                ->pluck('property_number')
-                ->all());
-            
-            foreach ($allGroups['assets'] ?? [] as $i => $row) {
-                $pn = trim($row['property_number'] ?? '');
-                if ($pn && isset($existingInDb[$pn])) {
-                    $alreadyFlaggedFile = false;
-                    foreach ($fileDuplicates as $d) {
-                        if ($d['index'] === $i) { $alreadyFlaggedFile = true; break; }
-                    }
-                    if (!$alreadyFlaggedFile) {
-                        $dbDuplicates[] = ['index' => $i, 'property_number' => $pn, 'reason' => 'Exists in database', 'article' => $row['article'] ?? ''];
-                    }
-                }
+        foreach ($allGroups['buildings'] as $i => $row) {
+            $pn = strtolower(trim($row['property_number'] ?? ''));
+            if (!$pn) continue;
+            if (isset($caches['file_bldgs'][$pn])) {
+                $duplicates[] = ['index' => $i, 'property_number' => $row['property_number'], 'reason' => 'Repeated in file', 'article' => $row['article'] ?? '', 'type' => 'building'];
+                $fileDuplicates++;
+            } elseif (isset($caches['db_buildings'][$pn])) {
+                $duplicates[] = ['index' => $i, 'property_number' => $row['property_number'], 'reason' => 'Exists in database', 'article' => $row['article'] ?? '', 'type' => 'building'];
+                $dbDuplicates++;
             }
+            $caches['file_bldgs'][$pn] = true;
         }
-
-        // Also check building duplicates
-        $buildingProps = [];
-        $seenInFileB = [];
-        foreach ($allGroups['buildings'] ?? [] as $i => $row) {
-            $pn = trim($row['property_number'] ?? '');
-            if ($pn) {
-                $buildingProps[] = $pn;
-                if (isset($seenInFileB[$pn])) {
-                    $fileDuplicates[] = ['index' => $i, 'property_number' => $pn, 'reason' => 'Repeated in file', 'article' => $row['article'] ?? '', 'type' => 'building'];
-                }
-                $seenInFileB[$pn] = true;
-            }
-        }
-
-        if (!empty($buildingProps)) {
-            $existingInDbB = array_flip(DB::table('building_records')
-                ->whereIn('property_number', $buildingProps)
-                ->pluck('property_number')
-                ->all());
-            
-            foreach ($allGroups['buildings'] ?? [] as $i => $row) {
-                $pn = trim($row['property_number'] ?? '');
-                if ($pn && isset($existingInDbB[$pn])) {
-                    $alreadyFlaggedFile = false;
-                    foreach ($fileDuplicates as $d) {
-                        if ($d['index'] === $i && ($d['type'] ?? '') === 'building') { $alreadyFlaggedFile = true; break; }
-                    }
-                    if (!$alreadyFlaggedFile) {
-                        $dbDuplicates[] = ['index' => $i, 'property_number' => $pn, 'reason' => 'Exists in database', 'article' => $row['article'] ?? '', 'type' => 'building'];
-                    }
-                }
-            }
-        }
-
-        $duplicates = array_merge($dbDuplicates, $fileDuplicates);
 
         session(['pif_import_data' => $allGroups]);
 
         return view('import-buildings', [
             'allGroups'      => $allGroups,
-            'totalBuildings' => count($allGroups['buildings'] ?? []),
-            'totalAssets'    => count($allGroups['assets'] ?? []),
+            'totalBuildings' => count($allGroups['buildings']),
+            'totalAssets'    => count($allGroups['assets']),
             'duplicates'     => $duplicates,
-            'dbDuplicates'   => count($dbDuplicates),
-            'fileDuplicates' => count($fileDuplicates)
+            'dbDuplicates'   => $dbDuplicates,
+            'fileDuplicates' => $fileDuplicates
         ]);
     }
 
@@ -168,397 +118,133 @@ class BuildingImportController extends Controller
         $allGroups = session('pif_import_data');
 
         if (!$allGroups || (empty($allGroups['buildings']) && empty($allGroups['assets']))) {
-            return redirect()->route('buildings.import')
-                ->withErrors(['xlsx_file' => 'No import data found. Please upload and preview your file first.']);
+            return redirect()->route('buildings.import')->withErrors(['xlsx_file' => 'No import data found.']);
         }
 
         $userName = auth()->user() ? auth()->user()->email : 'System';
         $duplicateAction = $request->input('duplicate_action', 'keep');
 
-        // Extract all property numbers
-        $buildingPropsToOverwrite = [];
-        $assetPropsToOverwrite = [];
-
-        // Apply duplicate action if remove or skip_existing
-        if (in_array($duplicateAction, ['remove', 'skip_existing'])) {
-            $seenAssets = [];
-            $filteredAssets = [];
-            
-            $allProps = [];
-            foreach ($allGroups['assets'] ?? [] as $row) {
-                if (!empty($row['property_number'])) $allProps[] = trim($row['property_number']);
-            }
-            $inDb = !empty($allProps) ? array_flip(DB::table('asset_assignments')->whereIn('property_number', $allProps)->pluck('property_number')->all()) : [];
-
-            foreach ($allGroups['assets'] ?? [] as $row) {
-                $pn = trim($row['property_number'] ?? '');
-                if ($pn) {
-                    if (isset($inDb[$pn]) || isset($seenAssets[$pn])) continue; // Skip duplicate
-                    $seenAssets[$pn] = true;
-                }
-                $filteredAssets[] = $row;
-            }
-            $allGroups['assets'] = $filteredAssets;
-
-            $seenBuildings = [];
-            $filteredBuildings = [];
-            $allBProps = [];
-            foreach ($allGroups['buildings'] ?? [] as $row) {
-                if (!empty($row['property_number'])) $allBProps[] = trim($row['property_number']);
-            }
-            $inDbB = !empty($allBProps) ? array_flip(DB::table('building_records')->whereIn('property_number', $allBProps)->pluck('property_number')->all()) : [];
-
-            foreach ($allGroups['buildings'] ?? [] as $row) {
-                $pn = trim($row['property_number'] ?? '');
-                if ($pn) {
-                    if (isset($inDbB[$pn]) || isset($seenBuildings[$pn])) continue; // Skip duplicate
-                    $seenBuildings[$pn] = true;
-                }
-                $filteredBuildings[] = $row;
-            }
-            $allGroups['buildings'] = $filteredBuildings;
-        } elseif ($duplicateAction === 'overwrite') {
-            // Collect property numbers to overwrite
-            foreach ($allGroups['buildings'] ?? [] as $row) {
-                if (!empty($row['property_number'])) $buildingPropsToOverwrite[] = trim($row['property_number']);
-            }
-            foreach ($allGroups['assets'] ?? [] as $row) {
-                if (!empty($row['property_number'])) $assetPropsToOverwrite[] = trim($row['property_number']);
-            }
-
-            // Let's filter out file-level duplicates so we only insert them once during overwrite
-            $seenAssets = [];
-            $filteredAssets = [];
-            foreach ($allGroups['assets'] ?? [] as $row) {
-                $pn = trim($row['property_number'] ?? '');
-                if ($pn) {
-                    if (isset($seenAssets[$pn])) continue;
-                    $seenAssets[$pn] = true;
-                }
-                $filteredAssets[] = $row;
-            }
-            $allGroups['assets'] = $filteredAssets;
-
-            $seenBuildings = [];
-            $filteredBuildings = [];
-            foreach ($allGroups['buildings'] ?? [] as $row) {
-                $pn = trim($row['property_number'] ?? '');
-                if ($pn) {
-                    if (isset($seenBuildings[$pn])) continue;
-                    $seenBuildings[$pn] = true;
-                }
-                $filteredBuildings[] = $row;
-            }
-            $allGroups['buildings'] = $filteredBuildings;
+        // Apply duplicate action using modern collection pipeline
+        if ($duplicateAction === 'overwrite') {
+            DB::table('asset_assignments')->whereIn('property_number', collect($allGroups['assets'])->pluck('property_number')->filter()->toArray())->delete();
+            DB::table('building_records')->whereIn('property_number', collect($allGroups['buildings'])->pluck('property_number')->filter()->toArray())->delete();
+        } elseif (in_array($duplicateAction, ['remove', 'skip_existing'])) {
+            $allGroups['assets'] = collect($allGroups['assets'])->unique('property_number')->reject(function($row) {
+                return !empty($row['property_number']) && DB::table('asset_assignments')->where('property_number', $row['property_number'])->exists();
+            })->toArray();
+            $allGroups['buildings'] = collect($allGroups['buildings'])->unique('property_number')->reject(function($row) {
+                return !empty($row['property_number']) && DB::table('building_records')->where('property_number', $row['property_number'])->exists();
+            })->toArray();
         }
 
-        // ── Pre-collect unique names for batch lookups ──
-        $uniqueClassLower = [];
-        $uniqueItemLower  = [];
-        $buildingProps    = [];
-        $assetProps       = [];
-
-        foreach ($allGroups['buildings'] ?? [] as $row) {
-            if (!empty($row['property_number'])) $buildingProps[] = $row['property_number'];
-        }
-
-        foreach ($allGroups['assets'] ?? [] as $row) {
-            $c = trim($row['classification'] ?? '');
-            $uniqueClassLower[] = strtolower(empty($c) ? 'Unclassified' : $c);
-            $i = trim($row['article'] ?? '');
-            if (!empty($i)) $uniqueItemLower[] = strtolower($i);
-            if (!empty($row['property_number'])) $assetProps[] = trim($row['property_number']);
-        }
-
-        $uniqueClassLower = array_values(array_unique($uniqueClassLower));
-        $uniqueItemLower  = array_values(array_unique($uniqueItemLower));
-
-        // ── Batch DB lookups ──
-        $classMap = [];
-        if (!empty($uniqueClassLower)) {
-            $ph   = implode(',', array_fill(0, count($uniqueClassLower), '?'));
-            foreach (DB::select("SELECT id, name FROM classifications WHERE LOWER(name) IN ({$ph})", $uniqueClassLower) as $r) {
-                $classMap[strtolower($r->name)] = $r;
-            }
-        }
-
-        $catMap = [];
-        $uniqueCatLower = ['uncategorized'];
-        $ph   = implode(',', array_fill(0, count($uniqueCatLower), '?'));
-        foreach (DB::select("SELECT id, name, classification_id FROM categories WHERE LOWER(name) IN ({$ph})", $uniqueCatLower) as $r) {
-            $catMap[strtolower($r->name)][] = $r;
-        }
-
-        $itemMap = [];
-        if (!empty($uniqueItemLower)) {
-            $ph   = implode(',', array_fill(0, count($uniqueItemLower), '?'));
-            foreach (DB::select("SELECT id, name, category_id FROM items WHERE LOWER(name) IN ({$ph})", $uniqueItemLower) as $r) {
-                $itemMap[strtolower($r->name)] = $r;
-            }
-        }
-
-        $existingBuildingProps = !empty($buildingProps)
-            ? array_flip(DB::table('building_records')->whereIn('property_number', $buildingProps)->pluck('property_number')->all())
-            : [];
-
-        $existingAssetProps = !empty($assetProps)
-            ? array_flip(DB::table('asset_assignments')->whereIn('property_number', $assetProps)->pluck('property_number')->all())
-            : [];
-
-        $totalBuildings = 0;
-        $totalAssets    = 0;
+        // ── Optimized Memory Maps for Lookups ──
+        $caches = [
+            'class'   => array_change_key_case(DB::table('classifications')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'cat'     => array_change_key_case(DB::table('categories')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'item'    => array_change_key_case(DB::table('items')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'source'  => array_change_key_case(DB::table('acquisition_sources')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'mode'    => array_change_key_case(DB::table('procurement_modes')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'schools' => DB::table('schools')->pluck('id', 'school_id')->toArray(),
+            'b_class' => array_change_key_case(DB::table('building_classifications')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'b_types' => array_change_key_case(DB::table('building_types')->pluck('id', 'name')->toArray(), CASE_LOWER),
+        ];
 
         DB::beginTransaction();
         try {
-            // ── Overwrite: Delete existing records ──
-            if ($duplicateAction === 'overwrite') {
-                if (!empty($assetPropsToOverwrite)) {
-                    $existingAssets = DB::table('asset_assignments')
-                        ->whereIn('property_number', $assetPropsToOverwrite)
-                        ->select('id', 'asset_source_id')
-                        ->get();
-                    
-                    if ($existingAssets->isNotEmpty()) {
-                        $sourceIds = $existingAssets->pluck('asset_source_id')->unique()->filter()->all();
-                        DB::table('asset_assignments')->whereIn('property_number', $assetPropsToOverwrite)->delete();
-                        if (!empty($sourceIds)) {
-                            // Check if source is still used by other distributions, if not delete it
-                            $usedSourceIds = DB::table('asset_assignments')->whereIn('asset_source_id', $sourceIds)->pluck('asset_source_id')->unique()->all();
-                            $orphanedSourceIds = array_diff($sourceIds, $usedSourceIds);
-                            if (!empty($orphanedSourceIds)) {
-                                DB::table('asset_sources')->whereIn('id', $orphanedSourceIds)->delete();
-                            }
-                        }
-                    }
-                }
+            // Process Assets
+            foreach ($allGroups['assets'] as $row) {
+                $className = trim($row['classification'] ?? 'Unclassified');
+                $classId   = $caches['class'][strtolower($className)] ??= DB::table('classifications')->insertGetId(['name' => $className, 'created_at' => now()]);
 
-                if (!empty($buildingPropsToOverwrite)) {
-                    DB::table('building_records')->whereIn('property_number', $buildingPropsToOverwrite)->delete();
-                }
+                $catName = 'Uncategorized';
+                $catId   = $caches['cat'][strtolower($catName)] ??= DB::table('categories')->insertGetId(['classification_id' => $classId, 'name' => $catName, 'created_at' => now()]);
 
-                // Since we deleted them, we don't consider them 'existing' anymore for skipping
-                $existingBuildingProps = [];
-                $existingAssetProps = [];
+                $itemName = trim($row['article'] ?? 'Unknown Item');
+                $itemId   = $caches['item'][strtolower($itemName)] ??= DB::table('items')->insertGetId(['category_id' => $catId, 'name' => $itemName, 'created_at' => now()]);
+
+                $sourceName = trim($row['source_of_acquisition'] ?? 'DepEd Central Office');
+                $sourceId   = $caches['source'][strtolower($sourceName)] ??= DB::table('acquisition_sources')->insertGetId(['name' => $sourceName, 'source_type' => 'Internal', 'created_at' => now()]);
+
+                $modeName = trim($row['procurement_mode'] ?? 'Direct Purchase');
+                $modeId   = $caches['mode'][strtolower($modeName)] ??= DB::table('procurement_modes')->insertGetId(['name' => $modeName, 'created_at' => now()]);
+
+                $assetSourceId = DB::table('asset_sources')->insertGetId([
+                    'item_id' => $itemId,
+                    'description' => $row['description'] ?? null,
+                    'unit_of_measurement' => $row['uom'] ?? 'Unit',
+                    'acquisition_source_id' => $sourceId,
+                    'procurement_mode_id' => $modeId,
+                    'asset_cost' => floatval($row['unit_value'] ?? 0),
+                    'quantity' => intval($row['quantity'] ?? 1),
+                    'acceptance_date' => $row['acquisition_date'] ?? now()->toDateString(),
+                    'created_at' => now(),
+                ]);
+
+                DB::table('asset_assignments')->insert([
+                    'asset_source_id' => $assetSourceId,
+                    'condition' => $row['remarks'] ?? 'Good Condition',
+                    'office_school_type' => $row['office_type'] ?? 'School',
+                    'location' => $row['location'] ?? 'Division Office',
+                    'property_number' => $row['property_number'] ?? null,
+                    'acquisition_cost' => floatval($row['total_value'] ?? 0),
+                    'acquisition_date' => $row['acquisition_date'] ?? now()->toDateString(),
+                    'created_at' => now(),
+                ]);
             }
 
-            // ── Insert Buildings ──
-            foreach ($allGroups['buildings'] ?? [] as $row) {
-                $propNo = $row['property_number'] ?? null;
-                if ($propNo && isset($existingBuildingProps[$propNo])) continue;
+            // Process Buildings
+            foreach ($allGroups['buildings'] as $row) {
+                $classStr = trim($row['classification'] ?? 'Unclassified');
+                $classId  = $caches['b_class'][strtolower($classStr)] ??= DB::table('building_classifications')->insertGetId(['name' => $classStr, 'created_at' => now()]);
 
-                $schoolId = null;
-                if (!empty($row['school_identifier'])) {
-                    $school = DB::table('schools')->where('school_id', $row['school_identifier'])->first();
-                    if ($school) $schoolId = $school->id;
-                }
+                $typeStr  = trim($row['article'] ?? 'Building');
+                $typeId   = $caches['b_types'][strtolower($typeStr)] ??= DB::table('building_types')->insertGetId(['building_classification_id' => $classId, 'name' => $typeStr, 'created_at' => now()]);
 
-                // Taxonomy lookup
-                $classStr = trim($row['classification'] ?: 'Unclassified');
-                $classRec = DB::table('building_classifications')->where('name', $classStr)->first();
-                $classId = $classRec ? $classRec->id : DB::table('building_classifications')->insertGetId(['name' => $classStr, 'created_at' => now(), 'updated_at' => now()]);
+                $schoolId = $caches['schools'][$row['school_identifier'] ?? ''] ?? null;
 
-                $typeStr = trim($row['article'] ?: 'Building');
-                $typeRec = DB::table('building_types')->where('building_classification_id', $classId)->where('name', $typeStr)->first();
-                $typeId = $typeRec ? $typeRec->id : DB::table('building_types')->insertGetId(['building_classification_id' => $classId, 'name' => $typeStr, 'created_at' => now(), 'updated_at' => now()]);
-
-                $descStr = trim($row['description'] ?: '');
-                $st = $row['storeys'];
-                $cr = $row['classrooms'];
-                
-                $specQuery = DB::table('building_specs')->where('building_type_id', $typeId)->where('description', $descStr);
-                if ($st !== null) $specQuery->where('storeys', $st); else $specQuery->whereNull('storeys');
-                if ($cr !== null) $specQuery->where('classrooms', $cr); else $specQuery->whereNull('classrooms');
-                $specRec = $specQuery->first();
-                
-                $specId = $specRec ? $specRec->id : DB::table('building_specs')->insertGetId([
+                $specId = DB::table('building_specs')->insertGetId([
                     'building_type_id' => $typeId,
-                    'description' => $descStr ?: null,
-                    'storeys' => $st,
-                    'classrooms' => $cr,
-                    'created_at' => now(), 'updated_at' => now()
+                    'description' => $row['description'] ?? null,
+                    'storeys' => intval($row['storeys'] ?? 1),
+                    'classrooms' => intval($row['classrooms'] ?? 0),
+                    'created_at' => now()
                 ]);
 
                 DB::table('building_records')->insert([
-                    'school_id'         => $schoolId,
-                    'building_spec_id'  => $specId,
-                    'region'            => $row['region'] ?: 'REGION IX',
-                    'division'          => $row['division'] ?: 'Division of Zamboanga City',
-                    'office_type'       => $row['office_type'] ?: null,
-                    'address'           => $row['address'] ?: null,
-                    'location'          => $row['location'] ?: null,
-                    'occupancy_nature'  => $row['occupancy_nature'] ?: null,
-                    'date_constructed'  => $row['date_constructed'],
-                    'acquisition_date'  => $row['acquisition_date'],
-                    'property_number'   => $propNo,
-                    'acquisition_cost'  => $row['acquisition_cost'],
-                    'estimated_useful_life' => $row['estimated_useful_life'] ?? 25,
-                    'appraised_value'   => $row['appraised_value'],
-                    'appraisal_date'    => $row['appraisal_date'],
-                    'remarks'           => $row['remarks'] ?: null,
-                    'created_at'        => now(),
-                    'updated_at'        => now(),
+                    'school_id' => $schoolId,
+                    'building_spec_id' => $specId,
+                    'office_type' => $row['office_type'] ?? null,
+                    'address' => $row['address'] ?? null,
+                    'location' => $row['location'] ?? null,
+                    'occupancy_nature' => $row['occupancy_nature'] ?? null,
+                    'date_constructed' => $row['date_constructed'] ?? null,
+                    'acquisition_date' => $row['acquisition_date'] ?? null,
+                    'property_number' => $row['property_number'] ?? null,
+                    'acquisition_cost' => floatval($row['acquisition_cost'] ?? 0),
+                    'estimated_useful_life' => intval($row['estimated_useful_life'] ?? 25),
+                    'appraised_value' => floatval($row['appraised_value'] ?? 0),
+                    'appraisal_date' => $row['appraisal_date'] ?? null,
+                    'remarks' => $row['remarks'] ?? null,
+                    'created_at' => now()
                 ]);
-                
-                if ($propNo) $existingBuildingProps[$propNo] = true;
-                $totalBuildings++;
             }
-
-            // ── Insert Assets (PPE PIF / Semi-PPE PIF) ──
-            if (!empty($allGroups['assets'])) {
-                $pifSource   = DB::table('acquisition_sources')->where('name', 'PIF Import')->first();
-                $pifSourceId = $pifSource
-                    ? $pifSource->id
-                    : DB::table('acquisition_sources')->insertGetId([
-                        'name'        => 'PIF Import',
-                        'source_type' => 'Internal',
-                        'created_at'  => now(), 'updated_at' => now(),
-                    ]);
-
-                // Batch lookup for procurement mode
-                $pifModeName = 'PIF Import';
-                $pifModeId = DB::table('procurement_modes')->where('name', $pifModeName)->value('id');
-                if (!$pifModeId) {
-                    $pifModeId = DB::table('procurement_modes')->insertGetId([
-                        'name' => $pifModeName,
-                        'created_at' => now(), 'updated_at' => now(),
-                    ]);
-                }
-
-                // Batch lookup for schools
-                $schoolLookup = DB::table('schools')->pluck('id', 'school_id')->all();
-
-                foreach ($allGroups['assets'] as $row) {
-                    $propNo = trim($row['property_number'] ?? '');
-                    if (!empty($propNo) && isset($existingAssetProps[$propNo])) continue;
-
-                    // Classification
-                    $cName      = trim($row['classification'] ?? '');
-                    if (empty($cName)) $cName = 'Unclassified';
-                    $cNameLower = strtolower($cName);
-
-                    if (!isset($classMap[$cNameLower])) {
-                        $cId = DB::table('classifications')->insertGetId([
-                            'name' => $cName, 'created_at' => now(), 'updated_at' => now(),
-                        ]);
-                        $classMap[$cNameLower] = (object)['id' => $cId, 'name' => $cName];
-                    }
-                    $classId = $classMap[$cNameLower]->id;
-
-                    // Category
-                    $catName = 'Uncategorized';
-                    $catNameLower = 'uncategorized';
-                    $catId    = null;
-                    $foundCat = false;
-                    foreach ($catMap[$catNameLower] ?? [] as $c) {
-                        if ((int)$c->classification_id === (int)$classId) {
-                            $catId = $c->id; $foundCat = true; break;
-                        }
-                    }
-                    if (!$foundCat) {
-                        $catId = DB::table('categories')->insertGetId([
-                            'name'              => $catName,
-                            'classification_id' => $classId,
-                            'created_at'        => now(), 'updated_at' => now(),
-                        ]);
-                        $catMap[$catNameLower][] = (object)['id' => $catId, 'name' => $catName, 'classification_id' => $classId];
-                    }
-
-                    // Item
-                    $iName      = trim($row['article'] ?? '');
-                    if (empty($iName)) $iName = 'Unspecified Item';
-                    $iNameLower = strtolower($iName);
-
-                    if (!isset($itemMap[$iNameLower])) {
-                        $itemId = DB::table('items')->insertGetId([
-                            'name'        => $iName,
-                            'category_id' => $catId,
-                            'created_at'  => now(), 'updated_at' => now(),
-                        ]);
-                        $itemMap[$iNameLower] = (object)['id' => $itemId, 'name' => $iName, 'category_id' => $catId];
-                    } else {
-                        $itemId = $itemMap[$iNameLower]->id;
-                        if (empty($itemMap[$iNameLower]->category_id)) {
-                            DB::table('items')->where('id', $itemId)->update(['category_id' => $catId]);
-                            $itemMap[$iNameLower]->category_id = $catId;
-                        }
-                    }
-
-                    $cost = (isset($row['acquisition_cost']) && $row['acquisition_cost'] !== '') ? $row['acquisition_cost'] : null;
-                    $date = $row['acquisition_date'] ?: now()->toDateString();
-
-                    // asset_sources (uses normalized FKs)
-                    $assetSourceId = DB::table('asset_sources')->insertGetId([
-                        'item_id'               => $itemId,
-                        'description'           => $row['description'] ?: null,
-                        'acquisition_source_id' => $pifSourceId,
-                        'procurement_mode_id'   => $pifModeId,
-                        'acquisition_contact_id'=> null,
-                        'asset_cost'            => $cost,
-                        'quantity'              => 1,
-                        'acceptance_date'       => $date,
-                        'created_at'            => now(), 'updated_at' => now(),
-                    ]);
-
-                    // asset_assignments (current schema: no region/division/office_school_name)
-                    if (empty($propNo)) {
-                        $propNo = 'PIF-' . now()->format('Ymd') . '-' . uniqid();
-                    }
-
-                    // Resolve school FK for assignment
-                    $schoolIdentifier = trim($row['school_identifier'] ?? '');
-                    $resolvedSchoolId = !empty($schoolIdentifier) && isset($schoolLookup[$schoolIdentifier])
-                        ? $schoolIdentifier
-                        : null;
-
-                    DB::table('asset_assignments')->insert([
-                        'asset_source_id'     => $assetSourceId,
-                        'custodian_id'        => null,
-                        'office_id'           => null,
-                        'condition'           => 'Serviceable',
-                        'office_school_type'  => $row['office_type'] ?: '',
-                        'school_id'           => $resolvedSchoolId,
-                        'nature_of_occupancy' => $row['occupancy_nature'] ?: '',
-                        'location'            => $row['location'] ?: null,
-                        'property_number'     => $propNo,
-                        'acquisition_cost'    => $cost,
-                        'acquisition_date'    => $date,
-                        'created_at'          => now(), 'updated_at' => now(),
-                    ]);
-
-                    if ($propNo && $duplicateAction !== 'keep') $existingAssetProps[$propNo] = true;
-                    $totalAssets++;
-                }
-            }
-
-            DB::commit();
-
-            $parts = [];
-            if ($totalBuildings > 0) $parts[] = "{$totalBuildings} building(s)";
-            if ($totalAssets > 0)    $parts[] = "{$totalAssets} asset(s)";
 
             DB::table('system_logs')->insert([
-                'user'        => $userName,
-                'activity'    => 'PIF Import: ' . implode(' and ', $parts) . ' registered',
-                'module'      => 'Import',
-                'action_type' => 'Create',
-                'created_at'  => now(), 'updated_at' => now(),
+                'user' => $userName,
+                'activity' => "PIF Import: Confirmed " . count($allGroups['buildings']) . " buildings and " . count($allGroups['assets']) . " assets.",
+                'module' => 'Buildings',
+                'action_type' => 'Import',
+                'created_at' => now()
             ]);
 
+            DB::commit();
             session()->forget('pif_import_data');
-
-            $msg  = 'Import complete! ';
-            if ($totalBuildings > 0) $msg .= "{$totalBuildings} building(s)";
-            if ($totalBuildings > 0 && $totalAssets > 0) $msg .= ' and ';
-            if ($totalAssets > 0)    $msg .= "{$totalAssets} asset(s)";
-            $msg .= ' registered successfully.';
-
-            return redirect()->route('buildings.import')->with('success', $msg);
+            return redirect('/inventory-setup')->with('success', 'Import completed successfully.');
 
         } catch (\Exception $e) {
             DB::rollBack();
-            \Illuminate\Support\Facades\Log::error('PIF Import failed: ' . $e->getMessage() . ' at line ' . $e->getLine());
-            return redirect()->route('buildings.import')
-                ->withErrors(['xlsx_file' => 'Import failed: ' . $e->getMessage()]);
+            Log::error("[Import] Confirm failure: " . $e->getMessage());
+            return back()->withErrors(['xlsx_file' => 'Import failed: ' . $e->getMessage()]);
         }
     }
 
@@ -572,10 +258,20 @@ class BuildingImportController extends Controller
         for ($col = 1; $col <= 20; $col++) {
             $val = $sheet->getCellByColumnAndRow($col, 8)->getValue();
             if ($val !== null) {
-                $headerValues[] = strtolower(trim(str_replace("\n", ' ', (string)$val)));
+                $headerValues[] = trim(str_replace("\n", ' ', (string)$val));
             }
         }
-        $h = implode('|', $headerValues);
+
+        // Try Gemini AI-based detection first
+        $gemini = new \App\Services\GeminiService();
+        $type = $gemini->detectTemplateType($headerValues);
+
+        if ($type !== 'unknown') {
+            return $type;
+        }
+
+        // Local keyword fallback logic
+        $h = implode('|', array_map('strtolower', $headerValues));
 
         if (str_contains($h, 'storey') || str_contains($h, 'school address') || str_contains($h, 'date constructed')) {
             return 'buildings';
