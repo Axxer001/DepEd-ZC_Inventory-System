@@ -22,10 +22,9 @@ class DashboardController extends Controller
 
         // 2. Distributed Assets (What is currently in schools/offices)
         $distributedItems = DB::table('asset_assignments')
-            ->join('custodians', 'asset_assignments.custodian_id', '=', 'custodians.id')
             ->where(function($q) {
-                $q->whereNotNull('custodians.office_id')
-                  ->orWhereNotNull('custodians.school_id');
+                $q->whereNotNull('asset_assignments.office_id')
+                  ->orWhereNotNull('asset_assignments.school_id');
             })
             ->count();
         $distributedCount = $distributedItems + $buildingPool; // Buildings are always "distributed"
@@ -67,13 +66,15 @@ class DashboardController extends Controller
                 $itemId = $q->id;
                 
                 $itemData = DB::table('asset_assignments as ad')
-                    ->join('custodians as c', 'ad.custodian_id', '=', 'c.id')
-                    ->leftJoin('offices as o', 'c.office_id', '=', 'o.id')
                     ->leftJoin('schools as s', function($join) {
-                        $join->on('c.school_id', '=', 's.school_id')
-                             ->orOn('o.school_id', '=', 's.id');
+                        $join->on('ad.school_id', '=', 's.id');
                     })
-                    ->join('districts as d', 's.district_id', '=', 'd.id')
+                    ->leftJoin('offices as o', 'ad.office_id', '=', 'o.id')
+                    ->leftJoin('schools as so', 'o.school_id', '=', 'so.id')
+                    ->join('districts as d', function($join) {
+                        $join->on('s.district_id', '=', 'd.id')
+                             ->orOn('so.district_id', '=', 'd.id');
+                    })
                     ->where('d.quadrant_id', $itemId)
                     ->select(
                         DB::raw('COUNT(ad.id) as qty'),
@@ -100,12 +101,8 @@ class DashboardController extends Controller
 
         // 6. Recent Transaction Logs
         $recentLogs = DB::table('asset_assignments as ad')
-            ->leftJoin('custodians as c', 'ad.custodian_id', '=', 'c.id')
-            ->leftJoin('offices as o', 'c.office_id', '=', 'o.id')
-            ->leftJoin('schools as s', function($join) {
-                $join->on('c.school_id', '=', 's.school_id')
-                     ->orOn('o.school_id', '=', 's.id');
-            })
+            ->leftJoin('schools as s', 'ad.school_id', '=', 's.id')
+            ->leftJoin('offices as o', 'ad.office_id', '=', 'o.id')
             ->select('ad.id', DB::raw('COALESCE(s.name, o.name, ad.location) as school'), 'ad.acquisition_cost as value', 'ad.created_at as timestamp')
             ->orderByDesc('ad.created_at')
             ->limit(10)

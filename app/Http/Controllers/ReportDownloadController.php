@@ -649,18 +649,16 @@ class ReportDownloadController extends Controller
                     ->whereColumn('school_id', 'schools.id')
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
                 'total_ppe_cost' => DB::table('asset_assignments')
-                    ->leftJoin('custodians', 'asset_assignments.custodian_id', '=', 'custodians.id')
                     ->where(function($q) {
                         $q->whereColumn('asset_assignments.location', 'schools.name')
-                          ->orWhereColumn('custodians.school_id', 'schools.school_id');
+                          ->orWhereColumn('asset_assignments.school_id', 'schools.id');
                     })
                     ->where('acquisition_cost', '>=', 50000)
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
                 'total_semi_ppe_cost' => DB::table('asset_assignments')
-                    ->leftJoin('custodians', 'asset_assignments.custodian_id', '=', 'custodians.id')
                     ->where(function($q) {
                         $q->whereColumn('asset_assignments.location', 'schools.name')
-                          ->orWhereColumn('custodians.school_id', 'schools.school_id');
+                          ->orWhereColumn('asset_assignments.school_id', 'schools.id');
                     })
                     ->where('acquisition_cost', '<', 50000)
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),

@@ -292,14 +292,14 @@ class AssetController extends Controller
             ->join('classifications', 'categories.classification_id', '=', 'classifications.id')
             ->join('acquisition_sources', 'asrc.acquisition_source_id', '=', 'acquisition_sources.id')
             ->leftJoin('custodians', 'ad.custodian_id', '=', 'custodians.id')
-            ->leftJoin('offices', 'custodians.office_id', '=', 'offices.id')
-            ->leftJoin('schools', 'custodians.school_id', '=', 'schools.school_id')
+            ->leftJoin('offices', 'ad.office_id', '=', 'offices.id')
+            ->leftJoin('schools', 'ad.school_id', '=', 'schools.id')
             ->leftJoin('procurement_modes as pm', 'asrc.procurement_mode_id', '=', 'pm.id')
             ->select(
                 'ad.id',
                 'ad.property_number',
                 'ad.photo_path',
-                'custodians.office_id',
+                'ad.office_id',
                 'ad.condition',
                 DB::raw("NULL as nature_of_occupancy"),
                 'ad.location',

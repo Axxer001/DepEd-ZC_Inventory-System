@@ -338,10 +338,10 @@
         <div class="flex flex-wrap justify-start items-center gap-3 mb-5">
             {{-- Tab Pill --}}
             <div class="inline-flex p-1 bg-slate-100 rounded-2xl border border-slate-200 shadow-inner">
-                <button onclick="setAssetTab('source')" id="tabBtnSource" class="relative z-10 px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-slate-500 hover:text-slate-700">
+                <button onclick="setAssetTab('source')" id="tabBtnSource" class="relative z-10 px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-white bg-[#c00000] shadow-md shadow-red-200">
                     Asset Source
                 </button>
-                <button onclick="setAssetTab('distribution')" id="tabBtnDist" class="relative z-10 px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-white bg-[#c00000] shadow-md shadow-red-200">
+                <button onclick="setAssetTab('distribution')" id="tabBtnDist" class="relative z-10 px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-slate-500 hover:text-slate-700">
                     Asset Distribution
                 </button>
             </div>
@@ -508,7 +508,7 @@
         const assetRowsPerPage = 50;
         let allSchoolList = [];
         let isSchoolInit = false;
-        let currentAssetTab = 'distribution';
+        let currentAssetTab = 'source';
         let assetShowAllColumns = false;
 
         function toggleAssetColumns() {
