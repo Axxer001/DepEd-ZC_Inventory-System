@@ -120,6 +120,66 @@ class ReportDownloadController extends Controller
             $query->whereDate('asset_sources.acceptance_date', $filters['dateAcquired']);
         }
 
+        if (!empty($filters['status'])) {
+            $status = $filters['status'];
+            if ($status === 'distributed') {
+                if ($tab === 'source') {
+                    $query->whereExists(function($q) {
+                        $q->select(DB::raw(1))
+                          ->from('asset_assignments')
+                          ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id');
+                    });
+                }
+            } elseif ($status === 'not_distributed') {
+                if ($tab === 'source') {
+                    $query->whereNotExists(function($q) {
+                        $q->select(DB::raw(1))
+                          ->from('asset_assignments')
+                          ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id');
+                    });
+                } else {
+                    $query->whereRaw('1 = 0');
+                }
+            } elseif ($status === 'serviceable') {
+                if ($tab === 'source') {
+                    $query->whereExists(function($q) {
+                        $q->select(DB::raw(1))
+                          ->from('asset_assignments')
+                          ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id')
+                          ->whereRaw("LOWER(asset_assignments.condition) LIKE 'serviceable%' OR LOWER(asset_assignments.condition) LIKE 'good%'");
+                    });
+                } else {
+                    $query->where(function($q) {
+                        $q->whereRaw("LOWER(asset_assignments.condition) LIKE 'serviceable%' OR LOWER(asset_assignments.condition) LIKE 'good%'");
+                    });
+                }
+            } elseif ($status === 'to_repair') {
+                if ($tab === 'source') {
+                    $query->whereExists(function($q) {
+                        $q->select(DB::raw(1))
+                          ->from('asset_assignments')
+                          ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id')
+                          ->whereRaw("LOWER(asset_assignments.condition) LIKE '%repair%'");
+                    });
+                } else {
+                    $query->whereRaw("LOWER(asset_assignments.condition) LIKE '%repair%'");
+                }
+            } elseif ($status === 'unserviceable') {
+                if ($tab === 'source') {
+                    $query->whereExists(function($q) {
+                        $q->select(DB::raw(1))
+                          ->from('asset_assignments')
+                          ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id')
+                          ->whereRaw("LOWER(asset_assignments.condition) LIKE 'unserviceable%' OR LOWER(asset_assignments.condition) LIKE 'condemned%' OR LOWER(asset_assignments.condition) LIKE 'disposed%'");
+                    });
+                } else {
+                    $query->where(function($q) {
+                        $q->whereRaw("LOWER(asset_assignments.condition) LIKE 'unserviceable%' OR LOWER(asset_assignments.condition) LIKE 'condemned%' OR LOWER(asset_assignments.condition) LIKE 'disposed%'");
+                    });
+                }
+            }
+        }
+
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function($q) use ($search, $tab) {

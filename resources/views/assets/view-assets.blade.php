@@ -209,6 +209,17 @@
                         <option value="acquisition_date">Missing Acquisition Date</option>
                     </select>
                 </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Status / Condition</label>
+                    <select id="assetFilterStatus" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+                        <option value="">All Statuses / Conditions</option>
+                        <option value="distributed">Distributed</option>
+                        <option value="not_distributed">Not Yet Distributed</option>
+                        <option value="serviceable">Serviceable</option>
+                        <option value="to_repair">To Repair</option>
+                        <option value="unserviceable">Unserviceable</option>
+                    </select>
+                </div>
             </div>
             <div class="mt-8 flex justify-end items-center gap-8 relative z-10">
                 <button onclick="clearAssetFilters()" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-[#c00000] hover:-translate-y-0.5 transition-all duration-300 italic">Clear All Filters</button>
@@ -403,6 +414,7 @@
                 schoolName: document.getElementById('assetFilterSchool').value,
                 sortCost: document.getElementById('assetFilterSort').value,
                 emptyCol: document.getElementById('assetFilterEmptyCol').value,
+                status: document.getElementById('assetFilterStatus').value,
                 tab: currentAssetTab,
                 search: document.getElementById('assetSearchInput')?.value || ''
             };
@@ -520,6 +532,7 @@
             document.getElementById('assetFilterSchool').value = '';
             document.getElementById('assetFilterSort').value = '';
             document.getElementById('assetFilterEmptyCol').value = '';
+            document.getElementById('assetFilterStatus').value = '';
             const searchInput = document.getElementById('assetSearchInput');
             if(searchInput) searchInput.value = '';
             assetFetchData();
