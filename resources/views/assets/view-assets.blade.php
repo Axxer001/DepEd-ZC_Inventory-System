@@ -853,7 +853,31 @@
         }
         // ---- End Condition Dropdown ----
 
-        document.addEventListener('DOMContentLoaded', () => { assetFetchFilters(); assetFetchData(); });
+        document.addEventListener('DOMContentLoaded', () => { 
+            const urlParams = new URLSearchParams(window.location.search);
+            const tabParam = urlParams.get('tab');
+            const conditionParam = urlParams.get('condition');
+            
+            assetFetchFilters(); 
+
+            // If condition param exists, find the matching button and click it to sync UI & fetch data
+            if (conditionParam) {
+                const btn = document.querySelector(`button[onclick*="setConditionFilter('${conditionParam}'"]`);
+                if (btn) {
+                    // Temporarily override assetFetchData inside setConditionFilter to prevent double fetch
+                    const origFetch = window.assetFetchData;
+                    window.assetFetchData = function(){}; 
+                    btn.click();
+                    window.assetFetchData = origFetch;
+                }
+            }
+
+            if (tabParam === 'source' || tabParam === 'distribution') {
+                setAssetTab(tabParam);
+            } else {
+                assetFetchData(); 
+            }
+        });
     </script>
 </body>
 </html>

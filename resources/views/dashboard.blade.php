@@ -290,7 +290,7 @@
                 {{-- 1. Top Stat Cards --}}
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-10">
                     {{-- Total Inventory --}}
-                    <div class="p-8 rounded-[2.5rem] bg-white border-l-[12px] border-[#c00000] shadow-2xl flex flex-col justify-between h-56 group hover:-translate-y-2 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out cursor-default relative overflow-hidden border-r border-y border-slate-50">
+                    <div onclick="window.location.href='{{ url('/view-assets?tab=source') }}'" class="p-8 rounded-[2.5rem] bg-white border-l-[12px] border-[#c00000] shadow-2xl flex flex-col justify-between h-56 group hover:-translate-y-2 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out cursor-pointer relative overflow-hidden border-r border-y border-slate-50">
                         <div class="flex justify-between items-start relative z-10">
                             <div class="flex flex-col">
                                 <span class="text-xs font-black uppercase tracking-[0.2em] text-slate-900 group-hover:text-[#c00000] transition-colors">System Asset Inventory</span>
@@ -310,7 +310,7 @@
                     </div>
 
                     {{-- Not Yet Distributed Assets --}}
-                    <div class="p-8 rounded-[2.5rem] bg-white border-l-[12px] border-[#c00000] shadow-2xl flex flex-col justify-between h-56 group hover:-translate-y-2 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out cursor-default relative overflow-hidden border-r border-y border-slate-50">
+                    <div onclick="window.location.href='{{ url('/view-assets?tab=distribution&condition=not_distributed') }}'" class="p-8 rounded-[2.5rem] bg-white border-l-[12px] border-[#c00000] shadow-2xl flex flex-col justify-between h-56 group hover:-translate-y-2 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out cursor-pointer relative overflow-hidden border-r border-y border-slate-50">
                         <div class="flex justify-between items-start relative z-10">
                             <div class="flex flex-col">
                                 <span class="text-xs font-black uppercase tracking-[0.2em] text-slate-900 group-hover:text-[#c00000] transition-colors">Assets Not Yet Distributed</span>
@@ -370,7 +370,7 @@
                         
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {{-- Serviceable --}}
-                            <div class="bg-white p-6 rounded-[2.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:scale-[1.02] hover:shadow-emerald-50 transition-all duration-500 cursor-default overflow-hidden relative">
+                            <div onclick="window.location.href='{{ url('/view-assets?tab=distribution&condition=serviceable') }}'" class="bg-white p-6 rounded-[2.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:scale-[1.02] hover:shadow-emerald-50 transition-all duration-500 cursor-pointer overflow-hidden relative">
                                 <div class="flex justify-between items-start mb-6 relative z-10">
                                     <div class="p-2 bg-emerald-50 rounded-2xl group-hover:bg-white transition-all duration-500 shadow-sm">
                                         <img src="{{ asset('images/serviceable.png') }}" alt="Serviceable" class="w-12 h-12 object-contain group-hover:scale-110 transition-transform">
@@ -392,7 +392,7 @@
                             </div>
 
                             {{-- For Repair --}}
-                            <div class="bg-white p-6 rounded-[2.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:scale-[1.02] hover:shadow-amber-50 transition-all duration-500 cursor-default overflow-hidden relative">
+                            <div onclick="window.location.href='{{ url('/view-assets?tab=distribution&condition=to_repair') }}'" class="bg-white p-6 rounded-[2.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:scale-[1.02] hover:shadow-amber-50 transition-all duration-500 cursor-pointer overflow-hidden relative">
                                 <div class="flex justify-between items-start mb-6 relative z-10">
                                     <div class="p-2 bg-amber-50 rounded-2xl group-hover:bg-white transition-all duration-500 shadow-sm">
                                         <img src="{{ asset('images/for_repair.png') }}" alt="For Repair" class="w-12 h-12 object-contain group-hover:scale-110 transition-transform">
@@ -414,7 +414,7 @@
                             </div>
 
                             {{-- Unserviceable --}}
-                            <div class="bg-white p-6 rounded-[2.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:scale-[1.02] hover:shadow-red-50 transition-all duration-500 cursor-default overflow-hidden relative">
+                            <div onclick="window.location.href='{{ url('/view-assets?tab=distribution&condition=unserviceable') }}'" class="bg-white p-6 rounded-[2.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:scale-[1.02] hover:shadow-red-50 transition-all duration-500 cursor-pointer overflow-hidden relative">
                                 <div class="flex justify-between items-start mb-6 relative z-10">
                                     <div class="p-2 bg-red-50 rounded-2xl group-hover:bg-white transition-all duration-500 shadow-sm">
                                         <img src="{{ asset('images/unserviceable.png') }}" alt="Unserviceable" class="w-12 h-12 object-contain group-hover:scale-110 transition-transform">
