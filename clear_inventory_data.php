@@ -9,14 +9,21 @@ use Illuminate\Support\Facades\Schema;
 $tables = [
     'asset_assignments',
     'asset_sources',
+    'acquisition_contacts',
     'acquisition_sources',
+    'procurement_modes',
     'items',
     'categories',
     'classifications',
-    'buildings'
+    'building_records',
+    'building_specs',
+    'building_types',
+    'building_classifications',
+    'asset_transfers',
+    'system_logs'
 ];
 
-echo "Starting database cleanup...\n";
+echo "Starting comprehensive database cleanup...\n";
 
 DB::statement('SET FOREIGN_KEY_CHECKS=0;');
 
@@ -31,4 +38,4 @@ foreach ($tables as $table) {
 
 DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-echo "Database cleanup completed successfully.\n";
+echo "Comprehensive database cleanup completed successfully.\n";
