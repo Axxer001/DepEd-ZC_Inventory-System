@@ -3,34 +3,19 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Office extends Model
 {
     protected $fillable = [
-        'school_id',
+        'office_id',
         'name',
-        'office_code',
-        'room_number',
+        'type',
+        'location',
     ];
 
-    public function school(): BelongsTo
+    public function employees(): HasMany
     {
-        return $this->belongsTo(School::class);
-    }
-
-    public function custodians(): HasMany
-    {
-        return $this->hasMany(Custodian::class);
-    }
-
-    /**
-     * Resolve asset assignments through custodians since office_id was moved to custodians.
-     */
-    public function assetAssignments(): HasManyThrough
-    {
-        return $this->hasManyThrough(AssetAssignment::class, Custodian::class);
+        return $this->hasMany(Employee::class);
     }
 }

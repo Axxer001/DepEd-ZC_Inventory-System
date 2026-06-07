@@ -10,6 +10,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventorySetupController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\BuildingImportController;
+use App\Http\Controllers\EmployeeController;
 
 // --- Public Routes ---
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
@@ -132,8 +133,8 @@ Route::middleware('auth')->group(function () {
             ->orderBy('name')
             ->get();
 
-        $allCustodians = DB::table('custodians')
-            ->select('id', 'first_name', 'middle_name', 'last_name', 'position', 'contact_number')
+        $allCustodians = DB::table('employees')
+            ->select('id', 'first_name', 'middle_name', 'last_name', 'position', 'employee_id')
             ->orderBy('last_name')
             ->get();
 
@@ -157,14 +158,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/supplier-contacts/preview', [\App\Http\Controllers\AcquisitionContactController::class, 'getPreview'])->name('api.supplier_contacts.preview');
     Route::get('/admin/supplier-contacts/{id}', [\App\Http\Controllers\AcquisitionContactController::class, 'profile'])->name('supplier_contacts.profile');
 
-    // --- Custodians Registry ---
-    Route::get('/admin/custodians', function () {
-        return view('admin.custodians');
-    })->name('admin.custodians');
+    // --- Employee (formerly Custodian) Registry ---
+    Route::get('/admin/employees', [EmployeeController::class, 'index'])->name('admin.employees');
+    Route::get('/api/employees/search', [EmployeeController::class, 'searchEmployees'])->name('api.employees.search');
+    Route::get('/api/locations/search', [EmployeeController::class, 'searchLocations'])->name('api.locations.search');
 
-    Route::post('/api/custodians/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansPreview'])->name('api.custodians.preview');
-    Route::get('/api/custodians/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansFilterOptions'])->name('api.custodians.filters');
-    Route::get('/admin/custodians/{id}', [\App\Http\Controllers\CustodianController::class, 'profile'])->name('custodians.profile');
+    Route::post('/api/employees/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansPreview'])->name('api.employees.preview');
+    Route::get('/api/employees/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansFilterOptions'])->name('api.employees.filters');
+    Route::get('/admin/employees/{id}', [EmployeeController::class, 'profile'])->name('employees.profile');
 
 
 
@@ -214,19 +215,16 @@ Route::middleware('auth')->group(function () {
         $assets = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
-            ->leftJoin('offices', 'ad.office_id', '=', 'offices.id')
-            ->leftJoin('schools', 'offices.school_id', '=', 'schools.id')
+            ->leftJoin('employees as emp', 'ad.employee_id', '=', 'emp.id')
+            ->leftJoin('offices as off', 'emp.office_id', '=', 'off.id')
+            ->leftJoin('schools as sch', 'emp.school_id', '=', 'sch.id')
             ->select(
                 'ad.id',
                 'ad.property_number',
-                'ad.condition',
-                'ad.location',
+                'asrc.condition',
                 'items.name as item_name',
                 DB::raw('COALESCE(asrc.description, items.name) as description'),
-                'asrc.serial_number',
-                'asrc.brand',
-                'asrc.model',
-                DB::raw('COALESCE(schools.name, offices.name, ad.location) as school_name')
+                DB::raw('COALESCE(sch.name, off.name) as location')
             )
             ->orderBy('ad.id', 'desc')
             ->get();
@@ -238,19 +236,16 @@ Route::middleware('auth')->group(function () {
         $assets = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
-            ->leftJoin('offices', 'ad.office_id', '=', 'offices.id')
-            ->leftJoin('schools', 'offices.school_id', '=', 'schools.id')
+            ->leftJoin('employees as emp', 'ad.employee_id', '=', 'emp.id')
+            ->leftJoin('offices as off', 'emp.office_id', '=', 'off.id')
+            ->leftJoin('schools as sch', 'emp.school_id', '=', 'sch.id')
             ->select(
                 'ad.id',
                 'ad.property_number',
-                'ad.condition',
-                'ad.location',
+                'asrc.condition',
                 'items.name as item_name',
                 DB::raw('COALESCE(asrc.description, items.name) as description'),
-                'asrc.serial_number',
-                'asrc.brand',
-                'asrc.model',
-                DB::raw('COALESCE(schools.name, offices.name, ad.location) as school_name')
+                DB::raw('COALESCE(sch.name, off.name) as location')
             )
             ->orderBy('ad.id', 'desc')
             ->get();
@@ -293,6 +288,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/reports/download-rpc', [\App\Http\Controllers\ReportDownloadController::class, 'download'])->name('assets.reports.download_rpc');
 
     // --- Inventory Management (Edit) ---
+    Route::get('/api/inventory/dropdown-data', [InventorySetupController::class, 'getDropdownData'])->name('api.inventory.dropdown_data');
     Route::post('/api/inventory/edit-preview', [\App\Http\Controllers\ReportDownloadController::class, 'getEditPreview'])->name('api.inventory.edit_preview');
     Route::post('/inventory-setup/edit-batch', [\App\Http\Controllers\InventorySetupController::class, 'updateBatch'])->name('inventory.setup.updateBatch');
 

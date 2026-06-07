@@ -8,32 +8,51 @@ return [
     |--------------------------------------------------------------------------
     | Gemini API Key
     |--------------------------------------------------------------------------
-    |
-    | Here you may specify your Gemini API Key and organization. This will be
-    | used to authenticate with the Gemini API - you can find your API key
-    | on Google AI Studio, at https://aistudio.google.com/app/apikey.
+    | Bind via GEMINI_API_KEY in .env — sourced from Google AI Studio.
     */
-
     'api_key' => env('GEMINI_API_KEY'),
 
     /*
     |--------------------------------------------------------------------------
     | Gemini Base URL
     |--------------------------------------------------------------------------
-    |
-    | If you need a specific base URL for the Gemini API, you can provide it here.
-    | Otherwise, leave empty to use the default value.
+    | Default v1beta endpoint. Override via GEMINI_BASE_URL if needed.
     */
-    'base_url' => env('GEMINI_BASE_URL'),
+    'base_url' => env('GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com/v1beta'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Model
+    |--------------------------------------------------------------------------
+    | Free-tier compatible model. Override via GEMINI_MODEL in .env.
+    | Options: gemini-2.0-flash, gemini-2.0-flash-lite, gemini-1.5-flash
+    */
+    'model' => env('GEMINI_MODEL', 'gemini-2.0-flash'),
 
     /*
     |--------------------------------------------------------------------------
     | Request Timeout
     |--------------------------------------------------------------------------
-    |
-    | The timeout may be used to specify the maximum number of seconds to wait
-    | for a response. By default, the client will time out after 30 seconds.
+    | Max seconds to wait per API call. Default 45s for batch sanitation.
     */
+    'request_timeout' => env('GEMINI_REQUEST_TIMEOUT', 45),
 
-    'request_timeout' => env('GEMINI_REQUEST_TIMEOUT', 30),
+    /*
+    |--------------------------------------------------------------------------
+    | Retry Configuration
+    |--------------------------------------------------------------------------
+    | max_attempts: how many times to retry on 429/5xx before giving up.
+    | retry_delay_ms: base delay in milliseconds between attempts.
+    */
+    'max_attempts'   => (int) env('GEMINI_MAX_ATTEMPTS', 3),
+    'retry_delay_ms' => (int) env('GEMINI_RETRY_DELAY_MS', 1500),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Row Chunk Size
+    |--------------------------------------------------------------------------
+    | Max rows per Gemini call. Kept low to protect token limits and
+    | the 4GB local VRAM constraint.
+    */
+    'chunk_size' => (int) env('GEMINI_CHUNK_SIZE', 40),
 ];

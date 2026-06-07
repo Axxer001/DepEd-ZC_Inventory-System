@@ -30,14 +30,14 @@ class AssetTransfer extends Model
         return $this->belongsTo(AssetAssignment::class);
     }
 
-    public function fromCustodian(): BelongsTo
+    public function fromEmployee(): BelongsTo
     {
-        return $this->belongsTo(Custodian::class, 'from_custodian_id');
+        return $this->belongsTo(Employee::class, 'from_custodian_id');
     }
 
-    public function toCustodian(): BelongsTo
+    public function toEmployee(): BelongsTo
     {
-        return $this->belongsTo(Custodian::class, 'to_custodian_id');
+        return $this->belongsTo(Employee::class, 'to_custodian_id');
     }
 
     public function fromOffice(): BelongsTo

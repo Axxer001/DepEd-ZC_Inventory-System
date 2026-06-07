@@ -11,15 +11,12 @@ class OfficeController extends Controller
     {
         // Fetch the office details with its school, district, and quadrant
         $office = DB::table('offices as o')
-            ->leftJoin('schools as s', 'o.school_id', '=', 's.id')
-            ->leftJoin('districts as d', 's.district_id', '=', 'd.id')
-            ->leftJoin('quadrants as q', 'd.quadrant_id', '=', 'q.id')
+            ->leftJoin('districts as d', function($j) {
+                // offices are now standalone — no direct school_id FK
+                $j->whereRaw('1=0'); // placeholder; district resolved via employees
+            })
             ->select(
-                'o.*',
-                's.name as school_name',
-                's.school_id as school_identifier',
-                'd.name as district_name',
-                'q.name as quadrant_name'
+                'o.id', 'o.name', 'o.office_id', 'o.type', 'o.location'
             )
             ->where('o.id', $id)
             ->first();
@@ -52,19 +49,21 @@ class OfficeController extends Controller
             ->where('br.school_id', $office->school_id)
             ->get();
 
-        // Asset assignments for this office
+        // Asset assignments for employees based in this office
         $assetStats = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
-            ->where('ad.office_id', $id)
+            ->join('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->where('e.office_id', $id)
             ->selectRaw('COUNT(ad.id) as total_assets, COALESCE(SUM(ad.acquisition_cost), 0) as total_asset_value')
             ->first();
 
-        // Recent assets assigned to this office
+        // Recent assets for employees based in this office
         $recentAssets = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->where('ad.office_id', $id)
+            ->join('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->where('e.office_id', $id)
             ->select(
                 'ad.id',
                 'ad.property_number',
@@ -72,15 +71,15 @@ class OfficeController extends Controller
                 'ad.acquisition_cost as asset_cost',
                 'items.name as item_name',
                 'categories.name as category_name',
-                'ad.condition'
+                'asrc.condition'
             )
             ->orderByDesc('ad.acquisition_date')
             ->get();
 
-        // Fetch custodians who have assets assigned in this office
-        $custodians = DB::table('asset_assignments as ad')
-            ->join('custodians as c', 'ad.custodian_id', '=', 'c.id')
-            ->where('ad.office_id', $id)
+        // Employees based in this office with their asset counts
+        $custodians = DB::table('employees as c')
+            ->leftJoin('asset_assignments as ad', 'ad.employee_id', '=', 'c.id')
+            ->where('c.office_id', $id)
             ->select(
                 'c.id',
                 'c.first_name',

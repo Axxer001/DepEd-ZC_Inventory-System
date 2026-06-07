@@ -45,7 +45,7 @@ class AssetController extends Controller
         $allItems = DB::table('items')
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->leftJoin(DB::raw('(SELECT item_id, SUM(quantity) as sourced_qty FROM asset_sources GROUP BY item_id) as src'), 'items.id', '=', 'src.item_id')
-            ->leftJoin(DB::raw('(SELECT asrc.item_id, COUNT(ad.id) as distributed_qty FROM asset_assignments ad JOIN asset_sources asrc ON ad.asset_source_id = asrc.id WHERE ad.location != "AMU Warehouse" OR ad.location IS NULL GROUP BY asrc.item_id) as dist'), 'items.id', '=', 'dist.item_id')
+            ->leftJoin(DB::raw('(SELECT asrc.item_id, COUNT(ad.id) as distributed_qty FROM asset_assignments ad JOIN asset_sources asrc ON ad.asset_source_id = asrc.id WHERE ad.employee_id IS NOT NULL GROUP BY asrc.item_id) as dist'), 'items.id', '=', 'dist.item_id')
             ->select(
                 'items.id',
                 'items.name as item_name',
@@ -91,19 +91,17 @@ class AssetController extends Controller
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->leftJoin('custodians as c', 'ad.custodian_id', '=', 'c.id')
-            ->leftJoin('offices', 'c.office_id', '=', 'offices.id')
-            ->leftJoin('schools', 'c.school_id', '=', 'schools.school_id')
-            ->where(function($q) {
-                $q->where('ad.location', '!=', 'AMU Warehouse')
-                  ->orWhereNull('ad.location');
-            })
+            ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->leftJoin('offices', 'e.office_id', '=', 'offices.id')
+            ->leftJoin('schools', 'e.school_id', '=', 'schools.id')
+            ->whereNotNull('ad.employee_id')
             ->select(
-                DB::raw('COALESCE(schools.name, offices.name, ad.location) as school_name'),
+                DB::raw('COALESCE(schools.name, offices.name, "Warehouse") as school_name'),
                 'categories.name as category_name',
                 'items.name as item_name',
                 DB::raw('COALESCE(asrc.description, items.name) as sub_item_name'),
-                DB::raw('1 as quantity')
+                DB::raw('1 as quantity'),
+                'asrc.condition as status'
             )
             ->get();
 
@@ -130,7 +128,7 @@ class AssetController extends Controller
                 $inventory[$cat]['items'][$item]['sub_items'][$sub][] = [
                     'name' => $row->school_name,
                     'qty' => $row->quantity,
-                    'status' => 'Serviceable'
+                    'status' => $row->status ?: 'Good Condition'
                 ];
             }
         }
@@ -140,12 +138,15 @@ class AssetController extends Controller
 
     public function getCategoriesBySchool($schoolId)
     {
-        $mockCategories = [
-            '1' => ['DCP Package', 'Furniture'],
-            '2' => ['Science Kit', 'DCP Package'],
-            '3' => ['Furniture', 'Science Kit', 'Office Supplies']
-        ];
-        $categories = $mockCategories[$schoolId] ?? ['General Inventory'];
+        $categories = DB::table('employees')
+            ->join('asset_assignments', 'employees.id', '=', 'asset_assignments.employee_id')
+            ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+            ->join('items', 'asset_sources.item_id', '=', 'items.id')
+            ->join('categories', 'items.category_id', '=', 'categories.id')
+            ->where('employees.school_id', $schoolId)
+            ->distinct()
+            ->pluck('categories.name');
+
         return response()->json($categories);
     }
 
@@ -175,16 +176,17 @@ class AssetController extends Controller
         $assetDistributions = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
-            ->leftJoin('custodians as c', 'ad.custodian_id', '=', 'c.id')
-            ->leftJoin('offices', 'c.office_id', '=', 'offices.id')
-            ->leftJoin('schools', 'c.school_id', '=', 'schools.school_id')
+            ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->leftJoin('offices', 'e.office_id', '=', 'offices.id')
+            ->leftJoin('schools', 'e.school_id', '=', 'schools.id')
             ->leftJoin('districts', 'schools.district_id', '=', 'districts.id')
             ->leftJoin('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
             ->select(
                 'ad.*',
+                'asrc.condition',
                 'items.name as item_name',
                 'asrc.description as asset_description',
-                'schools.name as office_school_name',
+                DB::raw('COALESCE(schools.name, offices.name, "Warehouse") as office_school_name'),
                 'districts.name as district_name',
                 'quadrants.name as quadrant_name'
             )
@@ -215,15 +217,15 @@ class AssetController extends Controller
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->leftJoin('custodians as c', 'ad.custodian_id', '=', 'c.id')
-            ->leftJoin('offices', 'c.office_id', '=', 'offices.id')
-            ->leftJoin('schools', 'c.school_id', '=', 'schools.school_id')
+            ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->leftJoin('offices', 'e.office_id', '=', 'offices.id')
+            ->leftJoin('schools', 'e.school_id', '=', 'schools.id')
             ->select(
                 'ad.id',
                 'items.name as item_name',
                 DB::raw('COALESCE(asrc.description, "General") as sub_item_name'),
                 'categories.name as category',
-                DB::raw('COALESCE(schools.name, offices.name, ad.location) as school'),
+                DB::raw('COALESCE(schools.name, offices.name, "Warehouse") as school'),
                 DB::raw("'Assigned' as district"),
                 DB::raw('1 as qty'),
                 'ad.created_at as distributed_at'
@@ -256,15 +258,14 @@ class AssetController extends Controller
             ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->join('acquisition_sources', 'asrc.acquisition_source_id', '=', 'acquisition_sources.id')
-            ->leftJoin('custodians as c', 'ad.custodian_id', '=', 'c.id')
-            ->leftJoin('offices', 'c.office_id', '=', 'offices.id')
-            ->leftJoin('schools', 'c.school_id', '=', 'schools.school_id')
+            ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->leftJoin('offices', 'e.office_id', '=', 'offices.id')
+            ->leftJoin('schools', 'e.school_id', '=', 'schools.id')
             ->leftJoin('procurement_modes as pm', 'asrc.procurement_mode_id', '=', 'pm.id')
             ->select(
                 'ad.id',
                 'ad.property_number',
-                'ad.location',
-                'ad.condition',
+                'asrc.condition',
                 'ad.acquisition_date',
                 'asrc.acceptance_date',
                 DB::raw('COALESCE(asrc.description, items.name) as description'),
@@ -274,7 +275,7 @@ class AssetController extends Controller
                 'acquisition_sources.name as source_name',
                 'items.name as item_name',
                 'categories.name as category_name',
-                DB::raw('COALESCE(schools.name, offices.name, ad.location) as school_name')
+                DB::raw('COALESCE(schools.name, offices.name, "Warehouse") as school_name')
             )
             ->orderByDesc('ad.created_at')
             ->get();
@@ -291,23 +292,22 @@ class AssetController extends Controller
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->join('classifications', 'categories.classification_id', '=', 'classifications.id')
             ->join('acquisition_sources', 'asrc.acquisition_source_id', '=', 'acquisition_sources.id')
-            ->leftJoin('custodians', 'ad.custodian_id', '=', 'custodians.id')
-            ->leftJoin('offices', 'custodians.office_id', '=', 'offices.id')
-            ->leftJoin('schools', 'custodians.school_id', '=', 'schools.school_id')
+            ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->leftJoin('offices', 'e.office_id', '=', 'offices.id')
+            ->leftJoin('schools', 'e.school_id', '=', 'schools.id')
             ->leftJoin('procurement_modes as pm', 'asrc.procurement_mode_id', '=', 'pm.id')
             ->select(
                 'ad.id',
                 'ad.property_number',
                 'ad.photo_path',
-                'custodians.office_id',
-                'ad.condition',
+                'e.office_id',
+                'asrc.condition',
                 DB::raw("NULL as nature_of_occupancy"),
-                'ad.location',
                 'ad.acquisition_date',
-                'ad.custodian_id',
+                'ad.employee_id',
                 DB::raw("'Region IX' as region"),
                 DB::raw("'Division of Zamboanga City' as division"),
-                DB::raw('COALESCE(schools.name, offices.name, ad.location) as office_school_name'),
+                DB::raw('COALESCE(schools.name, offices.name, "Warehouse") as office_school_name'),
                 'offices.name as office_name',
                 'schools.name as school_name',
                 'asrc.id as asset_source_id',
@@ -324,11 +324,11 @@ class AssetController extends Controller
                 'categories.id as category_id',
                 'classifications.name as classification_name',
                 'classifications.id as classification_id',
-                'custodians.first_name as custodian_first',
-                'custodians.middle_name as custodian_middle',
-                'custodians.last_name as custodian_last',
-                'custodians.position as custodian_position',
-                'custodians.contact_number as custodian_contact'
+                'e.first_name as employee_first',
+                'e.middle_name as employee_middle',
+                'e.last_name as employee_last',
+                'e.position as employee_position',
+                'e.employee_id as employee_id_code'
             )
             ->where('ad.id', $id)
             ->first();
@@ -341,9 +341,9 @@ class AssetController extends Controller
         $categories = DB::table('categories')->orderBy('name')->get();
         $items = DB::table('items')->orderBy('name')->get();
         $acquisitionSources = DB::table('acquisition_sources')->orderBy('name')->get();
-        $custodians = DB::table('custodians')->orderBy('first_name')->get()->map(function($c) {
-            $c->full_name = trim($c->first_name . ' ' . $c->middle_name . ' ' . $c->last_name);
-            return $c;
+        $employees = DB::table('employees')->orderBy('first_name')->get()->map(function($e) {
+            $e->full_name = trim($e->first_name . ' ' . ($e->middle_name ? $e->middle_name . ' ' : '') . $e->last_name);
+            return $e;
         });
         $schools = DB::table('schools')->orderBy('name')->get();
         $offices = DB::table('offices')->orderBy('name')->get();
@@ -361,7 +361,7 @@ class AssetController extends Controller
         // Fetch transfer history with office/school names
         $transfers = DB::table('asset_transfers')
             ->leftJoin('users', 'asset_transfers.authorized_by', '=', 'users.id')
-            ->leftJoin('custodians as to_custodian', 'asset_transfers.to_custodian_id', '=', 'to_custodian.id')
+            ->leftJoin('employees as to_emp', 'asset_transfers.to_custodian_id', '=', 'to_emp.id')
             ->leftJoin('offices as from_off', 'asset_transfers.from_office_id', '=', 'from_off.id')
             ->leftJoin('schools as from_sch', 'from_off.school_id', '=', 'from_sch.id')
             ->leftJoin('offices as to_off', 'asset_transfers.to_office_id', '=', 'to_off.id')
@@ -370,14 +370,14 @@ class AssetController extends Controller
             ->select(
                 'asset_transfers.*',
                 'users.name as user_name',
-                'to_custodian.first_name', 'to_custodian.last_name',
+                'to_emp.first_name', 'to_emp.last_name',
                 DB::raw('COALESCE(from_sch.name, from_off.name) as from_school_name'),
                 DB::raw('COALESCE(to_sch.name, to_off.name) as to_school_name')
             )
             ->orderBy('asset_transfers.created_at', 'asc')
             ->get();
 
-        if ($transfers->isEmpty() && !empty($asset->office_school_name) && $asset->office_school_name !== 'AMU Warehouse') {
+        if ($transfers->isEmpty() && !empty($asset->office_school_name) && $asset->office_school_name !== 'Warehouse') {
             $timeline[] = [
                 'date' => $asset->acquisition_date ?? 'N/A',
                 'type' => 'Transfer',
@@ -386,16 +386,16 @@ class AssetController extends Controller
             ];
         } else {
             foreach ($transfers as $t) {
-                $fromName = $t->from_school_name ?? 'AMU Warehouse';
-                $toName = $t->to_school_name ?? 'AMU Warehouse';
+                $fromName = $t->from_school_name ?? 'Warehouse';
+                $toName = $t->to_school_name ?? 'Warehouse';
 
                 if ($t->transfer_type === 'Return') {
                     $desc = 'Returned from ' . $fromName . ' to AMU / Warehouse.';
                     if ($t->remarks) $desc .= ' Reason: ' . $t->remarks;
                 } else {
                     $desc = 'Transferred from ' . $fromName . ' to ' . $toName;
-                    $custName = trim(($t->first_name ?? '') . ' ' . ($t->last_name ?? ''));
-                    if ($custName) $desc .= ' (Custodian: ' . $custName . ')';
+                    $empName = trim(($t->first_name ?? '') . ' ' . ($t->last_name ?? ''));
+                    if ($empName) $desc .= ' (Employee: ' . $empName . ')';
                     if ($t->transfer_type === 'Temporary Borrow' && $t->return_date) {
                         $desc .= '. Borrowed until: ' . \Carbon\Carbon::parse($t->return_date)->format('F d, Y');
                     }
@@ -412,7 +412,18 @@ class AssetController extends Controller
 
         $documents = DB::table('asset_documents')->where('asset_distribution_id', $id)->orderByDesc('created_at')->get();
 
-        return view('assets.profile', compact('asset', 'timeline', 'documents', 'classifications', 'categories', 'items', 'acquisitionSources', 'custodians', 'schools', 'offices'));
+        return view('assets.profile', [
+            'asset' => $asset,
+            'timeline' => $timeline,
+            'documents' => $documents,
+            'classifications' => $classifications,
+            'categories' => $categories,
+            'items' => $items,
+            'acquisitionSources' => $acquisitionSources,
+            'employees' => $employees,
+            'schools' => $schools,
+            'offices' => $offices
+        ]);
     }
 
     public function update(Request $request, $id)
@@ -431,10 +442,9 @@ class AssetController extends Controller
             'asset_cost' => 'required|numeric|min:0',
             'acquisition_source_id' => 'required|exists:acquisition_sources,id',
             'mode_of_acquisition' => 'required|string|max:255',
+            'condition' => 'required|string|in:Good Condition,Needs Repair,Unserviceable',
 
-            'custodian_id' => 'nullable|string',
-            'custodian_position' => 'nullable|string|max:255',
-            'custodian_contact' => 'nullable|string|max:255',
+            'employee_id' => 'nullable|exists:employees,id',
         ]);
 
         $asset = DB::table('asset_assignments')->where('id', $id)->first();
@@ -499,58 +509,14 @@ class AssetController extends Controller
                 'updated_at' => now(),
             ]);
 
-            // 4. Resolve Custodian
-            $custodianInput = $request->input('custodian_id');
-            $finalCustodianId = $asset->custodian_id;
-
-            if ($custodianInput) {
-                if (is_numeric($custodianInput) && DB::table('custodians')->where('id', $custodianInput)->exists()) {
-                    $finalCustodianId = $custodianInput;
-                    DB::table('custodians')->where('id', $finalCustodianId)->update([
-                        'position' => $request->input('custodian_position'),
-                        'contact_number' => $request->input('custodian_contact'),
-                        'updated_at' => now(),
-                    ]);
-                } else {
-                    $parts = explode(' ', trim($custodianInput));
-                    $firstName = $parts[0];
-                    $lastName = count($parts) > 1 ? array_pop($parts) : '';
-                    $middleName = count($parts) > 1 ? implode(' ', array_slice($parts, 1)) : '';
-
-                    $existing = DB::table('custodians')
-                        ->where('first_name', $firstName)
-                        ->where('last_name', $lastName)
-                        ->first();
-
-                    if ($existing) {
-                        $finalCustodianId = $existing->id;
-                        DB::table('custodians')->where('id', $finalCustodianId)->update([
-                            'position' => $request->input('custodian_position'),
-                            'contact_number' => $request->input('custodian_contact'),
-                            'updated_at' => now(),
-                        ]);
-                    } else {
-                        $finalCustodianId = DB::table('custodians')->insertGetId([
-                            'first_name' => $firstName,
-                            'middle_name' => $middleName,
-                            'last_name' => $lastName,
-                            'position' => $request->input('custodian_position'),
-                            'contact_number' => $request->input('custodian_contact'),
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                    }
-                }
-            }
-
-            // 5. Update Asset Assignment
+            // 4. Update Asset Assignment
             $distUpdate = ['updated_at' => now()];
             if (array_key_exists('property_number', $validated)) $distUpdate['property_number'] = $validated['property_number'];
-            if ($finalCustodianId) $distUpdate['custodian_id'] = $finalCustodianId;
+            if (array_key_exists('employee_id', $validated)) $distUpdate['employee_id'] = $validated['employee_id'];
 
             DB::table('asset_assignments')->where('id', $id)->update($distUpdate);
 
-            // 6. Update Asset Source (Description, Item link, etc.)
+            // 5. Update Asset Source (Description, Item link, etc.)
             $modeName = trim($validated['mode_of_acquisition']);
             $modeId = DB::table('procurement_modes')->whereRaw('LOWER(name) = ?', [strtolower($modeName)])->value('id');
             if (!$modeId) {
@@ -568,11 +534,12 @@ class AssetController extends Controller
                 'asset_cost' => $validated['asset_cost'],
                 'acquisition_source_id' => $validated['acquisition_source_id'],
                 'procurement_mode_id' => $modeId,
+                'condition' => $validated['condition'],
                 'updated_at' => now(),
             ]);
             
             /** @var \App\Models\User|null $user */
-            $user = \Illuminate\Support\Facades\Auth::user();
+            $user = Auth::user();
             
             // Log the change
             DB::table('system_logs')->insert([
@@ -595,19 +562,10 @@ class AssetController extends Controller
         }
 
         $validated = $request->validate([
-            'office_school_type' => 'nullable|string|max:255',
-            'school_id' => 'nullable|string|max:255',
-            'office_school_name' => 'nullable|string|max:255',
-            'nature_of_occupancy' => 'nullable|string|max:255',
-            'location' => 'nullable|string|max:255',
-            'custodian_first' => 'nullable|string|max:255',
-            'custodian_middle' => 'nullable|string|max:255',
-            'custodian_last' => 'nullable|string|max:255',
-            'custodian_position' => 'nullable|string|max:255',
-            'custodian_contact' => 'nullable|string|max:255',
+            'employee_id' => 'required|exists:employees,id',
             'transfer_date' => 'nullable|date',
             'transfer_type' => 'nullable|string|max:255',
-            'condition' => 'required|string|max:255',
+            'condition' => 'required|string|in:Good Condition,Needs Repair,Unserviceable',
             'return_date' => 'nullable|date',
             'remarks' => 'nullable|string|max:1000',
         ]);
@@ -618,85 +576,26 @@ class AssetController extends Controller
         }
 
         DB::transaction(function () use ($id, $asset, $validated, $request) {
-            $finalCustodianId = null;
-
-            // Handle Custodian Find or Create
-            $firstName = trim($validated['custodian_first'] ?? '');
-            $lastName = trim($validated['custodian_last'] ?? '');
-            $middleName = trim($validated['custodian_middle'] ?? '');
-
-            if (!empty($firstName) || !empty($lastName)) {
-                $existing = DB::table('custodians')
-                    ->where('first_name', $firstName)
-                    ->where('last_name', $lastName)
-                    ->first();
-
-                if ($existing) {
-                    $finalCustodianId = $existing->id;
-                    DB::table('custodians')->where('id', $finalCustodianId)->update([
-                        'position' => $validated['custodian_position'] ?? null,
-                        'contact_number' => $validated['custodian_contact'] ?? null,
-                        'updated_at' => now(),
-                    ]);
-                } else {
-                    $finalCustodianId = DB::table('custodians')->insertGetId([
-                        'first_name' => $firstName,
-                        'middle_name' => $middleName,
-                        'last_name' => $lastName,
-                        'position' => $validated['custodian_position'] ?? null,
-                        'contact_number' => $validated['custodian_contact'] ?? null,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
-
-            // Resolve current office_id from the custodian
-            $currentOfficeId = null;
-            if ($asset->custodian_id) {
-                $currentCustodian = DB::table('custodians')->where('id', $asset->custodian_id)->first();
-                if ($currentCustodian) {
-                    $currentOfficeId = $currentCustodian->office_id;
-                }
-            }
-
-            // Resolve target office_id
-            $officeId = null;
-            $schoolIdStr = $request->input('school_id');
-            $officeSchoolName = $request->input('office_school_name');
+            $targetEmployee = DB::table('employees')->where('id', $validated['employee_id'])->first();
             
-            if ($schoolIdStr) {
-                $school = DB::table('schools')->where('school_id', $schoolIdStr)->first();
-                if ($school) {
-                    $office = DB::table('offices')->where('school_id', $school->id)->first();
-                    $officeId = $office ? $office->id : null;
-                }
-            } elseif ($officeSchoolName) {
-                $school = DB::table('schools')->where('name', $officeSchoolName)->first();
-                if ($school) {
-                    $office = DB::table('offices')->where('school_id', $school->id)->first();
-                    $officeId = $office ? $office->id : null;
-                } else {
-                    $office = DB::table('offices')->where('name', $officeSchoolName)->first();
-                    $officeId = $office ? $office->id : null;
+            // Resolve current office_id from the previous employee
+            $currentOfficeId = null;
+            if ($asset->employee_id) {
+                $currentEmployee = DB::table('employees')->where('id', $asset->employee_id)->first();
+                if ($currentEmployee) {
+                    $currentOfficeId = $currentEmployee->office_id;
                 }
             }
 
-            $targetCustodianId = $finalCustodianId ?: $asset->custodian_id;
-            if ($targetCustodianId) {
-                DB::table('custodians')->where('id', $targetCustodianId)->update([
-                    'office_id' => $officeId,
-                    'school_id' => $schoolIdStr ?: null,
-                    'updated_at' => now(),
-                ]);
-            }
-
-            // Update Asset Assignment (nature_of_occupancy, school_id, office_id dropped)
+            // Update Asset Assignment
             DB::table('asset_assignments')->where('id', $id)->update([
-                'office_school_type' => $request->input('office_school_type') ?? '',
-                'location' => $request->input('location') ?? '',
-                'custodian_id' => $targetCustodianId,
-                'condition' => $request->input('condition'),
+                'employee_id' => $validated['employee_id'],
+                'updated_at' => now(),
+            ]);
+
+            // Update Asset Source Condition
+            DB::table('asset_sources')->where('id', $asset->asset_source_id)->update([
+                'condition' => $validated['condition'],
                 'updated_at' => now(),
             ]);
 
@@ -704,13 +603,13 @@ class AssetController extends Controller
             DB::table('asset_transfers')->insert([
                 'asset_assignment_id' => $id,
                 'from_office_id' => $currentOfficeId,
-                'to_office_id' => $officeId,
-                'from_custodian_id' => $asset->custodian_id,
-                'to_custodian_id' => $targetCustodianId,
-                'transfer_date' => $request->input('transfer_date', now()),
-                'return_date' => $request->input('return_date'),
-                'transfer_type' => $request->input('transfer_type', 'Permanent Reassignment'),
-                'remarks' => $request->input('remarks'),
+                'to_office_id' => $targetEmployee->office_id,
+                'from_custodian_id' => $asset->employee_id, // keep column name as per spec 8.4
+                'to_custodian_id' => $validated['employee_id'],
+                'transfer_date' => $validated['transfer_date'] ?? now(),
+                'return_date' => $validated['return_date'],
+                'transfer_type' => $validated['transfer_type'] ?? 'Permanent Reassignment',
+                'remarks' => $validated['remarks'],
                 'authorized_by' => Auth::id() ?? 1,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -728,7 +627,7 @@ class AssetController extends Controller
 
         $validated = $request->validate([
             'return_date' => 'required|date',
-            'condition' => 'required|string|max:255',
+            'condition' => 'required|string|in:Good Condition,Needs Repair,Unserviceable',
             'remarks' => 'nullable|string|max:1000',
         ]);
 
@@ -738,12 +637,12 @@ class AssetController extends Controller
         }
 
         DB::transaction(function () use ($id, $asset, $validated) {
-            // Resolve current office_id from the custodian
+            // Resolve current office_id from the employee
             $currentOfficeId = null;
-            if ($asset->custodian_id) {
-                $currentCustodian = DB::table('custodians')->where('id', $asset->custodian_id)->first();
-                if ($currentCustodian) {
-                    $currentOfficeId = $currentCustodian->office_id;
+            if ($asset->employee_id) {
+                $currentEmployee = DB::table('employees')->where('id', $asset->employee_id)->first();
+                if ($currentEmployee) {
+                    $currentOfficeId = $currentEmployee->office_id;
                 }
             }
 
@@ -752,7 +651,7 @@ class AssetController extends Controller
                 'asset_assignment_id' => $id,
                 'from_office_id' => $currentOfficeId,
                 'to_office_id' => null,
-                'from_custodian_id' => $asset->custodian_id,
+                'from_custodian_id' => $asset->employee_id,
                 'to_custodian_id' => null,
                 'transfer_date' => $validated['return_date'],
                 'transfer_type' => 'Return',
@@ -762,12 +661,14 @@ class AssetController extends Controller
                 'updated_at' => now(),
             ]);
 
-            // We do NOT delete the assignment, we instead nullify fields so the asset retains its history 
-            // but is no longer distributed (location = AMU Warehouse).
+            // Nullify employee_id
             DB::table('asset_assignments')->where('id', $id)->update([
-                'custodian_id' => null,
-                'office_school_type' => '',
-                'location' => 'AMU Warehouse',
+                'employee_id' => null,
+                'updated_at' => now(),
+            ]);
+
+            // Update condition in asset_sources
+            DB::table('asset_sources')->where('id', $asset->asset_source_id)->update([
                 'condition' => $validated['condition'],
                 'updated_at' => now(),
             ]);
@@ -778,18 +679,12 @@ class AssetController extends Controller
 
     public function getSchoolAssets($id)
     {
-        // Find the school and get its school_id string
-        $school = DB::table('schools')->where('id', $id)->first();
-        if (!$school) {
-            return response()->json(['success' => false, 'assets' => []]);
-        }
-
         $records = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->leftJoin('custodians as c', 'ad.custodian_id', '=', 'c.id')
-            ->where('c.school_id', $school->school_id)
+            ->join('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->where('e.school_id', $id)
             ->select(
                 'categories.name as category_name',
                 'items.name as item_name',

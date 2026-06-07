@@ -6,6 +6,7 @@
     <title>Asset Registration | DepEd Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
@@ -42,7 +43,50 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen flex text-slate-900 overflow-x-hidden">
+<body class="bg-slate-50 min-h-screen flex text-slate-900 overflow-x-hidden" x-data="{
+    sourceType: '',
+    locationQuery: '',
+    locationResults: [],
+    selectedLocation: null,
+    employeeQuery: '',
+    employeeResults: [],
+    selectedEmployee: null,
+    classifications: [],
+    allCategories: [],
+    categories: [],
+    classificationId: '',
+    loading: false,
+    async init() {
+        const res = await fetch('/api/inventory/dropdown-data');
+        const data = await res.json();
+        this.classifications = data.classifications;
+        this.allCategories = data.categories;
+    },
+    async searchLocations() {
+        if (this.locationQuery.length < 2) { this.locationResults = []; return; }
+        this.loading = true;
+        const res = await fetch(`/api/locations/search?q=${encodeURIComponent(this.locationQuery)}&type=${this.sourceType === 'school' ? 'school' : 'office'}`);
+        this.locationResults = await res.json();
+        this.loading = false;
+    },
+    selectLocation(loc) {
+        this.selectedLocation = loc;
+        this.locationQuery = loc.name;
+        this.locationResults = [];
+    },
+    async searchEmployees() {
+        if (this.employeeQuery.length < 2) { this.employeeResults = []; return; }
+        this.loading = true;
+        const res = await fetch(`/api/employees/search?q=${encodeURIComponent(this.employeeQuery)}`);
+        this.employeeResults = await res.json();
+        this.loading = false;
+    },
+    selectEmployee(emp) {
+        this.selectedEmployee = emp;
+        this.employeeQuery = emp.full_name;
+        this.employeeResults = [];
+    }
+}">
 
     @if(session('success'))
         <script>
@@ -53,23 +97,6 @@
                     icon: 'success',
                     confirmButtonColor: '#c00000',
                     customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
-                });
-            });
-        </script>
-    @endif
-
-    @if($errors->any())
-        <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                Swal.fire({
-                    title: 'Registration Error',
-                    html: `{!! implode('<br>', $errors->all()) !!}`,
-                    icon: 'error',
-                    confirmButtonColor: '#c00000',
-                    customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
-                }).then(() => {
-                    // Jump directly to step 2 on validation error (specs step)
-                    goToStep(2);
                 });
             });
         </script>
@@ -131,48 +158,92 @@
                         {{-- Entity Type --}}
                         <div class="space-y-3">
                             <label class="text-[10px] font-black text-[#c00000] uppercase tracking-widest ml-1 italic underline underline-offset-4 decoration-2">Entity Type <span class="text-red-500">*</span></label>
-                            <select id="sourceEntityType" onchange="handleEntityTypeChange()" class="w-full p-6 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-red-50 transition-all cursor-pointer appearance-none">
+                            <select id="sourceEntityType" x-model="sourceType" @change="handleEntityTypeChange(); selectedLocation = null; locationQuery = '';" class="w-full p-6 bg-slate-50 border border-slate-100 rounded-3xl font-black text-slate-700 outline-none focus:ring-4 focus:ring-red-50 transition-all cursor-pointer appearance-none">
                                 <option value="" selected disabled>-- Select Entity Type --</option>
                                 <option value="school">School (Internal)</option>
-                                <option value="external">External (Supplier / Provider)</option>
+                                <option value="external">External (Supplier / Office)</option>
                             </select>
                         </div>
-                        {{-- Dynamic source input --}}
+                        {{-- Dynamic source input (Location Search) --}}
                         <div class="space-y-3 relative">
                             <label id="sourceDynamicLabel" class="text-[10px] font-black text-slate-300 uppercase tracking-widest ml-1 italic">Provider Name</label>
-                            <input type="text" id="sourceDynamicInput" disabled placeholder="Select type first..."
-                                class="w-full p-6 bg-slate-100 border border-slate-100 rounded-3xl font-bold text-slate-700 outline-none transition-all placeholder:text-slate-300 shadow-inner"
-                                autocomplete="off" oninput="filterSourceInput()" onfocus="filterSourceInput()">
-                            <div id="sourceDropdown" class="autocomplete-dropdown hidden custom-scroll"></div>
-                            <p id="sourceExistingHint" class="hidden text-[10px] font-semibold text-emerald-600 ml-2 mt-1">✓ Using existing provider</p>
-                            <p id="sourceNewHint" class="hidden text-[10px] font-semibold text-blue-600 ml-2 mt-1">✦ Will be registered as new</p>
+                            <div class="relative">
+                                <input type="text" id="sourceDynamicInput" x-model="locationQuery" @input.debounce.300ms="searchLocations()" :disabled="!sourceType" :placeholder="sourceType ? 'Search ' + sourceType + ' name...' : 'Select type first...'"
+                                    class="w-full p-6 bg-slate-100 border border-slate-100 rounded-3xl font-bold text-slate-700 outline-none transition-all placeholder:text-slate-300 shadow-inner"
+                                    autocomplete="off">
+                                <div x-show="locationResults.length > 0" class="autocomplete-dropdown custom-scroll">
+                                    <template x-for="loc in locationResults" :key="loc.entity_type + loc.id">
+                                        <div @click="selectLocation(loc)" class="autocomplete-item">
+                                            <span class="font-medium" x-text="loc.name"></span>
+                                            <span class="ml-2 text-xs text-zinc-400" x-text="'(' + loc.entity_type + ')'"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                            <div class="mt-3 grid grid-cols-3 gap-2" x-show="selectedLocation">
+                                <div>
+                                    <label class="block text-[8px] font-bold text-zinc-500 uppercase">ID</label>
+                                    <input type="text" readonly :value="selectedLocation?.entity_id" class="w-full rounded-lg border border-zinc-100 bg-zinc-50 px-2 py-1 text-[10px] font-bold"/>
+                                </div>
+                                <div>
+                                    <label class="block text-[8px] font-bold text-zinc-500 uppercase">Type</label>
+                                    <input type="text" readonly :value="selectedLocation?.type" class="w-full rounded-lg border border-zinc-100 bg-zinc-50 px-2 py-1 text-[10px] font-bold"/>
+                                </div>
+                                <div>
+                                    <label class="block text-[8px] font-bold text-zinc-500 uppercase">Location</label>
+                                    <input type="text" readonly :value="selectedLocation?.location" class="w-full rounded-lg border border-zinc-100 bg-zinc-50 px-2 py-1 text-[10px] font-bold"/>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
-                    <div class="pt-10 border-t border-slate-50 grid grid-cols-1 md:grid-cols-2 gap-10">
+                    <div class="pt-10 border-t border-slate-50 grid grid-cols-1 md:grid-cols-1 gap-10">
                         <div class="space-y-3 relative">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Authorized Personnel</label>
-                            <input type="text" id="receiverName" placeholder="Click to browse personnel..."
-                                class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-slate-300 transition-all"
-                                autocomplete="off" oninput="filterPersonnelInput()" onfocus="filterPersonnelInput()">
-                            <div id="personnelDropdown" class="autocomplete-dropdown hidden custom-scroll"></div>
-                            <p id="personnelExistingHint" class="hidden text-[10px] font-semibold text-emerald-600 ml-2 mt-1">✓ Using existing personnel</p>
-                            <p id="personnelNewHint" class="hidden text-[10px] font-semibold text-blue-600 ml-2 mt-1">✦ Will be registered as new</p>
-                        </div>
-                        <div class="space-y-3">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Job Title / Position</label>
-                            <input type="text" id="receiverPos" placeholder="e.g. Supply Officer" class="w-full p-5 bg-slate-50 border border-slate-100 rounded-2xl font-bold text-slate-700 outline-none focus:border-slate-300 transition-all">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 italic">Authorized Personnel (Custodian) <span class="text-red-500">*</span></label>
+                            <div class="relative">
+                                <input type="text" id="receiverName" x-model="employeeQuery" @input.debounce.300ms="searchEmployees()" placeholder="Search employee name or ID..."
+                                    class="w-full p-6 bg-slate-50 border border-slate-100 rounded-3xl font-black text-sm outline-none focus:ring-4 focus:ring-red-50 transition-all"
+                                    autocomplete="off">
+                                <div x-show="employeeResults.length > 0" class="autocomplete-dropdown custom-scroll">
+                                    <template x-for="emp in employeeResults" :key="emp.id">
+                                        <div @click="selectEmployee(emp)" class="autocomplete-item">
+                                            <span class="font-medium" x-text="emp.full_name"></span>
+                                            <span class="ml-2 text-xs text-zinc-400" x-text="emp.employee_id"></span>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <!-- Auto-filled fields (readonly) -->
+                            <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6" x-show="selectedEmployee">
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Employee ID</label>
+                                    <input type="text" readonly :value="selectedEmployee?.employee_id"
+                                           class="w-full p-4 bg-slate-100 border border-slate-100 rounded-2xl font-bold text-xs outline-none"/>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Position</label>
+                                    <input type="text" readonly :value="selectedEmployee?.position"
+                                           class="w-full p-4 bg-slate-100 border border-slate-100 rounded-2xl font-bold text-xs outline-none"/>
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Status</label>
+                                    <input type="text" readonly :value="selectedEmployee?.status"
+                                           class="w-full p-4 bg-slate-100 border border-slate-100 rounded-2xl font-bold text-xs outline-none"/>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="flex justify-end pb-12"> {{-- Added pb-12 for a generous gap --}}
-    <button id="step1-next" onclick="goToStep(2)" disabled class="group px-14 py-6 bg-slate-200 text-slate-400 rounded-[2.5rem] font-black uppercase tracking-widest text-xs transition-all flex items-center gap-4 cursor-not-allowed shadow-sm">
-        Next Step
-        <svg class="w-5 h-5 transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-        </svg>
-    </button>
-</div>
+                <div class="flex justify-end pb-12">
+                    <button id="step1-next" onclick="goToStep(2)" :disabled="!selectedLocation || !selectedEmployee" class="group px-14 py-6 rounded-[2.5rem] font-black uppercase tracking-widest text-xs transition-all flex items-center gap-4 shadow-sm"
+                        :class="selectedLocation && selectedEmployee ? 'bg-slate-900 text-white hover:bg-black cursor-pointer shadow-xl' : 'bg-slate-200 text-slate-400 cursor-not-allowed'">
+                        Next Step
+                        <svg class="w-5 h-5 transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             {{-- ============================== --}}
@@ -181,12 +252,9 @@
             <div id="step2-content" class="hidden animate-fade space-y-8">
                 <form id="registerItemForm" action="{{ route('register.item.store') }}" method="POST">
                     @csrf
-                    {{-- Hidden source fields --}}
-                    <input type="hidden" name="source_entity_type" id="hiddenSourceEntityType">
-                    <input type="hidden" name="provider_id" id="hiddenProviderId">
-                    <input type="hidden" name="provider_name" id="hiddenProviderName">
-                    <input type="hidden" name="personnel_name" id="hiddenPersonnelName">
-                    <input type="hidden" name="personnel_position" id="hiddenPersonnelPosition">
+                    {{-- Hidden source fields from Step 1 --}}
+                    <input type="hidden" name="acquisition_source_id" :value="selectedLocation?.id">
+                    <input type="hidden" name="employee_id" :value="selectedEmployee?.id">
 
                   <div class="bg-white border border-slate-100 rounded-[3.5rem] p-12 shadow-sm">
     {{-- Header Section --}}
@@ -203,20 +271,29 @@
         </button>
     </div>
 
-   
-
-                        {{-- Category & Item Name with autocomplete --}}
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+                        {{-- Classification, Category & Item Name --}}
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+                            {{-- Classification --}}
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 italic">Classification <span class="text-red-500">*</span></label>
+                                <select name="classification_id" x-model="classificationId" @change="categories = allCategories.filter(c => c.classification_id == classificationId)" required
+                                    class="w-full p-6 bg-slate-50 border border-slate-100 rounded-3xl font-black text-sm outline-none focus:ring-4 focus:ring-red-50 transition-all cursor-pointer">
+                                    <option value="">Select Classification</option>
+                                    <template x-for="cls in classifications" :key="cls.id">
+                                        <option :value="cls.id" x-text="cls.name"></option>
+                                    </template>
+                                </select>
+                            </div>
                             {{-- Category --}}
-                            <div class="space-y-2 relative">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 italic">Main Category <span class="text-red-500">*</span></label>
-                                <input type="hidden" name="category_id" id="categoryId">
-                                <input type="text" name="category_name" id="categoryName" placeholder="e.g. ICT, Furniture"
-                                    class="w-full p-6 bg-slate-50 border border-slate-100 rounded-3xl font-black text-sm outline-none focus:ring-4 focus:ring-red-50 transition-all"
-                                    autocomplete="off" oninput="filterCategoryInput()" onfocus="filterCategoryInput()" required>
-                                <div id="categoryDropdown" class="autocomplete-dropdown hidden custom-scroll"></div>
-                                <p id="categoryHint" class="hidden text-[10px] font-semibold text-emerald-600 ml-2">✓ Using existing category</p>
-                                <p id="categoryNewHint" class="hidden text-[10px] font-semibold text-blue-600 ml-2">✦ Will create new category</p>
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 italic">Category <span class="text-red-500">*</span></label>
+                                <select name="category_id" required :disabled="!classificationId"
+                                    class="w-full p-6 bg-slate-50 border border-slate-100 rounded-3xl font-black text-sm outline-none focus:ring-4 focus:ring-red-50 transition-all cursor-pointer disabled:bg-slate-100">
+                                    <option value="">Select Category</option>
+                                    <template x-for="cat in categories" :key="cat.id">
+                                        <option :value="cat.id" x-text="cat.name"></option>
+                                    </template>
+                                </select>
                             </div>
                             {{-- Item Name --}}
                             <div class="space-y-2 relative">
@@ -237,7 +314,7 @@
                         </div>
                     </div>
 
-                    <div class="flex justify-between my- py-6"> {{-- Idinagdag ang my-12 para sa gap sa taas/baba at py-6 para sa inner padding --}}
+                    <div class="flex justify-between py-6">
     
     {{-- Back Button --}}
     <button type="button" onclick="goToStep(1)" class="group px-10 py-6 bg-white border border-slate-200 text-slate-600 rounded-[2.5rem] font-black uppercase tracking-widest text-xs hover:bg-slate-50 transition-all flex items-center gap-4 italic shadow-sm active:scale-95">
@@ -269,12 +346,12 @@
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
                             <div class="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 shadow-inner">
                                 <span class="text-[#c00000] text-[9px] font-black uppercase tracking-[0.3em] block mb-3">Asset Source</span>
-                                <h4 id="sumSource" class="text-2xl font-black text-white italic underline decoration-red-500 underline-offset-8">--</h4>
-                                <div id="sumPersonnelContainer" class="hidden mt-3 border-l-2 border-[#c00000] pl-3 py-1 bg-white/5 rounded-r-xl pr-4 inline-block">
+                                <h4 id="sumSource" class="text-2xl font-black text-white italic underline decoration-red-500 underline-offset-8" x-text="selectedLocation?.name || '--'">--</h4>
+                                <div id="sumPersonnelContainer" class="mt-3 border-l-2 border-[#c00000] pl-3 py-1 bg-white/5 rounded-r-xl pr-4 inline-block" x-show="selectedEmployee">
                                     <span class="text-slate-400 text-[9px] font-black uppercase tracking-widest block mb-1">Authorized Personnel</span>
-                                    <p id="sumPersonnel" class="text-white text-sm font-bold m-0 leading-none">--</p>
+                                    <p id="sumPersonnel" class="text-white text-sm font-bold m-0 leading-none" x-text="selectedEmployee?.full_name || '--'">--</p>
                                 </div>
-                                <p id="sumType" class="text-slate-500 text-[10px] font-bold uppercase mt-4 tracking-widest italic">--</p>
+                                <p id="sumType" class="text-slate-500 text-[10px] font-bold uppercase mt-4 tracking-widest italic" x-text="(sourceType || 'Unknown').toUpperCase() + ' SOURCE'">--</p>
                             </div>
                             <div class="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 shadow-inner">
                                 <span class="text-emerald-500 text-[9px] font-black uppercase tracking-[0.3em] block mb-3">Item Name</span>
@@ -316,94 +393,19 @@
         // =============================================
         // DATA FROM BACKEND
         // =============================================
-        const rawCategories  = @json($categories);
         const rawItems       = @json($items);
         const rawSubItems    = @json($subItems);
-        const rawStakeholders= @json($stakeholders);
-        const rawSchools     = @json($allSchools);
-
-        let selectedSourceId   = null;
-        let selectedSourceType = null;
-
-        // =============================================
-        // RESTORE OLD INPUT (Validation Failure)
-        // =============================================
-        document.addEventListener('DOMContentLoaded', () => {
-            const oldInput = @json(session()->getOldInput());
-            
-            if (Object.keys(oldInput).length > 0 && oldInput.source_entity_type) {
-                // Restore Step 1 fields
-                document.getElementById('sourceEntityType').value = oldInput.source_entity_type;
-                handleEntityTypeChange(); // Trigger layout update
-                
-                selectedSourceId = oldInput.provider_id || null;
-                document.getElementById('sourceDynamicInput').value = oldInput.provider_name || '';
-                document.getElementById('receiverName').value = oldInput.personnel_name || '';
-                document.getElementById('receiverPos').value = oldInput.personnel_position || '';
-                updateStep1NextBtn();
-
-                // Restore Step 2 fields
-                document.getElementById('categoryId').value = oldInput.category_id || '';
-                document.getElementById('categoryName').value = oldInput.category_name || '';
-                document.getElementById('existingItemId').value = oldInput.existing_item_id || '';
-                document.getElementById('itemName').value = oldInput.item_name || '';
-
-                // Restore sub items dynamically
-                if (oldInput.sub_items && Array.isArray(oldInput.sub_items)) {
-                    document.getElementById('subItemContainer').innerHTML = ''; // clear default
-                    oldInput.sub_items.forEach((subName, index) => {
-                        addSubItemField();
-                        const rows = document.querySelectorAll('.row-container');
-                        const row = rows[rows.length - 1];
-                        
-                        row.querySelector('.spec-val').value = subName || '';
-                        if (oldInput.sub_item_conditions && oldInput.sub_item_conditions[index]) {
-                            row.querySelector('.cond-val').value = oldInput.sub_item_conditions[index];
-                        }
-                        if (oldInput.sub_item_quantities && oldInput.sub_item_quantities[index]) {
-                            row.querySelector('.qty-val').value = oldInput.sub_item_quantities[index];
-                        }
-                        // Handle Checkbox
-                        if (oldInput.sub_item_serialized && oldInput.sub_item_serialized[index]) {
-                            const cb = row.querySelector('input[type="checkbox"]');
-                            cb.checked = true;
-                            // Extract 'id' properly from row ID string (e.g. "row-12345")
-                            const rowId = row.id.split('-')[1];
-                            handleSerializedChange(cb, rowId);
-                        }
-                        if (oldInput.sub_item_property_numbers && oldInput.sub_item_property_numbers[index]) {
-                            row.querySelector('.prop-val').value = oldInput.sub_item_property_numbers[index];
-                        }
-                        if (oldInput.sub_item_serial_numbers && oldInput.sub_item_serial_numbers[index]) {
-                            row.querySelector('.sn-val').value = oldInput.sub_item_serial_numbers[index];
-                        }
-                    });
-                }
-                
-                // Immediately navigate to step 2 to correct errors
-                setTimeout(() => { goToStep(2); }, 100);
-            }
-            
-            // Check for Errors and alert
-            @if ($errors->any())
-                Swal.fire({
-                    title: 'Incomplete Submission',
-                    html: '{!! implode("<br>", $errors->all()) !!}',
-                    icon: 'error',
-                    confirmButtonColor: '#c00000',
-                    customClass: { popup: 'rounded-[1.5rem]', confirmButton: 'rounded-xl font-bold px-6' }
-                });
-            @endif
-        });
 
         // =============================================
         // STEPPER NAVIGATION
         // =============================================
         function goToStep(step) {
             ['step1-content','step2-content','step3-content'].forEach(id => {
-                document.getElementById(id).classList.add('hidden');
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
             });
-            document.getElementById(`step${step}-content`).classList.remove('hidden');
+            const content = document.getElementById(`step${step}-content`);
+            if (content) content.classList.remove('hidden');
 
             document.getElementById('step1-indicator').className = 'flex flex-col items-center gap-4 z-10 transition-all duration-500 ' + (step === 1 ? 'step-active' : 'step-complete');
             document.getElementById('step2-indicator').className = 'flex flex-col items-center gap-4 z-10 transition-all duration-500 ' + (step === 2 ? 'step-active' : (step > 2 ? 'step-complete' : 'step-inactive'));
@@ -413,12 +415,6 @@
             document.getElementById('line-2').className = 'stepper-line ' + (step >= 3 ? 'active' : '');
 
             if (step === 2) {
-                document.getElementById('hiddenSourceEntityType').value = selectedSourceType;
-                document.getElementById('hiddenProviderId').value = selectedSourceId || '';
-                document.getElementById('hiddenProviderName').value = document.getElementById('sourceDynamicInput').value;
-                document.getElementById('hiddenPersonnelName').value = document.getElementById('receiverName').value;
-                document.getElementById('hiddenPersonnelPosition').value = document.getElementById('receiverPos').value;
-
                 if (document.getElementById('subItemContainer').children.length === 0) {
                     addSubItemField();
                 }
@@ -432,198 +428,23 @@
         // STEP 1 — ENTITY TYPE HANDLER
         // =============================================
         function handleEntityTypeChange() {
-            const type = document.getElementById('sourceEntityType').value;
             const input = document.getElementById('sourceDynamicInput');
             const label = document.getElementById('sourceDynamicLabel');
-            const nextBtn = document.getElementById('step1-next');
 
-            selectedSourceType = type;
-            selectedSourceId = null;
-            input.value = '';
             input.disabled = false;
             input.classList.remove('bg-slate-100', 'shadow-inner');
             input.classList.add('bg-white', 'border-slate-200', 'focus:ring-4', 'focus:ring-red-50');
-            document.getElementById('sourceExistingHint')?.classList.add('hidden');
-            document.getElementById('sourceNewHint')?.classList.add('hidden');
             label.classList.add('text-[#c00000]');
             label.classList.remove('text-slate-300');
 
+            const type = document.getElementById('sourceEntityType').value;
             label.innerText = type === 'school'
                 ? 'Search School Name *'
-                : 'External Provider / Supplier Name *';
-
-            // Keep Next disabled until they pick/type something
-            updateStep1NextBtn();
+                : 'External Provider / Office Name *';
         }
 
         function updateStep1NextBtn() {
-            const input = document.getElementById('sourceDynamicInput');
-            const btn   = document.getElementById('step1-next');
-            const hasValue = input.value.trim().length > 0;
-
-            if (hasValue) {
-                btn.disabled = false;
-                btn.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
-                btn.classList.add('bg-slate-900', 'text-white', 'hover:bg-black', 'shadow-xl', 'cursor-pointer');
-            } else {
-                btn.disabled = true;
-                btn.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
-                btn.classList.remove('bg-slate-900', 'text-white', 'hover:bg-black', 'shadow-xl', 'cursor-pointer');
-            }
-        }
-
-        function filterSourceInput() {
-            const q = document.getElementById('sourceDynamicInput').value.trim().toLowerCase();
-            const dd = document.getElementById('sourceDropdown');
-            document.getElementById('sourceExistingHint')?.classList.add('hidden');
-            document.getElementById('sourceNewHint')?.classList.add('hidden');
-            updateStep1NextBtn();
-
-            let list = [];
-            if (selectedSourceType === 'school') {
-                list = rawSchools.filter(s =>
-                    !q || s.name.toLowerCase().includes(q) || (s.school_id && s.school_id.toString().includes(q))
-                ).slice(0, 30);
-            } else if (selectedSourceType === 'external') {
-                // Only Distributor type with entity_type = 'School' or 'External'
-                const distributors = rawStakeholders.filter(s =>
-                    s.type === 'Distributor' &&
-                    (s.entity_type === 'School' || s.entity_type === 'External')
-                );
-                list = distributors.filter(s =>
-                    !q || s.name.toLowerCase().includes(q)
-                ).slice(0, 30);
-            }
-
-            const exactMatch = list.find(s => s.name.toLowerCase() === q);
-            if (exactMatch) {
-                document.getElementById('sourceExistingHint')?.classList.remove('hidden');
-            } else if (q) {
-                document.getElementById('sourceNewHint')?.classList.remove('hidden');
-            }
-
-            if (list.length === 0) { dd.classList.add('hidden'); return; }
-
-            dd.innerHTML = list.map(s => `
-                <div class="autocomplete-item" onclick="selectSource(${s.id}, '${s.name.replace(/'/g,"\\'")}')">
-                    ${s.name}
-                    ${s.entity_type ? `<div class="hint">${s.entity_type}</div>` : ''}
-                    ${s.school_id ? `<div class="hint">ID: ${s.school_id}</div>` : ''}
-                </div>`).join('');
-            dd.classList.remove('hidden');
-        }
-
-        function selectSource(id, name) {
-            selectedSourceId = id;
-            document.getElementById('sourceDynamicInput').value = name;
-            document.getElementById('sourceDropdown').classList.add('hidden');
-            document.getElementById('sourceExistingHint')?.classList.remove('hidden');
-            document.getElementById('sourceNewHint')?.classList.add('hidden');
-            // Clear personnel when provider changes
-            document.getElementById('receiverName').value = '';
-            document.getElementById('receiverPos').value = '';
-            document.getElementById('personnelDropdown').classList.add('hidden');
-            document.getElementById('personnelExistingHint')?.classList.add('hidden');
-            document.getElementById('personnelNewHint')?.classList.add('hidden');
-            updateStep1NextBtn();
-        }
-
-        // =============================================
-        // STEP 1 — AUTHORIZED PERSONNEL AUTOCOMPLETE
-        // =============================================
-        function filterPersonnelInput() {
-            const q = document.getElementById('receiverName').value.trim().toLowerCase();
-            const dd = document.getElementById('personnelDropdown');
-            document.getElementById('personnelExistingHint')?.classList.add('hidden');
-            document.getElementById('personnelNewHint')?.classList.add('hidden');
-
-            if (!selectedSourceId) {
-                dd.innerHTML = '<div class="autocomplete-item" style="color:#94a3b8;font-style:italic;cursor:default;">Select a provider first</div>';
-                dd.classList.remove('hidden');
-                return;
-            }
-
-            // Find personnel based on source entity binding
-            let personnel = rawStakeholders.filter(s => {
-                if (selectedSourceType === 'school') {
-                    return s.school_id && String(s.school_id) === String(selectedSourceId);
-                }
-                return s.parent_id && String(s.parent_id) === String(selectedSourceId);
-            });
-
-            const filtered = personnel.filter(s =>
-                !q ||
-                (s.person_name && s.person_name.toLowerCase().includes(q)) ||
-                s.name.toLowerCase().includes(q)
-            ).slice(0, 30);
-
-            const exactMatch = filtered.find(s => {
-                const dName = (s.person_name || s.name).toLowerCase();
-                return dName === q;
-            });
-            if (exactMatch) {
-                document.getElementById('personnelExistingHint')?.classList.remove('hidden');
-            } else if (q) {
-                document.getElementById('personnelNewHint')?.classList.remove('hidden');
-            }
-
-            if (filtered.length === 0) { dd.classList.add('hidden'); return; }
-
-            dd.innerHTML = filtered.map(s => {
-                const displayName = s.person_name || s.name;
-                const pos = s.position || '';
-                return `<div class="autocomplete-item" onclick="selectPersonnel('${displayName.replace(/'/g,"\\'")}', '${pos.replace(/'/g,"\\'")}')">
-                    ${displayName}
-                    ${pos ? `<div class="hint">${pos}</div>` : ''}
-                </div>`;
-            }).join('');
-            dd.classList.remove('hidden');
-        }
-
-        function selectPersonnel(name, position) {
-            document.getElementById('receiverName').value = name;
-            document.getElementById('receiverPos').value = position;
-            document.getElementById('personnelDropdown').classList.add('hidden');
-            document.getElementById('personnelExistingHint')?.classList.remove('hidden');
-            document.getElementById('personnelNewHint')?.classList.add('hidden');
-        }
-
-
-        // =============================================
-        // STEP 2 — CATEGORY AUTOCOMPLETE
-        // =============================================
-        function filterCategoryInput() {
-            const q = document.getElementById('categoryName').value.trim().toLowerCase();
-            const dd = document.getElementById('categoryDropdown');
-            document.getElementById('categoryId').value = '';
-            document.getElementById('categoryHint').classList.add('hidden');
-            document.getElementById('categoryNewHint').classList.add('hidden');
-
-            const matches = rawCategories.filter(c => !q || c.name.toLowerCase().includes(q)).slice(0, 15);
-            const exactMatch = rawCategories.find(c => c.name.toLowerCase() === q);
-
-            if (exactMatch) {
-                document.getElementById('categoryId').value = exactMatch.id;
-                document.getElementById('categoryHint').classList.remove('hidden');
-            } else if (q) {
-                document.getElementById('categoryNewHint').classList.remove('hidden');
-            }
-
-            if (matches.length === 0) { dd.classList.add('hidden'); return; }
-
-            dd.innerHTML = matches.map(c => `
-                <div class="autocomplete-item" onclick="selectCategory(${c.id}, '${c.name.replace(/'/g,"\\'")}')">
-                    ${c.name}
-                </div>`).join('');
-            dd.classList.remove('hidden');
-        }
-
-        function selectCategory(id, name) {
-            document.getElementById('categoryId').value = id;
-            document.getElementById('categoryName').value = name;
-            document.getElementById('categoryDropdown').classList.add('hidden');
-            document.getElementById('categoryHint').classList.remove('hidden');
-            document.getElementById('categoryNewHint').classList.add('hidden');
+            // Managed by Alpine.js :disabled
         }
 
         // =============================================
@@ -636,13 +457,11 @@
             document.getElementById('itemExistingHint').classList.add('hidden');
             document.getElementById('itemNewHint').classList.add('hidden');
 
-            const catId = document.getElementById('categoryId').value;
+            const catId = document.querySelector('select[name="category_id"]').value;
             let matches = rawItems;
             if (catId) {
                 matches = matches.filter(i => String(i.category_id) === String(catId));
             } else if (!q) {
-                // If no category and no query, don't show the whole database of items
-                // Prompt them gently
                 dd.innerHTML = '<div class="autocomplete-item" style="color:#94a3b8;font-style:italic;cursor:default;">Select Category first</div>';
                 dd.classList.remove('hidden');
                 return;
@@ -650,7 +469,7 @@
             
             matches = matches.filter(i => !q || i.name.toLowerCase().includes(q)).slice(0, 15);
 
-            const exactMatch = rawItems.find(i => i.name.toLowerCase() === q);
+            const exactMatch = rawItems.find(i => i.name.toLowerCase() === q && (!catId || String(i.category_id) === String(catId)));
             if (exactMatch) {
                 document.getElementById('existingItemId').value = exactMatch.id;
                 document.getElementById('itemExistingHint').classList.remove('hidden');
@@ -661,10 +480,8 @@
             if (matches.length === 0) { dd.classList.add('hidden'); return; }
 
             dd.innerHTML = matches.map(i => {
-                const cat = rawCategories.find(c => c.id === i.category_id);
                 return `<div class="autocomplete-item" onclick="selectItem(${i.id}, '${i.name.replace(/'/g,"\\'")}', ${i.category_id})">
                     ${i.name}
-                    ${cat ? `<div class="hint">${cat.name}</div>` : ''}
                 </div>`;
             }).join('');
             dd.classList.remove('hidden');
@@ -676,15 +493,6 @@
             document.getElementById('itemDropdown').classList.add('hidden');
             document.getElementById('itemExistingHint').classList.remove('hidden');
             document.getElementById('itemNewHint').classList.add('hidden');
-
-            // Auto-fill category if not yet filled
-            const cat = rawCategories.find(c => c.id === catId);
-            if (cat && !document.getElementById('categoryId').value) {
-                document.getElementById('categoryId').value = cat.id;
-                document.getElementById('categoryName').value = cat.name;
-                document.getElementById('categoryHint').classList.remove('hidden');
-                document.getElementById('categoryNewHint').classList.add('hidden');
-            }
         }
 
        // =============================================
@@ -700,7 +508,7 @@ function addSubItemField() {
 
                 <div class="lg:col-span-5 space-y-2 relative">
                     <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1 italic">Specifications / Materials <span class="text-red-500">*</span></label>
-                    <input type="text" name="sub_items[]" placeholder="e.g. Core i7, 4ft Steel Frame" required
+                    <input type="text" name="description[]" placeholder="e.g. Core i7, 4ft Steel Frame" required
                         autocomplete="off" oninput="filterSpecInput(this, ${id})" onfocus="filterSpecInput(this, ${id})"
                         class="spec-val w-full p-4 bg-white border border-slate-100 rounded-2xl font-bold text-sm outline-none focus:border-red-200 shadow-sm transition-all">
                     <div id="specDropdown-${id}" class="autocomplete-dropdown hidden custom-scroll"></div>
@@ -710,15 +518,16 @@ function addSubItemField() {
 
                 <div class="lg:col-span-2 space-y-2">
                     <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block ml-1 italic">Condition</label>
-                    <select name="sub_item_conditions[]" class="cond-val w-full p-4 bg-white border border-slate-100 rounded-2xl font-bold text-xs outline-none shadow-sm cursor-pointer transition-all focus:border-red-200">
-                        <option value="Serviceable">Serviceable</option>
+                    <select name="condition[]" class="cond-val w-full p-4 bg-white border border-slate-100 rounded-2xl font-bold text-xs outline-none shadow-sm cursor-pointer transition-all focus:border-red-200">
+                        <option value="Good Condition">Good Condition</option>
+                        <option value="Needs Repair">Needs Repair</option>
                         <option value="Unserviceable">Unserviceable</option>
                     </select>
                 </div>
 
                 <div class="lg:col-span-2 space-y-2">
                     <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest block text-center italic">Qty <span class="text-red-500">*</span></label>
-                    <input type="number" name="sub_item_quantities[]" id="qty-${id}" placeholder="0" min="1" required
+                    <input type="number" name="quantity[]" id="qty-${id}" placeholder="0" min="1" required
                         class="qty-val w-full p-4 bg-white border border-slate-100 rounded-2xl font-bold text-sm text-center outline-none shadow-sm transition-all focus:border-red-200">
                 </div>
 
@@ -736,13 +545,13 @@ function addSubItemField() {
                     <label class="text-[9px] font-black text-[#c00000] uppercase tracking-widest block ml-1 italic underline underline-offset-4">₱ Unit Price</label>
                     <div class="relative flex items-center">
                         <span class="absolute left-4 text-xs font-black text-slate-400 italic">₱</span>
-                        <input type="number" name="sub_item_prices[]" placeholder="0.00" step="0.01" min="0"
+                        <input type="number" name="asset_cost[]" placeholder="0.00" step="0.01" min="0"
                             class="price-val w-full pl-8 p-4 bg-white border border-red-50 rounded-2xl font-bold text-sm outline-none shadow-sm transition-all focus:ring-4 focus:ring-red-50">
                     </div>
                 </div>
                 <div class="space-y-2">
                     <label class="text-[9px] font-black text-[#c00000] uppercase tracking-widest block ml-1 italic underline underline-offset-4">📅 Date Acquired</label>
-                    <input type="date" name="sub_item_dates[]"
+                    <input type="date" name="acquisition_date[]"
                         class="date-val w-full p-4 bg-white border border-red-50 rounded-2xl font-bold text-sm outline-none shadow-sm transition-all focus:ring-4 focus:ring-red-50 uppercase text-slate-500">
                 </div>
             </div>
@@ -750,7 +559,7 @@ function addSubItemField() {
             <div id="serial-panel-${id}" class="hidden mt-8 pt-8 border-t-2 border-dashed border-slate-100 animate-fade">
                 <div class="flex flex-col md:flex-row gap-8 items-center bg-white p-6 rounded-3xl border border-slate-100 shadow-inner">
                     <label class="flex items-center gap-4 cursor-pointer min-w-[180px] group">
-                        <input type="hidden" name="sub_item_serialized[]" value="0" id="serial-flag-${id}">
+                        <input type="hidden" name="serialized[]" value="0" id="serial-flag-${id}">
                         <input type="checkbox" value="1"
                             class="w-6 h-6 rounded-lg border-slate-200 accent-[#c00000] transition-all transform group-hover:scale-110"
                             onchange="document.getElementById('serial-flag-${id}').value = this.checked ? '1' : '0'; handleSerializedChange(this, ${id})">
@@ -760,10 +569,8 @@ function addSubItemField() {
                         </div>
                     </label>
                     <div class="flex gap-4 w-full">
-                        <input type="text" name="sub_item_property_numbers[]" placeholder="Property No. (e.g. 2026-ICT-001)" disabled
+                        <input type="text" name="property_number[]" placeholder="Property No. (e.g. 2026-ICT-001)" disabled
                             class="prop-val flex-1 p-4 bg-slate-100 border border-slate-100 rounded-xl font-bold text-[11px] outline-none shadow-sm italic placeholder:text-slate-300 transition-all">
-                        <input type="text" name="sub_item_serial_numbers[]" placeholder="Serial No. (e.g. SN-88920-X)" disabled
-                            class="sn-val flex-1 p-4 bg-slate-100 border border-slate-100 rounded-xl font-bold text-[11px] outline-none shadow-sm italic placeholder:text-slate-300 transition-all">
                     </div>
                 </div>
             </div>
@@ -784,7 +591,6 @@ function addSubItemField() {
             const row = document.getElementById(`row-${id}`);
             const qtyInput = row.querySelector('.qty-val');
             const propInput = row.querySelector('.prop-val');
-            const snInput = row.querySelector('.sn-val');
             
             if (checkbox.checked) {
                 qtyInput.value = 1;
@@ -794,10 +600,6 @@ function addSubItemField() {
                 propInput.disabled = false;
                 propInput.classList.remove('bg-slate-100', 'placeholder:text-slate-300');
                 propInput.classList.add('bg-white');
-                
-                snInput.disabled = false;
-                snInput.classList.remove('bg-slate-100', 'placeholder:text-slate-300');
-                snInput.classList.add('bg-white');
             } else {
                 qtyInput.readOnly = false;
                 qtyInput.classList.remove('bg-slate-100');
@@ -806,11 +608,6 @@ function addSubItemField() {
                 propInput.value = '';
                 propInput.classList.add('bg-slate-100', 'placeholder:text-slate-300');
                 propInput.classList.remove('bg-white');
-                
-                snInput.disabled = true;
-                snInput.value = '';
-                snInput.classList.add('bg-slate-100', 'placeholder:text-slate-300');
-                snInput.classList.remove('bg-white');
             }
         }
 
@@ -818,8 +615,6 @@ function addSubItemField() {
             const q = input.value.trim().toLowerCase();
             const dd = document.getElementById(`specDropdown-${id}`);
             const itemId = document.getElementById('existingItemId').value;
-            document.getElementById(`specExistingHint-${id}`)?.classList.add('hidden');
-            document.getElementById(`specNewHint-${id}`)?.classList.add('hidden');
 
             if (!itemId) {
                 dd.innerHTML = '<div class="autocomplete-item" style="color:#94a3b8;font-style:italic;cursor:default;">Select an item name first</div>';
@@ -827,25 +622,17 @@ function addSubItemField() {
                 return;
             }
 
-            let specs = rawSubItems.filter(s => String(s.item_id) === String(itemId) && !s.is_serialized);
+            let specs = rawSubItems.filter(s => String(s.item_id) === String(itemId));
             
             const filtered = specs.filter(s =>
                 !q || s.name.toLowerCase().includes(q)
             ).slice(0, 20);
-
-            const exactMatch = filtered.find(s => s.name.toLowerCase() === q);
-            if (exactMatch) {
-                document.getElementById(`specExistingHint-${id}`)?.classList.remove('hidden');
-            } else if (q) {
-                document.getElementById(`specNewHint-${id}`)?.classList.remove('hidden');
-            }
 
             if (filtered.length === 0) { dd.classList.add('hidden'); return; }
 
             dd.innerHTML = filtered.map(s => {
                 return `<div class="autocomplete-item" onclick="selectSpec(${id}, '${s.name.replace(/'/g,"\\'")}')">
                     ${s.name}
-                    <div class="hint">Available: ${s.quantity}</div>
                 </div>`;
             }).join('');
             dd.classList.remove('hidden');
@@ -855,27 +642,18 @@ function addSubItemField() {
             const row = document.getElementById(`row-${rowId}`);
             row.querySelector('.spec-val').value = name;
             document.getElementById(`specDropdown-${rowId}`).classList.add('hidden');
-            document.getElementById(`specExistingHint-${rowId}`)?.classList.remove('hidden');
-            document.getElementById(`specNewHint-${rowId}`)?.classList.add('hidden');
         }
 
         // =============================================
         // STEP 3 — BUILD SUMMARY
         // =============================================
         function buildSummary() {
-            document.getElementById('sumSource').innerText = document.getElementById('sourceDynamicInput').value || '—';
+            const sumItem = document.getElementById('itemName').value || 'Unnamed Asset';
+            document.getElementById('sumItem').innerText = sumItem;
             
-            const personnel = document.getElementById('receiverName').value;
-            if (personnel) {
-                document.getElementById('sumPersonnel').innerText = personnel;
-                document.getElementById('sumPersonnelContainer').classList.remove('hidden');
-            } else {
-                document.getElementById('sumPersonnelContainer').classList.add('hidden');
-            }
-
-            document.getElementById('sumType').innerText   = (selectedSourceType || 'Unknown').toUpperCase() + ' SOURCE';
-            document.getElementById('sumItem').innerText   = document.getElementById('itemName').value || 'Unnamed Asset';
-            document.getElementById('sumCat').innerText    = document.getElementById('categoryName').value || '—';
+            const catSelect = document.querySelector('select[name="category_id"]');
+            const catName = catSelect.options[catSelect.selectedIndex]?.text || '--';
+            document.getElementById('sumCat').innerText = catName;
 
             const table = document.getElementById('summaryTable');
             table.innerHTML = '';
@@ -896,101 +674,10 @@ function addSubItemField() {
             });
         }
 
-        // =============================================
-        // SUBMISSION WITH SWEETALERT CONFIRM
-        // =============================================
-
-        /** Highlight a field red, scroll it into view, and auto-remove the highlight after 3s */
-        function highlightField(el) {
-            el.classList.add('ring-4', 'ring-red-400', 'border-red-400');
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            setTimeout(() => {
-                el.classList.remove('ring-4', 'ring-red-400', 'border-red-400');
-            }, 3000);
-        }
-
         function confirmSubmit() {
-            const itemName = document.getElementById('itemName').value.trim();
-            const catName  = document.getElementById('categoryName').value.trim();
-
-            // ── Step-2 header fields ──────────────────────────────────────────────
-            if (!catName) {
-                goToStep(2);
-                setTimeout(() => highlightField(document.getElementById('categoryName')), 150);
-                Swal.fire({ title: 'Missing Category', text: 'Please fill in the Main Category before submitting.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-            if (!itemName) {
-                goToStep(2);
-                setTimeout(() => highlightField(document.getElementById('itemName')), 150);
-                Swal.fire({ title: 'Missing Item Name', text: 'Please fill in the Item Name before submitting.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-
-            // ── Sub-item rows ─────────────────────────────────────────────────────
-            const rows = document.querySelectorAll('.row-container');
-            if (rows.length === 0) {
-                goToStep(2);
-                Swal.fire({ title: 'No Specifications', text: 'Please add at least one specification / sub-item row before submitting.', icon: 'warning', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' } });
-                return;
-            }
-
-            let firstError = null;
-            let errorMessages = [];
-
-            rows.forEach((row, rowIndex) => {
-                const rowNum = rowIndex + 1;
-                const specEl  = row.querySelector('.spec-val');
-                const qtyEl   = row.querySelector('.qty-val');
-                const priceEl = row.querySelector('.price-val');
-                const dateEl  = row.querySelector('.date-val');
-
-                const spec  = specEl  ? specEl.value.trim()   : '';
-                const qty   = qtyEl   ? parseFloat(qtyEl.value)  : 0;
-                const price = priceEl ? priceEl.value.trim()  : '';
-                const date  = dateEl  ? dateEl.value.trim()   : '';
-
-                if (!spec) {
-                    errorMessages.push(`Row ${rowNum}: Specification / Material name is required.`);
-                    if (!firstError) firstError = specEl;
-                }
-                if (!qty || qty <= 0) {
-                    errorMessages.push(`Row ${rowNum}: Quantity must be greater than zero.`);
-                    if (!firstError) firstError = qtyEl;
-                }
-                if (!price || parseFloat(price) <= 0) {
-                    errorMessages.push(`Row ${rowNum}: Unit Price is required and must be greater than ₱0.00.`);
-                    if (!firstError) firstError = priceEl;
-                }
-                if (!date) {
-                    errorMessages.push(`Row ${rowNum}: Date Acquired is required.`);
-                    if (!firstError) firstError = dateEl;
-                }
-            });
-
-            if (errorMessages.length > 0) {
-                // Navigate back to step 2 WITHOUT clearing data
-                goToStep(2);
-                // Highlight the first offending field after transition
-                if (firstError) {
-                    setTimeout(() => highlightField(firstError), 150);
-                }
-                Swal.fire({
-                    title: 'Incomplete Specification Data',
-                    html: '<ul style="text-align:left;font-size:0.8rem;line-height:1.8;">' +
-                          errorMessages.map(m => `<li>⚠ ${m}</li>`).join('') +
-                          '</ul>',
-                    icon: 'warning',
-                    confirmButtonColor: '#c00000',
-                    customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl font-bold px-6' }
-                });
-                return;
-            }
-
-            // ── All good — show final confirm ─────────────────────────────────────
             Swal.fire({
                 title: 'Register to Masterlist?',
-                html: `<strong>${itemName}</strong> under <em>${catName}</em> will be added to the inventory.`,
+                text: 'Are you sure you want to register these items?',
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#1e293b',
@@ -1005,11 +692,8 @@ function addSubItemField() {
             });
         }
 
-        // =============================================
-        // CLOSE DROPDOWNS ON OUTSIDE CLICK
-        // =============================================
         document.addEventListener('click', e => {
-            ['categoryDropdown', 'itemDropdown', 'sourceDropdown', 'personnelDropdown'].forEach(id => {
+            ['itemDropdown', 'sourceDropdown', 'personnelDropdown'].forEach(id => {
                 const dd = document.getElementById(id);
                 if (dd && !dd.contains(e.target) && !e.target.closest('input')) {
                     dd.classList.add('hidden');

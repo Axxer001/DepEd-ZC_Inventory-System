@@ -5,6 +5,63 @@
         const rowsPerPage = 50;
         let _rowNumCounter = 0; 
 
+        // Global datalist caches
+        let globalLocations = [];
+        let globalEmployees = [];
+
+        async function initGlobalDatalists() {
+            try {
+                const locRes = await fetch('/api/locations/search?q=&type=all');
+                globalLocations = await locRes.json();
+                const dlLoc = document.getElementById('dl-locations');
+                if(dlLoc) {
+                    dlLoc.innerHTML = globalLocations.map(loc => `<option value="${loc.name}"></option>`).join('');
+                }
+
+                const empRes = await fetch('/api/employees/search?q=');
+                globalEmployees = await empRes.json();
+                const dlEmp = document.getElementById('dl-employees');
+                if(dlEmp) {
+                    dlEmp.innerHTML = globalEmployees.map(emp => `<option value="${emp.full_name}"></option>`).join('');
+                }
+            } catch (e) { console.error('Failed to init datalists', e); }
+        }
+        document.addEventListener('DOMContentLoaded', initGlobalDatalists);
+
+        function autofillLocation(rowId, val) {
+            const row = allRowsData.find(r => r.id === rowId);
+            if(!row) return;
+            const loc = globalLocations.find(l => l.name === val);
+            if(loc) {
+                row['school-id'] = loc.entity_id;
+                row['school-type'] = loc.type || '';
+                row['school-name'] = loc.name;
+                row['location'] = loc.location || '';
+                
+                document.querySelector(`#dst-${rowId} input[data-col="school-id"]`).value = row['school-id'];
+                document.querySelector(`#dst-${rowId} input[data-col="school-type"]`).value = row['school-type'];
+                document.querySelector(`#dst-${rowId} input[data-col="school-name"]`).value = row['school-name'];
+                document.querySelector(`#dst-${rowId} input[data-col="location"]`).value = row['location'];
+            }
+        }
+
+        function autofillEmployee(rowId, val) {
+            const row = allRowsData.find(r => r.id === rowId);
+            if(!row) return;
+            const emp = globalEmployees.find(e => e.full_name === val);
+            if(emp) {
+                row['employee-id'] = emp.employee_id;
+                row['employee-name'] = emp.full_name;
+                row['employee-pos'] = emp.position || '';
+                row['employee-status'] = emp.status || '';
+
+                document.querySelector(`#dst-${rowId} input[data-col="employee-id"]`).value = row['employee-id'];
+                document.querySelector(`#dst-${rowId} input[data-col="employee-name"]`).value = row['employee-name'];
+                document.querySelector(`#dst-${rowId} input[data-col="employee-pos"]`).value = row['employee-pos'];
+                document.querySelector(`#dst-${rowId} input[data-col="employee-status"]`).value = row['employee-status'];
+            }
+        }
+
         function updatePaginationDisplay() {
             const totalPages = Math.max(1, Math.ceil(allRowsData.length / rowsPerPage));
             if (currentPage > totalPages) currentPage = totalPages;
@@ -174,37 +231,33 @@
                             if (locInp) locInp.value = row['location'];
                         }
                     }
-                } else if (col === 'custodian-first' || col === 'custodian-last') {
-                    // Smart Auto-fill: check if there is an exact unique match for the provided names
-                    const first = (row['custodian-first'] || '').toLowerCase();
-                    const last = (row['custodian-last'] || '').toLowerCase();
-                    let matches = allCustodiansList.filter(c => {
-                        let fMatch = first ? c.first_name.toLowerCase().includes(first) : true;
-                        let lMatch = last ? c.last_name.toLowerCase().includes(last) : true;
+                } else if (col === 'employee-first' || col === 'employee-last') {
+                    // Smart Auto-fill: unique-match lookup against employees registry
+                    const first = (row['employee-first'] || '').toLowerCase();
+                    const last  = (row['employee-last']  || '').toLowerCase();
+                    const matches = allCustodiansList.filter(c => {
+                        const fMatch = first ? c.first_name.toLowerCase().includes(first) : true;
+                        const lMatch = last  ? c.last_name.toLowerCase().includes(last)   : true;
                         return fMatch && lMatch;
                     });
-                    
-                    // If exactly one match, auto-fill the rest
+
+                    // Auto-fill only on unique match
                     if (matches.length === 1 && (first || last)) {
                         const m = matches[0];
-                        row['custodian-first'] = m.first_name;
-                        row['custodian-middle'] = m.middle_name || '';
-                        row['custodian-last'] = m.last_name;
-                        row['custodian-pos'] = m.position || '';
-                        row['custodian-contact'] = m.contact_number || '';
-                        
-                        // Update UI
-                        const fInp = document.querySelector(`#dst-${rowId} input[data-col="custodian-first"]`);
-                        const mInp = document.querySelector(`#dst-${rowId} input[data-col="custodian-middle"]`);
-                        const lInp = document.querySelector(`#dst-${rowId} input[data-col="custodian-last"]`);
-                        const pInp = document.querySelector(`#dst-${rowId} input[data-col="custodian-pos"]`);
-                        const cInp = document.querySelector(`#dst-${rowId} input[data-col="custodian-contact"]`);
-                        
-                        if (fInp) fInp.value = row['custodian-first'];
-                        if (mInp) mInp.value = row['custodian-middle'];
-                        if (lInp) lInp.value = row['custodian-last'];
-                        if (pInp) pInp.value = row['custodian-pos'];
-                        if (cInp) cInp.value = row['custodian-contact'];
+                        row['employee-first']  = m.first_name;
+                        row['employee-middle'] = m.middle_name || '';
+                        row['employee-last']   = m.last_name;
+                        row['employee-pos']    = m.position || '';
+
+                        const fInp = document.querySelector(`#dst-${rowId} input[data-col="employee-first"]`);
+                        const mInp = document.querySelector(`#dst-${rowId} input[data-col="employee-middle"]`);
+                        const lInp = document.querySelector(`#dst-${rowId} input[data-col="employee-last"]`);
+                        const pInp = document.querySelector(`#dst-${rowId} input[data-col="employee-pos"]`);
+
+                        if (fInp) fInp.value = row['employee-first'];
+                        if (mInp) mInp.value = row['employee-middle'];
+                        if (lInp) lInp.value = row['employee-last'];
+                        if (pInp) pInp.value = row['employee-pos'];
                     }
                 }
 
@@ -249,9 +302,9 @@
                 'acceptance-date': today,
                 condition: 'Good Condition',
                 region: 'Region IX', division: 'Zamboanga City Division',
-                'school-type': '', 'school-id': '', 'school-name': '', 
-                'custodian-first': '', 'custodian-middle': '', 'custodian-last': '', 'custodian-pos': '', 'custodian-contact': '',
-                occupancy: '', location: 'Zamboanga City', 'property-no': '', 'acquisition-date': today
+                'school-search': '', 'school-id': '', 'school-type': '', 'school-name': '', location: 'Zamboanga City',
+                'employee-search': '', 'employee-id': '', 'employee-name': '', 'employee-pos': '', 'employee-status': '',
+                'property-no': '', 'acquisition-date': today
             };
             allRowsData.push(newRow);
             currentPage = Math.ceil(allRowsData.length / rowsPerPage);
@@ -310,18 +363,20 @@
                 </td>
                 <td class="xls-td col-context"><input type="text" value="${data.region}" class="xls-input bg-slate-50 dark:bg-white/5 cursor-not-allowed text-slate-500" readonly tabindex="-1"></td>
                 <td class="xls-td col-context"><input type="text" value="${data.division}" class="xls-input bg-slate-50 dark:bg-white/5 cursor-not-allowed text-slate-500" readonly tabindex="-1"></td>
-                <td class="xls-td col-context">
-                    <input type="text" oninput="syncState(${data.id}, 'school-type', this.value)" data-col="school-type" value="${data['school-type']}" autocomplete="off" class="xls-input" list="dl-school-type" placeholder="Combo-box: Select">
+                <td class="xls-td col-identity">
+                    <input type="text" oninput="syncState(${data.id}, 'school-search', this.value); autofillLocation(${data.id}, this.value)" data-col="school-search" value="${data['school-search'] || ''}" autocomplete="off" class="xls-input" list="dl-locations" placeholder="Search Location...">
                 </td>
-                <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'school-id', this.value)"   data-col="school-id"   value="${data['school-id']}"   autocomplete="off" class="xls-input" placeholder="School ID" inputmode="numeric"></td>
-                <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'school-name', this.value)" data-col="school-name" value="${data['school-name']}" autocomplete="off" class="xls-input" placeholder="School / Office name"></td>
-                <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'custodian-first', this.value)" data-col="custodian-first" value="${data['custodian-first'] || ''}" autocomplete="off" class="xls-input" placeholder="First Name"></td>
-                <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'custodian-middle', this.value)" data-col="custodian-middle" value="${data['custodian-middle'] || ''}" autocomplete="off" class="xls-input" placeholder="Middle Name"></td>
-                <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'custodian-last', this.value)" data-col="custodian-last" value="${data['custodian-last'] || ''}" autocomplete="off" class="xls-input" placeholder="Last Name"></td>
-                <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'custodian-pos', this.value)" data-col="custodian-pos" value="${data['custodian-pos']}" autocomplete="off" class="xls-input" placeholder="Position"></td>
-                <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'custodian-contact', this.value)" data-col="custodian-contact" value="${data['custodian-contact']}" autocomplete="off" class="xls-input" placeholder="Contact No."></td>
-                <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'occupancy', this.value)"   data-col="occupancy"   value="${data.occupancy}"       autocomplete="off" class="xls-input" placeholder="Nature of occupancy"></td>
-                <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'location', this.value)"    data-col="location"    value="${data.location}"        autocomplete="off" class="xls-input" placeholder="Location"></td>
+                <td class="xls-td col-identity"><input type="text" data-col="school-id"   value="${data['school-id'] || ''}"   autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
+                <td class="xls-td col-identity"><input type="text" data-col="school-type" value="${data['school-type'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
+                <td class="xls-td col-identity"><input type="text" data-col="school-name" value="${data['school-name'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
+                <td class="xls-td col-identity"><input type="text" data-col="location"    value="${data.location || ''}"       autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
+                <td class="xls-td col-personnel">
+                    <input type="text" oninput="syncState(${data.id}, 'employee-search', this.value); autofillEmployee(${data.id}, this.value)" data-col="employee-search" value="${data['employee-search'] || ''}" autocomplete="off" class="xls-input" list="dl-employees" placeholder="Search Employee...">
+                </td>
+                <td class="xls-td col-personnel"><input type="text" data-col="employee-id" value="${data['employee-id'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
+                <td class="xls-td col-personnel"><input type="text" data-col="employee-name" value="${data['employee-name'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
+                <td class="xls-td col-personnel"><input type="text" data-col="employee-pos" value="${data['employee-pos'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
+                <td class="xls-td col-personnel"><input type="text" data-col="employee-status" value="${data['employee-status'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
                 <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'property-no', this.value)" data-col="property-no" value="${data['property-no']}" autocomplete="off" class="xls-input" placeholder="Property number" id="dst-prop-${data.id}"></td>
                 <td class="xls-td col-financial"><input type="number" id="dst-cost-${data.id}" data-col="cost-total" value="${total}" autocomplete="off" class="xls-input text-right bg-slate-50 dark:bg-white/5 cursor-not-allowed" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1"></td>
                 <td class="xls-td col-temporal"><input type="date"   oninput="syncState(${data.id}, 'acquisition-date', this.value)" data-col="acquisition-date" value="${data['acquisition-date']}" autocomplete="off" class="xls-input"></td>
@@ -418,6 +473,35 @@
         // =============================================
         // BULK ADD MODAL LOGIC
         // =============================================
+        function bulkAutofillLocation(val) {
+            const loc = globalLocations.find(l => l.name === val);
+            if(loc) {
+                document.getElementById('bSchoolId').value = loc.entity_id;
+                document.getElementById('bSchoolType').value = loc.type || '';
+                document.getElementById('bSchoolName').value = loc.name;
+                document.getElementById('bLocation').value = loc.location || '';
+            } else {
+                document.getElementById('bSchoolId').value = '';
+                document.getElementById('bSchoolType').value = '';
+                document.getElementById('bSchoolName').value = '';
+                document.getElementById('bLocation').value = '';
+            }
+        }
+
+        function bulkAutofillEmployee(val) {
+            const emp = globalEmployees.find(e => e.full_name === val);
+            if(emp) {
+                document.getElementById('bEmployeeId').value = emp.employee_id;
+                document.getElementById('bEmployeeName').value = emp.full_name;
+                document.getElementById('bEmployeePos').value = emp.position || '';
+                document.getElementById('bEmployeeStatus').value = emp.status || '';
+            } else {
+                document.getElementById('bEmployeeId').value = '';
+                document.getElementById('bEmployeeName').value = '';
+                document.getElementById('bEmployeePos').value = '';
+                document.getElementById('bEmployeeStatus').value = '';
+            }
+        }
         function openBulkAddModal() {
             const m = document.getElementById('bulkAddModal');
             m.classList.remove('hidden');
@@ -454,16 +538,16 @@
                 date1: document.getElementById('bDate1').value,
                 remarks: document.getElementById('bRemarks').value || 'Good Condition',
 
-                schoolType: document.getElementById('bSchoolType').value || '',
-                schoolId: document.getElementById('bSchoolId').value,
-                schoolName: document.getElementById('bSchoolName').value,
-                custodianFirst: document.getElementById('bCustodianFirst') ? document.getElementById('bCustodianFirst').value.trim() : '',
-                custodianMiddle: document.getElementById('bCustodianMiddle') ? document.getElementById('bCustodianMiddle').value.trim() : '',
-                custodianLast: document.getElementById('bCustodianLast') ? document.getElementById('bCustodianLast').value.trim() : '',
-                custodianPos: document.getElementById('bCustodianPos') ? document.getElementById('bCustodianPos').value.trim() : '',
-                custodianContact: document.getElementById('bCustodianContact') ? document.getElementById('bCustodianContact').value.trim() : '',
-                occupancy: document.getElementById('bOccupancy').value,
-                location: document.getElementById('bLocation') ? (document.getElementById('bLocation').value || 'Zamboanga City') : 'Zamboanga City',
+                schoolSearch: document.getElementById('bSchoolSearch') ? document.getElementById('bSchoolSearch').value : '',
+                schoolType: document.getElementById('bSchoolType') ? document.getElementById('bSchoolType').value : '',
+                schoolId: document.getElementById('bSchoolId') ? document.getElementById('bSchoolId').value : '',
+                schoolName: document.getElementById('bSchoolName') ? document.getElementById('bSchoolName').value : '',
+                employeeSearch: document.getElementById('bEmployeeSearch') ? document.getElementById('bEmployeeSearch').value : '',
+                employeeId: document.getElementById('bEmployeeId') ? document.getElementById('bEmployeeId').value : '',
+                employeeName: document.getElementById('bEmployeeName') ? document.getElementById('bEmployeeName').value : '',
+                employeePos: document.getElementById('bEmployeePos') ? document.getElementById('bEmployeePos').value : '',
+                employeeStatus: document.getElementById('bEmployeeStatus') ? document.getElementById('bEmployeeStatus').value : '',
+                location: document.getElementById('bLocation') ? document.getElementById('bLocation').value : '',
                 propertyNo: document.getElementById('bPropertyNo').value,
                 cost2: document.getElementById('bCost2').value,
                 date2: document.getElementById('bDate2').value
@@ -487,14 +571,16 @@
                     'acceptance-date': data.date1 || today,
                     condition: data.remarks,
                     region: 'Region IX', division: 'Zamboanga City Division',
+                    'school-search': data.schoolSearch || '',
                     'school-type': data.schoolType || '',
                     'school-id': data.schoolId || '',
                     'school-name': data.schoolName || '',
-                    custodian: data.custodian || '',
-                    'custodian-pos': data.custodianPos || '',
-                    'custodian-contact': data.custodianContact || '',
-                    occupancy: data.occupancy || '',
-                    location: data.location || 'Zamboanga City',
+                    'employee-search': data.employeeSearch || '',
+                    'employee-id': data.employeeId || '',
+                    'employee-name': data.employeeName || '',
+                    'employee-pos': data.employeePos || '',
+                    'employee-status': data.employeeStatus || '',
+                    location: data.location || '',
                     'property-no': data.propertyNo || '',
                     'acquisition-date': data.date2 || today
                 };
@@ -1806,26 +1892,24 @@
 
         function syncBulkCustodian() {
             const first = (document.getElementById('bCustodianFirst')?.value || '').toLowerCase();
-            const last = (document.getElementById('bCustodianLast')?.value || '').toLowerCase();
-            let matches = allCustodiansList.filter(c => {
-                let fMatch = first ? c.first_name.toLowerCase().includes(first) : true;
-                let lMatch = last ? c.last_name.toLowerCase().includes(last) : true;
+            const last  = (document.getElementById('bCustodianLast')?.value  || '').toLowerCase();
+            const matches = allCustodiansList.filter(c => {
+                const fMatch = first ? c.first_name.toLowerCase().includes(first) : true;
+                const lMatch = last  ? c.last_name.toLowerCase().includes(last)   : true;
                 return fMatch && lMatch;
             });
-            
+
             if (matches.length === 1 && (first || last)) {
                 const m = matches[0];
                 const fInp = document.getElementById('bCustodianFirst');
                 const mInp = document.getElementById('bCustodianMiddle');
                 const lInp = document.getElementById('bCustodianLast');
                 const pInp = document.getElementById('bCustodianPos');
-                const cInp = document.getElementById('bCustodianContact');
-                
+
                 if (fInp) fInp.value = m.first_name;
                 if (mInp) mInp.value = m.middle_name || '';
                 if (lInp) lInp.value = m.last_name;
                 if (pInp) pInp.value = m.position || '';
-                if (cInp) cInp.value = m.contact_number || '';
             }
         }
         

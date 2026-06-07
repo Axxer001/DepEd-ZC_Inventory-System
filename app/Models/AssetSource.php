@@ -10,22 +10,21 @@ class AssetSource extends Model
 {
     protected $fillable = [
         'item_id',
-        'description',
         'acquisition_source_id',
         'procurement_mode_id',
         'acquisition_contact_id',
+        'description',
+        'unit_of_measurement',
         'asset_cost',
         'quantity',
         'estimated_useful_life',
         'acceptance_date',
-        'remarks',
-        'unit_of_measurement',
-        'specs',
+        'condition',           // renamed from remarks
     ];
 
     protected $casts = [
         'acceptance_date' => 'date',
-        'asset_cost' => 'decimal:2',
+        'asset_cost'      => 'decimal:2',
     ];
 
     public function item(): BelongsTo

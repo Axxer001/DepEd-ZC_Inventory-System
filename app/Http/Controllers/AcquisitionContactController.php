@@ -108,9 +108,6 @@ class AcquisitionContactController extends Controller
                 'aa.acquisition_cost as asset_cost',
                 'i.name as item_name',
                 'cat.name as category_name',
-                'asrc.brand',
-                'asrc.model',
-                'asrc.serial_number',
                 'aa.condition',
                 'o.name as office_name',
                 's.name as school_name'

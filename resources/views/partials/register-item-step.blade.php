@@ -1,7 +1,7 @@
 {{-- ═══════ STEP: ADD NEW RECORD — Registration Form ═══════ --}}
 <div id="stepAddNew" class="step-content">
 
-    {{-- DATALISTS (shared option pools) --}}
+    {{-- DATALISTS (shared option pools - reduced as per search-only requirements) --}}
     <datalist id="dl-acq-source">
         <option value="DepEd Central Office">
         <option value="Local Government Unit">
@@ -9,37 +9,20 @@
         <option value="Congressional Allocation">
         <option value="MOOE Fund">
     </datalist>
-    <datalist id="dl-classification">
-        <option value="Semi-Expendable">
-        <option value="Non-Expendable">
-        <option value="Expendable">
+    <datalist id="dl-locations"></datalist>
+    <datalist id="dl-employees"></datalist>
+    <datalist id="dl-condition">
+        <option value="Good Condition">
+        <option value="Needs Repair">
+        <option value="Unserviceable">
     </datalist>
-    <datalist id="dl-category">@foreach($categories->unique('name') as $c)<option value="{{ $c->name }}">@endforeach</datalist>
-    <datalist id="dl-item">@foreach($items->unique('name') as $i)<option value="{{ $i->name }}">@endforeach</datalist>
-    <datalist id="dl-description"><option value="General"><option value="Specific"></datalist>
-    <datalist id="dl-mode">
-        <option value="Deped Central Office">
-        <option value="Public Bidding">
-        <option value="Direct Contracting">
-        <option value="Shopping">
-        <option value="Negotiated Procurement">
+    <datalist id="dl-uom">
+        <option value="Unit">
+        <option value="Set">
+        <option value="Piece">
+        <option value="Box">
+        <option value="Lot">
     </datalist>
-    <datalist id="dl-personnel"></datalist>
-    <datalist id="dl-position"><option value="Supply Officer"><option value="Principal"><option value="Teacher"><option value="Clerk"></datalist>
-    <datalist id="dl-school-type">
-        <option value="Elementary School">
-        <option value="High School">
-        <option value="Integrated School">
-        <option value="Division Office">
-        <option value="Government Building">
-    </datalist>
-    <datalist id="dl-school-id">@foreach($allSchools->unique('school_id') as $s)<option value="{{ $s->school_id }}">@endforeach</datalist>
-    <datalist id="dl-school-name">@foreach($allSchools->unique('name') as $s)<option value="{{ $s->name }}">@endforeach</datalist>
-    <datalist id="dl-custodian">@foreach($allCustodians->unique(fn($c) => $c->first_name . $c->last_name) as $c)<option value="{{ $c->first_name }} {{ $c->last_name }}">@endforeach</datalist>
-    <datalist id="dl-custodian-pos">@foreach($allCustodians->unique('position') as $c)@if($c->position)<option value="{{ $c->position }}">@endif@endforeach</datalist>
-    <datalist id="dl-custodian-contact">@foreach($allCustodians->unique('contact_number') as $c)@if($c->contact_number)<option value="{{ $c->contact_number }}">@endif@endforeach</datalist>
-    <datalist id="dl-occupancy"><option value="Owned"><option value="Leased"><option value="Borrowed"></datalist>
-    <datalist id="dl-location">@foreach($allSchools->unique('name') as $s)<option value="{{ $s->name }}">@endforeach</datalist>
 
     {{-- ── Section 1: Acquisition Source ── --}}
     <div id="acqSourceCard" class="mb-6 bg-white rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden">
@@ -143,17 +126,17 @@
                     <tr>
                         <th class="xls-th w-10 text-center sticky left-0 z-10">#</th>
                         <th class="xls-th col-context" style="min-width:120px">Region</th>
-                        <th class="xls-th col-context" style="min-width:180px">Division</th>
-                        <th class="xls-th col-context" style="min-width:160px">Office/School Type</th>
-                        <th class="xls-th col-identity" style="min-width:100px">School ID</th>
-                        <th class="xls-th col-identity" style="min-width:210px">Office/School Name</th>
-                        <th class="xls-th col-personnel" style="min-width:160px">Custodian First Name</th>
-                        <th class="xls-th col-personnel" style="min-width:160px">Custodian Middle Name</th>
-                        <th class="xls-th col-personnel" style="min-width:160px">Custodian Last Name</th>
-                        <th class="xls-th col-personnel" style="min-width:160px">Custodian Position</th>
-                        <th class="xls-th col-personnel" style="min-width:160px">Custodian Contact No.</th>
-                        <th class="xls-th col-context" style="min-width:160px">Nature of Occupancy</th>
-                        <th class="xls-th col-context" style="min-width:160px">Location</th>
+                        <th class="xls-th col-context" style="min-width:160px">Division</th>
+                        <th class="xls-th col-identity" style="min-width:200px">School/Office Search</th>
+                        <th class="xls-th col-identity" style="min-width:120px">Office/School ID</th>
+                        <th class="xls-th col-identity" style="min-width:150px">Office/School Type</th>
+                        <th class="xls-th col-identity" style="min-width:180px">Office/School Name</th>
+                        <th class="xls-th col-identity" style="min-width:180px">Location</th>
+                        <th class="xls-th col-personnel" style="min-width:200px">Employee Search</th>
+                        <th class="xls-th col-personnel" style="min-width:120px">Employee ID</th>
+                        <th class="xls-th col-personnel" style="min-width:150px">Employee Name</th>
+                        <th class="xls-th col-personnel" style="min-width:150px">Employee Position</th>
+                        <th class="xls-th col-personnel" style="min-width:120px">Employee Status</th>
                         <th class="xls-th col-identity" style="min-width:150px">Property No.</th>
                         <th class="xls-th col-financial text-right" style="min-width:130px">Acquisition Cost (₱)</th>
                         <th class="xls-th col-temporal" style="min-width:140px">Acquisition Date</th>

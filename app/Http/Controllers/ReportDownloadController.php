@@ -56,17 +56,17 @@ class ReportDownloadController extends Controller
                 ->leftJoin('acquisition_sources', 'asset_sources.acquisition_source_id', '=', 'acquisition_sources.id')
                 ->leftJoin('procurement_modes as pm', 'asset_sources.procurement_mode_id', '=', 'pm.id')
                 ->leftJoin('acquisition_contacts as ac', 'asset_sources.acquisition_contact_id', '=', 'ac.id')
-                ->leftJoin('custodians as cus', 'asset_assignments.custodian_id', '=', 'cus.id')
+                ->leftJoin('employees as cus', 'asset_assignments.employee_id', '=', 'cus.id')
                 ->leftJoin('offices', 'cus.office_id', '=', 'offices.id')
-                ->leftJoin('schools', 'cus.school_id', '=', 'schools.school_id')
+                ->leftJoin('schools', 'cus.school_id', '=', 'schools.id')
                 ->select(
                     'asset_assignments.*',
                     DB::raw("'Region IX' as region"),
                     DB::raw("'Division of Zamboanga City' as division"),
-                    'cus.school_id as school_id',
-                    DB::raw('COALESCE(schools.name, offices.name, asset_assignments.location) as location'),
-                    DB::raw('COALESCE(schools.name, offices.name, asset_assignments.location) as office_school_name'),
-                    DB::raw('NULL as nature_of_occupancy'),
+                    DB::raw('COALESCE(schools.school_id, offices.office_id) as school_id'),
+                    DB::raw('COALESCE(schools.type, offices.type) as school_type'),
+                    DB::raw('COALESCE(schools.name, offices.name) as office_school_name'),
+                    DB::raw('COALESCE(schools.location, offices.location) as location'),
                     'asset_sources.description',
                     'asset_sources.unit_of_measurement',
                     'asset_sources.asset_cost',
@@ -77,16 +77,15 @@ class ReportDownloadController extends Controller
                     'ac.name as source_personnel',
                     'ac.position as personnel_position',
                     'asset_sources.acceptance_date',
-                    'asset_sources.remarks',
+                    'asset_sources.condition as remarks',
                     'items.name as article',
                     'categories.name as category',
                     'classifications.name as classification',
                     'acquisition_sources.name as acq_source',
-                    'cus.first_name as custodian_first_name',
-                    'cus.middle_name as custodian_middle_name',
-                    'cus.last_name as custodian_last_name',
+                    'cus.employee_id as custodian_employee_id',
+                    DB::raw("CONCAT(cus.first_name, ' ', COALESCE(cus.middle_name, ''), ' ', cus.last_name) as custodian_name"),
                     'cus.position as custodian_position',
-                    'cus.contact_number as custodian_contact_number'
+                    'cus.status as custodian_status'
                 );
         }
 
@@ -589,19 +588,13 @@ class ReportDownloadController extends Controller
                     ->whereColumn('school_id', 'schools.id')
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
                 'total_ppe_cost' => DB::table('asset_assignments')
-                    ->leftJoin('custodians', 'asset_assignments.custodian_id', '=', 'custodians.id')
-                    ->where(function($q) {
-                        $q->whereColumn('asset_assignments.location', 'schools.name')
-                          ->orWhereColumn('custodians.school_id', 'schools.school_id');
-                    })
+                    ->join('employees', 'asset_assignments.employee_id', '=', 'employees.id')
+                    ->whereColumn('employees.school_id', 'schools.id')
                     ->where('acquisition_cost', '>=', 50000)
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
                 'total_semi_ppe_cost' => DB::table('asset_assignments')
-                    ->leftJoin('custodians', 'asset_assignments.custodian_id', '=', 'custodians.id')
-                    ->where(function($q) {
-                        $q->whereColumn('asset_assignments.location', 'schools.name')
-                          ->orWhereColumn('custodians.school_id', 'schools.school_id');
-                    })
+                    ->join('employees', 'asset_assignments.employee_id', '=', 'employees.id')
+                    ->whereColumn('employees.school_id', 'schools.id')
                     ->where('acquisition_cost', '<', 50000)
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
             ]);
@@ -710,18 +703,18 @@ class ReportDownloadController extends Controller
             ->addSelect([
                 'total_ppe_cost' => DB::table('asset_assignments as ad2')
                     ->join('asset_sources as asrc2', 'ad2.asset_source_id', '=', 'asrc2.id')
-                    ->join('custodians as c2', 'ad2.custodian_id', '=', 'c2.id')
+                    ->join('employees as c2', 'ad2.employee_id', '=', 'c2.id')
                     ->whereColumn('c2.office_id', 'offices.id')
                     ->where('asrc2.asset_cost', '>=', 50000)
                     ->selectRaw('COALESCE(SUM(asrc2.asset_cost), 0)'),
                 'total_semi_ppe_cost' => DB::table('asset_assignments as ad3')
                     ->join('asset_sources as asrc3', 'ad3.asset_source_id', '=', 'asrc3.id')
-                    ->join('custodians as c3', 'ad3.custodian_id', '=', 'c3.id')
+                    ->join('employees as c3', 'ad3.employee_id', '=', 'c3.id')
                     ->whereColumn('c3.office_id', 'offices.id')
                     ->where('asrc3.asset_cost', '<', 50000)
                     ->selectRaw('COALESCE(SUM(asrc3.asset_cost), 0)'),
                 'total_assets' => DB::table('asset_assignments as ad4')
-                    ->join('custodians as c4', 'ad4.custodian_id', '=', 'c4.id')
+                    ->join('employees as c4', 'ad4.employee_id', '=', 'c4.id')
                     ->whereColumn('c4.office_id', 'offices.id')
                     ->selectRaw('COUNT(*)'),
             ]);
@@ -752,22 +745,20 @@ class ReportDownloadController extends Controller
         $filters = $request->input('filters', []);
         if (is_string($filters)) { $filters = json_decode($filters, true) ?: []; }
 
-        $query = DB::table('custodians')
-            ->select(
-                'custodians.*'
-            )
+        $query = DB::table('employees')
+            ->select('employees.*')
             ->addSelect([
                 'total_assets' => DB::table('asset_assignments')
-                    ->whereColumn('custodian_id', 'custodians.id')
+                    ->whereColumn('employee_id', 'employees.id')
                     ->selectRaw('COUNT(*)'),
                 'total_value' => DB::table('asset_assignments as ad')
                     ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
-                    ->whereColumn('ad.custodian_id', 'custodians.id')
+                    ->whereColumn('ad.employee_id', 'employees.id')
                     ->selectRaw('COALESCE(SUM(asrc.asset_cost), 0)'),
             ]);
 
         if (!empty($filters['status'])) {
-            $query->where('custodians.status', $filters['status']);
+            $query->where('employees.status', $filters['status']);
         }
         if (!empty($filters['search'])) {
             $search = $filters['search'];
@@ -785,12 +776,12 @@ class ReportDownloadController extends Controller
 
     public function getCustodiansFilterOptions(Request $request)
     {
-        $positions = DB::table('custodians')->distinct()->pluck('position')->filter()->values();
-        $statuses = DB::table('custodians')->distinct()->pluck('status')->filter()->values();
+        $positions = DB::table('employees')->distinct()->pluck('position')->filter()->values();
+        $statuses  = DB::table('employees')->distinct()->pluck('status')->filter()->values();
 
         return response()->json([
             'positions' => $positions,
-            'statuses' => $statuses
+            'statuses'  => $statuses
         ]);
     }
 }

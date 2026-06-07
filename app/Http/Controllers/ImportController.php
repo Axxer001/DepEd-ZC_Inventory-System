@@ -4,9 +4,38 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\Classification;
+use App\Models\Category;
+use App\Models\Item;
+use App\Models\AcquisitionSource;
+use App\Models\ProcurementMode;
+use App\Models\Employee;
+use App\Models\School;
+use App\Models\Office;
+use App\Models\AssetSource;
+use App\Models\AssetAssignment;
 
 class ImportController extends Controller
 {
+    /**
+     * Build in-memory lookup cache for bulk operations.
+     */
+    private function buildLookupCache(): array
+    {
+        return [
+            'classifications'     => Classification::pluck('id', 'name')->toArray(),
+            'categories'          => Category::get()->groupBy('classification_id')->map(fn($items) => $items->keyBy('name')),
+            'items'               => Item::get()->groupBy('category_id')->map(fn($items) => $items->keyBy('name')),
+            'acquisition_sources' => AcquisitionSource::pluck('id', 'name')->toArray(),
+            'procurement_modes'   => ProcurementMode::pluck('id', 'name')->toArray(),
+            'employees'           => Employee::get()->keyBy(function($e) {
+                                        return strtolower(trim("{$e->first_name} {$e->last_name}"));
+                                    }),
+            'schools'             => School::pluck('id', 'school_id')->toArray(),
+            'offices'             => Office::pluck('id', 'office_id')->toArray(),
+        ];
+    }
+
     /**
      * Show the import page.
      */
@@ -38,7 +67,7 @@ class ImportController extends Controller
      */
     public function downloadTemplate(Request $request)
     {
-        $headers = ['category', 'item_name', 'sub_item_name', 'quantity', 'condition', 'source', 'source_type', 'unit_price', 'date_acquired', 'is_serialized', 'property_number', 'serial_number'];
+        $headers = ['classification', 'category', 'item_name', 'sub_item_name', 'quantity', 'condition', 'source', 'source_type', 'unit_price', 'date_acquired', 'is_serialized', 'property_number', 'employee_name'];
         
         $callback = function () use ($headers, $request) {
             $file = fopen('php://output', 'w');
@@ -48,18 +77,19 @@ class ImportController extends Controller
             if ($request->has('rows') && is_array($request->rows)) {
                 foreach ($request->rows as $r) {
                     $row = [
+                        $r['classification'] ?? 'Unclassified',
                         $r['category'] ?? '',
                         $r['item_name'] ?? '',
                         $r['sub_item_name'] ?? '',
                         $r['quantity'] ?? '1',
-                        $r['condition'] ?? 'Serviceable',
+                        $r['condition'] ?? 'Good Condition',
                         $r['source'] ?? '',
-                        $r['source_type'] ?? 'School',
+                        $r['source_type'] ?? 'Internal',
                         '', // unit_price
                         now()->toDateString(), // date_acquired — auto-set to today
                         $r['is_serialized'] ?? 'no',
                         '', // property_number
-                        ''  // serial_number
+                        $r['employee_name'] ?? ''
                     ];
                     fputcsv($file, $row);
                 }
@@ -106,7 +136,7 @@ class ImportController extends Controller
         }
 
         // Validate headers
-        $expectedHeaders = ['category', 'item_name', 'sub_item_name', 'quantity', 'condition', 'source', 'source_type', 'unit_price', 'date_acquired', 'is_serialized', 'property_number', 'serial_number'];
+        $expectedHeaders = ['classification', 'category', 'item_name', 'sub_item_name', 'quantity', 'condition', 'source', 'source_type', 'unit_price', 'date_acquired', 'is_serialized', 'property_number', 'employee_name'];
         $actualHeaders = array_map('strtolower', array_map('trim', $csvRows[0]));
 
         $missingHeaders = array_diff($expectedHeaders, $actualHeaders);
@@ -144,7 +174,8 @@ class ImportController extends Controller
 
     /**
      * Confirm and execute the actual database import.
-     * Now writes to the new schema: asset_sources (replaces sub_items).
+     * Now writes to the new schema: asset_sources and asset_assignments.
+     * Uses lookup cache and match-only employee resolution.
      */
     public function confirm(Request $request)
     {
@@ -155,9 +186,10 @@ class ImportController extends Controller
         }
 
         $userName = auth()->user() ? auth()->user()->name : 'System';
-
+        $cache = $this->buildLookupCache();
         $totalImported = 0;
         $totalSkipped = 0;
+        $errors = [];
 
         DB::beginTransaction();
         try {
@@ -168,25 +200,99 @@ class ImportController extends Controller
                     continue;
                 }
 
-                $categoryName = $data['category'] ?? '';
-                $itemName = $data['item_name'] ?? '';
+                $className = trim($data['classification'] ?? 'Unclassified');
+                $categoryName = trim($data['category'] ?? 'General');
+                $itemName = trim($data['item_name'] ?? 'Unknown Item');
                 $description = $data['sub_item_name'] ?? '';
                 $quantity = max(1, (int)($data['quantity'] ?? 1));
                 $sourceName = $data['source'] ?? '';
                 $sourceType = $data['source_type'] ?? '';
+                $rawCondition = strtolower(trim($data['condition'] ?? ''));
+                $employeeName = trim($data['employee_name'] ?? '');
 
-                // Validate source_type
-                $allowedSourceTypes = ['Internal', 'External'];
+                // ── Resolve Hierarchy (Classification -> Category -> Item) ──
+                $classId = $cache['classifications'][$className] ?? null;
+                if (!$classId) {
+                    $classId = Classification::create(['name' => $className])->id;
+                    $cache['classifications'][$className] = $classId;
+                }
+
+                $category = $cache['categories'][$classId][$categoryName] ?? null;
+                if (!$category) {
+                    $category = Category::create([
+                        'classification_id' => $classId,
+                        'name' => $categoryName
+                    ]);
+                    $cache['categories'][$classId][$categoryName] = $category;
+                }
+                $catId = $category->id;
+
+                $item = $cache['items'][$catId][$itemName] ?? null;
+                if (!$item) {
+                    $item = Item::create([
+                        'category_id' => $catId,
+                        'name' => $itemName
+                    ]);
+                    $cache['items'][$catId][$itemName] = $item;
+                }
+                $itemId = $item->id;
+
+                // ── Resolve Acquisition Source ──
                 // Map old values to new
                 $sourceTypeMap = ['School' => 'Internal', 'External' => 'External', 'Individual' => 'External'];
-                if (!empty($sourceType)) {
-                    $sourceType = $sourceTypeMap[$sourceType] ?? $sourceType;
-                    if (!in_array($sourceType, $allowedSourceTypes, true)) {
-                        $sourceType = 'Internal'; // Default fallback
-                    }
-                } else {
+                $sourceType = $sourceTypeMap[$sourceType] ?? $sourceType;
+                if (!in_array($sourceType, ['Internal', 'External'])) {
                     $sourceType = 'Internal';
                 }
+
+                if (empty($sourceName)) {
+                    $sourceName = 'Unknown Source';
+                }
+
+                $acqSourceId = $cache['acquisition_sources'][$sourceName] ?? null;
+                if (!$acqSourceId) {
+                    $acqSourceId = AcquisitionSource::create([
+                        'name' => $sourceName,
+                        'source_type' => $sourceType
+                    ])->id;
+                    $cache['acquisition_sources'][$sourceName] = $acqSourceId;
+                }
+
+                // ── Resolve Procurement Mode ──
+                $modeName = 'CSV Import';
+                $modeId = $cache['procurement_modes'][$modeName] ?? null;
+                if (!$modeId) {
+                    $modeId = ProcurementMode::create(['name' => $modeName])->id;
+                    $cache['procurement_modes'][$modeName] = $modeId;
+                }
+
+                // ── Resolve Employee (Match-only) ──
+                $employeeId = null;
+                if (!empty($employeeName)) {
+                    $employee = $cache['employees'][strtolower($employeeName)] ?? null;
+                    if ($employee) {
+                        $employeeId = $employee->id;
+                    } else {
+                        $errors[] = "Row " . ($rowIndex + 1) . ": Employee '{$employeeName}' not found. Register employee first.";
+                        $totalSkipped++;
+                        continue;
+                    }
+                }
+
+                // ── Condition Mapping ──
+                $conditionMap = [
+                    'good'           => 'Good Condition',
+                    'good condition' => 'Good Condition',
+                    'serviceable'    => 'Good Condition',
+                    'needs repair'   => 'Needs Repair',
+                    'repair'         => 'Needs Repair',
+                    'minor repair'   => 'Needs Repair',
+                    'major repair'   => 'Needs Repair',
+                    'unserviceable'  => 'Unserviceable',
+                    'condemned'      => 'Unserviceable',
+                    'not useable'    => 'Unserviceable',
+                ];
+                $condition = $conditionMap[$rawCondition] ?? 'Good Condition';
 
                 $unitPriceRaw = !empty($data['unit_price']) ? str_replace(',', '', $data['unit_price']) : null;
                 $unitPrice = $unitPriceRaw !== null ? (float)$unitPriceRaw : 0;
@@ -196,131 +302,36 @@ class ImportController extends Controller
                 if (!empty($dateAcquiredRaw)) {
                     try {
                         $dateAcquired = \Carbon\Carbon::parse($dateAcquiredRaw)->toDateString();
-                    } catch (\Exception $e) {
-                        // Keep the default now()
-                    }
+                    } catch (\Exception $e) { }
                 }
 
-                // ── Resolve Category ──
-                $categoryId = null;
-                if (!empty($categoryName)) {
-                    $existingCat = DB::table('categories')
-                        ->whereRaw('LOWER(name) = ?', [strtolower($categoryName)])
-                        ->first();
+                // ── Insert Asset Source ──
+                $assetSource = AssetSource::create([
+                    'item_id'                => $itemId,
+                    'description'            => !empty($description) ? $description : null,
+                    'acquisition_source_id'  => $acqSourceId,
+                    'procurement_mode_id'    => $modeId,
+                    'asset_cost'             => $unitPrice,
+                    'quantity'               => $quantity,
+                    'acceptance_date'        => $dateAcquired,
+                    'condition'              => $condition,
+                ]);
 
-                    if ($existingCat) {
-                        $categoryId = $existingCat->id;
-                    } else {
-                        $categoryId = DB::table('categories')->insertGetId([
-                            'name' => $categoryName,
-                            'created_at' => now(),
-                        ]);
-                        DB::table('system_logs')->insert([
-                            'user' => $userName,
-                            'activity' => "[CSV Import] Auto-created category: {$categoryName}",
-                            'module' => 'Categories',
-                            'action_type' => 'Create',
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                    }
-                }
-
-                // ── Resolve Acquisition Source ──
-                $acquisitionSourceId = null;
-                if (!empty($sourceName)) {
-                    $existingSrc = DB::table('acquisition_sources')
-                        ->whereRaw('LOWER(name) = ?', [strtolower($sourceName)])
-                        ->first();
-
-                    if ($existingSrc) {
-                        $acquisitionSourceId = $existingSrc->id;
-                    } else {
-                        $acquisitionSourceId = DB::table('acquisition_sources')->insertGetId([
-                            'name' => $sourceName,
-                            'source_type' => $sourceType,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                        DB::table('system_logs')->insert([
-                            'user' => $userName,
-                            'activity' => "[CSV Import] Auto-created acquisition source: {$sourceName}",
-                            'module' => 'Acquisition Sources',
-                            'action_type' => 'Create',
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                    }
-                } else {
-                    // Create a default "Unknown Source" if none provided
-                    $defaultSrc = DB::table('acquisition_sources')
-                        ->where('name', 'Unknown Source')->first();
-                    if ($defaultSrc) {
-                        $acquisitionSourceId = $defaultSrc->id;
-                    } else {
-                        $acquisitionSourceId = DB::table('acquisition_sources')->insertGetId([
-                            'name' => 'Unknown Source',
-                            'source_type' => 'Internal',
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                    }
-                }
-
-                // ── Resolve Item ──
-                if (empty($itemName)) {
-                    $totalSkipped++;
-                    continue;
-                }
-
-                $existingItem = DB::table('items')
-                    ->whereRaw('LOWER(name) = ?', [strtolower($itemName)])
-                    ->first();
-
-                if ($existingItem) {
-                    $itemId = $existingItem->id;
-                } else {
-                    $itemId = DB::table('items')->insertGetId([
-                        'name' => $itemName,
-                        'category_id' => $categoryId,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                    DB::table('system_logs')->insert([
-                        'user' => $userName,
-                        'activity' => "[CSV Import] Registered item: {$itemName}",
-                        'module' => 'Items',
-                        'action_type' => 'Create',
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-
-                // ── Resolve Procurement Mode ──
-                $modeName = 'CSV Import';
-                $modeId = DB::table('procurement_modes')->where('name', $modeName)->value('id');
-                if (!$modeId) {
-                    $modeId = DB::table('procurement_modes')->insertGetId([
-                        'name' => $modeName,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-
-                // ── Insert Asset Source (replaces sub_items) ──
-                DB::table('asset_sources')->insert([
-                    'item_id' => $itemId,
-                    'description' => !empty($description) ? $description : null,
-                    'acquisition_source_id' => $acquisitionSourceId,
-                    'procurement_mode_id' => $modeId,
-                    'asset_cost' => $unitPrice,
-                    'quantity' => $quantity,
-                    'acceptance_date' => $dateAcquired,
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                // ── Insert Asset Assignment ──
+                AssetAssignment::create([
+                    'asset_source_id'  => $assetSource->id,
+                    'employee_id'      => $employeeId,
+                    'property_number'  => ($quantity > 1) ? null : ($data['property_number'] ?? null),
+                    'acquisition_cost' => $unitPrice * $quantity,
+                    'acquisition_date' => $dateAcquired,
                 ]);
 
                 $totalImported++;
+            }
+
+            if (!empty($errors)) {
+                DB::rollBack();
+                return redirect()->route('assets.reports')->withErrors(['csv_file' => 'Import failed due to validation errors: '])->with('import_errors', $errors);
             }
 
             DB::commit();

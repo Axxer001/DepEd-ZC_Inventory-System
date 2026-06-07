@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class BuildingImportController extends Controller
@@ -147,6 +148,7 @@ class BuildingImportController extends Controller
             'schools' => DB::table('schools')->pluck('id', 'school_id')->toArray(),
             'b_class' => array_change_key_case(DB::table('building_classifications')->pluck('id', 'name')->toArray(), CASE_LOWER),
             'b_types' => array_change_key_case(DB::table('building_types')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'emp'     => DB::table('employees')->get()->mapWithKeys(fn($e) => [strtolower(trim(($e->first_name ?? '') . ' ' . ($e->last_name ?? ''))) => $e->id])->toArray(),
         ];
 
         DB::beginTransaction();
@@ -168,25 +170,40 @@ class BuildingImportController extends Controller
                 $modeName = trim($row['procurement_mode'] ?? 'Direct Purchase');
                 $modeId   = $caches['mode'][strtolower($modeName)] ??= DB::table('procurement_modes')->insertGetId(['name' => $modeName, 'created_at' => now()]);
 
+                // Map condition (Spec 7.3)
+                $conditionMap = [
+                    'good'           => 'Good Condition',
+                    'good condition' => 'Good Condition',
+                    'needs repair'   => 'Needs Repair',
+                    'repair'         => 'Needs Repair',
+                    'unserviceable'  => 'Unserviceable',
+                    'condemned'      => 'Unserviceable',
+                ];
+                $rawCondition = strtolower(trim($row['remarks'] ?? $row['condition'] ?? ''));
+                $condition = $conditionMap[$rawCondition] ?? 'Good Condition';
+
                 $assetSourceId = DB::table('asset_sources')->insertGetId([
                     'item_id' => $itemId,
                     'description' => $row['description'] ?? null,
                     'unit_of_measurement' => $row['uom'] ?? 'Unit',
                     'acquisition_source_id' => $sourceId,
                     'procurement_mode_id' => $modeId,
-                    'asset_cost' => floatval($row['unit_value'] ?? 0),
+                    'asset_cost' => floatval($row['unit_value'] ?? $row['asset_cost'] ?? 0),
                     'quantity' => intval($row['quantity'] ?? 1),
                     'acceptance_date' => $row['acquisition_date'] ?? now()->toDateString(),
+                    'condition' => $condition,
                     'created_at' => now(),
                 ]);
 
+                // Resolve employee (Spec 7.2)
+                $loc = trim($row['location'] ?? '');
+                $employeeId = $caches['emp'][strtolower($loc)] ?? null;
+
                 DB::table('asset_assignments')->insert([
                     'asset_source_id' => $assetSourceId,
-                    'condition' => $row['remarks'] ?? 'Good Condition',
-                    'office_school_type' => $row['office_type'] ?? 'School',
-                    'location' => $row['location'] ?? 'Division Office',
+                    'employee_id' => $employeeId,
                     'property_number' => $row['property_number'] ?? null,
-                    'acquisition_cost' => floatval($row['total_value'] ?? 0),
+                    'acquisition_cost' => floatval($row['total_value'] ?? $row['acquisition_cost'] ?? 0),
                     'acquisition_date' => $row['acquisition_date'] ?? now()->toDateString(),
                     'created_at' => now(),
                 ]);
@@ -372,6 +389,10 @@ class BuildingImportController extends Controller
                 'acquisition_date'  => $this->parseDate($v[11] ?? null),
                 'property_number'   => trim((string)($v[12] ?? '')),
                 'acquisition_cost'  => $this->parseDecimal($v[13] ?? null),
+                'unit_value'        => $this->parseDecimal($v[13] ?? null),
+                'quantity'          => intval($v[14] ?? 1),
+                'total_value'       => $this->parseDecimal($v[15] ?? null),
+                'remarks'           => trim((string)($v[16] ?? '')),
             ];
         }
         return $rows;

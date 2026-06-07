@@ -12,11 +12,7 @@ class AssetAssignment extends Model
 
     protected $fillable = [
         'asset_source_id',
-        'custodian_id',
-        // NOTE: school_id and office_id are now on custodians — call via custodian()->school() / custodian()->office()
-        'condition',
-        'office_school_type',
-        'location',
+        'employee_id',
         'property_number',
         'photo_path',
         'acquisition_cost',
@@ -28,18 +24,24 @@ class AssetAssignment extends Model
         'acquisition_cost' => 'decimal:2',
     ];
 
+    // Relationships
+    public function employee(): BelongsTo
+    {
+        return $this->belongsTo(Employee::class);
+    }
+
     public function assetSource(): BelongsTo
     {
         return $this->belongsTo(AssetSource::class);
     }
 
-    public function custodian(): BelongsTo
+    public function documents(): HasMany
     {
-        return $this->belongsTo(Custodian::class);
+        return $this->hasMany(AssetDocument::class, 'asset_distribution_id');
     }
 
     public function transfers(): HasMany
     {
-        return $this->hasMany(AssetTransfer::class);
+        return $this->hasMany(AssetTransfer::class, 'asset_assignment_id');
     }
 }

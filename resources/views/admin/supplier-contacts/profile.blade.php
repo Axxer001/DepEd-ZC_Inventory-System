@@ -174,7 +174,6 @@
                                     <tr class="border-b border-slate-100">
                                         <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item / Category</th>
                                         <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Property No.</th>
-                                        <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Brand · Model</th>
                                         <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Deployed To</th>
                                         <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Condition</th>
                                         <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Cost</th>
@@ -189,16 +188,6 @@
                                         </td>
                                         <td class="py-4">
                                             <span class="text-[10px] font-black text-slate-500 uppercase block">{{ $asset->property_number }}</span>
-                                            @if($asset->serial_number)
-                                            <span class="text-[9px] font-semibold text-slate-400 block mt-0.5">SN: {{ $asset->serial_number }}</span>
-                                            @endif
-                                        </td>
-                                        <td class="py-4">
-                                            <span class="text-[10.5px] font-bold text-slate-600 uppercase">{{ $asset->brand ?: '—' }}</span>
-                                            @if($asset->model)
-                                            <span class="text-[9px] text-slate-400 mx-1">·</span>
-                                            <span class="text-[10px] font-semibold text-slate-500 uppercase">{{ $asset->model }}</span>
-                                            @endif
                                         </td>
                                         <td class="py-4">
                                             <span class="text-[10.5px] font-bold text-slate-800 uppercase leading-tight block max-w-[180px] truncate">{{ $asset->school_name ?: '—' }}</span>

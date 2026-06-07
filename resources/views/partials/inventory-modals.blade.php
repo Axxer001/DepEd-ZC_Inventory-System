@@ -70,31 +70,43 @@
                     <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Division</label>
                         <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-white/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Division of Zamboanga City <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
                     </div>
-                    <div class="relative col-context p-1 rounded-2xl">
-                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Type</label>
-                        <input type="text" list="dl-school-type" id="bSchoolType" data-col="school-type" autocomplete="off" 
-                            oninput="const isSchool=this.value.toLowerCase().includes('school'); if(!isSchool){document.getElementById('bLocation').value='Zamboanga City';}else{const sName=document.getElementById('bSchoolName').value; if(sName && typeof cleanSchoolNameForLocation==='function'){document.getElementById('bLocation').value=cleanSchoolNameForLocation(sName);}}"
-                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select">
+                    
+                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">School/Office Search</label>
+                        <input type="text" list="dl-locations" id="bSchoolSearch" data-col="school-search" autocomplete="off" 
+                            oninput="bulkAutofillLocation(this.value)"
+                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Location...">
                     </div>
-                    <div class="relative col-identity p-1 rounded-2xl">
-                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">School ID</label>
-                        <input type="text" id="bSchoolId" data-col="school-id" autocomplete="off" 
-                            oninput="const s=allSchoolsList.find(x=>String(x.school_id)===this.value); if(s){document.getElementById('bSchoolName').value=s.name; const t=typeof detectItemSchoolType==='function'?detectItemSchoolType(s.name):''; document.getElementById('bSchoolType').value=t; const isSchool=t.toLowerCase().includes('school'); document.getElementById('bLocation').value=isSchool?cleanSchoolNameForLocation(s.name):'Zamboanga City';}"
-                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select" inputmode="numeric">
+                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School ID</label>
+                        <input type="text" id="bSchoolId" data-col="school-id" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
                     </div>
-                    <div class="relative col-identity p-1 rounded-2xl">
-                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label>
-                        <input type="text" id="bSchoolName" data-col="school-name" autocomplete="off" 
-                            oninput="const s=allSchoolsList.find(x=>x.name.toLowerCase()===this.value.toLowerCase()); if(s){ const t = detectItemSchoolType(s.name); document.getElementById('bSchoolType').value=t; document.getElementById('bSchoolId').value=s.school_id; const isSchool=t.toLowerCase().includes('school'); document.getElementById('bLocation').value=isSchool?cleanSchoolNameForLocation(s.name):'Zamboanga City';} else if(this.value.trim()){ const t = detectItemSchoolType(this.value); if(t) document.getElementById('bSchoolType').value=t; document.getElementById('bSchoolId').value=''; const isSchool=t.toLowerCase().includes('school'); document.getElementById('bLocation').value=isSchool?cleanSchoolNameForLocation(this.value):'Zamboanga City';}"
-                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select">
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Type</label>
+                        <input type="text" id="bSchoolType" data-col="school-type" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
                     </div>
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">First Name</label><input type="text" id="bCustodianFirst" data-col="custodian-first" oninput="syncBulkCustodian()" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="First Name"></div>
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Middle Name</label><input type="text" id="bCustodianMiddle" data-col="custodian-middle" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Middle Name"></div>
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Last Name</label><input type="text" id="bCustodianLast" data-col="custodian-last" oninput="syncBulkCustodian()" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Last Name"></div>
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Custodian Position</label><input type="text" id="bCustodianPos" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Custodian Position"></div>
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Custodian Contact No.</label><input type="text" id="bCustodianContact" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Contact No."></div>
-                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Nature of Occupancy</label><input type="text" id="bOccupancy" data-col="occupancy" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
-                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Location</label><input type="text" id="bLocation" data-col="location" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
+                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label>
+                        <input type="text" id="bSchoolName" data-col="school-name" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
+                    </div>
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Location</label>
+                        <input type="text" id="bLocation" data-col="location" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
+                    </div>
+
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee Search</label>
+                        <input type="text" list="dl-employees" id="bEmployeeSearch" data-col="employee-search" autocomplete="off" 
+                            oninput="bulkAutofillEmployee(this.value)"
+                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Employee...">
+                    </div>
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee ID</label>
+                        <input type="text" id="bEmployeeId" data-col="employee-id" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
+                    </div>
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee Name</label>
+                        <input type="text" id="bEmployeeName" data-col="employee-name" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
+                    </div>
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee Position</label>
+                        <input type="text" id="bEmployeePos" data-col="employee-pos" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
+                    </div>
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee Status</label>
+                        <input type="text" id="bEmployeeStatus" data-col="employee-status" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
+                    </div>
+
                     <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Property Number</label><input type="text" id="bPropertyNo" oninput="checkBulkPropertyNumber()" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
                     <div class="relative col-financial p-1 rounded-2xl">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Cost</label>

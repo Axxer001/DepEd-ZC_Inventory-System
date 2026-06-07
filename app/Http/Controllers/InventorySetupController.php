@@ -3,10 +3,43 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Classification;
+use App\Models\Category;
+use App\Models\Item;
+use App\Models\AcquisitionSource;
+use App\Models\ProcurementMode;
+use App\Models\Employee;
+use App\Models\School;
+use App\Models\Office;
+use App\Models\AssetSource;
+use App\Models\AssetAssignment;
+use App\Services\GeminiService;
 
 class InventorySetupController extends Controller
 {
+    /**
+     * Build in-memory lookup cache for bulk operations.
+     */
+    private function buildLookupCache(): array
+    {
+        return [
+            'classifications'     => Classification::pluck('id', 'name')->toArray(),
+            'categories'          => Category::get()->groupBy('classification_id')->map(fn($items) => $items->keyBy('name')),
+            'items'               => Item::get()->groupBy('category_id')->map(fn($items) => $items->keyBy('name')),
+            'acquisition_sources' => AcquisitionSource::pluck('id', 'name')->toArray(),
+            'procurement_modes'   => ProcurementMode::pluck('id', 'name')->toArray(),
+            'employees'           => Employee::get()->keyBy(function($e) {
+                                        return strtolower(trim("{$e->first_name} {$e->last_name}"));
+                                    }),
+            'schools'             => School::pluck('id', 'school_id')->toArray(),
+            'offices'             => Office::pluck('id', 'office_id')->toArray(),
+        ];
+    }
+
     /**
      * MODULE 1: MASTER REGISTRY — Register or update an item in the master list.
      *
@@ -16,237 +49,266 @@ class InventorySetupController extends Controller
      * - No more master_quantity on items (derived from SUM of asset_sources)
      * - No more asset_transactions
      */
-    public function storeItem(Request $request)
+    public function getDropdownData(): \Illuminate\Http\JsonResponse
     {
-        $request->validate([
-            'category_id' => 'nullable|exists:categories,id',
-            'category_name' => 'nullable|string|max:255',
-            'item_name' => 'required|string|max:255',
+        $classifications = \App\Models\Classification::orderBy('name')->get(['id', 'name']);
+        $categories      = \App\Models\Category::orderBy('name')->get(['id', 'name', 'classification_id']);
+
+        return response()->json(compact('classifications', 'categories'));
+    }
+
+    public function storeItem(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'classification_id' => 'required|exists:classifications,id',
+            'category_id'       => 'required|exists:categories,id',
+            'item_name'         => 'required|string|max:255',
+            'condition'         => 'required|in:Good Condition,Needs Repair,Unserviceable',
+            'description'       => 'nullable|string',
+            'uom'               => 'nullable|string|max:255',
+            'asset_cost'        => 'required|numeric|min:0',
+            'quantity'          => 'required|integer|min:1',
+            'useful_life'       => 'nullable|integer|min:0',
+            'acceptance_date'   => 'nullable|date',
+            'acquisition_source_id' => 'required|exists:acquisition_sources,id',
+            'procurement_mode_id'   => 'nullable|exists:procurement_modes,id',
+            // Assignment fields
+            'employee_id'       => 'nullable|exists:employees,id',
+            'property_number'   => 'nullable|string|max:255',
+            'acquisition_date'  => 'nullable|date',
         ]);
 
-        $userName = auth()->user() ? auth()->user()->name : 'System';
-        $existingItemId = $request->input('existing_item_id');
-        $itemName = trim($request->input('item_name'));
+        $userName = Auth::user() ? Auth::user()->name : 'System';
 
-        $messages = [];
+        try {
+            DB::beginTransaction();
 
-        // ── Resolve Category ──
-        $categoryId = $request->input('category_id');
-        $categoryName = trim($request->input('category_name'));
+            // 1. Ensure Category belongs to Classification
+            $category = Category::where('id', $validated['category_id'])
+                ->where('classification_id', $validated['classification_id'])
+                ->firstOrFail();
 
-        if (!$categoryId) {
-            if (!$categoryName) {
-                return back()->withErrors(['category_name' => 'Please select a Main Category or type a new one.'])->withInput();
-            }
-            $existingCat = DB::table('categories')
-                ->whereRaw('LOWER(name) = ?', [strtolower($categoryName)])
-                ->first();
+            // 2. Resolve Item
+            $item = Item::firstOrCreate(
+                ['name' => trim($validated['item_name']), 'category_id' => $category->id]
+            );
 
-            if ($existingCat) {
-                $categoryId = $existingCat->id;
-            } else {
-                $categoryId = DB::table('categories')->insertGetId([
-                    'name' => $categoryName,
-                    'created_at' => now(),
-                ]);
-                DB::table('system_logs')->insert([
-                    'user' => $userName,
-                    'activity' => "Added new category: {$categoryName}",
-                    'module' => 'Categories',
-                    'action_type' => 'Create',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-            }
-        }
+            // 3. Create Asset Source
+            $assetSource = AssetSource::create([
+                'item_id'                => $item->id,
+                'acquisition_source_id'  => $validated['acquisition_source_id'],
+                'procurement_mode_id'    => $validated['procurement_mode_id'] ?? null,
+                'description'            => $validated['description'] ?? null,
+                'unit_of_measurement'    => $validated['uom'] ?? 'Unit',
+                'asset_cost'             => $validated['asset_cost'],
+                'quantity'               => $validated['quantity'],
+                'estimated_useful_life'  => $validated['useful_life'] ?? 0,
+                'acceptance_date'        => $validated['acceptance_date'] ?? now(),
+                'condition'              => $validated['condition'],
+            ]);
 
-        // ── Resolve Item ──
-        if ($existingItemId) {
-            $existingItem = DB::table('items')->where('id', $existingItemId)->first();
-            if (!$existingItem) {
-                return back()->withErrors(['item_name' => 'The selected item does not exist.']);
-            }
-            $itemId = $existingItem->id;
-            $messages[] = "Item '{$itemName}' selected for asset registration";
-        } else {
-            $duplicate = DB::table('items')
-                ->whereRaw('LOWER(name) = ?', [strtolower($itemName)])
-                ->first();
-
-            if ($duplicate) {
-                return back()->withErrors(['item_name' => "The item '{$itemName}' already exists. Please use the dropdown to select it."])->withInput();
-            }
-
-            $itemId = DB::table('items')->insertGetId([
-                'name' => $itemName,
-                'category_id' => $categoryId,
-                'created_at' => now(),
-                'updated_at' => now(),
+            // 4. Create Asset Assignment
+            AssetAssignment::create([
+                'asset_source_id'  => $assetSource->id,
+                'employee_id'      => $validated['employee_id'] ?? null,
+                'property_number'  => ((int)$validated['quantity'] > 1) ? null : ($validated['property_number'] ?? null),
+                'acquisition_cost' => $validated['asset_cost'] * $validated['quantity'],
+                'acquisition_date' => $validated['acquisition_date'] ?? now(),
             ]);
 
             DB::table('system_logs')->insert([
                 'user' => $userName,
-                'activity' => "Added new item: {$itemName}",
-                'module' => 'Items',
+                'activity' => "Registered asset: {$validated['item_name']}",
+                'module' => 'Assets',
                 'action_type' => 'Create',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
-            $messages[] = "Item '{$itemName}' registered";
-        }
 
-        if (empty($messages)) {
-            $messages[] = "Item '{$itemName}' already exists — no changes made";
-        }
+            DB::commit();
 
-        return back()->with('success', implode('. ', $messages) . '.');
+            return response()->json([
+                'success' => true, 
+                'message' => "Asset '{$validated['item_name']}' registered successfully."
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false, 
+                'message' => 'Failed to register asset: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * MODULE 2: BATCH REGISTRATION — Securely parse and insert bulk generated table rows
+     * MODULE 2: BATCH REGISTRATION — Securely parse and insert bulk-generated table rows.
+     *
+     * Pipeline:
+     *  1. Gemini sanitizes/normalises the raw rows (runs before any DB work).
+     *  2. A single buildLookupCache() call loads all reference data into RAM.
+     *  3. Row loop resolves every FK from memory — zero N+1 queries.
+     *  4. Employees are match-only: unresolved names skip the row and report an error.
+     *  5. condition is stored on asset_sources (ENUM), not asset_assignments.
      */
     public function storeBatch(Request $request)
     {
         $payload = $request->validate([
-            'source_of_acquisition' => 'required|string',
-            'rows' => 'required|array|min:1',
+            'source_of_acquisition' => 'required|string|max:255',
+            'rows'                  => 'required|array|min:1',
         ]);
 
+        // ── Step 1: Gemini sanitation (before transaction) ─────────────────────
         $gemini = new \App\Services\GeminiService();
-        $rows = $gemini->sanitizeRows($payload['rows'], 'manual_batch');
+        $rows   = $gemini->sanitizeRows($payload['rows'], 'manual_batch');
 
         /** @var \App\Models\User|null $user */
-        $user = \Illuminate\Support\Facades\Auth::user();
-        $userName = $user ? $user->name : 'System';
-        
+        $user     = \Illuminate\Support\Facades\Auth::user();
+        $userName = $user?->name ?? 'System';
+
+        // ── Step 2: Resolve acquisition source (upsert — it's a reference entity) ─
+        $acqSourceName = trim($payload['source_of_acquisition']);
+        DB::table('acquisition_sources')->updateOrInsert(
+            ['name' => $acqSourceName],
+            ['source_type' => 'Internal', 'updated_at' => now()]
+        );
+        $acqSourceId = DB::table('acquisition_sources')->where('name', $acqSourceName)->value('id');
+
+        // ── Step 3: Single in-memory lookup cache (one DB read per table) ──────
+        $cache = [
+            'class'   => array_change_key_case(DB::table('classifications')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'cat'     => array_change_key_case(DB::table('categories')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'item'    => array_change_key_case(DB::table('items')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'mode'    => array_change_key_case(DB::table('procurement_modes')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            // Employee cache keyed by "firstname lastname" (lowercased, trimmed)
+            'emp'     => DB::table('employees')->get()->mapWithKeys(
+                fn($e) => [strtolower(trim("{$e->first_name} {$e->last_name}")) => $e->id]
+            )->toArray(),
+        ];
+
+        $conditionMap = [
+            'good'           => 'Good Condition',
+            'good condition' => 'Good Condition',
+            'serviceable'    => 'Good Condition',
+            'needs repair'   => 'Needs Repair',
+            'repair'         => 'Needs Repair',
+            'minor repair'   => 'Needs Repair',
+            'major repair'   => 'Needs Repair',
+            'unserviceable'  => 'Unserviceable',
+            'condemned'      => 'Unserviceable',   // legacy PIF value
+            'not useable'    => 'Unserviceable',
+        ];
+
+        $errors   = [];
+        $inserted = 0;
+
         try {
             DB::beginTransaction();
 
-            $acqSourceName = trim($payload['source_of_acquisition']);
-            $acqSourceId = DB::table('acquisition_sources')->updateOrInsert(
-                ['name' => $acqSourceName],
-                ['source_type' => 'Internal', 'updated_at' => now()]
-            );
-            $acqSourceId = DB::table('acquisition_sources')->where('name', $acqSourceName)->value('id');
+            foreach ($rows as $rowIndex => $row) {
+                $rowNum = $rowIndex + 1;
 
-            // Pre-load memory-cached lookup maps
-            $caches = [
-                'class' => array_change_key_case(DB::table('classifications')->pluck('id', 'name')->toArray(), CASE_LOWER),
-                'cat'   => array_change_key_case(DB::table('categories')->pluck('id', 'name')->toArray(), CASE_LOWER),
-                'item'  => array_change_key_case(DB::table('items')->pluck('id', 'name')->toArray(), CASE_LOWER),
-                'mode'  => array_change_key_case(DB::table('procurement_modes')->pluck('id', 'name')->toArray(), CASE_LOWER),
-            ];
-            
-            foreach ($rows as $row) {
-                // 1. Resolve Hierarchy (Classification -> Category -> Item)
+                // ── Resolve Classification → Category → Item ─────────────────
                 $className = trim($row['classification'] ?? 'Unclassified');
-                $classId = $caches['class'][strtolower($className)] ??= DB::table('classifications')->insertGetId(['name' => $className, 'created_at' => now()]);
+                $classId   = $cache['class'][strtolower($className)]
+                    ??= DB::table('classifications')->insertGetId(['name' => $className, 'created_at' => now(), 'updated_at' => now()]);
 
                 $catName = trim($row['category'] ?? 'General');
-                $catId = $caches['cat'][strtolower($catName)] ??= DB::table('categories')->insertGetId([
-                    'classification_id' => $classId, 
-                    'name' => $catName, 
-                    'created_at' => now()
-                ]);
+                $catId   = $cache['cat'][strtolower($catName)]
+                    ??= DB::table('categories')->insertGetId(['classification_id' => $classId, 'name' => $catName, 'created_at' => now(), 'updated_at' => now()]);
 
                 $itemName = trim($row['item'] ?? 'Unknown Item');
-                $itemId = $caches['item'][strtolower($itemName)] ??= DB::table('items')->insertGetId([
-                    'category_id' => $catId, 
-                    'name' => $itemName, 
-                    'created_at' => now()
-                ]);
+                $itemId   = $cache['item'][strtolower($itemName)]
+                    ??= DB::table('items')->insertGetId(['category_id' => $catId, 'name' => $itemName, 'created_at' => now(), 'updated_at' => now()]);
 
-                // 2. Resolve Procurement Mode
+                // ── Resolve Procurement Mode ─────────────────────────────────
                 $modeName = trim($row['mode'] ?? 'Direct Purchase');
-                $modeId = $caches['mode'][strtolower($modeName)] ??= DB::table('procurement_modes')->insertGetId(['name' => $modeName, 'created_at' => now()]);
+                $modeId   = $cache['mode'][strtolower($modeName)]
+                    ??= DB::table('procurement_modes')->insertGetId(['name' => $modeName, 'created_at' => now(), 'updated_at' => now()]);
 
-                // 3. Resolve Contact & Custodian (Surgical lookups)
+                // ── Resolve Acquisition Contact (source personnel) ───────────
                 $contactId = null;
-                if (!empty($row['personnel'])) {
-                    $contactId = DB::table('acquisition_contacts')->updateOrInsert(
-                        ['acquisition_source_id' => $acqSourceId, 'name' => $row['personnel']],
+                $personnel = trim($row['personnel'] ?? $row['employee-first'] ?? '');
+                if (!empty($personnel)) {
+                    DB::table('acquisition_contacts')->updateOrInsert(
+                        ['acquisition_source_id' => $acqSourceId, 'name' => $personnel],
                         ['position' => $row['position'] ?? null, 'updated_at' => now()]
                     );
-                    $contactId = DB::table('acquisition_contacts')->where(['acquisition_source_id' => $acqSourceId, 'name' => $row['personnel']])->value('id');
+                    $contactId = DB::table('acquisition_contacts')
+                        ->where(['acquisition_source_id' => $acqSourceId, 'name' => $personnel])
+                        ->value('id');
                 }
 
-                $custodianId = null;
-                if (!empty($row['custodian-last'])) {
-                    // Resolve office_id from office type string if provided
-                    $custodianOfficeId = null;
-                    if (!empty($row['school-type']) && stripos($row['school-type'], 'division') !== false) {
-                        $custodianOfficeId = DB::table('offices')->where('name', 'like', '%Division%')->value('id');
+                // ── Resolve Employee — MATCH ONLY, no silent creation ────────
+                $employeeId   = null;
+                $employeeName = trim(implode(' ', array_filter([
+                    $row['employee-first']  ?? $row['custodian-first']  ?? '',
+                    $row['employee-last']   ?? $row['custodian-last']   ?? '',
+                ])));
+
+                if (!empty($employeeName)) {
+                    $employeeId = $cache['emp'][strtolower($employeeName)] ?? null;
+                    if ($employeeId === null) {
+                        $errors[] = "Row {$rowNum}: Employee '{$employeeName}' not found. Register the employee first.";
+                        continue; // skip row — partial import is valid
                     }
-                    DB::table('custodians')->updateOrInsert(
-                        ['last_name' => $row['custodian-last'], 'first_name' => $row['custodian-first'] ?? ''],
-                        [
-                            'middle_name' => $row['custodian-middle'] ?? null,
-                            'position'    => $row['custodian-pos'] ?? null,
-                            'school_id'   => $row['school-id'] ?? null,
-                            'office_id'   => $custodianOfficeId,
-                            'updated_at'  => now(),
-                        ]
-                    );
-                    $custodianId = DB::table('custodians')->where(['last_name' => $row['custodian-last'], 'first_name' => $row['custodian-first'] ?? ''])->value('id');
                 }
 
-                // 4. Final Insertions
+                // ── Map Condition to ENUM (stored on asset_sources) ──────────
+                $rawCondition = strtolower(trim($row['condition'] ?? ''));
+                $condition    = $conditionMap[$rawCondition] ?? 'Good Condition';
+
+                // ── Insert asset_sources ─────────────────────────────────────
                 $assetSourceId = DB::table('asset_sources')->insertGetId([
-                    'item_id' => $itemId,
-                    'description' => $row['description'] ?? null,
-                    'unit_of_measurement' => $row['uom'] ?? 'Unit',
-                    'acquisition_source_id' => $acqSourceId,
-                    'procurement_mode_id' => $modeId,
+                    'item_id'                => $itemId,
+                    'acquisition_source_id'  => $acqSourceId,
+                    'procurement_mode_id'    => $modeId,
                     'acquisition_contact_id' => $contactId,
-                    'asset_cost' => floatval($row['cost'] ?? 0),
-                    'quantity' => intval($row['qty'] ?? 1),
-                    'estimated_useful_life' => intval($row['useful-life'] ?? 0),
-                    'acceptance_date' => $row['acceptance-date'] ?? now()->toDateString(),
-                    'remarks'         => null,
-                    'created_at'      => now(),
+                    'description'            => $row['description']      ?? null,
+                    'unit_of_measurement'    => $row['uom']               ?? 'Unit',
+                    'asset_cost'             => (float) ($row['cost']     ?? 0),
+                    'quantity'               => (int)   ($row['qty']      ?? 1),
+                    'estimated_useful_life'  => (int)   ($row['useful-life'] ?? 0),
+                    'acceptance_date'        => $row['acceptance-date']   ?? now()->toDateString(),
+                    'condition'              => $condition,
+                    'created_at'             => now(),
+                    'updated_at'             => now(),
                 ]);
 
-                // Map legacy condition strings to valid ENUM values
-                $conditionRaw = trim($row['condition'] ?? '');
-                $conditionMap = [
-                    'good condition' => 'Serviceable',
-                    'serviceable'    => 'Serviceable',
-                    'minor repair'   => 'Minor Repair',
-                    'major repair'   => 'Major Repair',
-                    'condemned'      => 'Condemned',
-                    'not useable'    => 'Condemned',
-                    'needs repair'   => 'Minor Repair',
-                ];
-                $condition = $conditionMap[strtolower($conditionRaw)] ?? 'Serviceable';
-
+                // ── Insert asset_assignments ─────────────────────────────────
                 DB::table('asset_assignments')->insert([
-                    'asset_source_id'    => $assetSourceId,
-                    'custodian_id'       => $custodianId,
-                    'condition'          => $condition,
-                    'office_school_type' => $row['school-type'] ?? null,
-                    'location'           => $row['location'] ?? null,
-                    'property_number'    => $row['property-no'] ?? null,
-                    'acquisition_cost'   => floatval($row['cost'] ?? 0) * intval($row['qty'] ?? 1),
-                    'acquisition_date'   => $row['acquisition-date'] ?? now()->toDateString(),
-                    'created_at'         => now(),
-                    'updated_at'         => now(),
+                    'asset_source_id'  => $assetSourceId,
+                    'employee_id'      => $employeeId,
+                    'property_number'  => ((int)($row['qty'] ?? 1) > 1) ? null : ($row['property-no'] ?? null),
+                    'acquisition_cost' => (float) ($row['cost']     ?? 0) * (int) ($row['qty'] ?? 1),
+                    'acquisition_date' => $row['acquisition-date']  ?? now()->toDateString(),
+                    'created_at'       => now(),
+                    'updated_at'       => now(),
                 ]);
+
+                $inserted++;
             }
 
             DB::table('system_logs')->insert([
-                'user' => $userName,
-                'activity' => "Batch Registration: " . count($rows) . " assets.",
-                'module' => 'Assets',
+                'user'        => $userName,
+                'activity'    => "Batch Registration: {$inserted} assets inserted, " . count($errors) . " rows skipped.",
+                'module'      => 'Assets',
                 'action_type' => 'Create',
-                'created_at' => now()
+                'created_at'  => now(),
+                'updated_at'  => now(),
             ]);
 
             DB::commit();
-            return response()->json(['success' => true, 'message' => "Successfully registered " . count($rows) . " items."]);
+
+            return response()->json([
+                'success' => true,
+                'message' => "Successfully registered {$inserted} item(s)." . (count($errors) ? ' ' . count($errors) . ' row(s) skipped.' : ''),
+                'errors'  => $errors,
+            ]);
 
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("[Inventory] storeBatch failure: " . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('[storeBatch] Failure: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
@@ -380,7 +442,7 @@ class InventorySetupController extends Controller
      * MODULE: Inventory Management (Edit)
      * Handles batch updates to asset_sources and asset_assignments.
      */
-    public function updateBatch(Request $request)
+    public function updateBatch(Request $request): JsonResponse
     {
         $request->validate([
             'updates' => 'required|array',
@@ -389,220 +451,82 @@ class InventorySetupController extends Controller
         ]);
 
         $updates = $request->input('updates');
-        $userName = auth()->user() ? auth()->user()->name : 'System';
+        $userName = Auth::user() ? Auth::user()->name : 'System';
         $updateCount = 0;
 
         DB::beginTransaction();
         try {
+            // Section 8.3: Field Mapping
+            $sourceFieldsMap = [
+                'description'     => 'description',
+                'uom'             => 'unit_of_measurement',
+                'cost'            => 'asset_cost',
+                'qty'             => 'quantity',
+                'useful_life'     => 'estimated_useful_life',
+                'acceptance_date' => 'acceptance_date',
+                'condition'       => 'condition',
+            ];
+
+            $assignmentFieldsMap = [
+                'property_no'      => 'property_number',
+                'acquisition_cost' => 'acquisition_cost',
+                'acquisition_date' => 'acquisition_date',
+                'employee_id'      => 'employee_id',
+            ];
+
             foreach ($updates as $data) {
-                // Determine if we need to update asset_sources
+                // 1. Update Asset Source
                 $srcUpdates = [];
-
-                // Resolve item_id or acq_source if hierarchy names are provided
-                $hasHierarchyChange = array_key_exists('classification', $data) || 
-                                     array_key_exists('category', $data) || 
-                                     array_key_exists('article', $data);
-                
-                $hasAcqSourceChange = array_key_exists('acq_source', $data);
-
-                if ($hasHierarchyChange || $hasAcqSourceChange) {
-                    $row = DB::table('asset_sources')
-                        ->leftJoin('items', 'asset_sources.item_id', '=', 'items.id')
-                        ->leftJoin('categories', 'items.category_id', '=', 'categories.id')
-                        ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')
-                        ->leftJoin('acquisition_sources', 'asset_sources.acquisition_source_id', '=', 'acquisition_sources.id')
-                        ->where('asset_sources.id', $data['src_id'])
-                        ->select('classifications.name as class_name', 'categories.name as cat_name', 'items.name as item_name', 'acquisition_sources.name as acq_source_name')
-                        ->first();
-
-                    if ($row) {
-                        if ($hasHierarchyChange) {
-                            $className = trim($data['classification'] ?? $row->class_name);
-                            $catName = trim($data['category'] ?? $row->cat_name);
-                            $itemName = trim($data['article'] ?? $row->item_name);
-
-                            // 1. Ensure Classification
-                            if ($className) {
-                                $classId = DB::table('classifications')->whereRaw('LOWER(name) = ?', [strtolower($className)])->value('id');
-                                if (!$classId) {
-                                    $classId = DB::table('classifications')->insertGetId(['name' => $className, 'created_at' => now(), 'updated_at' => now()]);
-                                }
-                            } else { $classId = null; }
-
-                            // 2. Ensure Category
-                            if ($catName) {
-                                $catQuery = DB::table('categories')->whereRaw('LOWER(name) = ?', [strtolower($catName)]);
-                                if ($classId) $catQuery->where('classification_id', $classId);
-                                else $catQuery->whereNull('classification_id');
-                                
-                                $catId = $catQuery->value('id');
-                                if (!$catId) {
-                                    $catId = DB::table('categories')->insertGetId(['name' => $catName, 'classification_id' => $classId, 'created_at' => now(), 'updated_at' => now()]);
-                                }
-                            } else { $catId = null; }
-
-                            // 3. Ensure Item
-                            if ($itemName) {
-                                $itemQuery = DB::table('items')->whereRaw('LOWER(name) = ?', [strtolower($itemName)]);
-                                if ($catId) $itemQuery->where('category_id', $catId);
-                                else $itemQuery->whereNull('category_id');
-
-                                $itemId = $itemQuery->value('id');
-                                if (!$itemId) {
-                                    $itemId = DB::table('items')->insertGetId(['name' => $itemName, 'category_id' => $catId, 'created_at' => now(), 'updated_at' => now()]);
-                                }
-                                $srcUpdates['item_id'] = $itemId;
-                            }
+                foreach ($sourceFieldsMap as $requestKey => $dbCol) {
+                    if (array_key_exists($requestKey, $data)) {
+                        $value = $data[$requestKey];
+                        if ($dbCol === 'condition') {
+                            $conditionMap = [
+                                'good'           => 'Good Condition',
+                                'good condition' => 'Good Condition',
+                                'serviceable'    => 'Good Condition',
+                                'needs repair'   => 'Needs Repair',
+                                'repair'         => 'Needs Repair',
+                                'unserviceable'  => 'Unserviceable',
+                                'condemned'      => 'Unserviceable',
+                            ];
+                            $value = $conditionMap[strtolower(trim($value))] ?? 'Good Condition';
                         }
-
-                        if ($hasAcqSourceChange) {
-                            $acqSourceName = trim($data['acq_source'] ?? $row->acq_source_name);
-                            if ($acqSourceName) {
-                                $acqSourceId = DB::table('acquisition_sources')->whereRaw('LOWER(name) = ?', [strtolower($acqSourceName)])->value('id');
-                                if (!$acqSourceId) {
-                                    $acqSourceId = DB::table('acquisition_sources')->insertGetId([
-                                        'name' => $acqSourceName,
-                                        'source_type' => 'Internal',
-                                        'created_at' => now(),
-                                        'updated_at' => now()
-                                    ]);
-                                }
-                                $srcUpdates['acquisition_source_id'] = $acqSourceId;
-                            }
-                        }
+                        $srcUpdates[$dbCol] = $value;
                     }
                 }
 
-                if (array_key_exists('description', $data)) $srcUpdates['description'] = $data['description'];
-                if (array_key_exists('brand', $data)) $srcUpdates['brand'] = $data['brand'];
-                if (array_key_exists('model', $data)) $srcUpdates['model'] = $data['model'];
-                if (array_key_exists('serial_no', $data)) $srcUpdates['serial_number'] = $data['serial_no'];
-                if (array_key_exists('uom', $data)) $srcUpdates['unit_of_measurement'] = $data['uom'];
-                if (array_key_exists('cost', $data)) $srcUpdates['asset_cost'] = floatval($data['cost']);
-                if (array_key_exists('qty', $data)) $srcUpdates['quantity'] = intval($data['qty']);
-                if (array_key_exists('useful_life', $data)) $srcUpdates['estimated_useful_life'] = intval($data['useful_life']);
-                if (array_key_exists('acceptance_date', $data)) $srcUpdates['acceptance_date'] = $data['acceptance_date'];
-                
-                // Process Mode
-                if (array_key_exists('mode', $data)) {
-                    $modeName = trim($data['mode']);
-                    if ($modeName) {
-                        $modeId = DB::table('procurement_modes')->whereRaw('LOWER(name) = ?', [strtolower($modeName)])->value('id');
-                        if (!$modeId) {
-                            $modeId = DB::table('procurement_modes')->insertGetId(['name' => $modeName, 'created_at' => now(), 'updated_at' => now()]);
-                        }
-                        $srcUpdates['procurement_mode_id'] = $modeId;
-                    } else {
-                        $srcUpdates['procurement_mode_id'] = null;
-                    }
+                // Handle hierarchy changes if provided (Item resolution)
+                if (isset($data['item_id'])) {
+                    $srcUpdates['item_id'] = $data['item_id'];
                 }
 
-                // Process Contact
-                if (array_key_exists('personnel', $data) || array_key_exists('position', $data)) {
-                    $personnelName = trim($data['personnel'] ?? $row->source_personnel ?? '');
-                    $personnelPos = trim($data['position'] ?? $row->personnel_position ?? '');
-                    $currentAcqSource = $srcUpdates['acquisition_source_id'] ?? $row->acquisition_source_id;
-
-                    if ($personnelName !== '' || $personnelPos !== '') {
-                        $contact = DB::table('acquisition_contacts')
-                            ->where('acquisition_source_id', $currentAcqSource)
-                            ->where('name', $personnelName)
-                            ->where('position', $personnelPos)
-                            ->first();
-
-                        if (!$contact) {
-                            $contactId = DB::table('acquisition_contacts')->insertGetId([
-                                'acquisition_source_id' => $currentAcqSource,
-                                'name' => $personnelName ?: null,
-                                'position' => $personnelPos ?: null,
-                                'created_at' => now(),
-                                'updated_at' => now()
-                            ]);
-                        } else {
-                            $contactId = $contact->id;
-                        }
-                        $srcUpdates['acquisition_contact_id'] = $contactId;
-                    } else {
-                        $srcUpdates['acquisition_contact_id'] = null;
+                // Get quantity to check if it's bulk/multiple
+                $quantity = null;
+                if (isset($srcUpdates['quantity'])) {
+                    $quantity = (int)$srcUpdates['quantity'];
+                } else {
+                    $currentSource = DB::table('asset_sources')->where('id', $data['src_id'])->first();
+                    if ($currentSource) {
+                        $quantity = (int)$currentSource->quantity;
                     }
                 }
-
-                if (array_key_exists('remarks', $data)) $srcUpdates['remarks'] = $data['remarks'];
 
                 if (!empty($srcUpdates)) {
                     DB::table('asset_sources')->where('id', $data['src_id'])->update($srcUpdates);
                 }
 
-                // Determine if we need to update asset_assignments
+                // 2. Update Asset Assignment
                 $distUpdates = [];
-                // nature_of_occupancy and school_id have been removed from asset_assignments.
-                // school_id is now on custodians; handle it there via custodian update below.
-                if (array_key_exists('location', $data)) $distUpdates['location'] = $data['location'];
-                if (array_key_exists('property_no', $data)) $distUpdates['property_number'] = $data['property_no'];
-                if (array_key_exists('school_type', $data)) $distUpdates['office_school_type'] = $data['school_type'];
-                if (array_key_exists('acquisition_date', $data)) $distUpdates['acquisition_date'] = $data['acquisition_date'];
-                if (array_key_exists('condition', $data)) {
-                    $conditionMap = [
-                        'good condition' => 'Serviceable', 'serviceable' => 'Serviceable',
-                        'minor repair' => 'Minor Repair', 'major repair' => 'Major Repair',
-                        'condemned' => 'Condemned', 'not useable' => 'Condemned', 'needs repair' => 'Minor Repair',
-                    ];
-                    $distUpdates['condition'] = $conditionMap[strtolower(trim($data['condition']))] ?? 'Serviceable';
+                foreach ($assignmentFieldsMap as $requestKey => $dbCol) {
+                    if (array_key_exists($requestKey, $data)) {
+                        $distUpdates[$dbCol] = $data[$requestKey];
+                    }
                 }
 
-                // Process Custodian
-                if (
-                    array_key_exists('custodian_first_name', $data) || 
-                    array_key_exists('custodian_middle_name', $data) || 
-                    array_key_exists('custodian_last_name', $data) || 
-                    array_key_exists('custodian_position', $data) || 
-                    array_key_exists('custodian_contact_number', $data)
-                ) {
-                    $rowDist = DB::table('asset_assignments')
-                        ->leftJoin('custodians', 'asset_assignments.custodian_id', '=', 'custodians.id')
-                        ->where('asset_assignments.id', $data['dist_id'])
-                        ->select('custodians.first_name', 'custodians.middle_name', 'custodians.last_name', 'custodians.position', 'custodians.contact_number')
-                        ->first();
-
-                    $custFirst = trim($data['custodian_first_name'] ?? $rowDist->first_name ?? '');
-                    $custMiddle = trim($data['custodian_middle_name'] ?? $rowDist->middle_name ?? '');
-                    $custLast = trim($data['custodian_last_name'] ?? $rowDist->last_name ?? '');
-                    $custPos = trim($data['custodian_position'] ?? $rowDist->position ?? '');
-                    $custContact = trim($data['custodian_contact_number'] ?? $rowDist->contact_number ?? '');
-
-                    if ($custFirst !== '' || $custLast !== '') {
-                        $custQuery = DB::table('custodians')
-                            ->where('first_name', $custFirst)
-                            ->where('last_name', $custLast);
-                            
-                        if ($custMiddle !== '') {
-                            $custQuery->where('middle_name', $custMiddle);
-                        } else {
-                            $custQuery->where(function($q) {
-                                $q->whereNull('middle_name')->orWhere('middle_name', '');
-                            });
-                        }
-                        
-                        $custodian = $custQuery->first();
-                        
-                        if (!$custodian) {
-                            $custodianId = DB::table('custodians')->insertGetId([
-                                'first_name' => $custFirst ?: null,
-                                'middle_name' => $custMiddle ?: null,
-                                'last_name' => $custLast ?: null,
-                                'position' => $custPos ?: null,
-                                'contact_number' => $custContact ?: null,
-                                'status' => 'Active',
-                                'created_at' => now(),
-                                'updated_at' => now()
-                            ]);
-                        } else {
-                            $custodianId = $custodian->id;
-                        }
-                        $distUpdates['custodian_id'] = $custodianId;
-                    } else {
-                        $distUpdates['custodian_id'] = null;
-                    }
+                // If quantity > 1, property number must be NULL
+                if ($quantity !== null && $quantity > 1) {
+                    $distUpdates['property_number'] = null;
                 }
 
                 if (!empty($distUpdates)) {
