@@ -518,10 +518,10 @@
             
             if (assetShowAllColumns) {
                 btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" /></svg> Hide Extra Columns`;
-                table.style.minWidth = '1400px';
+                table.style.minWidth = currentAssetTab === 'source' ? '2000px' : '2600px';
             } else {
                 btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg> View All Columns`;
-                table.style.minWidth = '1000px';
+                table.style.minWidth = '900px';
             }
             renderAssetTable();
         }
@@ -617,7 +617,11 @@
                 const data = await res.json();
                 assetRowsData = data.rows || [];
                 renderAssetTable();
-            } catch (e) { console.error('Failed to fetch assets', e); } finally { loading.classList.add('hidden'); }
+            } catch (e) { 
+                console.error('Failed to fetch assets', e);
+                assetRowsData = [];
+                renderAssetTable();
+            } finally { loading.classList.add('hidden'); }
         }
 
         function renderAssetTable() {
@@ -626,9 +630,32 @@
             
             if (currentAssetTab === 'source') {
                 if (assetShowAllColumns) {
-                    header.innerHTML = `<tr><th class="xls-th w-10 text-center sticky left-0 z-40">#</th><th class="xls-th" style="min-width:150px">Classification</th><th class="xls-th" style="min-width:150px">Category</th><th class="xls-th" style="min-width:180px">Article</th><th class="xls-th" style="min-width:300px">Description</th><th class="xls-th" style="min-width:80px">Unit</th><th class="xls-th" style="min-width:120px">Unit Cost</th><th class="xls-th" style="min-width:80px">Total Qty</th><th class="xls-th" style="min-width:150px">Total Cost</th><th class="xls-th" style="min-width:150px">Mode</th><th class="xls-th" style="min-width:200px">Source/Supplier</th><th class="xls-th" style="min-width:150px">Date Acquired</th></tr>`;
+                    header.innerHTML = `<tr>
+                        <th class="xls-th w-10 text-center sticky left-0 z-40">#</th>
+                        <th class="xls-th" style="min-width:140px">Classification</th>
+                        <th class="xls-th" style="min-width:140px">Category</th>
+                        <th class="xls-th" style="min-width:180px">Item</th>
+                        <th class="xls-th" style="min-width:260px">Description</th>
+                        <th class="xls-th" style="min-width:70px">Unit</th>
+                        <th class="xls-th" style="min-width:160px">Mode of Acquisition</th>
+                        <th class="xls-th" style="min-width:180px">Source Personnel</th>
+                        <th class="xls-th" style="min-width:180px">Personnel Position</th>
+                        <th class="xls-th" style="min-width:130px">Cost/Unit (₱)</th>
+                        <th class="xls-th" style="min-width:80px">Quantity</th>
+                        <th class="xls-th" style="min-width:110px">Useful Life (Yrs)</th>
+                        <th class="xls-th" style="min-width:140px">Acceptance Date</th>
+                        <th class="xls-th" style="min-width:130px">Condition</th>
+                    </tr>`;
                 } else {
-                    header.innerHTML = `<tr><th class="xls-th w-10 text-center sticky left-0 z-40">#</th><th class="xls-th" style="min-width:180px">Article</th><th class="xls-th" style="min-width:300px">Description</th><th class="xls-th" style="min-width:80px">Unit</th><th class="xls-th" style="min-width:80px">Total Qty</th><th class="xls-th" style="min-width:150px">Total Cost</th><th class="xls-th" style="min-width:150px">Date Acquired</th></tr>`;
+                    header.innerHTML = `<tr>
+                        <th class="xls-th w-10 text-center sticky left-0 z-40">#</th>
+                        <th class="xls-th" style="min-width:180px">Item</th>
+                        <th class="xls-th" style="min-width:260px">Description</th>
+                        <th class="xls-th" style="min-width:70px">Unit</th>
+                        <th class="xls-th" style="min-width:130px">Cost/Unit (₱)</th>
+                        <th class="xls-th" style="min-width:80px">Quantity</th>
+                        <th class="xls-th" style="min-width:130px">Condition</th>
+                    </tr>`;
                 }
             } else {
                 if (assetShowAllColumns) {
@@ -636,25 +663,27 @@
                         <th class="xls-th w-10 text-center sticky left-0 z-40">#</th>
                         <th class="xls-th" style="min-width:100px">Region</th>
                         <th class="xls-th" style="min-width:180px">Division</th>
+                        <th class="xls-th" style="min-width:220px">School/Office Search</th>
+                        <th class="xls-th" style="min-width:130px">Office/School ID</th>
                         <th class="xls-th" style="min-width:150px">Office/School Type</th>
-                        <th class="xls-th" style="min-width:100px">School ID</th>
-                        <th class="xls-th" style="min-width:250px">Office/School Name</th>
-                        <th class="xls-th" style="min-width:150px">Nature of Occupancy</th>
-                        <th class="xls-th" style="min-width:150px">Location</th>
+                        <th class="xls-th" style="min-width:230px">Office/School Name</th>
+                        <th class="xls-th" style="min-width:160px">Location</th>
+                        <th class="xls-th" style="min-width:220px">Employee Search</th>
+                        <th class="xls-th" style="min-width:130px">Employee ID</th>
+                        <th class="xls-th" style="min-width:200px">Employee Name</th>
+                        <th class="xls-th" style="min-width:180px">Employee Position</th>
+                        <th class="xls-th" style="min-width:130px">Employee Status</th>
                         <th class="xls-th" style="min-width:180px">Property No.</th>
-                        <th class="xls-th" style="min-width:140px">Condition</th>
-                        <th class="xls-th" style="min-width:150px">Acquisition Cost (₱)</th>
+                        <th class="xls-th" style="min-width:160px">Acquisition Cost (₱)</th>
                         <th class="xls-th" style="min-width:150px">Acquisition Date</th>
                     </tr>`;
                 } else {
                     header.innerHTML = `<tr>
                         <th class="xls-th w-10 text-center sticky left-0 z-40">#</th>
-                        <th class="xls-th" style="min-width:100px">School ID</th>
-                        <th class="xls-th" style="min-width:250px">Office/School Name</th>
-                        <th class="xls-th" style="min-width:150px">Location</th>
+                        <th class="xls-th" style="min-width:230px">Office/School Name</th>
+                        <th class="xls-th" style="min-width:200px">Employee Name</th>
                         <th class="xls-th" style="min-width:180px">Property No.</th>
-                        <th class="xls-th" style="min-width:140px">Condition</th>
-                        <th class="xls-th" style="min-width:150px">Acquisition Cost (₱)</th>
+                        <th class="xls-th" style="min-width:160px">Acquisition Cost (₱)</th>
                         <th class="xls-th" style="min-width:150px">Acquisition Date</th>
                     </tr>`;
                 }
@@ -675,46 +704,81 @@
                 const cell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const">${val || ''}</span></td>`;
                 const costCell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const font-black text-emerald-600 italic">₱ ${Number(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></td>`;
                 if (currentAssetTab === 'source') {
-                    if (assetShowAllColumns) {
-                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>${cell(row.classification, 'text-blue-600 font-bold')}${cell(row.category, 'text-slate-500')}${cell(row.article, 'font-bold text-slate-800')}${cell(row.description, 'text-slate-600 italic')}${cell(row.unit_of_measurement)}${costCell(row.asset_cost)}${cell(row.quantity, 'font-black text-amber-600')}${costCell(row.acquisition_cost, 'bg-inherit')}${cell(row.mode_of_acquisition)}${cell(row.acq_source, 'font-bold text-blue-600')}${cell(row.acceptance_date)}`;
+                    const srcCond = (row.condition || '').toLowerCase();
+                    let srcBadge;
+                    if (srcCond.includes('good') || srcCond.includes('serviceable')) {
+                        srcBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>${row.condition || 'Good Condition'}</span>`;
+                    } else if (srcCond.includes('repair')) {
+                        srcBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-amber-200 bg-amber-50 text-amber-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>${row.condition || 'Needs Repair'}</span>`;
+                    } else if (srcCond.includes('unserviceable')) {
+                        srcBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-rose-200 bg-rose-50 text-rose-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>${row.condition || 'Unserviceable'}</span>`;
                     } else {
-                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>${cell(row.article, 'font-bold text-slate-800')}${cell(row.description, 'text-slate-600 italic')}${cell(row.unit_of_measurement)}${cell(row.quantity, 'font-black text-amber-600')}${costCell(row.acquisition_cost, 'bg-inherit')}${cell(row.acceptance_date)}`;
+                        srcBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-slate-200 bg-slate-50 text-slate-400 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm">${row.condition || 'N/A'}</span>`;
+                    }
+                    const srcCondCell = `<td class="xls-td relative"><span class="xls-const">${srcBadge}</span></td>`;
+                    if (assetShowAllColumns) {
+                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
+                            ${cell(row.classification, 'text-blue-700 font-bold')}
+                            ${cell(row.category, 'text-slate-600')}
+                            ${cell(row.article, 'font-bold text-slate-800')}
+                            ${cell(row.description, 'text-slate-600 italic')}
+                            ${cell(row.unit_of_measurement)}
+                            ${cell(row.mode_of_acquisition, 'text-violet-700 font-bold')}
+                            ${cell(row.source_personnel, 'font-bold text-blue-600')}
+                            ${cell(row.personnel_position, 'text-slate-500 italic')}
+                            ${costCell(row.asset_cost)}
+                            ${cell(row.quantity, 'font-black text-amber-600')}
+                            ${cell(row.estimated_useful_life, 'font-black text-slate-600')}
+                            ${cell(row.acceptance_date)}
+                            ${srcCondCell}`;
+                    } else {
+                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
+                            ${cell(row.article, 'font-bold text-slate-800')}
+                            ${cell(row.description, 'text-slate-600 italic')}
+                            ${cell(row.unit_of_measurement)}
+                            ${costCell(row.asset_cost)}
+                            ${cell(row.quantity, 'font-black text-amber-600')}
+                            ${srcCondCell}`;
                     }
                 } else {
-                    let condBadge = '';
-                    const lowerCond = (row.condition || '').toLowerCase();
-                    if (lowerCond.includes('serviceable') || lowerCond.includes('good')) {
-                        condBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Serviceable</span>`;
-                    } else if (lowerCond.includes('repair')) {
-                        condBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-amber-200 bg-amber-50 text-amber-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>To Repair</span>`;
-                    } else if (lowerCond.includes('unserviceable') || lowerCond.includes('condemned') || lowerCond.includes('disposed')) {
-                        condBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-rose-200 bg-rose-50 text-rose-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Unserviceable</span>`;
+                    // Employee Status badge
+                    const empStatus = (row.custodian_status || '').toLowerCase();
+                    let empBadge;
+                    if (empStatus === 'active') {
+                        empBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Active</span>`;
+                    } else if (empStatus === 'on leave') {
+                        empBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-amber-200 bg-amber-50 text-amber-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>On Leave</span>`;
+                    } else if (empStatus === 'retired') {
+                        empBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-slate-200 bg-slate-100 text-slate-500 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>Retired</span>`;
+                    } else if (empStatus === 'inactive') {
+                        empBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-rose-200 bg-rose-50 text-rose-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Inactive</span>`;
                     } else {
-                        condBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-slate-200 bg-slate-50 text-slate-500 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm">${row.condition || 'N/A'}</span>`;
+                        empBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-slate-200 bg-slate-50 text-slate-400 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm">${row.custodian_status || 'N/A'}</span>`;
                     }
-                    const condCell = `<td class="xls-td relative"><span class="xls-const">${condBadge}</span></td>`;
-
+                    const empStatusCell = `<td class="xls-td relative"><span class="xls-const">${empBadge}</span></td>`;
                     if (assetShowAllColumns) {
                         tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
                             <td class="xls-td"><span class="xls-const">Region IX</span></td>
                             <td class="xls-td"><span class="xls-const">Division of Zamboanga City</span></td>
-                            ${cell(row.school_type)}
-                            ${cell(row.school_id)}
+                            ${cell(row.office_school_name, 'text-slate-500 italic')}
+                            ${cell(row.school_id, 'font-bold text-slate-700')}
+                            ${cell(row.school_type, 'text-slate-500')}
                             ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
-                            ${cell(row.nature_of_occupancy)}
                             ${cell(row.location)}
-                            ${cell(row.property_number)}
-                            ${condCell}
-                            ${costCell(row.acquisition_cost, 'bg-inherit')}
+                            ${cell(row.custodian_name, 'text-slate-500 italic')}
+                            ${cell(row.custodian_employee_id, 'font-bold text-slate-700')}
+                            ${cell(row.custodian_name, 'font-bold text-blue-700')}
+                            ${cell(row.custodian_position, 'text-slate-500 italic')}
+                            ${empStatusCell}
+                            ${cell(row.property_number, 'font-bold text-slate-800')}
+                            ${costCell(row.acquisition_cost)}
                             ${cell(row.acquisition_date)}`;
                     } else {
                         tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
-                            ${cell(row.school_id)}
                             ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
-                            ${cell(row.location)}
-                            ${cell(row.property_number)}
-                            ${condCell}
-                            ${costCell(row.acquisition_cost, 'bg-inherit')}
+                            ${cell(row.custodian_name, 'font-bold text-blue-700')}
+                            ${cell(row.property_number, 'font-bold text-slate-800')}
+                            ${costCell(row.acquisition_cost)}
                             ${cell(row.acquisition_date)}`;
                     }
                 }
@@ -858,6 +922,9 @@
             const tabParam = urlParams.get('tab');
             const conditionParam = urlParams.get('condition');
             
+            // Render headers immediately so columns are always visible
+            renderAssetTable();
+
             assetFetchFilters(); 
 
             // If condition param exists, find the matching button and click it to sync UI & fetch data

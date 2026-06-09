@@ -107,7 +107,10 @@ class ReportDownloadController extends Controller
             $query->where('items.name', $filters['article']);
         }
         if (!empty($filters['schoolName']) && $tab === 'distribution') {
-            $query->where('asset_assignments.location', $filters['schoolName']);
+            $query->where(function($q) use ($filters) {
+                $q->where('schools.name', 'LIKE', '%' . $filters['schoolName'] . '%')
+                  ->orWhere('offices.name', 'LIKE', '%' . $filters['schoolName'] . '%');
+            });
         }
         if (!empty($filters['source'])) {
             $query->where('acquisition_sources.name', $filters['source']);
@@ -160,9 +163,9 @@ class ReportDownloadController extends Controller
             if ($tab === 'distribution') {
                 if ($eCol === 'property_number') $dbCol = 'asset_assignments.property_number';
                 elseif ($eCol === 'school_id') $dbCol = 'cus.school_id';
-                elseif ($eCol === 'school_name') $dbCol = 'asset_assignments.location';
+                elseif ($eCol === 'school_name') $dbCol = 'schools.name';
                 elseif ($eCol === 'occupancy') $dbCol = DB::raw('NULL');
-                elseif ($eCol === 'location') $dbCol = 'asset_assignments.location';
+                elseif ($eCol === 'location') $dbCol = 'schools.location';
                 elseif ($eCol === 'acquisition_date') $dbCol = 'asset_assignments.acquisition_date';
             }
             
@@ -256,7 +259,9 @@ class ReportDownloadController extends Controller
         $classifications = (clone $baseQuery)->whereNotNull('classifications.name')->pluck('classifications.name')->unique()->sort()->values();
         $categories = (clone $baseQuery)->whereNotNull('categories.name')->pluck('categories.name')->unique()->sort()->values();
         $items = (clone $baseQuery)->whereNotNull('items.name')->pluck('items.name')->unique()->sort()->values();
-        $schools = (clone $baseQuery)->whereNotNull('asset_assignments.location')->where('asset_assignments.location', '!=', '')->pluck('asset_assignments.location')->unique()->sort()->values();
+        $schools = DB::table('schools')->whereNotNull('name')->where('name', '!=', '')->pluck('name')->merge(
+            DB::table('offices')->whereNotNull('name')->where('name', '!=', '')->pluck('name')
+        )->unique()->sort()->values();
         $sources = (clone $baseQuery)->whereNotNull('acquisition_sources.name')->pluck('acquisition_sources.name')->unique()->sort()->values();
         $modes = (clone $baseQuery)->whereNotNull('pm.name')->pluck('pm.name')->unique()->sort()->values();
 
