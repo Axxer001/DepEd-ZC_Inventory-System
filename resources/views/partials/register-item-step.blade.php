@@ -9,8 +9,7 @@
         <option value="Congressional Allocation">
         <option value="MOOE Fund">
     </datalist>
-    <datalist id="dl-locations"></datalist>
-    <datalist id="dl-employees"></datalist>
+    <!-- Datalists Removed: Replaced by custom custom dropdown component (.xls-custom-dd) -->
     <datalist id="dl-condition">
         <option value="Good Condition">
         <option value="Needs Repair">
@@ -127,16 +126,16 @@
                         <th class="xls-th w-10 text-center sticky left-0 z-10">#</th>
                         <th class="xls-th col-context" style="min-width:120px">Region</th>
                         <th class="xls-th col-context" style="min-width:160px">Division</th>
-                        <th class="xls-th col-identity" style="min-width:200px">School/Office Search</th>
-                        <th class="xls-th col-identity" style="min-width:120px">Office/School ID</th>
-                        <th class="xls-th col-identity" style="min-width:150px">Office/School Type</th>
-                        <th class="xls-th col-identity" style="min-width:180px">Office/School Name</th>
-                        <th class="xls-th col-identity" style="min-width:180px">Location</th>
                         <th class="xls-th col-personnel" style="min-width:200px">Employee Search</th>
                         <th class="xls-th col-personnel" style="min-width:120px">Employee ID</th>
                         <th class="xls-th col-personnel" style="min-width:150px">Employee Name</th>
                         <th class="xls-th col-personnel" style="min-width:150px">Employee Position</th>
                         <th class="xls-th col-personnel" style="min-width:120px">Employee Status</th>
+                        <th class="xls-th col-identity" style="min-width:200px">School/Office Search</th>
+                        <th class="xls-th col-identity" style="min-width:120px">Office/School ID</th>
+                        <th class="xls-th col-identity" style="min-width:150px">Office/School Type</th>
+                        <th class="xls-th col-identity" style="min-width:180px">Office/School Name</th>
+                        <th class="xls-th col-identity" style="min-width:180px">Location</th>
                         <th class="xls-th col-identity" style="min-width:150px">Property No.</th>
                         <th class="xls-th col-financial text-right" style="min-width:130px">Acquisition Cost (₱)</th>
                         <th class="xls-th col-temporal" style="min-width:140px">Acquisition Date</th>

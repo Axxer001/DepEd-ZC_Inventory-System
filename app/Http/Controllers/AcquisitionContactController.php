@@ -98,8 +98,9 @@ class AcquisitionContactController extends Controller
             ->join('asset_sources as asrc', 'aa.asset_source_id', '=', 'asrc.id')
             ->join('items as i', 'asrc.item_id', '=', 'i.id')
             ->join('categories as cat', 'i.category_id', '=', 'cat.id')
-            ->leftJoin('offices as o', 'aa.office_id', '=', 'o.id')
-            ->leftJoin('schools as s', 'o.school_id', '=', 's.id')
+            ->leftJoin('employees as e', 'aa.employee_id', '=', 'e.id')
+            ->leftJoin('offices as o', 'e.office_id', '=', 'o.id')
+            ->leftJoin('schools as s', 'e.school_id', '=', 's.id')
             ->where('asrc.acquisition_contact_id', $id)
             ->select(
                 'aa.id',

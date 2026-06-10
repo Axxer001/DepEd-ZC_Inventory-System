@@ -242,7 +242,7 @@
 
         async function custodianFetchFilters() {
             try {
-                const res = await fetch(`{{ route('api.custodians.filters') }}`);
+                const res = await fetch(`{{ route('api.employees.filters') }}`);
                 const data = await res.json();
                 
                 const renderChips = (containerId, list, themeClass) => {
@@ -287,7 +287,7 @@
                 search: document.getElementById('custodianFilterSearch').value
             };
             try {
-                const res = await fetch("{{ route('api.custodians.preview') }}", {
+                const res = await fetch("{{ route('api.employees.preview') }}", {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                     body: JSON.stringify({ filters: filters })
@@ -325,7 +325,7 @@
                 const displayNum = start + idx + 1;
                 const tr = document.createElement('tr');
                 tr.className = 'xls-row group border-b border-slate-100';
-                tr.onclick = () => window.location.href = '/admin/custodians/' + row.id;
+                tr.onclick = () => window.location.href = '{{ url('/admin/custodians') }}/' + row.id;
                 
                 const cell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const uppercase">${val || ''}</span></td>`;
                 const costCell = (val, color) => `<td class="xls-td relative text-right"><span class="xls-const font-black italic ${color} justify-end">₱ ${Number(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></td>`;

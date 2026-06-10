@@ -173,16 +173,16 @@
                             <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
                             <th class="xls-th col-context" style="min-width:120px">REGION</th>
                             <th class="xls-th col-context" style="min-width:180px">DIVISION</th>
-                            <th class="xls-th col-identity" style="min-width:200px">SCHOOL/OFFICE SEARCH</th>
-                            <th class="xls-th col-identity" style="min-width:120px">OFFICE/SCHOOL ID</th>
-                            <th class="xls-th col-identity" style="min-width:150px">OFFICE/SCHOOL TYPE</th>
-                            <th class="xls-th col-identity" style="min-width:180px">OFFICE/SCHOOL NAME</th>
-                            <th class="xls-th col-identity" style="min-width:180px">LOCATION</th>
                             <th class="xls-th col-personnel" style="min-width:200px">EMPLOYEE SEARCH</th>
                             <th class="xls-th col-personnel" style="min-width:120px">EMPLOYEE ID</th>
                             <th class="xls-th col-personnel" style="min-width:150px">EMPLOYEE NAME</th>
                             <th class="xls-th col-personnel" style="min-width:150px">EMPLOYEE POSITION</th>
                             <th class="xls-th col-personnel" style="min-width:120px">EMPLOYEE STATUS</th>
+                            <th class="xls-th col-identity" style="min-width:200px">SCHOOL/OFFICE SEARCH</th>
+                            <th class="xls-th col-identity" style="min-width:120px">OFFICE/SCHOOL ID</th>
+                            <th class="xls-th col-identity" style="min-width:150px">OFFICE/SCHOOL TYPE</th>
+                            <th class="xls-th col-identity" style="min-width:180px">OFFICE/SCHOOL NAME</th>
+                            <th class="xls-th col-identity" style="min-width:180px">LOCATION</th>
                             <th class="xls-th col-identity" style="min-width:150px">PROPERTY NO.</th>
                             <th class="xls-th col-financial text-right" style="min-width:130px">ACQUISITION COST (₱)</th>
                             <th class="xls-th col-temporal" style="min-width:140px">ACQUISITION DATE</th>
@@ -681,16 +681,22 @@
                 <td class="xls-td text-center sticky left-0 w-10 bg-white z-10"><span class="text-[10px] font-black text-slate-300">${displayNum}</span></td>
                 <td class="xls-td p-0 relative"><span class="xls-const w-full h-full flex items-center px-4">Region IX</span></td>
                 <td class="xls-td p-0 relative"><span class="xls-const w-full h-full flex items-center px-4">Division of Zamboanga City</span></td>
-                <td class="xls-td p-0 relative"><input type="text" oninput="autofillLocationEdit(${row.dist_id}, this.value)" data-id="${row.dist_id}" data-col="school_search" value="" autocomplete="off" class="xls-input w-full h-full bg-transparent" list="dl-locations" placeholder="Search Location..."></td>
-                ${renderCell('school_id', row.school_id, true)}
-                ${renderCell('school_type', row.school_type, true)}
-                ${renderCell('office_school_name', row.office_school_name, true)}
-                ${renderCell('location', row.location, true)}
-                <td class="xls-td p-0 relative"><input type="text" oninput="autofillEmployeeEdit(${row.dist_id}, this.value)" data-id="${row.dist_id}" data-col="employee_search" value="" autocomplete="off" class="xls-input w-full h-full bg-transparent" list="dl-employees" placeholder="Search Employee..."></td>
+                <td class="xls-td p-0 relative" style="overflow:visible">
+                    <input type="text" oninput="autofillEmployeeEdit(${row.dist_id}, this.value); filterEditEmpDropdown(${row.dist_id}, this.value)" onfocus="filterEditEmpDropdown(${row.dist_id}, this.value)" data-id="${row.dist_id}" data-col="employee_search" value="" autocomplete="off" class="xls-input w-full h-full bg-transparent" placeholder="Search Employee...">
+                    <div id="edit-emp-dd-${row.dist_id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
+                </td>
                 ${renderCell('custodian_employee_id', row.custodian_employee_id, true)}
                 ${renderCell('custodian_name', row.custodian_name, true)}
                 ${renderCell('custodian_position', row.custodian_position, true)}
                 ${renderCell('custodian_status', row.custodian_status, true)}
+                <td class="xls-td p-0 relative" style="overflow:visible">
+                    <input type="text" oninput="autofillLocationEdit(${row.dist_id}, this.value); filterEditLocDropdown(${row.dist_id}, this.value)" onfocus="filterEditLocDropdown(${row.dist_id}, this.value)" data-id="${row.dist_id}" data-col="school_search" value="" autocomplete="off" class="xls-input w-full h-full bg-transparent" placeholder="Search Location...">
+                    <div id="edit-loc-dd-${row.dist_id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
+                </td>
+                ${renderCell('school_id', row.school_id, true)}
+                ${renderCell('school_type', row.school_type, true)}
+                ${renderCell('office_school_name', row.office_school_name, true)}
+                ${renderCell('location', row.location, true)}
                 ${renderCell('property_number', row.property_number, false)}
                 <td class="xls-td p-0 relative"><input type="text" class="xls-input edit-readonly text-right w-full h-full" value="${totalCost}" readonly tabindex="-1"></td>
                 ${renderCell('acquisition_date', row.acquisition_date, false)}

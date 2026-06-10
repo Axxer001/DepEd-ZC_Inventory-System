@@ -331,7 +331,7 @@
         <div class="bg-slate-50 p-2 lg:p-3 rounded-2xl flex items-center gap-3 border border-slate-100 transition-all hover:border-red-100 hover:bg-white overflow-hidden" id="sidebarUserProfileCard">
             <div class="h-10 w-10 bg-[#c00000] rounded-2xl flex items-center justify-center text-white font-bold text-sm shadow-sm shadow-red-100 italic shrink-0 transition-transform hover:scale-105">A</div>
             <div class="overflow-hidden leading-tight sidebar-label hidden whitespace-nowrap flex-grow">
-                <p class="text-xs font-bold truncate text-slate-800">{{ auth()->user()->email }}</p>
+                <p class="text-xs font-bold truncate text-slate-800">{{ auth()->user()->email ?? 'guest@deped.gov.ph' }}</p>
                 <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none">Admin</p>
             </div>
             <form action="{{ route('logout') }}" method="POST" class="shrink-0 sidebar-label hidden">

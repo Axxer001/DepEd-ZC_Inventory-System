@@ -52,13 +52,11 @@ class SchoolController extends Controller
             ->where('br.school_id', $id)
             ->get();
 
-        // Asset assignments for this school (match via offices FK)
+        // Asset assignments for this school (match via employees FK)
         $assetStats = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
-            ->join('items', 'asrc.item_id', '=', 'items.id')
-            ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->leftJoin('offices', 'ad.office_id', '=', 'offices.id')
-            ->where('offices.school_id', $id)
+            ->join('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->where('e.school_id', $id)
             ->selectRaw('COUNT(ad.id) as total_assets, COALESCE(SUM(asrc.asset_cost), 0) as total_asset_value')
             ->first();
 
@@ -67,8 +65,8 @@ class SchoolController extends Controller
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->leftJoin('offices', 'ad.office_id', '=', 'offices.id')
-            ->where('offices.school_id', $id)
+            ->join('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->where('e.school_id', $id)
             ->select(
                 'ad.id',
                 'ad.property_number',

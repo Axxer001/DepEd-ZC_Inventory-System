@@ -663,16 +663,16 @@
                         <th class="xls-th w-10 text-center sticky left-0 z-40">#</th>
                         <th class="xls-th" style="min-width:100px">Region</th>
                         <th class="xls-th" style="min-width:180px">Division</th>
-                        <th class="xls-th" style="min-width:220px">School/Office Search</th>
-                        <th class="xls-th" style="min-width:130px">Office/School ID</th>
-                        <th class="xls-th" style="min-width:150px">Office/School Type</th>
-                        <th class="xls-th" style="min-width:230px">Office/School Name</th>
-                        <th class="xls-th" style="min-width:160px">Location</th>
                         <th class="xls-th" style="min-width:220px">Employee Search</th>
                         <th class="xls-th" style="min-width:130px">Employee ID</th>
                         <th class="xls-th" style="min-width:200px">Employee Name</th>
                         <th class="xls-th" style="min-width:180px">Employee Position</th>
                         <th class="xls-th" style="min-width:130px">Employee Status</th>
+                        <th class="xls-th" style="min-width:220px">School/Office Search</th>
+                        <th class="xls-th" style="min-width:130px">Office/School ID</th>
+                        <th class="xls-th" style="min-width:150px">Office/School Type</th>
+                        <th class="xls-th" style="min-width:230px">Office/School Name</th>
+                        <th class="xls-th" style="min-width:160px">Location</th>
                         <th class="xls-th" style="min-width:180px">Property No.</th>
                         <th class="xls-th" style="min-width:160px">Acquisition Cost (₱)</th>
                         <th class="xls-th" style="min-width:150px">Acquisition Date</th>
@@ -680,8 +680,8 @@
                 } else {
                     header.innerHTML = `<tr>
                         <th class="xls-th w-10 text-center sticky left-0 z-40">#</th>
-                        <th class="xls-th" style="min-width:230px">Office/School Name</th>
                         <th class="xls-th" style="min-width:200px">Employee Name</th>
+                        <th class="xls-th" style="min-width:230px">Office/School Name</th>
                         <th class="xls-th" style="min-width:180px">Property No.</th>
                         <th class="xls-th" style="min-width:160px">Acquisition Cost (₱)</th>
                         <th class="xls-th" style="min-width:150px">Acquisition Date</th>
@@ -760,23 +760,23 @@
                         tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
                             <td class="xls-td"><span class="xls-const">Region IX</span></td>
                             <td class="xls-td"><span class="xls-const">Division of Zamboanga City</span></td>
-                            ${cell(row.office_school_name, 'text-slate-500 italic')}
-                            ${cell(row.school_id, 'font-bold text-slate-700')}
-                            ${cell(row.school_type, 'text-slate-500')}
-                            ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
-                            ${cell(row.location)}
                             ${cell(row.custodian_name, 'text-slate-500 italic')}
                             ${cell(row.custodian_employee_id, 'font-bold text-slate-700')}
                             ${cell(row.custodian_name, 'font-bold text-blue-700')}
                             ${cell(row.custodian_position, 'text-slate-500 italic')}
                             ${empStatusCell}
+                            ${cell(row.office_school_name, 'text-slate-500 italic')}
+                            ${cell(row.school_id, 'font-bold text-slate-700')}
+                            ${cell(row.school_type, 'text-slate-500')}
+                            ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
+                            ${cell(row.location)}
                             ${cell(row.property_number, 'font-bold text-slate-800')}
                             ${costCell(row.acquisition_cost)}
                             ${cell(row.acquisition_date)}`;
                     } else {
                         tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
-                            ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
                             ${cell(row.custodian_name, 'font-bold text-blue-700')}
+                            ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
                             ${cell(row.property_number, 'font-bold text-slate-800')}
                             ${costCell(row.acquisition_cost)}
                             ${cell(row.acquisition_date)}`;

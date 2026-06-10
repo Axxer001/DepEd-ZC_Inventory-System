@@ -160,12 +160,14 @@ Route::middleware('auth')->group(function () {
 
     // --- Employee (formerly Custodian) Registry ---
     Route::get('/admin/employees', [EmployeeController::class, 'index'])->name('admin.employees');
+    Route::get('/admin/custodians', [EmployeeController::class, 'index'])->name('admin.custodians');
     Route::get('/api/employees/search', [EmployeeController::class, 'searchEmployees'])->name('api.employees.search');
     Route::get('/api/locations/search', [EmployeeController::class, 'searchLocations'])->name('api.locations.search');
 
     Route::post('/api/employees/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansPreview'])->name('api.employees.preview');
     Route::get('/api/employees/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansFilterOptions'])->name('api.employees.filters');
     Route::get('/admin/employees/{id}', [EmployeeController::class, 'profile'])->name('employees.profile');
+    Route::get('/admin/custodians/{id}', [EmployeeController::class, 'profile'])->name('custodians.profile');
 
 
 

@@ -28,6 +28,261 @@
         }
         document.addEventListener('DOMContentLoaded', initGlobalDatalists);
 
+        // ─── CUSTOM DROPDOWN HELPERS ──────────────────────────────────────
+        // Inject shared dropdown styles once
+        (function injectXlsDdStyles() {
+            if (document.getElementById('xls-dd-styles')) return;
+            const s = document.createElement('style');
+            s.id = 'xls-dd-styles';
+            s.textContent = `
+                .xls-custom-dd {
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    z-index: 9999;
+                    min-width: 260px;
+                    max-height: 220px;
+                    overflow-y: auto;
+                    background: #1e293b;
+                    border: 1.5px solid #334155;
+                    border-radius: 0.75rem;
+                    box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+                    margin-top: 3px;
+                    scrollbar-width: thin;
+                    scrollbar-color: #475569 transparent;
+                }
+                .xls-custom-dd::-webkit-scrollbar { width: 4px; }
+                .xls-custom-dd::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+                .xls-dd-item {
+                    padding: 8px 14px;
+                    font-size: 10px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.04em;
+                    color: #cbd5e1;
+                    cursor: pointer;
+                    border-bottom: 1px solid #334155;
+                    transition: background 0.12s, color 0.12s;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
+                .xls-dd-item:last-child { border-bottom: none; }
+                .xls-dd-item:hover, .xls-dd-item.focused { background: #c00000; color: #fff; }
+                .xls-dd-empty {
+                    padding: 10px 14px;
+                    font-size: 9px;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.08em;
+                    color: #475569;
+                    cursor: default;
+                }
+            `;
+            document.head.appendChild(s);
+        })();
+
+        function filterEmpDropdown(rowId, query) {
+            const dd = document.getElementById(`emp-dd-${rowId}`);
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalEmployees.slice(0, 50)
+                : globalEmployees.filter(e =>
+                    e.full_name.toLowerCase().includes(q) ||
+                    (e.employee_id && String(e.employee_id).toLowerCase().includes(q))
+                ).slice(0, 50);
+
+            if (matches.length === 0) {
+                dd.innerHTML = `<div class="xls-dd-empty">No employees found</div>`;
+            } else {
+                dd.innerHTML = matches.map(emp => `
+                    <div class="xls-dd-item" onmousedown="selectEmpForRow(${rowId}, this.getAttribute('data-name'))" data-name="${(emp.full_name||'').replace(/"/g, '&quot;')}">
+                        ${emp.full_name}
+                        <span style="color:#64748b;font-size:8px;margin-left:6px;">${emp.employee_id || ''}</span>
+                    </div>`).join('');
+            }
+            dd.style.display = 'block';
+        }
+
+        function selectEmpForRow(rowId, empFullName) {
+            const emp = globalEmployees.find(e => e.full_name === empFullName);
+            if (!emp) return;
+            
+            const inp = document.querySelector(`#dst-${rowId} input[data-col="employee-search"]`);
+            if (inp) inp.value = emp.full_name;
+            const dd = document.getElementById(`emp-dd-${rowId}`);
+            if (dd) dd.style.display = 'none';
+            syncState(rowId, 'employee-search', emp.full_name);
+
+            // Directly apply all employee + location fields
+            const row = allRowsData.find(r => r.id === rowId);
+            if (row) {
+                row['employee-id']     = emp.employee_id;
+                row['employee-name']   = emp.full_name;
+                row['employee-pos']    = emp.position || '';
+                row['employee-status'] = emp.status || '';
+                document.querySelector(`#dst-${rowId} input[data-col="employee-id"]`).value     = emp.employee_id || '';
+                document.querySelector(`#dst-${rowId} input[data-col="employee-name"]`).value   = emp.full_name || '';
+                document.querySelector(`#dst-${rowId} input[data-col="employee-pos"]`).value    = emp.position || '';
+                document.querySelector(`#dst-${rowId} input[data-col="employee-status"]`).value = emp.status || '';
+
+                if (emp.location_name) {
+                    row['school-search'] = emp.location_name;
+                    row['school-name']   = emp.location_name;
+                    row['school-id']     = emp.location_id || '';
+                    row['school-type']   = emp.location_type_label || emp.location_type || '';
+                    row['location']      = emp.location || 'Zamboanga City';
+                    const sSearch = document.querySelector(`#dst-${rowId} input[data-col="school-search"]`);
+                    const sName   = document.querySelector(`#dst-${rowId} input[data-col="school-name"]`);
+                    const sId     = document.querySelector(`#dst-${rowId} input[data-col="school-id"]`);
+                    const sType   = document.querySelector(`#dst-${rowId} input[data-col="school-type"]`);
+                    const sLoc    = document.querySelector(`#dst-${rowId} input[data-col="location"]`);
+                    if (sSearch) sSearch.value = emp.location_name;
+                    if (sName)   sName.value   = emp.location_name;
+                    if (sId)     sId.value     = emp.location_id || '';
+                    if (sType)   sType.value   = emp.location_type_label || emp.location_type || '';
+                    if (sLoc)    sLoc.value    = emp.location || 'Zamboanga City';
+                }
+            }
+        }
+
+        function filterLocDropdown(rowId, query) {
+            const dd = document.getElementById(`loc-dd-${rowId}`);
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalLocations.slice(0, 50)
+                : globalLocations.filter(l =>
+                    l.name.toLowerCase().includes(q) ||
+                    (l.entity_id && String(l.entity_id).toLowerCase().includes(q))
+                ).slice(0, 50);
+
+            if (matches.length === 0) {
+                dd.innerHTML = `<div class="xls-dd-empty">No locations found</div>`;
+            } else {
+                dd.innerHTML = matches.map(loc => `
+                    <div class="xls-dd-item" onmousedown="selectLocForRow(${rowId}, this.getAttribute('data-name'))" data-name="${(loc.name||'').replace(/"/g, '&quot;')}">
+                        ${loc.name}
+                        <span style="color:#64748b;font-size:8px;margin-left:6px;">${loc.entity_type || ''}</span>
+                    </div>`).join('');
+            }
+            dd.style.display = 'block';
+        }
+
+        function selectLocForRow(rowId, locName) {
+            const loc = globalLocations.find(l => l.name === locName);
+            if (!loc) return;
+            const inp = document.querySelector(`#dst-${rowId} input[data-col="school-search"]`);
+            if (inp) inp.value = loc.name;
+            const dd = document.getElementById(`loc-dd-${rowId}`);
+            if (dd) dd.style.display = 'none';
+            syncState(rowId, 'school-search', loc.name);
+            autofillLocation(rowId, loc.name);
+        }
+
+        // Close all custom dropdowns when clicking outside
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.xls-custom-dd') && !e.target.hasAttribute('data-col') && !e.target.closest('[id^="bSchoolSearch"]') && !e.target.closest('[id^="bEmployeeSearch"]')) {
+                document.querySelectorAll('.xls-custom-dd').forEach(dd => dd.style.display = 'none');
+            }
+        });
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.xls-custom-dd').forEach(dd => dd.style.display = 'none');
+            }
+        });
+
+        // ─── BULK ADD DROPDOWNS ──────────────────────────────────────
+        function filterBulkLocDropdown(query) {
+            const dd = document.getElementById('bulk-loc-dd');
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalLocations.slice(0, 50)
+                : globalLocations.filter(l => l.name.toLowerCase().includes(q) || (l.entity_id && String(l.entity_id).toLowerCase().includes(q))).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No locations found</div>`;
+            else dd.innerHTML = matches.map(loc => `<div class="xls-dd-item" onmousedown="selectBulkLoc(this.getAttribute('data-name'))" data-name="${(loc.name||'').replace(/"/g, '&quot;')}">${loc.name}<span style="color:#64748b;font-size:8px;margin-left:6px;">${loc.entity_type || ''}</span></div>`).join('');
+            dd.style.display = 'block';
+        }
+        function selectBulkLoc(locName) {
+            const loc = globalLocations.find(l => l.name === locName);
+            if (!loc) return;
+            const inp = document.getElementById('bSchoolSearch');
+            if (inp) inp.value = loc.name;
+            const dd = document.getElementById('bulk-loc-dd');
+            if (dd) dd.style.display = 'none';
+            bulkAutofillLocation(loc.name);
+        }
+
+        function filterBulkEmpDropdown(query) {
+            const dd = document.getElementById('bulk-emp-dd');
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalEmployees.slice(0, 50)
+                : globalEmployees.filter(e => e.full_name.toLowerCase().includes(q) || (e.employee_id && String(e.employee_id).toLowerCase().includes(q))).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No employees found</div>`;
+            else dd.innerHTML = matches.map(emp => `<div class="xls-dd-item" onmousedown="selectBulkEmp(this.getAttribute('data-name'))" data-name="${(emp.full_name||'').replace(/"/g, '&quot;')}">${emp.full_name}<span style="color:#64748b;font-size:8px;margin-left:6px;">${emp.employee_id || ''}</span></div>`).join('');
+            dd.style.display = 'block';
+        }
+        function selectBulkEmp(empFullName) {
+            const emp = globalEmployees.find(e => e.full_name === empFullName);
+            if (!emp) return;
+            const inp = document.getElementById('bEmployeeSearch');
+            if (inp) inp.value = emp.full_name;
+            const dd = document.getElementById('bulk-emp-dd');
+            if (dd) dd.style.display = 'none';
+            bulkAutofillEmployee(emp.full_name);
+        }
+
+        // ─── EDIT MODAL DROPDOWNS ──────────────────────────────────────
+        function filterEditLocDropdown(distId, query) {
+            const dd = document.getElementById(`edit-loc-dd-${distId}`);
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalLocations.slice(0, 50)
+                : globalLocations.filter(l => l.name.toLowerCase().includes(q) || (l.entity_id && String(l.entity_id).toLowerCase().includes(q))).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No locations found</div>`;
+            else dd.innerHTML = matches.map(loc => `<div class="xls-dd-item" onmousedown="selectEditLoc(${distId}, this.getAttribute('data-name'))" data-name="${(loc.name||'').replace(/"/g, '&quot;')}">${loc.name}<span style="color:#64748b;font-size:8px;margin-left:6px;">${loc.entity_type || ''}</span></div>`).join('');
+            dd.style.display = 'block';
+        }
+        function selectEditLoc(distId, locName) {
+            const loc = globalLocations.find(l => l.name === locName);
+            if (!loc) return;
+            const inp = document.querySelector(`input[data-col="school_search"][data-id="${distId}"]`);
+            if (inp) inp.value = loc.name;
+            const dd = document.getElementById(`edit-loc-dd-${distId}`);
+            if (dd) dd.style.display = 'none';
+            if (typeof autofillLocationEdit === 'function') autofillLocationEdit(distId, loc.name);
+        }
+
+        function filterEditEmpDropdown(distId, query) {
+            const dd = document.getElementById(`edit-emp-dd-${distId}`);
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalEmployees.slice(0, 50)
+                : globalEmployees.filter(e => e.full_name.toLowerCase().includes(q) || (e.employee_id && String(e.employee_id).toLowerCase().includes(q))).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No employees found</div>`;
+            else dd.innerHTML = matches.map(emp => `<div class="xls-dd-item" onmousedown="selectEditEmp(${distId}, this.getAttribute('data-name'))" data-name="${(emp.full_name||'').replace(/"/g, '&quot;')}">${emp.full_name}<span style="color:#64748b;font-size:8px;margin-left:6px;">${emp.employee_id || ''}</span></div>`).join('');
+            dd.style.display = 'block';
+        }
+        function selectEditEmp(distId, empFullName) {
+            const emp = globalEmployees.find(e => e.full_name === empFullName);
+            if (!emp) return;
+            const inp = document.querySelector(`input[data-col="employee_search"][data-id="${distId}"]`);
+            if (inp) inp.value = emp.full_name;
+            const dd = document.getElementById(`edit-emp-dd-${distId}`);
+            if (dd) dd.style.display = 'none';
+            if (typeof autofillEmployeeEdit === 'function') autofillEmployeeEdit(distId, emp.full_name);
+        }
+
         function autofillLocation(rowId, val) {
             const row = allRowsData.find(r => r.id === rowId);
             if(!row) return;
@@ -50,15 +305,36 @@
             if(!row) return;
             const emp = globalEmployees.find(e => e.full_name === val);
             if(emp) {
-                row['employee-id'] = emp.employee_id;
-                row['employee-name'] = emp.full_name;
-                row['employee-pos'] = emp.position || '';
+                row['employee-id']     = emp.employee_id;
+                row['employee-name']   = emp.full_name;
+                row['employee-pos']    = emp.position || '';
                 row['employee-status'] = emp.status || '';
 
-                document.querySelector(`#dst-${rowId} input[data-col="employee-id"]`).value = row['employee-id'];
-                document.querySelector(`#dst-${rowId} input[data-col="employee-name"]`).value = row['employee-name'];
-                document.querySelector(`#dst-${rowId} input[data-col="employee-pos"]`).value = row['employee-pos'];
+                document.querySelector(`#dst-${rowId} input[data-col="employee-id"]`).value     = row['employee-id'];
+                document.querySelector(`#dst-${rowId} input[data-col="employee-name"]`).value   = row['employee-name'];
+                document.querySelector(`#dst-${rowId} input[data-col="employee-pos"]`).value    = row['employee-pos'];
                 document.querySelector(`#dst-${rowId} input[data-col="employee-status"]`).value = row['employee-status'];
+
+                // Auto-fill the employee's assigned school/office into location fields
+                if (emp.location_name) {
+                    row['school-search'] = emp.location_name;
+                    row['school-name']   = emp.location_name;
+                    row['school-id']     = emp.location_id   || '';
+                    row['school-type']   = emp.location_type_label || emp.location_type || '';
+                    row['location']      = emp.location || 'Zamboanga City';
+
+                    const searchInp = document.querySelector(`#dst-${rowId} input[data-col="school-search"]`);
+                    const nameInp   = document.querySelector(`#dst-${rowId} input[data-col="school-name"]`);
+                    const idInp     = document.querySelector(`#dst-${rowId} input[data-col="school-id"]`);
+                    const typeInp   = document.querySelector(`#dst-${rowId} input[data-col="school-type"]`);
+                    const locInp    = document.querySelector(`#dst-${rowId} input[data-col="location"]`);
+
+                    if (searchInp) searchInp.value = emp.location_name;
+                    if (nameInp)   nameInp.value   = emp.location_name;
+                    if (idInp)     idInp.value     = row['school-id'];
+                    if (typeInp)   typeInp.value   = row['school-type'];
+                    if (locInp)    locInp.value    = row['location'];
+                }
             }
         }
 
@@ -363,20 +639,22 @@
                 </td>
                 <td class="xls-td col-context"><input type="text" value="${data.region}" class="xls-input bg-slate-50 dark:bg-white/5 cursor-not-allowed text-slate-500" readonly tabindex="-1"></td>
                 <td class="xls-td col-context"><input type="text" value="${data.division}" class="xls-input bg-slate-50 dark:bg-white/5 cursor-not-allowed text-slate-500" readonly tabindex="-1"></td>
-                <td class="xls-td col-identity">
-                    <input type="text" oninput="syncState(${data.id}, 'school-search', this.value); autofillLocation(${data.id}, this.value)" data-col="school-search" value="${data['school-search'] || ''}" autocomplete="off" class="xls-input" list="dl-locations" placeholder="Search Location...">
-                </td>
-                <td class="xls-td col-identity"><input type="text" data-col="school-id"   value="${data['school-id'] || ''}"   autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
-                <td class="xls-td col-identity"><input type="text" data-col="school-type" value="${data['school-type'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
-                <td class="xls-td col-identity"><input type="text" data-col="school-name" value="${data['school-name'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
-                <td class="xls-td col-identity"><input type="text" data-col="location"    value="${data.location || ''}"       autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
-                <td class="xls-td col-personnel">
-                    <input type="text" oninput="syncState(${data.id}, 'employee-search', this.value); autofillEmployee(${data.id}, this.value)" data-col="employee-search" value="${data['employee-search'] || ''}" autocomplete="off" class="xls-input" list="dl-employees" placeholder="Search Employee...">
+                <td class="xls-td col-personnel" style="position:relative;overflow:visible">
+                    <input type="text" oninput="syncState(${data.id}, 'employee-search', this.value); filterEmpDropdown(${data.id}, this.value)" onfocus="filterEmpDropdown(${data.id}, this.value)" data-col="employee-search" value="${data['employee-search'] || ''}" autocomplete="off" class="xls-input" placeholder="Search Employee...">
+                    <div id="emp-dd-${data.id}" class="xls-custom-dd" style="display:none;"></div>
                 </td>
                 <td class="xls-td col-personnel"><input type="text" data-col="employee-id" value="${data['employee-id'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
                 <td class="xls-td col-personnel"><input type="text" data-col="employee-name" value="${data['employee-name'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
                 <td class="xls-td col-personnel"><input type="text" data-col="employee-pos" value="${data['employee-pos'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
                 <td class="xls-td col-personnel"><input type="text" data-col="employee-status" value="${data['employee-status'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
+                <td class="xls-td col-identity" style="position:relative;overflow:visible">
+                    <input type="text" oninput="syncState(${data.id}, 'school-search', this.value); filterLocDropdown(${data.id}, this.value)" onfocus="filterLocDropdown(${data.id}, this.value)" data-col="school-search" value="${data['school-search'] || ''}" autocomplete="off" class="xls-input" placeholder="Search Location...">
+                    <div id="loc-dd-${data.id}" class="xls-custom-dd" style="display:none;"></div>
+                </td>
+                <td class="xls-td col-identity"><input type="text" data-col="school-id"   value="${data['school-id'] || ''}"   autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
+                <td class="xls-td col-identity"><input type="text" data-col="school-type" value="${data['school-type'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
+                <td class="xls-td col-identity"><input type="text" data-col="school-name" value="${data['school-name'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
+                <td class="xls-td col-identity"><input type="text" data-col="location"    value="${data.location || ''}"       autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
                 <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'property-no', this.value)" data-col="property-no" value="${data['property-no']}" autocomplete="off" class="xls-input" placeholder="Property number" id="dst-prop-${data.id}"></td>
                 <td class="xls-td col-financial"><input type="number" id="dst-cost-${data.id}" data-col="cost-total" value="${total}" autocomplete="off" class="xls-input text-right bg-slate-50 dark:bg-white/5 cursor-not-allowed" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1"></td>
                 <td class="xls-td col-temporal"><input type="date"   oninput="syncState(${data.id}, 'acquisition-date', this.value)" data-col="acquisition-date" value="${data['acquisition-date']}" autocomplete="off" class="xls-input"></td>
@@ -491,14 +769,24 @@
         function bulkAutofillEmployee(val) {
             const emp = globalEmployees.find(e => e.full_name === val);
             if(emp) {
-                document.getElementById('bEmployeeId').value = emp.employee_id;
-                document.getElementById('bEmployeeName').value = emp.full_name;
-                document.getElementById('bEmployeePos').value = emp.position || '';
+                document.getElementById('bEmployeeId').value     = emp.employee_id;
+                document.getElementById('bEmployeeName').value   = emp.full_name;
+                document.getElementById('bEmployeePos').value    = emp.position || '';
                 document.getElementById('bEmployeeStatus').value = emp.status || '';
+
+                // Auto-fill the employee's assigned school/office into location fields
+                if (emp.location_name) {
+                    const bSchoolSearch = document.getElementById('bSchoolSearch');
+                    if (bSchoolSearch) bSchoolSearch.value = emp.location_name;
+                    document.getElementById('bSchoolName').value = emp.location_name;
+                    document.getElementById('bSchoolId').value   = emp.location_id || '';
+                    document.getElementById('bSchoolType').value = emp.location_type_label || emp.location_type || '';
+                    document.getElementById('bLocation').value   = emp.location || 'Zamboanga City';
+                }
             } else {
-                document.getElementById('bEmployeeId').value = '';
-                document.getElementById('bEmployeeName').value = '';
-                document.getElementById('bEmployeePos').value = '';
+                document.getElementById('bEmployeeId').value     = '';
+                document.getElementById('bEmployeeName').value   = '';
+                document.getElementById('bEmployeePos').value    = '';
                 document.getElementById('bEmployeeStatus').value = '';
             }
         }
