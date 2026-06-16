@@ -260,13 +260,19 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-8">
-                    <div class="relative space-y-2">
+                    <div class="relative space-y-2" style="position:relative;overflow:visible">
                         <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Classification</label>
-                        <input type="text" id="ebClassification" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                        <input type="text" id="ebClassification" autocomplete="off" 
+                            oninput="filterBulkEditClassDropdown(this.value)" onfocus="filterBulkEditClassDropdown(this.value)"
+                            class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Search Classification...">
+                        <div id="bulk-edit-class-dd" class="xls-custom-dd" style="display:none; width:100%;"></div>
                     </div>
-                    <div class="relative space-y-2">
+                    <div class="relative space-y-2" style="position:relative;overflow:visible">
                         <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Category</label>
-                        <input type="text" id="ebCategory" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                        <input type="text" id="ebCategory" autocomplete="off" 
+                            oninput="filterBulkEditCatDropdown(this.value)" onfocus="filterBulkEditCatDropdown(this.value)"
+                            class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Search Category...">
+                        <div id="bulk-edit-cat-dd" class="xls-custom-dd" style="display:none; width:100%;"></div>
                     </div>
                     <div class="relative space-y-2">
                         <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Item</label>
@@ -635,6 +641,22 @@
                     return `<td class="xls-td p-0 relative"><input type="text" data-id="${row.dist_id}" data-col="${col}" class="xls-input edit-readonly w-full h-full" value="${safeVal}" readonly tabindex="-1">${badgeHtml}</td>`;
                 }
                 
+                if (col === 'classification') {
+                    return `<td class="xls-td p-0 relative" style="overflow:visible">
+                        <input type="text" data-id="${row.dist_id}" data-col="classification" value="${safeVal}" oninput="syncEditClass(${row.dist_id}, this.value); filterEditClassDropdown(${row.dist_id}, this.value)" onfocus="filterEditClassDropdown(${row.dist_id}, this.value)" autocomplete="off" class="xls-input w-full h-full bg-transparent">
+                        <div id="edit-class-dd-${row.dist_id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
+                        ${badgeHtml}
+                    </td>`;
+                }
+
+                if (col === 'category') {
+                    return `<td class="xls-td p-0 relative" style="overflow:visible">
+                        <input type="text" data-id="${row.dist_id}" data-col="category" value="${safeVal}" oninput="syncEditCat(${row.dist_id}, this.value); filterEditCatDropdown(${row.dist_id}, this.value)" onfocus="filterEditCatDropdown(${row.dist_id}, this.value)" autocomplete="off" class="xls-input w-full h-full bg-transparent">
+                        <div id="edit-cat-dd-${row.dist_id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
+                        ${badgeHtml}
+                    </td>`;
+                }
+
                 if (col === 'remarks') {
                     return `<td class="xls-td p-0 relative">
                         <select data-id="${row.dist_id}" data-col="${col}" onchange="syncEditCell(this)" class="xls-input w-full h-full bg-transparent">
@@ -711,6 +733,32 @@
         document.getElementById('editTotalPages').textContent = totalPages;
         document.getElementById('editPrevBtn').disabled = editCurrentPage === 1;
         document.getElementById('editNextBtn').disabled = editCurrentPage === totalPages;
+    }
+
+    function syncEditClass(distId, val) {
+        const row = editAllData.find(r => r.dist_id === distId);
+        if (row) {
+            const oldVal = row['classification'] ?? '';
+            if (String(oldVal).trim() !== String(val).trim()) {
+                editUndoStack.push({ type: 'single', rowId: distId, col: 'classification', oldVal: oldVal, newVal: val });
+                row['classification'] = val;
+                editRedoStack = [];
+                updateEditUndoBtn();
+            }
+        }
+    }
+
+    function syncEditCat(distId, val) {
+        const row = editAllData.find(r => r.dist_id === distId);
+        if (row) {
+            const oldVal = row['category'] ?? '';
+            if (String(oldVal).trim() !== String(val).trim()) {
+                editUndoStack.push({ type: 'single', rowId: distId, col: 'category', oldVal: oldVal, newVal: val });
+                row['category'] = val;
+                editRedoStack = [];
+                updateEditUndoBtn();
+            }
+        }
     }
 
     function syncEditCell(input) {

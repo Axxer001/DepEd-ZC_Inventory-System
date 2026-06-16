@@ -8,6 +8,9 @@
         // Global datalist caches
         let globalLocations = [];
         let globalEmployees = [];
+        let globalClassifications = [];
+        let globalCategories = [];
+        let globalAcqContacts = [];
 
         async function initGlobalDatalists() {
             try {
@@ -24,6 +27,25 @@
                 if(dlEmp) {
                     dlEmp.innerHTML = globalEmployees.map(emp => `<option value="${emp.full_name}"></option>`).join('');
                 }
+
+                const classRes = await fetch('/api/classifications/search?q=');
+                globalClassifications = await classRes.json();
+
+                const catRes = await fetch('/api/categories/search?q=');
+                globalCategories = await catRes.json();
+
+                try {
+                    const contactRes = await fetch('/api/supplier-contacts/preview', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                        },
+                        body: JSON.stringify({ filters: {} })
+                    });
+                    const contactData = await contactRes.json();
+                    globalAcqContacts = contactData.rows || [];
+                } catch (err) { console.error('Failed to fetch acquisition contacts', err); }
             } catch (e) { console.error('Failed to init datalists', e); }
         }
         document.addEventListener('DOMContentLoaded', initGlobalDatalists);
@@ -181,6 +203,67 @@
             autofillLocation(rowId, loc.name);
         }
 
+        window.filterPersonnelDropdown = function(rowId, query) {
+            const dd = document.getElementById(`personnel-dd-${rowId}`);
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            
+            // Filter employees
+            const matchedEmployees = globalEmployees.filter(e =>
+                e.full_name.toLowerCase().includes(q) ||
+                (e.employee_id && String(e.employee_id).toLowerCase().includes(q))
+            ).map(e => ({
+                name: e.full_name,
+                position: e.position || '',
+                type: 'Employee',
+                extra: e.employee_id ? `ID: ${e.employee_id}` : ''
+            }));
+
+            // Filter acquisition contacts
+            const matchedContacts = globalAcqContacts.filter(c =>
+                c.name.toLowerCase().includes(q) ||
+                (c.organization && c.organization.toLowerCase().includes(q))
+            ).map(c => ({
+                name: c.name,
+                position: c.position || '',
+                type: 'Supplier Contact',
+                extra: c.organization || ''
+            }));
+
+            const matches = [...matchedEmployees, ...matchedContacts].slice(0, 50);
+
+            if (matches.length === 0) {
+                dd.innerHTML = `<div class="xls-dd-empty">No personnel found</div>`;
+            } else {
+                dd.innerHTML = matches.map(p => {
+                    const nameEscaped = p.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const posEscaped = p.position.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const extraDisplay = p.extra ? `<span style="color:#64748b;font-size:8px;margin-left:6px;">(${p.extra})</span>` : '';
+                    return `
+                        <div class="xls-dd-item" onmousedown="selectPersonnelForRow(${rowId}, '${nameEscaped}', '${posEscaped}')">
+                            ${p.name}
+                            <span style="color:#f59e0b;font-size:8px;margin-left:6px;font-weight:bold;">${p.type}</span>
+                            ${extraDisplay}
+                        </div>`;
+                }).join('');
+            }
+            dd.style.display = 'block';
+        }
+
+        window.selectPersonnelForRow = function(rowId, name, position) {
+            const inpName = document.querySelector(`#src-${rowId} input[data-col="personnel"]`);
+            const inpPos = document.querySelector(`#src-${rowId} input[data-col="position"]`);
+            
+            if (inpName) inpName.value = name;
+            if (inpPos) inpPos.value = position;
+
+            const dd = document.getElementById(`personnel-dd-${rowId}`);
+            if (dd) dd.style.display = 'none';
+
+            syncState(rowId, 'personnel', name);
+            syncState(rowId, 'position', position);
+        }
+
         // Close all custom dropdowns when clicking outside
         document.addEventListener('click', e => {
             if (!e.target.closest('.xls-custom-dd') && !e.target.hasAttribute('data-col') && !e.target.closest('[id^="bSchoolSearch"]') && !e.target.closest('[id^="bEmployeeSearch"]')) {
@@ -192,6 +275,64 @@
                 document.querySelectorAll('.xls-custom-dd').forEach(dd => dd.style.display = 'none');
             }
         });
+
+        window.filterBulkPersonnelDropdown = function(query) {
+            const dd = document.getElementById('bulk-personnel-dd');
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            
+            // Filter employees
+            const matchedEmployees = globalEmployees.filter(e =>
+                e.full_name.toLowerCase().includes(q) ||
+                (e.employee_id && String(e.employee_id).toLowerCase().includes(q))
+            ).map(e => ({
+                name: e.full_name,
+                position: e.position || '',
+                type: 'Employee',
+                extra: e.employee_id ? `ID: ${e.employee_id}` : ''
+            }));
+
+            // Filter acquisition contacts
+            const matchedContacts = globalAcqContacts.filter(c =>
+                c.name.toLowerCase().includes(q) ||
+                (c.organization && c.organization.toLowerCase().includes(q))
+            ).map(c => ({
+                name: c.name,
+                position: c.position || '',
+                type: 'Supplier Contact',
+                extra: c.organization || ''
+            }));
+
+            const matches = [...matchedEmployees, ...matchedContacts].slice(0, 50);
+
+            if (matches.length === 0) {
+                dd.innerHTML = `<div class="xls-dd-empty">No personnel found</div>`;
+            } else {
+                dd.innerHTML = matches.map(p => {
+                    const nameEscaped = p.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const posEscaped = p.position.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const extraDisplay = p.extra ? `<span style="color:#64748b;font-size:8px;margin-left:6px;">(${p.extra})</span>` : '';
+                    return `
+                        <div class="xls-dd-item" onmousedown="selectBulkPersonnel('${nameEscaped}', '${posEscaped}')">
+                            ${p.name}
+                            <span style="color:#f59e0b;font-size:8px;margin-left:6px;font-weight:bold;">${p.type}</span>
+                            ${extraDisplay}
+                        </div>`;
+                }).join('');
+            }
+            dd.style.display = 'block';
+        }
+
+        window.selectBulkPersonnel = function(name, position) {
+            const inpName = document.getElementById('bPersonnel');
+            const inpPos = document.getElementById('bPosition');
+            
+            if (inpName) inpName.value = name;
+            if (inpPos) inpPos.value = position;
+
+            const dd = document.getElementById('bulk-personnel-dd');
+            if (dd) dd.style.display = 'none';
+        }
 
         // ─── BULK ADD DROPDOWNS ──────────────────────────────────────
         function filterBulkLocDropdown(query) {
@@ -281,6 +422,285 @@
             const dd = document.getElementById(`edit-emp-dd-${distId}`);
             if (dd) dd.style.display = 'none';
             if (typeof autofillEmployeeEdit === 'function') autofillEmployeeEdit(distId, emp.full_name);
+        }
+
+        // --- CLASSIFICATION AND CATEGORY DROPDOWN FUNCTIONS ---
+        // 1. Standard ADD ITEMS
+        window.filterClassDropdown = function(rowId, query) {
+            const dd = document.getElementById(`class-dd-${rowId}`);
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalClassifications.slice(0, 50)
+                : globalClassifications.filter(c => c.name.toLowerCase().includes(q)).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No classifications found</div>`;
+            else dd.innerHTML = matches.map(c => `<div class="xls-dd-item" onmousedown="selectClass(${rowId}, this.getAttribute('data-name'))" data-name="${c.name.replace(/"/g, '&quot;')}">${c.name}</div>`).join('');
+            dd.style.display = 'block';
+        }
+        window.selectClass = function(rowId, className) {
+            const inp = document.querySelector(`#src-${rowId} input[data-col="classification"]`);
+            if (inp) {
+                inp.value = className;
+                syncState(rowId, 'classification', className);
+            }
+            const dd = document.getElementById(`class-dd-${rowId}`);
+            if (dd) dd.style.display = 'none';
+
+            // Clear category if not matching
+            const catInp = document.querySelector(`#src-${rowId} input[data-col="category"]`);
+            if (catInp && catInp.value) {
+                const cat = globalCategories.find(c => c.name === catInp.value);
+                if (cat && cat.classification_name !== className) {
+                    catInp.value = '';
+                    syncState(rowId, 'category', '');
+                }
+            }
+        }
+
+        window.filterCatDropdown = function(rowId, query) {
+            const dd = document.getElementById(`cat-dd-${rowId}`);
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            
+            const classInp = document.querySelector(`#src-${rowId} input[data-col="classification"]`);
+            const className = classInp ? classInp.value.trim() : '';
+
+            let pool = globalCategories;
+            if (className !== '') {
+                pool = globalCategories.filter(c => c.classification_name && c.classification_name.toLowerCase() === className.toLowerCase());
+            }
+
+            const matches = q.length === 0
+                ? pool.slice(0, 50)
+                : pool.filter(c => c.name.toLowerCase().includes(q)).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No categories found</div>`;
+            else dd.innerHTML = matches.map(c => `<div class="xls-dd-item" onmousedown="selectCat(${rowId}, this.getAttribute('data-name'))" data-name="${c.name.replace(/"/g, '&quot;')}">${c.name}<span style="color:#64748b;font-size:8px;margin-left:6px;">${c.classification_name || ''}</span></div>`).join('');
+            dd.style.display = 'block';
+        }
+        window.selectCat = function(rowId, catName) {
+            const cat = globalCategories.find(c => c.name === catName);
+            if (!cat) return;
+
+            const inp = document.querySelector(`#src-${rowId} input[data-col="category"]`);
+            if (inp) {
+                inp.value = catName;
+                syncState(rowId, 'category', catName);
+            }
+            const dd = document.getElementById(`cat-dd-${rowId}`);
+            if (dd) dd.style.display = 'none';
+
+            // Autofill classification
+            const classInp = document.querySelector(`#src-${rowId} input[data-col="classification"]`);
+            if (classInp && cat.classification_name) {
+                classInp.value = cat.classification_name;
+                syncState(rowId, 'classification', cat.classification_name);
+            }
+        }
+
+        // 2. BULK ADD ITEMS
+        window.filterBulkClassDropdown = function(query) {
+            const dd = document.getElementById('bulk-class-dd');
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalClassifications.slice(0, 50)
+                : globalClassifications.filter(c => c.name.toLowerCase().includes(q)).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No classifications found</div>`;
+            else dd.innerHTML = matches.map(c => `<div class="xls-dd-item" onmousedown="selectBulkClass(this.getAttribute('data-name'))" data-name="${c.name.replace(/"/g, '&quot;')}">${c.name}</div>`).join('');
+            dd.style.display = 'block';
+        }
+        window.selectBulkClass = function(className) {
+            const inp = document.getElementById('bClassification');
+            if (inp) inp.value = className;
+            const dd = document.getElementById('bulk-class-dd');
+            if (dd) dd.style.display = 'none';
+
+            // Clear category if not matching
+            const catInp = document.getElementById('bCategory');
+            if (catInp && catInp.value) {
+                const cat = globalCategories.find(c => c.name === catInp.value);
+                if (cat && cat.classification_name !== className) {
+                    catInp.value = '';
+                }
+            }
+        }
+
+        window.filterBulkCatDropdown = function(query) {
+            const dd = document.getElementById('bulk-cat-dd');
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            
+            const classInp = document.getElementById('bClassification');
+            const className = classInp ? classInp.value.trim() : '';
+
+            let pool = globalCategories;
+            if (className !== '') {
+                pool = globalCategories.filter(c => c.classification_name && c.classification_name.toLowerCase() === className.toLowerCase());
+            }
+
+            const matches = q.length === 0
+                ? pool.slice(0, 50)
+                : pool.filter(c => c.name.toLowerCase().includes(q)).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No categories found</div>`;
+            else dd.innerHTML = matches.map(c => `<div class="xls-dd-item" onmousedown="selectBulkCat(this.getAttribute('data-name'))" data-name="${c.name.replace(/"/g, '&quot;')}">${c.name}<span style="color:#64748b;font-size:8px;margin-left:6px;">${c.classification_name || ''}</span></div>`).join('');
+            dd.style.display = 'block';
+        }
+        window.selectBulkCat = function(catName) {
+            const cat = globalCategories.find(c => c.name === catName);
+            if (!cat) return;
+
+            const inp = document.getElementById('bCategory');
+            if (inp) inp.value = catName;
+            const dd = document.getElementById('bulk-cat-dd');
+            if (dd) dd.style.display = 'none';
+
+            const classInp = document.getElementById('bClassification');
+            if (classInp && cat.classification_name) {
+                classInp.value = cat.classification_name;
+            }
+        }
+
+        // 3. EDIT ITEMS
+        window.filterEditClassDropdown = function(distId, query) {
+            const dd = document.getElementById(`edit-class-dd-${distId}`);
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalClassifications.slice(0, 50)
+                : globalClassifications.filter(c => c.name.toLowerCase().includes(q)).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No classifications found</div>`;
+            else dd.innerHTML = matches.map(c => `<div class="xls-dd-item" onmousedown="selectEditClass(${distId}, this.getAttribute('data-name'))" data-name="${c.name.replace(/"/g, '&quot;')}">${c.name}</div>`).join('');
+            dd.style.display = 'block';
+        }
+        window.selectEditClass = function(distId, className) {
+            const inp = document.querySelector(`input[data-col="classification"][data-id="${distId}"]`);
+            if (inp) inp.value = className;
+            if (typeof syncEditClass === 'function') syncEditClass(distId, className);
+
+            const dd = document.getElementById(`edit-class-dd-${distId}`);
+            if (dd) dd.style.display = 'none';
+
+            // Clear category if different
+            const catInp = document.querySelector(`input[data-col="category"][data-id="${distId}"]`);
+            if (catInp && catInp.value) {
+                const cat = globalCategories.find(c => c.name === catInp.value);
+                if (cat && cat.classification_name !== className) {
+                    catInp.value = '';
+                    if (typeof syncEditCat === 'function') syncEditCat(distId, '');
+                }
+            }
+            if (typeof renderEditTable === 'function') renderEditTable();
+        }
+
+        window.filterEditCatDropdown = function(distId, query) {
+            const dd = document.getElementById(`edit-cat-dd-${distId}`);
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+
+            const classInp = document.querySelector(`input[data-col="classification"][data-id="${distId}"]`);
+            const className = classInp ? classInp.value.trim() : '';
+
+            let pool = globalCategories;
+            if (className !== '') {
+                pool = globalCategories.filter(c => c.classification_name && c.classification_name.toLowerCase() === className.toLowerCase());
+            }
+
+            const matches = q.length === 0
+                ? pool.slice(0, 50)
+                : pool.filter(c => c.name.toLowerCase().includes(q)).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No categories found</div>`;
+            else dd.innerHTML = matches.map(c => `<div class="xls-dd-item" onmousedown="selectEditCat(${distId}, this.getAttribute('data-name'))" data-name="${c.name.replace(/"/g, '&quot;')}">${c.name}<span style="color:#64748b;font-size:8px;margin-left:6px;">${c.classification_name || ''}</span></div>`).join('');
+            dd.style.display = 'block';
+        }
+        window.selectEditCat = function(distId, catName) {
+            const cat = globalCategories.find(c => c.name === catName);
+            if (!cat) return;
+
+            const inp = document.querySelector(`input[data-col="category"][data-id="${distId}"]`);
+            if (inp) inp.value = catName;
+            if (typeof syncEditCat === 'function') syncEditCat(distId, catName);
+
+            const dd = document.getElementById(`edit-cat-dd-${distId}`);
+            if (dd) dd.style.display = 'none';
+
+            // Autofill classification
+            const classInp = document.querySelector(`input[data-col="classification"][data-id="${distId}"]`);
+            if (classInp && cat.classification_name) {
+                classInp.value = cat.classification_name;
+                if (typeof syncEditClass === 'function') syncEditClass(distId, cat.classification_name);
+            }
+            if (typeof renderEditTable === 'function') renderEditTable();
+        }
+
+        // 4. BULK EDIT ITEMS
+        window.filterBulkEditClassDropdown = function(query) {
+            const dd = document.getElementById('bulk-edit-class-dd');
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalClassifications.slice(0, 50)
+                : globalClassifications.filter(c => c.name.toLowerCase().includes(q)).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No classifications found</div>`;
+            else dd.innerHTML = matches.map(c => `<div class="xls-dd-item" onmousedown="selectBulkEditClass(this.getAttribute('data-name'))" data-name="${c.name.replace(/"/g, '&quot;')}">${c.name}</div>`).join('');
+            dd.style.display = 'block';
+        }
+        window.selectBulkEditClass = function(className) {
+            const inp = document.getElementById('ebClassification');
+            if (inp) inp.value = className;
+            const dd = document.getElementById('bulk-edit-class-dd');
+            if (dd) dd.style.display = 'none';
+
+            // Clear category if not matching
+            const catInp = document.getElementById('ebCategory');
+            if (catInp && catInp.value) {
+                const cat = globalCategories.find(c => c.name === catInp.value);
+                if (cat && cat.classification_name !== className) {
+                    catInp.value = '';
+                }
+            }
+        }
+
+        window.filterBulkEditCatDropdown = function(query) {
+            const dd = document.getElementById('bulk-edit-cat-dd');
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            
+            const classInp = document.getElementById('ebClassification');
+            const className = classInp ? classInp.value.trim() : '';
+
+            let pool = globalCategories;
+            if (className !== '') {
+                pool = globalCategories.filter(c => c.classification_name && c.classification_name.toLowerCase() === className.toLowerCase());
+            }
+
+            const matches = q.length === 0
+                ? pool.slice(0, 50)
+                : pool.filter(c => c.name.toLowerCase().includes(q)).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No categories found</div>`;
+            else dd.innerHTML = matches.map(c => `<div class="xls-dd-item" onmousedown="selectBulkEditCat(this.getAttribute('data-name'))" data-name="${c.name.replace(/"/g, '&quot;')}">${c.name}<span style="color:#64748b;font-size:8px;margin-left:6px;">${c.classification_name || ''}</span></div>`).join('');
+            dd.style.display = 'block';
+        }
+        window.selectBulkEditCat = function(catName) {
+            const cat = globalCategories.find(c => c.name === catName);
+            if (!cat) return;
+
+            const inp = document.getElementById('ebCategory');
+            if (inp) inp.value = catName;
+            const dd = document.getElementById('bulk-edit-cat-dd');
+            if (dd) dd.style.display = 'none';
+
+            const classInp = document.getElementById('ebClassification');
+            if (classInp && cat.classification_name) {
+                classInp.value = cat.classification_name;
+            }
         }
 
         function autofillLocation(rowId, val) {
@@ -600,13 +1020,22 @@
                 <td class="xls-td xls-sticky-col text-center sticky left-0 w-10" style="background:inherit">
                     <span class="row-num text-[10px] font-black text-slate-300">${displayNum}</span>
                 </td>
-                <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'classification', this.value)" data-col="classification" value="${data.classification}" autocomplete="off" class="xls-input" placeholder="e.g. Semi-Expendable"></td>
-                <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'category', this.value)"       data-col="category"       value="${data.category}"       autocomplete="off" class="xls-input" placeholder="Category"></td>
+                <td class="xls-td col-identity" style="position:relative;overflow:visible">
+                    <input type="text" oninput="syncState(${data.id}, 'classification', this.value); filterClassDropdown(${data.id}, this.value)" onfocus="filterClassDropdown(${data.id}, this.value)" data-col="classification" value="${data.classification}" autocomplete="off" class="xls-input" placeholder="Search Classification...">
+                    <div id="class-dd-${data.id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
+                </td>
+                <td class="xls-td col-identity" style="position:relative;overflow:visible">
+                    <input type="text" oninput="syncState(${data.id}, 'category', this.value); filterCatDropdown(${data.id}, this.value)" onfocus="filterCatDropdown(${data.id}, this.value)" data-col="category" value="${data.category}" autocomplete="off" class="xls-input" placeholder="Search Category...">
+                    <div id="cat-dd-${data.id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
+                </td>
                 <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'item', this.value)"           data-col="item"           value="${data.item}"           autocomplete="off" class="xls-input" placeholder="Item"></td>
                 <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'description', this.value)"    data-col="description"    value="${data.description}"    autocomplete="off" class="xls-input" placeholder="Description"></td>
                 <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'uom', this.value)"            data-col="uom"            value="${data.uom}"            autocomplete="off" class="xls-input" placeholder="e.g. Unit, Set, Pcs"></td>
                 <td class="xls-td col-status"><input type="text" oninput="syncState(${data.id}, 'mode', this.value)"           data-col="mode"           value="${data.mode}"           autocomplete="off" class="xls-input" placeholder="Mode of Procurement"></td>
-                <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'personnel', this.value)"      data-col="personnel"      value="${data.personnel}"      autocomplete="off" class="xls-input" placeholder="Personnel name"></td>
+                <td class="xls-td col-personnel" style="position:relative;overflow:visible">
+                    <input type="text" oninput="syncState(${data.id}, 'personnel', this.value); filterPersonnelDropdown(${data.id}, this.value)" onfocus="filterPersonnelDropdown(${data.id}, this.value)" data-col="personnel" value="${data.personnel}" autocomplete="off" class="xls-input" placeholder="Personnel name">
+                    <div id="personnel-dd-${data.id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
+                </td>
                 <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'position', this.value)"       data-col="position"       value="${data.position}"       autocomplete="off" class="xls-input" placeholder="Position"></td>
                 <td class="xls-td col-financial"><input type="number" oninput="syncState(${data.id}, 'cost', this.value)" data-col="cost" value="${data.cost}" class="xls-input text-right" placeholder="0.00" min="0" step="0.01"></td>
                 <td class="xls-td col-financial"><input type="number" oninput="syncState(${data.id}, 'qty', this.value)"  data-col="qty"  value="${data.qty}"  class="xls-input text-right ${data['property-no'] ? 'bg-slate-50 cursor-not-allowed' : ''}" placeholder="0" min="0" step="1" ${data['property-no'] ? 'readonly' : ''}></td>
@@ -2227,12 +2656,21 @@
                 return;
             }
             let isValid = true;
+            let errorMessage = 'Please fill in all required fields across all pages.';
             allRowsData.forEach(row => {
-                const required = ['classification', 'category', 'item', 'uom', 'cost', 'qty', 'useful-life', 'acceptance-date', 'school-type', 'school-name', 'occupancy', 'location', 'acquisition-date'];
+                const required = ['classification', 'category', 'item', 'uom', 'cost', 'qty', 'useful-life', 'acceptance-date'];
                 required.forEach(field => { if (!row[field]) isValid = false; });
+                
+                const hasEmployee = row['employee-name'] && row['employee-name'].trim() !== '';
+                const hasLocation = row['school-name'] && row['school-name'].trim() !== '';
+                
+                if (!hasEmployee && !hasLocation) {
+                    isValid = false;
+                    errorMessage = 'Please assign either an Employee or an Office/School for all items.';
+                }
             });
             if (!isValid) {
-                Swal.fire({ icon: 'error', title: 'Incomplete Fields', text: 'Please fill in all required fields across all pages.', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]' } });
+                Swal.fire({ icon: 'error', title: 'Incomplete Fields', text: errorMessage, confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]' } });
                 return;
             }
             Swal.fire({

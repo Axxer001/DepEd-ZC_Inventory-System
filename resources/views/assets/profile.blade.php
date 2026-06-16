@@ -89,7 +89,7 @@
                     <svg class="w-6 h-6 text-deped" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
                 </div>
                 <div>
-                    <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase italic">{{ $asset->description }}</h1>
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase italic">{{ $asset->item_name }}</h1>
                     <div class="flex items-center gap-3 mt-2">
                         <span class="text-xs font-bold text-slate-500 uppercase tracking-widest bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">{{ $asset->property_number }}</span>
                         {{-- Status Badge (Success placeholder) --}}
@@ -216,13 +216,18 @@
                                 <svg class="w-3 h-3 text-deped" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                                 Current Custodian
                             </p>
+                            @php
+                                $custodianFullName = trim(($asset->custodian_first ?? '') . ' ' . ($asset->custodian_middle ? $asset->custodian_middle . ' ' : '') . ($asset->custodian_last ?? ''));
+                                $custodianDisplay = $custodianFullName ?: ($asset->office_school_name ?? 'Warehouse');
+                                $custodianInitials = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $custodianDisplay), 0, 2)) ?: 'NA';
+                            @endphp
                             <div class="flex items-center gap-3 pl-1">
                                 <div class="w-10 h-10 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-600 font-black text-xs shrink-0 shadow-sm group-hover:scale-110 group-hover:bg-deped group-hover:border-deped group-hover:text-white transition-all">
-                                    {{ strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $asset->office_school_name), 0, 2)) ?: 'NA' }}
+                                    {{ $custodianInitials }}
                                 </div>
                                 <div>
-                                    <p class="text-xs font-black text-slate-700 uppercase leading-tight group-hover:text-deped transition-colors">{{ $asset->office_school_name }}</p>
-                                    <p class="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Designated Custodian</p>
+                                    <p class="text-xs font-black text-slate-700 uppercase leading-tight group-hover:text-deped transition-colors">{{ $custodianDisplay }}</p>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase mt-0.5">{{ $custodianFullName ? $asset->office_school_name : 'Unassigned / Warehouse' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -289,13 +294,22 @@
                                 </div>
                                 <div>
                                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Office / School Name</p>
-                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $asset->office_school_name }}{{ $asset->nature_of_occupancy ? ' - ' . $asset->nature_of_occupancy : '' }}</p>
+                                    @php
+                                        $officeSchoolLabel = $asset->school_name ?? $asset->office_name ?? null;
+                                    @endphp
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">
+                                        {{ $officeSchoolLabel ?: ($asset->office_school_name !== 'Warehouse' ? $asset->office_school_name : 'Unassigned') }}
+                                    </p>
                                 </div>
                                 <div>
                                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Custodian</p>
-                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">
-                                        {{ trim($asset->custodian_first . ' ' . $asset->custodian_middle . ' ' . $asset->custodian_last) ?: 'N/A' }}
-                                    </p>
+                                    @php
+                                        $custodianName = trim(($asset->custodian_first ?? '') . ' ' . ($asset->custodian_middle ? $asset->custodian_middle . ' ' : '') . ($asset->custodian_last ?? ''));
+                                    @endphp
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $custodianName ?: 'No Employee Assigned' }}</p>
+                                    @if($asset->employee_id_code)
+                                        <p class="text-[9px] font-bold text-slate-400 mt-0.5 px-1">ID: {{ $asset->employee_id_code }}</p>
+                                    @endif
                                 </div>
                                 <div>
                                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Position</p>
@@ -609,35 +623,25 @@
                 <form action="{{ route('assets.transfer', $asset->id) }}" method="POST" class="flex flex-col min-h-0">
                     @csrf
                     <div class="p-6 space-y-5 overflow-y-auto custom-scroll" x-data="{
-                        schools: @js($schools),
-                        selectedSchoolId: '',
-                        selectedOfficeSchoolName: '',
+                        employees: @js($employees),
+                        searchQuery: '',
+                        showDropdown: false,
+                        selectedEmployee: null,
                         transferType: 'Permanent Reassignment',
-                        
-                        autofillLocation(schoolName) {
-                            let base = schoolName.replace(/\s*(Elem|Elementary|National|High|Central|School|Main|Annex|\(.*\)).*/gi, '').trim();
-                            let loc = base ? base + ', Zamboanga City' : schoolName + ', Zamboanga City';
-                            let locInput = document.querySelector('input[name=location]');
-                            if(locInput) {
-                                locInput.value = loc;
-                                locInput.dispatchEvent(new Event('input', { bubbles: true }));
-                            }
+
+                        get filteredEmployees() {
+                            let q = this.searchQuery.trim().toLowerCase();
+                            if (q === '') return this.employees.slice(0, 50);
+                            return this.employees.filter(e => 
+                                (e.full_name && e.full_name.toLowerCase().includes(q)) || 
+                                (e.employee_id && String(e.employee_id).toLowerCase().includes(q))
+                            ).slice(0, 50);
                         },
 
-                        updateFromName() {
-                            let match = this.schools.find(s => s.name === this.selectedOfficeSchoolName);
-                            if (match) {
-                                this.selectedSchoolId = match.school_id;
-                                this.autofillLocation(match.name);
-                            }
-                        },
-                        
-                        updateFromId() {
-                            let match = this.schools.find(s => s.school_id === this.selectedSchoolId);
-                            if (match) {
-                                this.selectedOfficeSchoolName = match.name;
-                                this.autofillLocation(match.name);
-                            }
+                        selectEmployee(emp) {
+                            this.selectedEmployee = emp;
+                            this.searchQuery = emp.full_name;
+                            this.showDropdown = false;
                         }
                     }">
                         
@@ -653,72 +657,48 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Office / School Type</label>
-                                <input type="text" name="office_school_type" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="Type">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Nature of Occupancy</label>
-                                <input type="text" name="nature_of_occupancy" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="Occupancy">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-40">
-                            <!-- School ID -->
-                            <div x-data="{ openId: false, searchId: '' }" class="relative" x-init="$watch('selectedSchoolId', val => searchId = val)">
-                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">School ID</label>
-                                <div class="relative group" @click.away="openId = false">
-                                    <input type="text" x-model="searchId" @focus="openId = true" @input="openId = true; selectedSchoolId = searchId" name="school_id" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="Search ID...">
-                                    <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                                    
-                                    <div x-show="openId" x-cloak class="absolute w-full mt-2 bg-white border-2 border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scroll p-1 z-50">
-                                        <template x-for="s in schools.filter(o => o.school_id && o.school_id.toLowerCase().includes(searchId.toLowerCase()))" :key="s.id">
-                                            <div @click="searchId = s.school_id; selectedSchoolId = s.school_id; updateFromId(); openId = false" class="px-4 py-2.5 text-[10px] font-black text-slate-600 uppercase hover:bg-slate-100 hover:text-blue-600 rounded-lg cursor-pointer transition-colors" x-text="s.school_id + ' - ' + s.name"></div>
-                                        </template>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- School Name -->
-                            <div x-data="{ openName: false, searchName: '' }" class="relative" x-init="$watch('selectedOfficeSchoolName', val => searchName = val)">
-                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Office / School Name</label>
-                                <div class="relative group" @click.away="openName = false">
-                                    <input type="text" x-model="searchName" @focus="openName = true" @input="openName = true; selectedOfficeSchoolName = searchName" name="office_school_name" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="Search Name...">
-                                    <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                                    
-                                    <div x-show="openName" x-cloak class="absolute w-full mt-2 bg-white border-2 border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scroll p-1 z-50">
-                                        <template x-for="s in schools.filter(o => o.name && o.name.toLowerCase().includes(searchName.toLowerCase()))" :key="s.id">
-                                            <div @click="searchName = s.name; selectedOfficeSchoolName = s.name; updateFromName(); openName = false" class="px-4 py-2.5 text-[10px] font-black text-slate-600 uppercase hover:bg-slate-100 hover:text-blue-600 rounded-lg cursor-pointer transition-colors" x-text="s.name"></div>
-                                        </template>
-                                    </div>
+                        {{-- Employee Search Field --}}
+                        <div class="relative z-50">
+                            <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Search Employee <span class="text-deped">*</span></label>
+                            <div class="relative group" @click.away="showDropdown = false">
+                                <input type="text" x-model="searchQuery" @focus="showDropdown = true" @input="showDropdown = true" required autocomplete="off"
+                                    class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="Type name or ID to search...">
+                                <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                
+                                <div x-show="showDropdown && filteredEmployees.length > 0" x-cloak 
+                                    class="absolute left-0 right-0 mt-2 bg-white border-2 border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scroll p-1 z-50">
+                                    <template x-for="e in filteredEmployees" :key="e.id">
+                                        <div @click="selectEmployee(e)" 
+                                            class="px-4 py-2.5 text-[10px] font-black text-slate-600 uppercase hover:bg-slate-100 hover:text-blue-600 rounded-lg cursor-pointer transition-colors flex justify-between items-center">
+                                            <span x-text="e.full_name"></span>
+                                            <span class="text-slate-400 font-bold ml-2" x-text="e.employee_id ? '[' + e.employee_id + ']' : ''"></span>
+                                        </div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Location</label>
-                            <input type="text" name="location" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="Location">
-                        </div>
+                        {{-- Hidden employee_id field --}}
+                        <input type="hidden" name="employee_id" :value="selectedEmployee ? selectedEmployee.id : ''" required>
 
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Custodian (First / Middle / Last)</label>
-                            <div class="grid grid-cols-3 gap-3">
-                                <input type="text" name="custodian_first" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="First Name">
-                                <input type="text" name="custodian_middle" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="Middle Name">
-                                <input type="text" name="custodian_last" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="Last Name">
-                            </div>
-                        </div>
-
+                        {{-- Employee Autofilled details --}}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Employee ID</label>
+                                <input type="text" readonly :value="selectedEmployee ? selectedEmployee.employee_id : ''"
+                                    class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-400 uppercase outline-none shadow-sm cursor-not-allowed" placeholder="AUTO-FILLED">
+                            </div>
                             <div>
                                 <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Position</label>
-                                <input type="text" name="custodian_position" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="Position">
+                                <input type="text" readonly :value="selectedEmployee ? (selectedEmployee.position || 'N/A') : ''"
+                                    class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-400 uppercase outline-none shadow-sm cursor-not-allowed" placeholder="AUTO-FILLED">
                             </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Contact No.</label>
-                                <input type="text" name="custodian_contact" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="Contact No.">
-                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Office / School Location</label>
+                            <input type="text" readonly :value="selectedEmployee ? (selectedEmployee.location_name || 'N/A') : ''"
+                                class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-400 uppercase outline-none shadow-sm cursor-not-allowed" placeholder="AUTO-FILLED">
                         </div>
 
                         <div class="grid grid-cols-2 gap-5">
@@ -748,8 +728,8 @@
                             <div class="relative group">
                                 <select name="condition" required class="w-full appearance-none bg-white border-2 border-slate-200 rounded-xl pl-4 pr-10 py-3.5 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
                                     <option value="" disabled selected>Select condition...</option>
-                                    <option value="Serviceable">Serviceable</option>
-                                    <option value="For Repair">For Repair</option>
+                                    <option value="Good Condition">Good Condition</option>
+                                    <option value="Needs Repair">Needs Repair</option>
                                     <option value="Unserviceable">Unserviceable</option>
                                 </select>
                                 <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
@@ -822,8 +802,8 @@
                             <div class="relative group">
                                 <select name="condition" required class="w-full appearance-none bg-white border-2 border-slate-200 rounded-xl pl-4 pr-10 py-3 text-xs font-black text-slate-700 uppercase focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
                                     <option value="" disabled selected>Select condition...</option>
-                                    <option value="Serviceable">Serviceable</option>
-                                    <option value="For Repair">For Repair</option>
+                                    <option value="Good Condition">Good Condition</option>
+                                    <option value="Needs Repair">Needs Repair</option>
                                     <option value="Unserviceable">Unserviceable</option>
                                 </select>
                                 <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-emerald-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>

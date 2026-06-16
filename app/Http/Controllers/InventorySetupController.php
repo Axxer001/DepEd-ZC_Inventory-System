@@ -239,18 +239,34 @@ class InventorySetupController extends Controller
                         ->value('id');
                 }
 
-                // ── Resolve Employee — MATCH ONLY, no silent creation ────────
-                $employeeId   = null;
-                $employeeName = trim(implode(' ', array_filter([
-                    $row['employee-first']  ?? $row['custodian-first']  ?? '',
-                    $row['employee-last']   ?? $row['custodian-last']   ?? '',
-                ])));
+                // ── Resolve Employee — prefer direct ID code sent by frontend ──
+                $employeeId = null;
 
-                if (!empty($employeeName)) {
-                    $employeeId = $cache['emp'][strtolower($employeeName)] ?? null;
+                // 1. Frontend sends the employee_id CODE (not DB PK) as 'employee-id'
+                $directEmpCode = $row['employee-id'] ?? null;
+                if (!empty($directEmpCode)) {
+                    $employeeId = DB::table('employees')
+                        ->where('employee_id', $directEmpCode)
+                        ->value('id');
                     if ($employeeId === null) {
-                        $errors[] = "Row {$rowNum}: Employee '{$employeeName}' not found. Register the employee first.";
-                        continue; // skip row — partial import is valid
+                        $errors[] = "Row {$rowNum}: Employee code '{$directEmpCode}' not found.";
+                        continue;
+                    }
+                }
+
+                // 2. Fallback: name-based lookup (for legacy import rows)
+                if ($employeeId === null) {
+                    $employeeName = trim(implode(' ', array_filter([
+                        $row['employee-first']  ?? $row['custodian-first']  ?? '',
+                        $row['employee-last']   ?? $row['custodian-last']   ?? '',
+                    ])));
+
+                    if (!empty($employeeName)) {
+                        $employeeId = $cache['emp'][strtolower($employeeName)] ?? null;
+                        if ($employeeId === null) {
+                            $errors[] = "Row {$rowNum}: Employee '{$employeeName}' not found. Register the employee first.";
+                            continue; // skip row — partial import is valid
+                        }
                     }
                 }
 

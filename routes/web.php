@@ -163,6 +163,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/custodians', [EmployeeController::class, 'index'])->name('admin.custodians');
     Route::get('/api/employees/search', [EmployeeController::class, 'searchEmployees'])->name('api.employees.search');
     Route::get('/api/locations/search', [EmployeeController::class, 'searchLocations'])->name('api.locations.search');
+    Route::get('/api/classifications/search', [EmployeeController::class, 'searchClassifications'])->name('api.classifications.search');
+    Route::get('/api/categories/search', [EmployeeController::class, 'searchCategories'])->name('api.categories.search');
 
     Route::post('/api/employees/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansPreview'])->name('api.employees.preview');
     Route::get('/api/employees/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansFilterOptions'])->name('api.employees.filters');

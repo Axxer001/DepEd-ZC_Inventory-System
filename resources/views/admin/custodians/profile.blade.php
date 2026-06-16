@@ -340,8 +340,8 @@
                                             <h4 class="text-xs font-black text-slate-800 uppercase leading-none">{{ $asset->item_name }}</h4>
                                             <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">
                                                 {{ $asset->category_name }}
-                                                {{ $asset->brand ? ' · ' . $asset->brand : '' }}
-                                                {{ $asset->model ? ' · ' . $asset->model : '' }}
+                                                {{ ($asset->brand ?? null) ? ' · ' . $asset->brand : '' }}
+                                                {{ ($asset->model ?? null) ? ' · ' . $asset->model : '' }}
                                             </p>
                                         </div>
                                     </div>

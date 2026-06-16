@@ -31,13 +31,31 @@
                     <h4 class="font-black text-slate-800 uppercase tracking-widest text-xs">Asset Data Entry (Source)</h4>
                 </div>
                 <div class="grid grid-cols-2 gap-x-6 gap-y-5">
-                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Classification</label><input type="text" id="bClassification" data-col="classification" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
-                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Category</label><input type="text" id="bCategory" data-col="category" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
+                    <div class="relative col-identity p-1 rounded-2xl" style="position:relative;overflow:visible">
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Classification</label>
+                        <input type="text" id="bClassification" data-col="classification" autocomplete="off" 
+                            oninput="filterBulkClassDropdown(this.value)" onfocus="filterBulkClassDropdown(this.value)"
+                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Classification...">
+                        <div id="bulk-class-dd" class="xls-custom-dd" style="display:none; width:100%;"></div>
+                    </div>
+                    <div class="relative col-identity p-1 rounded-2xl" style="position:relative;overflow:visible">
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Category</label>
+                        <input type="text" id="bCategory" data-col="category" autocomplete="off" 
+                            oninput="filterBulkCatDropdown(this.value)" onfocus="filterBulkCatDropdown(this.value)"
+                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Category...">
+                        <div id="bulk-cat-dd" class="xls-custom-dd" style="display:none; width:100%;"></div>
+                    </div>
                     <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Item</label><input type="text" id="bItem" data-col="item" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
                     <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Description</label><input type="text" id="bDescription" data-col="description" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
                     <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Unit of Measurement</label><input type="text" id="bUom" data-col="uom" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="e.g. Unit, Set, Pcs"></div>
                     <div class="relative col-status p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Mode of Procurement</label><input type="text" id="bMode" data-col="mode" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="e.g. Public Bidding"></div>
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Source Personnel</label><input type="text" id="bPersonnel" data-col="personnel" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
+                    <div class="relative col-personnel p-1 rounded-2xl" style="position:relative;overflow:visible">
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Source Personnel</label>
+                        <input type="text" id="bPersonnel" data-col="personnel" autocomplete="off" 
+                            oninput="filterBulkPersonnelDropdown(this.value)" onfocus="filterBulkPersonnelDropdown(this.value)"
+                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select">
+                        <div id="bulk-personnel-dd" class="xls-custom-dd" style="display:none; width:100%;"></div>
+                    </div>
                     <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Personnel Position</label><input type="text" id="bPosition" data-col="position" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
                     <div class="relative col-financial p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Cost per Unit</label><input type="number" id="bCost" oninput="calcBulkCost()" class="xls-input !border border-slate-100 rounded-xl text-right bg-transparent" placeholder="1" min="0" step="0.01"></div>
                     <div class="relative col-financial p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Quantity</label><input type="number" id="bQty1" oninput="calcBulkCost()" class="xls-input !border border-slate-100 rounded-xl text-right bg-transparent" placeholder="1" min="0" step="1"></div>

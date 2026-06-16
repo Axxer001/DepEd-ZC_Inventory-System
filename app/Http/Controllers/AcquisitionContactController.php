@@ -109,7 +109,7 @@ class AcquisitionContactController extends Controller
                 'aa.acquisition_cost as asset_cost',
                 'i.name as item_name',
                 'cat.name as category_name',
-                'aa.condition',
+                'asrc.condition',
                 'o.name as office_name',
                 's.name as school_name'
             )

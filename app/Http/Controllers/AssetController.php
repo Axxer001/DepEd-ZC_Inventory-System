@@ -28,7 +28,14 @@ class AssetController extends Controller
         // 1. Fetch categories with total sourced quantity
         $allCategories = DB::table('categories')
             ->leftJoin('items', 'categories.id', '=', 'items.category_id')
-            ->leftJoin('asset_sources', 'items.id', '=', 'asset_sources.item_id')
+            ->leftJoin('asset_sources', function ($join) {
+                $join->on('items.id', '=', 'asset_sources.item_id')
+                    ->whereExists(function ($query) {
+                        $query->select(DB::raw(1))
+                            ->from('asset_assignments')
+                            ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id');
+                    });
+            })
             ->select('categories.id', 'categories.name', DB::raw('COALESCE(SUM(asset_sources.quantity), 0) as total_assets'))
             ->groupBy('categories.id', 'categories.name')
             ->get();
@@ -44,7 +51,7 @@ class AssetController extends Controller
         // 2. Fetch items with sourced and distributed quantities
         $allItems = DB::table('items')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->leftJoin(DB::raw('(SELECT item_id, SUM(quantity) as sourced_qty FROM asset_sources GROUP BY item_id) as src'), 'items.id', '=', 'src.item_id')
+            ->leftJoin(DB::raw('(SELECT item_id, SUM(quantity) as sourced_qty FROM asset_sources WHERE EXISTS (SELECT 1 FROM asset_assignments WHERE asset_assignments.asset_source_id = asset_sources.id) GROUP BY item_id) as src'), 'items.id', '=', 'src.item_id')
             ->leftJoin(DB::raw('(SELECT asrc.item_id, COUNT(ad.id) as distributed_qty FROM asset_assignments ad JOIN asset_sources asrc ON ad.asset_source_id = asrc.id WHERE ad.employee_id IS NOT NULL GROUP BY asrc.item_id) as dist'), 'items.id', '=', 'dist.item_id')
             ->select(
                 'items.id',
@@ -71,6 +78,11 @@ class AssetController extends Controller
 
         // 3. Fetch asset_sources as "sub-items" (descriptions grouped by item)
         $allAssetSources = DB::table('asset_sources')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('asset_assignments')
+                    ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id');
+            })
             ->join('items', 'asset_sources.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->select('asset_sources.description', 'items.name as item_name', 'categories.name as category_name')
@@ -158,6 +170,11 @@ class AssetController extends Controller
 
         // Data for Asset Source Tab
         $assetSources = DB::table('asset_sources as asrc')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('asset_assignments')
+                    ->whereColumn('asset_assignments.asset_source_id', 'asrc.id');
+            })
             ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')
@@ -324,11 +341,12 @@ class AssetController extends Controller
                 'categories.id as category_id',
                 'classifications.name as classification_name',
                 'classifications.id as classification_id',
-                'e.first_name as employee_first',
-                'e.middle_name as employee_middle',
-                'e.last_name as employee_last',
-                'e.position as employee_position',
-                'e.employee_id as employee_id_code'
+                'e.first_name as custodian_first',
+                'e.middle_name as custodian_middle',
+                'e.last_name as custodian_last',
+                'e.position as custodian_position',
+                'e.employee_id as employee_id_code',
+                DB::raw('NULL as custodian_contact')
             )
             ->where('ad.id', $id)
             ->first();
@@ -341,10 +359,16 @@ class AssetController extends Controller
         $categories = DB::table('categories')->orderBy('name')->get();
         $items = DB::table('items')->orderBy('name')->get();
         $acquisitionSources = DB::table('acquisition_sources')->orderBy('name')->get();
-        $employees = DB::table('employees')->orderBy('first_name')->get()->map(function($e) {
-            $e->full_name = trim($e->first_name . ' ' . ($e->middle_name ? $e->middle_name . ' ' : '') . $e->last_name);
-            return $e;
-        });
+        $employees = DB::table('employees as e')
+            ->leftJoin('schools as s', 'e.school_id', '=', 's.id')
+            ->leftJoin('offices as o', 'e.office_id', '=', 'o.id')
+            ->select('e.*', DB::raw('COALESCE(s.name, o.name) as location_name'))
+            ->orderBy('e.first_name')
+            ->get()
+            ->map(function($e) {
+                $e->full_name = trim($e->first_name . ' ' . ($e->middle_name ? $e->middle_name . ' ' : '') . $e->last_name);
+                return $e;
+            });
         $schools = DB::table('schools')->orderBy('name')->get();
         $offices = DB::table('offices')->orderBy('name')->get();
 
@@ -359,13 +383,15 @@ class AssetController extends Controller
         ];
         
         // Fetch transfer history with office/school names
+        // NOTE: offices has no school_id column — resolve names through custodian employees instead.
         $transfers = DB::table('asset_transfers')
             ->leftJoin('users', 'asset_transfers.authorized_by', '=', 'users.id')
             ->leftJoin('employees as to_emp', 'asset_transfers.to_custodian_id', '=', 'to_emp.id')
-            ->leftJoin('offices as from_off', 'asset_transfers.from_office_id', '=', 'from_off.id')
-            ->leftJoin('schools as from_sch', 'from_off.school_id', '=', 'from_sch.id')
-            ->leftJoin('offices as to_off', 'asset_transfers.to_office_id', '=', 'to_off.id')
-            ->leftJoin('schools as to_sch', 'to_off.school_id', '=', 'to_sch.id')
+            ->leftJoin('employees as from_emp', 'asset_transfers.from_custodian_id', '=', 'from_emp.id')
+            ->leftJoin('offices as from_off', 'from_emp.office_id', '=', 'from_off.id')
+            ->leftJoin('schools as from_sch', 'from_emp.school_id', '=', 'from_sch.id')
+            ->leftJoin('offices as to_off', 'to_emp.office_id', '=', 'to_off.id')
+            ->leftJoin('schools as to_sch', 'to_emp.school_id', '=', 'to_sch.id')
             ->where('asset_assignment_id', $id)
             ->select(
                 'asset_transfers.*',

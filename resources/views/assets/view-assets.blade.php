@@ -214,6 +214,181 @@
             pointer-events: none;
             color: #94a3b8;
         }
+        /* ── Dark Mode Overrides for View Assets ──────────────── */
+        html.dark body { background-color: #0f172a !important; color: #e2e8f0 !important; }
+
+        /* Header bar */
+        html.dark .backdrop-blur-xl.bg-white\/90 { background-color: rgba(30,41,59,0.92) !important; }
+
+        /* Table header cells */
+        html.dark .xls-th {
+            background: #0f172a !important;
+            color: #94a3b8 !important;
+            border-right-color: #334155 !important;
+            border-bottom-color: #334155 !important;
+        }
+
+        /* Table data cells */
+        html.dark .xls-td {
+            background: #1e293b !important;
+            border-right-color: #334155 !important;
+            border-bottom-color: #334155 !important;
+        }
+
+        /* Row hover */
+        html.dark .xls-row:hover .xls-td {
+            background-color: rgba(192, 0, 0, 0.06) !important;
+            border-bottom-color: rgba(192, 0, 0, 0.25) !important;
+        }
+        html.dark .xls-row:hover {
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.4), 0 8px 8px -6px rgba(0,0,0,0.3) !important;
+        }
+
+        /* Row # column sticky bg */
+        html.dark .xls-td.sticky { background: #1e293b !important; }
+        html.dark .xls-th.sticky { background: #0f172a !important; }
+
+        /* Text colors inside cells */
+        html.dark .xls-const { color: #cbd5e1; }
+        html.dark .xls-td .text-slate-800 { color: #e2e8f0 !important; }
+        html.dark .xls-td .text-slate-600 { color: #94a3b8 !important; }
+        html.dark .xls-td .text-slate-500 { color: #64748b !important; }
+
+        /* Scroll wrapper */
+        html.dark .xls-scroll-wrap {
+            background: #1e293b !important;
+            border-top-color: #334155 !important;
+        }
+
+        /* Table container card */
+        html.dark .rounded-\[2rem\] { border-color: #334155 !important; }
+
+        /* Pagination buttons */
+        html.dark .pg-btn {
+            background: #1e293b !important;
+            color: #e2e8f0 !important;
+            border-color: #334155 !important;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.4) !important;
+        }
+        html.dark .pg-btn:hover:not(:disabled) {
+            border-color: #c00000 !important;
+            color: #c00000 !important;
+        }
+        html.dark .pg-btn:disabled {
+            background: #0f172a !important;
+            color: #475569 !important;
+        }
+
+        /* Glass indicator (page counter) */
+        html.dark .glass-indicator {
+            background: rgba(30,41,59,0.8) !important;
+            border-color: #334155 !important;
+        }
+
+        /* Header action buttons */
+        html.dark .hdr-btn {
+            background: #1e293b !important;
+            color: #94a3b8 !important;
+            border-color: #334155 !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+        }
+        html.dark .hdr-btn:hover {
+            color: #c00000 !important;
+            border-color: #991b1b !important;
+            background: rgba(192,0,0,0.08) !important;
+            box-shadow: 0 6px 16px rgba(192,0,0,0.15) !important;
+        }
+
+        /* Styled select wrapper */
+        html.dark .styled-select-wrap select {
+            background: #1e293b !important;
+            color: #e2e8f0 !important;
+            border-color: #334155 !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+        }
+        html.dark .styled-select-wrap select:hover {
+            border-color: #991b1b !important;
+            box-shadow: 0 4px 12px rgba(192,0,0,0.15) !important;
+        }
+        html.dark .styled-select-wrap select:focus {
+            border-color: #c00000 !important;
+            box-shadow: 0 0 0 3px rgba(192,0,0,0.15), 0 4px 12px rgba(192,0,0,0.15) !important;
+        }
+
+        /* Filter section */
+        html.dark #assetFilterSection {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        /* Custom autocomplete dropdown */
+        html.dark .custom-autocomplete {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.5) !important;
+        }
+        html.dark .custom-autocomplete-item {
+            color: #94a3b8 !important;
+        }
+        html.dark .custom-autocomplete-item:hover {
+            background: #0f172a !important;
+            color: #c00000 !important;
+        }
+
+        /* Condition dropdown panel */
+        html.dark #conditionDropdownPanel {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5) !important;
+        }
+        html.dark .cond-item { color: #94a3b8 !important; }
+        html.dark .cond-item:hover { background: #0f172a !important; }
+        html.dark #conditionDropdownBtn {
+            background: #1e293b !important;
+            color: #e2e8f0 !important;
+            border-color: #334155 !important;
+        }
+
+        /* Tab pills */
+        html.dark .bg-slate-100.rounded-2xl { background: #0f172a !important; border-color: #334155 !important; }
+
+        /* Loading overlay */
+        html.dark #assetLoading { background: rgba(15,23,42,0.7) !important; }
+
+        /* Footer */
+        html.dark #assetTableFooter {
+            border-top-color: #334155 !important;
+            background: #1e293b !important;
+            box-shadow: 0 -4px 6px -1px rgba(0,0,0,0.3) !important;
+        }
+
+        /* Search suggestions */
+        html.dark #assetSearchSuggestions {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+        }
+
+        /* Badge overrides for dark mode */
+        html.dark .border-emerald-200 { border-color: #14532d !important; }
+        html.dark .bg-emerald-50 { background-color: rgba(5,46,22,0.5) !important; }
+        html.dark .border-amber-200 { border-color: #78350f !important; }
+        html.dark .bg-amber-50 { background-color: rgba(69,26,3,0.5) !important; }
+        html.dark .border-rose-200 { border-color: #881337 !important; }
+        html.dark .bg-rose-50 { background-color: rgba(76,5,25,0.5) !important; }
+
+        /* School card */
+        html.dark .school-card {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+        }
+        html.dark .school-card:hover {
+            border-color: #c00000 !important;
+            background: #0f172a !important;
+        }
+
+        /* Spec pills inside table cells */
+        html.dark .xls-td .border-slate-100 { border-color: #334155 !important; }
+        html.dark .xls-td .bg-white { background-color: #0f172a !important; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex text-slate-900 overflow-x-hidden">

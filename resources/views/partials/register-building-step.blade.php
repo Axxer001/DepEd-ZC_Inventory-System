@@ -67,15 +67,16 @@
         {{-- ── Tab 1: Building Identity Table ── --}}
         <div id="panelBldgIdentity">
             <div class="xls-scroll-wrap">
-                <table class="w-full border-collapse" style="min-width:1400px;">
+                <table class="w-full border-collapse" style="min-width:1600px;">
                     <thead>
                         <tr>
                             <th class="xls-th w-10 text-center sticky left-0 z-20">#</th>
                             <th class="xls-th col-context" style="min-width:120px">Region</th>
                             <th class="xls-th col-context" style="min-width:180px">Division</th>
+                            <th class="xls-th col-context" style="min-width:200px">School/Office Search *</th>
                             <th class="xls-th col-context" style="min-width:160px">Office Type</th>
                             <th class="xls-th col-identity" style="min-width:110px">School ID</th>
-                            <th class="xls-th col-identity" style="min-width:210px">Office/School Name *</th>
+                            <th class="xls-th col-identity" style="min-width:210px">Office/School Name</th>
                             <th class="xls-th col-context" style="min-width:180px">Address</th>
                             <th class="xls-th col-personnel text-right" style="min-width:85px">Storeys</th>
                             <th class="xls-th col-personnel text-right" style="min-width:100px">Classrooms</th>
@@ -191,14 +192,28 @@
                     <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Division</label>
                         <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-white/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Division of Zamboanga City</div>
                     </div>
+                    <div class="relative col-context p-1 rounded-2xl" style="position:relative;overflow:visible">
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">School/Office Search *</label>
+                        <input type="text" id="bldgBulkSchoolSearch" autocomplete="off"
+                            oninput="filterBldgBulkSchoolDropdown(this.value)" onfocus="filterBldgBulkSchoolDropdown(this.value)"
+                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Search school/office...">
+                        <div id="bulk-bldg-school-dd" class="xls-custom-dd" style="display:none; width:100%;"></div>
+                    </div>
                     <div class="relative col-context p-1 rounded-2xl">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Type</label>
-                        <input type="text" id="bldgBulkType" data-col="office_type" autocomplete="off" 
-                            oninput="const isSchool=this.value.toLowerCase().includes('school'); if(!isSchool){document.getElementById('bldgBulkLocation').value='Zamboanga City';}else{const sName=document.getElementById('bldgBulkSchoolName').value; if(sName && typeof cleanSchoolNameForLocation==='function'){document.getElementById('bldgBulkLocation').value=cleanSchoolNameForLocation(sName);}}"
-                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select" list="dl-bldg-type">
+                        <input type="text" id="bldgBulkType" data-col="office_type" autocomplete="off" readonly tabindex="-1"
+                            class="xls-input !border border-slate-100 rounded-xl bg-slate-100 text-slate-500 cursor-not-allowed" placeholder="Auto-filled">
                     </div>
-                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">School ID</label><input type="text" id="bldgBulkSchoolId" data-col="school_identifier" autocomplete="off" oninput="const s=allSchoolsList.find(x=>String(x.school_id)===this.value); if(s){document.getElementById('bldgBulkSchoolName').value=s.name; const t=typeof detectItemSchoolType==='function'?detectItemSchoolType(s.name):''; document.getElementById('bldgBulkType').value=t; const isSchool=t.toLowerCase().includes('school'); if(typeof cleanSchoolNameForLocation==='function')document.getElementById('bldgBulkLocation').value=isSchool?cleanSchoolNameForLocation(s.name):'Zamboanga City';}" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select" list="dl-bldg-school-id" inputmode="numeric"></div>
-                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label><input type="text" id="bldgBulkSchoolName" data-col="office_name" autocomplete="off" oninput="const s=allSchoolsList.find(x=>x.name.toLowerCase()===this.value.toLowerCase()); if(s){ const t = typeof detectItemSchoolType==='function'?detectItemSchoolType(s.name):''; document.getElementById('bldgBulkType').value=t; document.getElementById('bldgBulkSchoolId').value=s.school_id; const isSchool=t.toLowerCase().includes('school'); if(typeof cleanSchoolNameForLocation==='function')document.getElementById('bldgBulkLocation').value=isSchool?cleanSchoolNameForLocation(s.name):'Zamboanga City';} else if(this.value.trim()){ const t = typeof detectItemSchoolType==='function'?detectItemSchoolType(this.value):''; if(t) document.getElementById('bldgBulkType').value=t; document.getElementById('bldgBulkSchoolId').value=''; const isSchool=t.toLowerCase().includes('school'); if(typeof cleanSchoolNameForLocation==='function')document.getElementById('bldgBulkLocation').value=isSchool?cleanSchoolNameForLocation(this.value):'Zamboanga City';}" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select" list="dl-bldg-school-name"></div>
+                    <div class="relative col-identity p-1 rounded-2xl">
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">School ID</label>
+                        <input type="text" id="bldgBulkSchoolId" data-col="school_identifier" autocomplete="off" readonly tabindex="-1"
+                            class="xls-input !border border-slate-100 rounded-xl bg-slate-100 text-slate-500 cursor-not-allowed" placeholder="Auto-filled">
+                    </div>
+                    <div class="relative col-identity p-1 rounded-2xl">
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label>
+                        <input type="text" id="bldgBulkSchoolName" data-col="office_name" autocomplete="off" readonly tabindex="-1"
+                            class="xls-input !border border-slate-100 rounded-xl bg-slate-100 text-slate-500 cursor-not-allowed" placeholder="Auto-filled">
+                    </div>
                     <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Address</label><input type="text" id="bldgBulkAddress" data-col="address" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Leave empty to ignore"></div>
                     <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Storeys</label><input type="number" id="bldgBulkStoreys" class="xls-input !border border-slate-100 rounded-xl bg-transparent text-right" placeholder="0" min="0" step="1"></div>
                     <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Classrooms</label><input type="number" id="bldgBulkClassrooms" class="xls-input !border border-slate-100 rounded-xl bg-transparent text-right" placeholder="0" min="0" step="1"></div>
@@ -311,6 +326,7 @@ function addBldgRow(defaults = {}) {
         _id: id,
         region: defaults.region ?? 'REGION IX',
         division: defaults.division ?? 'Division of Zamboanga City',
+        'school-search': defaults['school-search'] ?? '',
         office_type: defaults.office_type ?? '',
         school_identifier: defaults.school_identifier ?? '',
         office_name: defaults.office_name ?? '',
@@ -459,9 +475,18 @@ function renderBldgEntryTable() {
             <td class="xls-td text-center sticky left-0 w-10 bg-white z-10"><span class="text-[10px] font-black text-slate-300">${displayNum}</span></td>
             <td class="xls-td col-context"><input type="text" value="${row.region}" class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" readonly tabindex="-1"></td>
             <td class="xls-td col-context"><input type="text" value="${row.division}" class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" readonly tabindex="-1"></td>
-            ${cell('office_type','dl-bldg-type','Combo-box: Select','col-context')}
-            ${cell('school_identifier','dl-bldg-school-id','Combo-box: Select','col-identity')}
-            ${cell('office_name','dl-bldg-school-name','Combo-box: Select','col-identity')}
+            <td class="xls-td col-context" style="position:relative;overflow:visible">
+                <input type="text" class="xls-input" data-bldg-col="school-search" data-bldg-id="${row._id}"
+                    value="${escBldg(row['school-search'] || '')}"
+                    placeholder="Search school/office..."
+                    autocomplete="off"
+                    oninput="syncBldgRow(${row._id},'school-search',this.value); filterBldgSchoolDropdown(${row._id},this.value)"
+                    onfocus="filterBldgSchoolDropdown(${row._id},this.value)">
+                <div id="bldg-school-dd-${row._id}" class="xls-custom-dd" style="display:none;width:100%;"></div>
+            </td>
+            <td class="xls-td col-context"><input type="text" class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" data-bldg-col="office_type" data-bldg-id="${row._id}" value="${escBldg(row.office_type)}" readonly tabindex="-1" placeholder="Auto-filled"></td>
+            <td class="xls-td col-identity"><input type="text" class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" data-bldg-col="school_identifier" data-bldg-id="${row._id}" value="${escBldg(row.school_identifier)}" readonly tabindex="-1" placeholder="Auto-filled"></td>
+            <td class="xls-td col-identity"><input type="text" class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" data-bldg-col="office_name" data-bldg-id="${row._id}" value="${escBldg(row.office_name)}" readonly tabindex="-1" placeholder="Auto-filled"></td>
             ${cell('address','','Address','col-context')}
             ${cell('storeys','','0','col-personnel','number')}
             ${cell('classrooms','','0','col-personnel','number')}
@@ -633,6 +658,120 @@ async function submitBuildingRegistration() {
         } else Swal.fire('Error', data.message, 'error');
     } catch(e) { Swal.fire('Error', 'Failed to register', 'error'); }
 }
+
+// ── Building School/Office Search Dropdown ──────────────────────────────────
+window.filterBldgSchoolDropdown = function(rowId, query) {
+    const dd = document.getElementById(`bldg-school-dd-${rowId}`);
+    if (!dd) return;
+    const q = (query || '').trim().toLowerCase();
+    const list = (typeof allSchoolsList !== 'undefined') ? allSchoolsList : [];
+    const matches = (q.length === 0
+        ? list.slice(0, 60)
+        : list.filter(s =>
+            s.name.toLowerCase().includes(q) ||
+            (s.school_id && String(s.school_id).includes(q))
+        ).slice(0, 60)
+    );
+    if (matches.length === 0) {
+        dd.innerHTML = `<div class="xls-dd-empty">No school/office found</div>`;
+    } else {
+        dd.innerHTML = matches.map(s => {
+            const nameEsc = s.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const typeLabel = (typeof detectItemSchoolType === 'function') ? detectItemSchoolType(s.name) : '';
+            return `<div class="xls-dd-item" onmousedown="selectBldgSchoolForRow(${rowId}, '${nameEsc}', '${s.school_id || ''}')">
+                ${s.name}
+                <span style="color:#64748b;font-size:8px;margin-left:6px;">${typeLabel || ''}</span>
+            </div>`;
+        }).join('');
+    }
+    dd.style.display = 'block';
+};
+
+window.selectBldgSchoolForRow = function(rowId, name, schoolId) {
+    const row = bldgEntryRows.find(r => r._id === rowId);
+    if (!row) return;
+
+    const type = (typeof detectItemSchoolType === 'function') ? detectItemSchoolType(name) : '';
+    const isSchool = type.toLowerCase().includes('school');
+    const location = (typeof cleanSchoolNameForLocation === 'function')
+        ? (isSchool ? cleanSchoolNameForLocation(name) : 'Zamboanga City')
+        : (isSchool ? name + ', Zamboanga City' : 'Zamboanga City');
+
+    // Update state
+    row['school-search']     = name;
+    row['office_name']       = name;
+    row['school_identifier'] = schoolId;
+    row['office_type']       = type;
+    row['location']          = location;
+
+    // Update DOM — search input
+    const searchInp = document.querySelector(`input[data-bldg-col="school-search"][data-bldg-id="${rowId}"]`);
+    if (searchInp) searchInp.value = name;
+
+    // Update read-only autofilled fields
+    const nameInp = document.querySelector(`input[data-bldg-col="office_name"][data-bldg-id="${rowId}"]`);
+    const idInp   = document.querySelector(`input[data-bldg-col="school_identifier"][data-bldg-id="${rowId}"]`);
+    const typeInp = document.querySelector(`input[data-bldg-col="office_type"][data-bldg-id="${rowId}"]`);
+    const locInp  = document.querySelector(`input[data-bldg-col="location"][data-bldg-id="${rowId}"]`);
+    if (nameInp) nameInp.value = name;
+    if (idInp)   idInp.value   = schoolId;
+    if (typeInp) typeInp.value = type;
+    if (locInp)  locInp.value  = location;
+
+    // Close dropdown
+    const dd = document.getElementById(`bldg-school-dd-${rowId}`);
+    if (dd) dd.style.display = 'none';
+};
+
+window.filterBldgBulkSchoolDropdown = function(query) {
+    const dd = document.getElementById('bulk-bldg-school-dd');
+    if (!dd) return;
+    const q = (query || '').trim().toLowerCase();
+    const list = (typeof allSchoolsList !== 'undefined') ? allSchoolsList : [];
+    const matches = (q.length === 0
+        ? list.slice(0, 60)
+        : list.filter(s =>
+            s.name.toLowerCase().includes(q) ||
+            (s.school_id && String(s.school_id).includes(q))
+        ).slice(0, 60)
+    );
+    if (matches.length === 0) {
+        dd.innerHTML = `<div class="xls-dd-empty">No school/office found</div>`;
+    } else {
+        dd.innerHTML = matches.map(s => {
+            const nameEsc = s.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+            const typeLabel = (typeof detectItemSchoolType === 'function') ? detectItemSchoolType(s.name) : '';
+            return `<div class="xls-dd-item" onmousedown="selectBldgBulkSchool('${nameEsc}', '${s.school_id || ''}')">
+                ${s.name}
+                <span style="color:#64748b;font-size:8px;margin-left:6px;">${typeLabel || ''}</span>
+            </div>`;
+        }).join('');
+    }
+    dd.style.display = 'block';
+};
+
+window.selectBldgBulkSchool = function(name, schoolId) {
+    const type = (typeof detectItemSchoolType === 'function') ? detectItemSchoolType(name) : '';
+    const isSchool = type.toLowerCase().includes('school');
+    const location = (typeof cleanSchoolNameForLocation === 'function')
+        ? (isSchool ? cleanSchoolNameForLocation(name) : 'Zamboanga City')
+        : (isSchool ? name + ', Zamboanga City' : 'Zamboanga City');
+
+    const searchInp = document.getElementById('bldgBulkSchoolSearch');
+    const nameInp   = document.getElementById('bldgBulkSchoolName');
+    const idInp     = document.getElementById('bldgBulkSchoolId');
+    const typeInp   = document.getElementById('bldgBulkType');
+    const locInp    = document.getElementById('bldgBulkLocation');
+
+    if (searchInp) searchInp.value = name;
+    if (nameInp)   nameInp.value   = name;
+    if (idInp)     idInp.value     = schoolId;
+    if (typeInp)   typeInp.value   = type;
+    if (locInp)    locInp.value    = location;
+
+    const dd = document.getElementById('bulk-bldg-school-dd');
+    if (dd) dd.style.display = 'none';
+};
 
 function updateBldgNewLabels() {
     const inputs = document.querySelectorAll('input[data-bldg-col]');

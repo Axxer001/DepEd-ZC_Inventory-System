@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Employee;
 use App\Models\School;
 use App\Models\Office;
+use App\Models\Classification;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -91,11 +93,11 @@ class EmployeeController extends Controller
      */
     public function searchEmployees(Request $request): JsonResponse
     {
-        $q = $request->string('q')->trim();
+        $q = (string)$request->string('q')->trim();
 
         $query = Employee::query()->with(['office', 'school']);
 
-        if (!empty($q)) {
+        if ($q !== '') {
             $query->where(function ($query) use ($q) {
                 $query->whereRaw("CONCAT(first_name, ' ', COALESCE(middle_name, ''), ' ', last_name) LIKE ?", ["%{$q}%"])
                       ->orWhere('employee_id', 'LIKE', "%{$q}%");
@@ -126,20 +128,42 @@ class EmployeeController extends Controller
      */
     public function searchLocations(Request $request): JsonResponse
     {
-        $q    = $request->string('q')->trim();
-        $type = $request->string('type', 'all');
-
-        if (empty($q)) {
-            return response()->json([]);
-        }
+        $q    = (string)$request->string('q')->trim();
+        $type = (string)$request->string('type', 'all');
 
         $schools = collect();
         $offices = collect();
 
+        if ($q === '') {
+            if (in_array($type, ['school', 'all'])) {
+                $schools = School::orderBy('name')->get()
+                    ->map(fn($s) => [
+                        'id'          => $s->id,
+                        'entity_type' => 'school',
+                        'entity_id'   => $s->school_id,
+                        'name'        => $s->name,
+                        'type'        => $s->type,
+                        'location'    => $s->location,
+                    ]);
+            }
+            if (in_array($type, ['office', 'all'])) {
+                $offices = Office::orderBy('name')->get()
+                    ->map(fn($o) => [
+                        'id'          => $o->id,
+                        'entity_type' => 'office',
+                        'entity_id'   => $o->office_id ?? $o->id,
+                        'name'        => $o->name,
+                        'type'        => $o->type,
+                        'location'    => $o->location,
+                    ]);
+            }
+            return response()->json($schools->merge($offices)->values());
+        }
+
         if (in_array($type, ['school', 'all'])) {
             $schools = School::where('name', 'LIKE', "%{$q}%")
                 ->orWhere('school_id', 'LIKE', "%{$q}%")
-                ->limit(10)->get()
+                ->limit(200)->get()
                 ->map(fn($s) => [
                     'id'          => $s->id,
                     'entity_type' => 'school',
@@ -153,7 +177,7 @@ class EmployeeController extends Controller
         if (in_array($type, ['office', 'all'])) {
             $offices = Office::where('name', 'LIKE', "%{$q}%")
                 ->orWhere('office_id', 'LIKE', "%{$q}%")
-                ->limit(10)->get()
+                ->limit(200)->get()
                 ->map(fn($o) => [
                     'id'          => $o->id,
                     'entity_type' => 'office',
@@ -165,5 +189,58 @@ class EmployeeController extends Controller
         }
 
         return response()->json($schools->merge($offices)->values());
+    }
+
+    /**
+     * API: Search classifications.
+     */
+    public function searchClassifications(Request $request): JsonResponse
+    {
+        $q = (string)$request->string('q')->trim();
+        
+        $query = Classification::query();
+        if ($q !== '') {
+            $query->where('name', 'LIKE', "%{$q}%");
+        }
+        
+        $results = $query->orderBy('name')->get()->map(fn($c) => [
+            'id'   => $c->id,
+            'name' => $c->name,
+        ]);
+        
+        return response()->json($results);
+    }
+
+    /**
+     * API: Search categories.
+     */
+    public function searchCategories(Request $request): JsonResponse
+    {
+        $q = (string)$request->string('q')->trim();
+        $classId = $request->input('classification_id');
+        $className = $request->input('classification_name');
+
+        $query = Category::query()->with('classification');
+
+        if ($classId) {
+            $query->where('classification_id', $classId);
+        } elseif ($className) {
+            $query->whereHas('classification', function($query) use ($className) {
+                $query->where('name', $className);
+            });
+        }
+
+        if ($q !== '') {
+            $query->where('name', 'LIKE', "%{$q}%");
+        }
+
+        $results = $query->orderBy('name')->get()->map(fn($cat) => [
+            'id' => $cat->id,
+            'name' => $cat->name,
+            'classification_id' => $cat->classification_id,
+            'classification_name' => $cat->classification?->name,
+        ]);
+
+        return response()->json($results);
     }
 }

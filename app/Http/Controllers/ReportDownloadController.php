@@ -21,6 +21,11 @@ class ReportDownloadController extends Controller
 
         if ($tab === 'source') {
             $query = DB::table('asset_sources')
+                ->whereExists(function ($q) {
+                    $q->select(DB::raw(1))
+                      ->from('asset_assignments')
+                      ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id');
+                })
                 ->leftJoin('items', 'asset_sources.item_id', '=', 'items.id')
                 ->leftJoin('categories', 'items.category_id', '=', 'categories.id')
                 ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')
@@ -189,7 +194,10 @@ class ReportDownloadController extends Controller
     {
         $query = $this->buildQuery($request);
         $rows = $query->limit(500)->get();
-        return response()->json(['rows' => $rows]);
+        return response()->json(['rows' => $rows])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 26 Jul 1997 05:00:00 GMT');
     }
 
     public function getAssetSuggestions(Request $request)
@@ -235,7 +243,10 @@ class ReportDownloadController extends Controller
             'acquisition_sources.id as acq_source_id'
         );
         $rows = $query->limit(500)->get();
-        return response()->json(['rows' => $rows]);
+        return response()->json(['rows' => $rows])
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+            ->header('Pragma', 'no-cache')
+            ->header('Expires', 'Sat, 26 Jul 1997 05:00:00 GMT');
     }
 
     public function getFilterOptions(Request $request)
@@ -243,7 +254,7 @@ class ReportDownloadController extends Controller
         $type = $request->input('report_type');
 
         $baseQuery = DB::table('asset_sources')
-            ->leftJoin('asset_assignments', 'asset_sources.id', '=', 'asset_assignments.asset_source_id')
+            ->join('asset_assignments', 'asset_sources.id', '=', 'asset_assignments.asset_source_id')
             ->leftJoin('items', 'asset_sources.item_id', '=', 'items.id')
             ->leftJoin('categories', 'items.category_id', '=', 'categories.id')
             ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')

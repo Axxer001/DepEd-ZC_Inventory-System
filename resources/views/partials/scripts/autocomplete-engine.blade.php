@@ -57,21 +57,32 @@ function handleAutocompleteEvent(e) {
     const end   = start + rowsPerPageToUse;
     const pageData = dataToUse.slice(start, end);
 
+    // Define columns in the Asset Distribution section to skip local suggestions (recently typed values)
+    const skipLocalCols = [
+        'property-no', 'property_number', 'property_no', 'propertyNo',
+        'location', 'loc',
+        'acquisition-date', 'acquisition_date',
+        'school-search', 'school_search', 'school-id', 'school_id', 'school-type', 'school_type', 'school-name', 'office_school_name',
+        'employee-search', 'employee_search', 'employee-id', 'custodian_employee_id', 'employee-name', 'custodian_name', 'employee-pos', 'custodian_position', 'employee-status', 'custodian_status'
+    ];
+
     const localData = [];
-    for (let i = pageData.length - 1; i >= 0; i--) {
-        const val = (pageData[i][colName] || "").toString().trim();
-        if (val && !localData.includes(val)) {
-            // Don't suggest the value currently being typed in the SAME row
-            const tr = input.closest('tr');
-            if (tr) {
-                const rowIdStr = tr.id.split('-').pop(); // Handle src-ID or bldg-row-ID
-                const rowId = parseInt(rowIdStr);
-                const dataId = isBldgEntry ? pageData[i]._id : pageData[i].id;
-                if (dataId !== rowId) {
+    if (!skipLocalCols.includes(colName)) {
+        for (let i = pageData.length - 1; i >= 0; i--) {
+            const val = (pageData[i][colName] || "").toString().trim();
+            if (val && !localData.includes(val)) {
+                // Don't suggest the value currently being typed in the SAME row
+                const tr = input.closest('tr');
+                if (tr) {
+                    const rowIdStr = tr.id.split('-').pop(); // Handle src-ID or bldg-row-ID
+                    const rowId = parseInt(rowIdStr);
+                    const dataId = isBldgEntry ? pageData[i]._id : pageData[i].id;
+                    if (dataId !== rowId) {
+                        localData.push(val);
+                    }
+                } else {
                     localData.push(val);
                 }
-            } else {
-                localData.push(val);
             }
         }
     }
