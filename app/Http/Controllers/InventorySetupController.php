@@ -505,6 +505,7 @@ class InventorySetupController extends Controller
                                 'repair'         => 'Needs Repair',
                                 'unserviceable'  => 'Unserviceable',
                                 'condemned'      => 'Unserviceable',
+                                'not useable'    => 'Unserviceable',
                             ];
                             $value = $conditionMap[strtolower(trim($value))] ?? 'Good Condition';
                         }
@@ -512,7 +513,102 @@ class InventorySetupController extends Controller
                     }
                 }
 
-                // Handle hierarchy changes if provided (Item resolution)
+                // Handle classification/category/item hierarchy changes
+                if (isset($data['classification']) || isset($data['category']) || isset($data['article'])) {
+                    $currentSource = DB::table('asset_sources')
+                        ->join('items', 'asset_sources.item_id', '=', 'items.id')
+                        ->join('categories', 'items.category_id', '=', 'categories.id')
+                        ->join('classifications', 'categories.classification_id', '=', 'classifications.id')
+                        ->where('asset_sources.id', $data['src_id'])
+                        ->select('classifications.name as class_name', 'categories.name as cat_name', 'items.name as item_name')
+                        ->first();
+
+                    $className = trim($data['classification'] ?? ($currentSource ? $currentSource->class_name : 'Unclassified'));
+                    $catName = trim($data['category'] ?? ($currentSource ? $currentSource->cat_name : 'General'));
+                    $itemName = trim($data['article'] ?? ($currentSource ? $currentSource->item_name : 'Unknown Item'));
+
+                    $classId = DB::table('classifications')->where('name', $className)->value('id')
+                        ?? DB::table('classifications')->insertGetId(['name' => $className, 'created_at' => now(), 'updated_at' => now()]);
+
+                    $catId = DB::table('categories')->where('classification_id', $classId)->where('name', $catName)->value('id')
+                        ?? DB::table('categories')->insertGetId(['classification_id' => $classId, 'name' => $catName, 'created_at' => now(), 'updated_at' => now()]);
+
+                    $itemId = DB::table('items')->where('category_id', $catId)->where('name', $itemName)->value('id')
+                        ?? DB::table('items')->insertGetId(['category_id' => $catId, 'name' => $itemName, 'created_at' => now(), 'updated_at' => now()]);
+
+                    $srcUpdates['item_id'] = $itemId;
+                }
+
+                // Handle Acquisition Source
+                if (isset($data['acq_source'])) {
+                    $acqSourceName = trim($data['acq_source']);
+                    if (!empty($acqSourceName)) {
+                        DB::table('acquisition_sources')->updateOrInsert(
+                            ['name' => $acqSourceName],
+                            ['source_type' => 'Internal', 'updated_at' => now()]
+                        );
+                        $acqSourceId = DB::table('acquisition_sources')->where('name', $acqSourceName)->value('id');
+                        $srcUpdates['acquisition_source_id'] = $acqSourceId;
+                    }
+                }
+
+                // Handle Mode of Acquisition
+                if (isset($data['mode'])) {
+                    $modeName = trim($data['mode']);
+                    if (!empty($modeName)) {
+                        $modeId = DB::table('procurement_modes')->where('name', $modeName)->value('id')
+                            ?? DB::table('procurement_modes')->insertGetId(['name' => $modeName, 'created_at' => now(), 'updated_at' => now()]);
+                        $srcUpdates['procurement_mode_id'] = $modeId;
+                    }
+                }
+
+                // Handle Source Personnel and Position
+                if (isset($data['personnel']) || isset($data['position'])) {
+                    $acqSourceId = $srcUpdates['acquisition_source_id'] ?? null;
+                    if ($acqSourceId === null) {
+                        $source = DB::table('asset_sources')->where('id', $data['src_id'])->first();
+                        $acqSourceId = $source ? $source->acquisition_source_id : null;
+                    }
+
+                    if ($acqSourceId) {
+                        $currentContact = DB::table('asset_sources')
+                            ->leftJoin('acquisition_contacts', 'asset_sources.acquisition_contact_id', '=', 'acquisition_contacts.id')
+                            ->where('asset_sources.id', $data['src_id'])
+                            ->select('acquisition_contacts.name', 'acquisition_contacts.position')
+                            ->first();
+
+                        $contactName = trim($data['personnel'] ?? ($currentContact ? $currentContact->name : ''));
+                        $contactPos = trim($data['position'] ?? ($currentContact ? $currentContact->position : ''));
+
+                        if (!empty($contactName)) {
+                            DB::table('acquisition_contacts')->updateOrInsert(
+                                ['acquisition_source_id' => $acqSourceId, 'name' => $contactName],
+                                ['position' => $contactPos ?: null, 'updated_at' => now()]
+                            );
+                            $contactId = DB::table('acquisition_contacts')
+                                ->where(['acquisition_source_id' => $acqSourceId, 'name' => $contactName])
+                                ->value('id');
+                            $srcUpdates['acquisition_contact_id'] = $contactId;
+                        }
+                    }
+                }
+
+                // Handle condition remarks mapping
+                if (isset($data['remarks'])) {
+                    $conditionMap = [
+                        'good'           => 'Good Condition',
+                        'good condition' => 'Good Condition',
+                        'serviceable'    => 'Good Condition',
+                        'needs repair'   => 'Needs Repair',
+                        'repair'         => 'Needs Repair',
+                        'unserviceable'  => 'Unserviceable',
+                        'condemned'      => 'Unserviceable',
+                        'not useable'    => 'Unserviceable',
+                    ];
+                    $srcUpdates['condition'] = $conditionMap[strtolower(trim($data['remarks']))] ?? 'Good Condition';
+                }
+
+                // Handle hierarchy changes if provided (Item resolution fallback)
                 if (isset($data['item_id'])) {
                     $srcUpdates['item_id'] = $data['item_id'];
                 }
@@ -538,6 +634,59 @@ class InventorySetupController extends Controller
                     if (array_key_exists($requestKey, $data)) {
                         $distUpdates[$dbCol] = $data[$requestKey];
                     }
+                }
+
+                // Resolve employee_id from code to DB primary key if present
+                if (array_key_exists('employee_id', $distUpdates)) {
+                    $empVal = $distUpdates['employee_id'];
+                    if (!empty($empVal)) {
+                        $resolvedId = DB::table('employees')
+                            ->where('employee_id', $empVal)
+                            ->orWhere('id', $empVal)
+                            ->value('id');
+                        $distUpdates['employee_id'] = $resolvedId;
+                    } else {
+                        $distUpdates['employee_id'] = null;
+                    }
+                }
+
+                // Handle Location (School/Office) association with Employee
+                if (isset($data['school_id'])) {
+                    $employeeId = $distUpdates['employee_id'] ?? null;
+                    if ($employeeId === null) {
+                        $assignment = DB::table('asset_assignments')->where('id', $data['dist_id'])->first();
+                        $employeeId = $assignment ? $assignment->employee_id : null;
+                    }
+
+                    if ($employeeId) {
+                        $school = DB::table('schools')->where('school_id', $data['school_id'])->first();
+                        if ($school) {
+                            DB::table('employees')->where('id', $employeeId)->update([
+                                'school_id' => $school->school_id,
+                                'office_id' => null,
+                            ]);
+                        } else {
+                            $office = DB::table('offices')
+                                ->where('office_id', $data['school_id'])
+                                ->orWhere('id', $data['school_id'])
+                                ->first();
+                            if ($office) {
+                                DB::table('employees')->where('id', $employeeId)->update([
+                                    'school_id' => null,
+                                    'office_id' => $office->id,
+                                ]);
+                            }
+                        }
+                    }
+                }
+
+                // Recompute acquisition_cost if cost or qty changes
+                if (isset($srcUpdates['asset_cost']) || isset($srcUpdates['quantity'])) {
+                    $currentSource = DB::table('asset_sources')->where('id', $data['src_id'])->first();
+                    $costVal = isset($srcUpdates['asset_cost']) ? (float)$srcUpdates['asset_cost'] : ($currentSource ? (float)$currentSource->asset_cost : 0.0);
+                    $qtyVal = isset($srcUpdates['quantity']) ? (int)$srcUpdates['quantity'] : ($currentSource ? (int)$currentSource->quantity : 1);
+                    
+                    $distUpdates['acquisition_cost'] = $costVal * $qtyVal;
                 }
 
                 // If quantity > 1, property number must be NULL

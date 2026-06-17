@@ -75,7 +75,15 @@
                 </div>
                 {{-- Name + Meta --}}
                 <div>
-                    <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase italic">{{ $contact->name }}</h1>
+                    <div class="flex items-center gap-3">
+                        <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase italic">{{ $contact->name }}</h1>
+                        @if(isset($employee) && $employee)
+                        <span class="px-2.5 py-0.5 rounded-full text-[8.5px] font-black uppercase tracking-wider bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center gap-1 shadow-sm">
+                            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+                            DepEd Employee
+                        </span>
+                        @endif
+                    </div>
                     <div class="flex flex-wrap items-center gap-3 mt-2">
                         <span class="text-xs font-bold text-slate-500 uppercase tracking-widest bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">{{ $contact->organization ?? 'External Provider' }}</span>
                         <span class="text-xs font-bold text-slate-500 uppercase tracking-widest bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">{{ $contact->position ?? 'Personnel' }}</span>
@@ -132,6 +140,44 @@
                                     <p class="text-xs font-black text-slate-800 uppercase leading-snug mt-0.5">{{ $contact->organization ?: '—' }}</p>
                                 </div>
                             </div>
+                            @if(isset($employee) && $employee)
+                            <div class="flex items-start gap-3">
+                                <div class="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center shrink-0 border border-slate-100">
+                                    <svg class="w-3.5 h-3.5 text-deped" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z"/></svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Employee ID</p>
+                                    <p class="text-xs font-black text-slate-800 leading-snug mt-0.5 font-mono">{{ $employee->employee_id }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center shrink-0 border border-slate-100">
+                                    <svg class="w-3.5 h-3.5 text-deped" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Position</p>
+                                    <p class="text-xs font-black text-slate-800 uppercase leading-snug mt-0.5">{{ $employee->position ?: '—' }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center shrink-0 border border-slate-100">
+                                    <svg class="w-3.5 h-3.5 text-deped" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 18h3.75M16.5 12h3.75m-3.75 3h3.75m-3.75 3h3.75M3 12h3.75M3 15h3.75"/></svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Assigned Station</p>
+                                    <p class="text-xs font-black text-slate-800 uppercase leading-snug mt-0.5">{{ $employee->station_name ?: '—' }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <div class="w-7 h-7 bg-slate-50 rounded-lg flex items-center justify-center shrink-0 border border-slate-100">
+                                    <svg class="w-3.5 h-3.5 text-deped" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                                </div>
+                                <div class="min-w-0">
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Status</p>
+                                    <p class="text-xs font-black text-slate-800 uppercase leading-snug mt-0.5">{{ $employee->status ?: '—' }}</p>
+                                </div>
+                            </div>
+                            @endif
                         </div>
                     </div>
 
@@ -190,9 +236,13 @@
                                             <span class="text-[10px] font-black text-slate-500 uppercase block">{{ $asset->property_number }}</span>
                                         </td>
                                         <td class="py-4">
-                                            <span class="text-[10.5px] font-bold text-slate-800 uppercase leading-tight block max-w-[180px] truncate">{{ $asset->school_name ?: '—' }}</span>
-                                            @if($asset->office_name)
-                                            <span class="text-[9px] font-semibold text-slate-400 uppercase block mt-0.5 max-w-[180px] truncate">{{ $asset->office_name }}</span>
+                                            @if($asset->custodian_name)
+                                            <span class="text-[10.5px] font-bold text-slate-800 uppercase leading-tight block max-w-[180px] truncate">{{ $asset->custodian_name }}</span>
+                                            @else
+                                            <span class="text-[10.5px] font-bold text-slate-400 uppercase leading-tight block max-w-[180px] truncate">Unassigned</span>
+                                            @endif
+                                            @if($asset->location_name)
+                                            <span class="text-[9px] font-semibold text-slate-400 uppercase block mt-0.5 max-w-[180px] truncate">{{ $asset->location_name }}</span>
                                             @endif
                                         </td>
                                         <td class="py-4 text-center">

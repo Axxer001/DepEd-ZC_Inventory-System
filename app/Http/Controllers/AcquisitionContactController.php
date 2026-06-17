@@ -86,6 +86,14 @@ class AcquisitionContactController extends Controller
             abort(404, 'Supplier Personnel not found');
         }
 
+        // Try to match the supplier contact to an employee
+        $employee = DB::table('employees as e')
+            ->leftJoin('schools as s', 'e.school_id', '=', 's.id')
+            ->leftJoin('offices as o', 'e.office_id', '=', 'o.id')
+            ->select('e.*', DB::raw('COALESCE(s.name, o.name) as station_name'))
+            ->where(DB::raw("TRIM(CONCAT(e.first_name, ' ', COALESCE(CONCAT(e.middle_name, ' '), ''), e.last_name))"), '=', $contact->name)
+            ->first();
+
         // Stats of supplied assets
         $stats = DB::table('asset_assignments as aa')
             ->join('asset_sources as asrc', 'aa.asset_source_id', '=', 'asrc.id')
@@ -110,12 +118,12 @@ class AcquisitionContactController extends Controller
                 'i.name as item_name',
                 'cat.name as category_name',
                 'asrc.condition',
-                'o.name as office_name',
-                's.name as school_name'
+                DB::raw("TRIM(CONCAT(e.first_name, ' ', COALESCE(CONCAT(e.middle_name, ' '), ''), e.last_name)) as custodian_name"),
+                DB::raw("COALESCE(s.name, o.name) as location_name")
             )
             ->orderByDesc('aa.acquisition_date')
             ->get();
 
-        return view('admin.supplier-contacts.profile', compact('contact', 'stats', 'assets'));
+        return view('admin.supplier-contacts.profile', compact('contact', 'stats', 'assets', 'employee'));
     }
 }

@@ -25,29 +25,9 @@ class OfficeController extends Controller
             abort(404, 'Office not found');
         }
 
-        // Total buildings stats for the school this office belongs to
-        $buildingStats = DB::table('building_records')
-            ->where('school_id', $office->school_id)
-            ->selectRaw('COUNT(*) as total_buildings, COALESCE(SUM(acquisition_cost), 0) as total_bldg_cost')
-            ->first();
-
-        // Building records for the school this office belongs to
-        $buildings = DB::table('building_records as br')
-            ->join('building_specs as bs', 'br.building_spec_id', '=', 'bs.id')
-            ->join('building_types as bt', 'bs.building_type_id', '=', 'bt.id')
-            ->select(
-                'br.id',
-                'br.property_number',
-                'br.date_constructed',
-                'br.acquisition_cost',
-                'br.occupancy_nature',
-                'bs.storeys',
-                'bs.classrooms',
-                'bs.description as spec_description',
-                'bt.name as type_name'
-            )
-            ->where('br.school_id', $office->school_id)
-            ->get();
+        // Offices are standalone units — buildings belong to schools, not offices.
+        $buildingStats = (object)['total_buildings' => 0, 'total_bldg_cost' => 0];
+        $buildings     = collect();
 
         // Asset assignments for employees based in this office
         $assetStats = DB::table('asset_assignments as ad')

@@ -112,10 +112,10 @@ class ReportDownloadController extends Controller
             $query->where('items.name', $filters['article']);
         }
         if (!empty($filters['schoolName']) && $tab === 'distribution') {
-            $query->where(function($q) use ($filters) {
-                $q->where('schools.name', 'LIKE', '%' . $filters['schoolName'] . '%')
-                  ->orWhere('offices.name', 'LIKE', '%' . $filters['schoolName'] . '%');
-            });
+            $query->where('schools.name', 'LIKE', '%' . $filters['schoolName'] . '%');
+        }
+        if (!empty($filters['officeName']) && $tab === 'distribution') {
+            $query->where('offices.name', 'LIKE', '%' . $filters['officeName'] . '%');
         }
         if (!empty($filters['source'])) {
             $query->where('acquisition_sources.name', $filters['source']);
@@ -163,15 +163,18 @@ class ReportDownloadController extends Controller
             elseif ($eCol === 'acq_source') $dbCol = 'acquisition_sources.name';
             elseif ($eCol === 'mode_of_acquisition') $dbCol = 'pm.name';
             elseif ($eCol === 'acceptance_date') $dbCol = 'asset_sources.acceptance_date';
+            elseif ($eCol === 'useful_life') $dbCol = 'asset_sources.estimated_useful_life';
+            elseif ($eCol === 'personnel') $dbCol = 'ac.name';
+            elseif ($eCol === 'condition') $dbCol = 'asset_sources.condition';
             
             // Distribution-specific columns
             if ($tab === 'distribution') {
                 if ($eCol === 'property_number') $dbCol = 'asset_assignments.property_number';
                 elseif ($eCol === 'school_id') $dbCol = 'cus.school_id';
                 elseif ($eCol === 'school_name') $dbCol = 'schools.name';
-                elseif ($eCol === 'occupancy') $dbCol = DB::raw('NULL');
                 elseif ($eCol === 'location') $dbCol = 'schools.location';
                 elseif ($eCol === 'acquisition_date') $dbCol = 'asset_assignments.acquisition_date';
+                elseif ($eCol === 'employee_id') $dbCol = 'asset_assignments.employee_id';
             }
             
             if ($dbCol) {
@@ -270,19 +273,27 @@ class ReportDownloadController extends Controller
         $classifications = (clone $baseQuery)->whereNotNull('classifications.name')->pluck('classifications.name')->unique()->sort()->values();
         $categories = (clone $baseQuery)->whereNotNull('categories.name')->pluck('categories.name')->unique()->sort()->values();
         $items = (clone $baseQuery)->whereNotNull('items.name')->pluck('items.name')->unique()->sort()->values();
-        $schools = DB::table('schools')->whereNotNull('name')->where('name', '!=', '')->pluck('name')->merge(
-            DB::table('offices')->whereNotNull('name')->where('name', '!=', '')->pluck('name')
-        )->unique()->sort()->values();
+        $schools = DB::table('schools')->whereNotNull('name')->where('name', '!=', '')->pluck('name')->unique()->sort()->values();
+        $offices = DB::table('offices')->whereNotNull('name')->where('name', '!=', '')->pluck('name')->unique()->sort()->values();
         $sources = (clone $baseQuery)->whereNotNull('acquisition_sources.name')->pluck('acquisition_sources.name')->unique()->sort()->values();
         $modes = (clone $baseQuery)->whereNotNull('pm.name')->pluck('pm.name')->unique()->sort()->values();
+
+        $units = DB::table('asset_sources')
+            ->whereNotNull('unit_of_measurement')
+            ->where('unit_of_measurement', '!=', '')
+            ->distinct()
+            ->orderBy('unit_of_measurement')
+            ->pluck('unit_of_measurement');
 
         return response()->json([
             'classifications' => $classifications,
             'categories' => $categories,
             'items' => $items,
             'schools' => $schools,
+            'offices' => $offices,
             'sources' => $sources,
-            'modes' => $modes
+            'modes' => $modes,
+            'units' => $units
         ]);
     }
 
@@ -706,15 +717,12 @@ class ReportDownloadController extends Controller
         if (is_string($filters)) { $filters = json_decode($filters, true) ?: []; }
 
         $query = DB::table('offices')
-            ->leftJoin('schools', 'offices.school_id', '=', 'schools.id')
             ->select(
                 'offices.id',
                 'offices.name',
-                'offices.office_code',
-                'offices.office_code as type',
-                'offices.room_number',
-                'schools.name as location',
-                'schools.name as school_name'
+                'offices.type',
+                'offices.location',
+                'offices.office_id'
             )
             ->addSelect([
                 'total_ppe_cost' => DB::table('asset_assignments as ad2')
@@ -735,24 +743,30 @@ class ReportDownloadController extends Controller
                     ->selectRaw('COUNT(*)'),
             ]);
 
+        if (!empty($filters['type'])) {
+            $types = is_array($filters['type']) ? $filters['type'] : [$filters['type']];
+            $query->whereIn('offices.type', $types);
+        }
+
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function($q) use ($search) {
                 $q->where('offices.name', 'LIKE', "%$search%")
-                  ->orWhere('offices.office_code', 'LIKE', "%$search%")
-                  ->orWhere('schools.name', 'LIKE', "%$search%");
+                  ->orWhere('offices.type', 'LIKE', "%$search%")
+                  ->orWhere('offices.location', 'LIKE', "%$search%");
             });
         }
 
         $rows = $query->orderBy('offices.name')->get();
         return response()->json(['rows' => $rows]);
+
     }
 
     public function getOfficesFilterOptions(Request $request)
     {
-        $schools = DB::table('schools')->pluck('name')->unique()->sort()->values();
+        $types = DB::table('offices')->distinct()->whereNotNull('type')->where('type', '!=', '')->pluck('type')->sort()->values();
         return response()->json([
-            'schools' => $schools
+            'types' => $types
         ]);
     }
 
@@ -762,15 +776,19 @@ class ReportDownloadController extends Controller
         if (is_string($filters)) { $filters = json_decode($filters, true) ?: []; }
 
         $query = DB::table('employees')
-            ->select('employees.*')
+            ->leftJoin('schools as s', 'employees.school_id', '=', 's.id')
+            ->leftJoin('offices as o', 'employees.office_id', '=', 'o.id')
+            ->select(
+                'employees.*',
+                DB::raw('COALESCE(s.name, o.name) as school_name')
+            )
             ->addSelect([
                 'total_assets' => DB::table('asset_assignments')
                     ->whereColumn('employee_id', 'employees.id')
                     ->selectRaw('COUNT(*)'),
                 'total_value' => DB::table('asset_assignments as ad')
-                    ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
                     ->whereColumn('ad.employee_id', 'employees.id')
-                    ->selectRaw('COALESCE(SUM(asrc.asset_cost), 0)'),
+                    ->selectRaw('COALESCE(SUM(ad.acquisition_cost), 0)'),
             ]);
 
         if (!empty($filters['status'])) {
@@ -779,14 +797,16 @@ class ReportDownloadController extends Controller
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function($q) use ($search) {
-                $q->where('first_name', 'LIKE', "%$search%")
-                  ->orWhere('last_name', 'LIKE', "%$search%")
-                  ->orWhere('employee_id', 'LIKE', "%$search%")
-                  ->orWhere('position', 'LIKE', "%$search%");
+                $q->where('employees.first_name', 'LIKE', "%$search%")
+                  ->orWhere('employees.last_name', 'LIKE', "%$search%")
+                  ->orWhere('employees.employee_id', 'LIKE', "%$search%")
+                  ->orWhere('employees.position', 'LIKE', "%$search%")
+                  ->orWhere('s.name', 'LIKE', "%$search%")
+                  ->orWhere('o.name', 'LIKE', "%$search%");
             });
         }
 
-        $rows = $query->orderBy('last_name')->get();
+        $rows = $query->orderBy('employees.last_name')->get();
         return response()->json(['rows' => $rows]);
     }
 

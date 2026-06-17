@@ -53,20 +53,20 @@ class EmployeeController extends Controller
             ->orderByDesc('ad.acquisition_date')
             ->get();
 
-        $schools = DB::table('asset_assignments as ad')
-            ->join('employees as e', 'ad.employee_id', '=', 'e.id')
+        // Fetch assigned station directly from the employee record (not through asset_assignments)
+        // so employees with 0 assets also show their school/office.
+        $schools = DB::table('employees as e')
             ->leftJoin('schools as s', 'e.school_id', '=', 's.id')
             ->leftJoin('offices as o', 'e.office_id', '=', 'o.id')
-            ->where('ad.employee_id', $id)
+            ->where('e.id', $id)
             ->where(function ($query) {
                 $query->whereNotNull('e.school_id')
                       ->orWhereNotNull('e.office_id');
             })
             ->select(
                 DB::raw('COALESCE(s.name, o.name) as name'),
-                DB::raw('COUNT(ad.id) as asset_count')
+                DB::raw('(SELECT COUNT(*) FROM asset_assignments WHERE employee_id = e.id) as asset_count')
             )
-            ->groupBy(DB::raw('COALESCE(s.name, o.name)'))
             ->get();
 
         $transfers = collect();
@@ -240,6 +240,32 @@ class EmployeeController extends Controller
             'classification_id' => $cat->classification_id,
             'classification_name' => $cat->classification?->name,
         ]);
+
+        return response()->json($results);
+    }
+
+    /**
+     * API: Search acquisition sources for selectors.
+     */
+    public function searchAcquisitionSources(Request $request): JsonResponse
+    {
+        $q = (string)$request->string('q')->trim();
+
+        $query = \App\Models\AcquisitionSource::query();
+
+        if ($q !== '') {
+            $query->where('name', 'LIKE', "%{$q}%");
+        }
+
+        $results = $query
+            ->orderBy('name')
+            ->limit(500)
+            ->get()
+            ->map(fn($src) => [
+                'id'          => $src->id,
+                'name'        => $src->name,
+                'source_type' => $src->source_type,
+            ]);
 
         return response()->json($results);
     }

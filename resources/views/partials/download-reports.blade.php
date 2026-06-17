@@ -225,6 +225,17 @@
                             </select>
                         </div>
 
+                        {{-- Office Name --}}
+                        <div>
+                            <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Office Name</label>
+                            <select x-model="filters.officeName" @change="applyFilters()" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-deped transition-all text-slate-500 cursor-pointer">
+                                <option value="">All Offices</option>
+                                <template x-for="office in filterOptions.offices" :key="office">
+                                    <option :value="office" x-text="office"></option>
+                                </template>
+                            </select>
+                        </div>
+
                         {{-- Source of Acquisition --}}
                         <div>
                             <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Source of Acquisition</label>
@@ -366,6 +377,7 @@
                 categories: [],
                 items: [],
                 schools: [],
+                offices: [],
                 sources: [],
                 modes: []
             },
@@ -375,6 +387,7 @@
                 article: '',
                 sortCost: '',
                 schoolName: '',
+                officeName: '',
                 source: '',
                 mode: '',
                 dateAcquired: ''
@@ -419,6 +432,7 @@
                     this.filterOptions.categories = data.categories || [];
                     this.filterOptions.items = data.items || [];
                     this.filterOptions.schools = data.schools || [];
+                    this.filterOptions.offices = data.offices || [];
                     this.filterOptions.sources = data.sources || [];
                     this.filterOptions.modes = data.modes || [];
                 })
@@ -432,6 +446,7 @@
                     article: '',
                     sortCost: '',
                     schoolName: '',
+                    officeName: '',
                     source: '',
                     mode: '',
                     dateAcquired: ''

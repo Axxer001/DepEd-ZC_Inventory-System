@@ -211,6 +211,7 @@
                         <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
                         <th class="xls-th sticky left-[40px] z-30" style="min-width:120px">School ID</th>
                         <th class="xls-th" style="min-width:300px">Institutional Name</th>
+                        <th class="xls-th" style="min-width:180px">Type</th>
                         <th class="xls-th" style="min-width:180px">District</th>
                         <th class="xls-th" style="min-width:180px">Quadrant</th>
                         <th class="xls-th" style="min-width:150px">Total Bldg Cost</th>
@@ -392,6 +393,20 @@
                 const cell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const">${val || ''}</span></td>`;
                 const idCell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const font-black text-red-600 italic">${val || ''}</span></td>`;
                 const costCell = (val, color) => `<td class="xls-td relative"><span class="xls-const font-black italic ${color}">₱ ${Number(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></td>`;
+                const typeBadge = (val) => {
+                    if (!val) return `<td class="xls-td relative"><span class="xls-const text-slate-300">—</span></td>`;
+                    let colorClass = 'bg-slate-50 text-slate-500 border-slate-200';
+                    if (val.includes('ELEMENTARY')) {
+                        colorClass = 'bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60';
+                    } else if (val.includes('JHS')) {
+                        colorClass = 'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900/60';
+                    } else if (val.includes('SHS')) {
+                        colorClass = 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60';
+                    } else if (val.includes('INTEGRATED')) {
+                        colorClass = 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-900/60';
+                    }
+                    return `<td class="xls-td relative"><span class="xls-const"><span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${colorClass}">${val}</span></span></td>`;
+                };
 
                 tr.innerHTML = `
                     <td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
@@ -399,6 +414,7 @@
                     <td class="xls-td relative">
                         <span class="xls-const font-bold text-slate-800 uppercase">${row.name || ''}</span>
                     </td>
+                    ${typeBadge(row.type)}
                     ${cell(row.district_name)}
                     ${cell(row.quadrant_name)}
                     ${costCell(row.total_bldg_cost, 'text-emerald-600')}

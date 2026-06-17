@@ -20,10 +20,10 @@
         .xls-td { height: 52px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; vertical-align: middle; padding: 0; background: white; transition: all 0.3s ease; }
         .xls-row { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative; }
         .xls-row:hover { transform: translateX(4px); z-index: 10; }
-        .xls-row:hover .xls-td { background-color: rgba(192, 0, 0, 0.03) !important; border-bottom-color: #c00000; }
+        .xls-row:hover .xls-td { background-color: #fdf3f3 !important; border-bottom-color: #c00000; }
         .xls-row:hover .xls-td:first-child { box-shadow: inset 4px 0 0 #c00000; }
         .xls-row:active { transform: scale(0.995); transition: all 0.1s; }
-        .xls-row:active .xls-td { background-color: rgba(192, 0, 0, 0.08) !important; }
+        .xls-row:active .xls-td { background-color: #fbe3e3 !important; }
         .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
         .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 350px); min-height: 400px; background: white; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
         .xls-scroll-wrap.expanded { height: calc(100vh - 250px); }
@@ -110,6 +110,8 @@
         html.dark .xls-td { background-color: #1e293b !important; border-color: #334155 !important; }
         html.dark .xls-th { background-color: #0f172a !important; border-color: #334155 !important; color: #94a3b8 !important; }
         html.dark .xls-scroll-wrap { background-color: #1e293b !important; border-color: #334155 !important; }
+        html.dark .xls-row:hover .xls-td { background-color: #27212b !important; }
+        html.dark .xls-row:active .xls-td { background-color: #35232d !important; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex text-slate-900 overflow-x-hidden selection:bg-red-100 selection:text-red-900 relative">

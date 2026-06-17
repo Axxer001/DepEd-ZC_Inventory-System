@@ -457,10 +457,17 @@
                     </select>
                 </div>
                 <div class="relative">
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Office / School</label>
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">School</label>
                     <div class="relative">
                         <input type="text" id="assetFilterSchool" placeholder="Search School..." autocomplete="off" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500 pr-10">
                         <div id="assetSchoolDropdown" class="custom-autocomplete hidden"></div>
+                    </div>
+                </div>
+                <div class="relative">
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Office</label>
+                    <div class="relative">
+                        <input type="text" id="assetFilterOffice" placeholder="Search Office..." autocomplete="off" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500 pr-10">
+                        <div id="assetOfficeDropdown" class="custom-autocomplete hidden"></div>
                     </div>
                 </div>
                 <div>
@@ -682,7 +689,9 @@
         let assetCurrentPage = 1;
         const assetRowsPerPage = 50;
         let allSchoolList = [];
+        let allOfficeList = [];
         let isSchoolInit = false;
+        let isOfficeInit = false;
         let currentAssetTab = 'source';
         let assetShowAllColumns = false;
 
@@ -705,14 +714,18 @@
             currentAssetTab = tab;
             const sourceBtn = document.getElementById('tabBtnSource');
             const distBtn = document.getElementById('tabBtnDist');
+            const schoolWrap = document.getElementById('assetFilterSchool').parentElement.parentElement;
+            const officeWrap = document.getElementById('assetFilterOffice').parentElement.parentElement;
             if (tab === 'source') {
                 sourceBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-white bg-[#c00000] shadow-md shadow-red-200";
                 distBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-slate-500 hover:text-[#c00000]";
-                document.getElementById('assetFilterSchool').parentElement.parentElement.classList.add('opacity-30', 'pointer-events-none');
+                schoolWrap.classList.add('opacity-30', 'pointer-events-none');
+                officeWrap.classList.add('opacity-30', 'pointer-events-none');
             } else {
                 distBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-white bg-[#c00000] shadow-md shadow-red-200";
                 sourceBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-slate-500 hover:text-[#c00000]";
-                document.getElementById('assetFilterSchool').parentElement.parentElement.classList.remove('opacity-30', 'pointer-events-none');
+                schoolWrap.classList.remove('opacity-30', 'pointer-events-none');
+                officeWrap.classList.remove('opacity-30', 'pointer-events-none');
             }
             assetCurrentPage = 1;
             assetFetchData();
@@ -738,7 +751,9 @@
                 populate('assetFilterSource', data.sources, 'Source');
                 populate('assetFilterMode', data.modes, 'Mode');
                 allSchoolList = data.schools || [];
+                allOfficeList = data.offices || [];
                 if (!isSchoolInit) { initSchoolAutocomplete(); isSchoolInit = true; }
+                if (!isOfficeInit) { initOfficeAutocomplete(); isOfficeInit = true; }
             } catch (e) { console.error('Failed to fetch filters', e); }
         }
 
@@ -765,6 +780,29 @@
             }
         }
 
+        function initOfficeAutocomplete() {
+            const input = document.getElementById('assetFilterOffice');
+            const dropdown = document.getElementById('assetOfficeDropdown');
+            input.onfocus = () => showDropdown(input.value);
+            input.oninput = (e) => showDropdown(e.target.value);
+            document.addEventListener('click', (e) => {
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.add('hidden');
+            });
+            function showDropdown(query = '') {
+                const filtered = allOfficeList.filter(s => s.toLowerCase().includes(query.toLowerCase()));
+                dropdown.innerHTML = '';
+                if (filtered.length === 0) { dropdown.classList.add('hidden'); return; }
+                filtered.slice(0, 10).forEach(office => {
+                    const item = document.createElement('div');
+                    item.className = 'custom-autocomplete-item';
+                    item.textContent = office;
+                    item.onclick = () => { input.value = office; dropdown.classList.add('hidden'); assetFetchData(); };
+                    dropdown.appendChild(item);
+                });
+                dropdown.classList.remove('hidden');
+            }
+        }
+
         async function assetFetchData() {
             const loading = document.getElementById('assetLoading');
             loading.classList.remove('hidden');
@@ -776,6 +814,7 @@
                 mode: document.getElementById('assetFilterMode').value,
                 dateAcquired: document.getElementById('assetFilterDate').value,
                 schoolName: document.getElementById('assetFilterSchool').value,
+                officeName: document.getElementById('assetFilterOffice').value,
                 sortCost: document.getElementById('assetFilterSort').value,
                 emptyCol: document.getElementById('assetFilterEmptyCol').value,
                 status: document.getElementById('assetFilterStatus').value,
@@ -975,6 +1014,7 @@
             document.getElementById('assetFilterMode').value = '';
             document.getElementById('assetFilterDate').value = '';
             document.getElementById('assetFilterSchool').value = '';
+            document.getElementById('assetFilterOffice').value = '';
             document.getElementById('assetFilterSort').value = '';
             document.getElementById('assetFilterEmptyCol').value = '';
             document.getElementById('assetFilterStatus').value = '';

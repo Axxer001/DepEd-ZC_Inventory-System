@@ -11,6 +11,7 @@
         let globalClassifications = [];
         let globalCategories = [];
         let globalAcqContacts = [];
+        let globalAcqSources = [];
 
         async function initGlobalDatalists() {
             try {
@@ -33,6 +34,13 @@
 
                 const catRes = await fetch('/api/categories/search?q=');
                 globalCategories = await catRes.json();
+
+                try {
+                    const acqSrcRes = await fetch('/api/acquisition-sources/search?q=');
+                    globalAcqSources = await acqSrcRes.json();
+                } catch (err) { console.error('Failed to fetch acquisition sources', err); }
+
+
 
                 try {
                     const contactRes = await fetch('/api/supplier-contacts/preview', {
@@ -149,22 +157,31 @@
                 document.querySelector(`#dst-${rowId} input[data-col="employee-pos"]`).value    = emp.position || '';
                 document.querySelector(`#dst-${rowId} input[data-col="employee-status"]`).value = emp.status || '';
 
+                const sSearch = document.querySelector(`#dst-${rowId} input[data-col="school-search"]`);
                 if (emp.location_name) {
                     row['school-search'] = emp.location_name;
                     row['school-name']   = emp.location_name;
                     row['school-id']     = emp.location_id || '';
                     row['school-type']   = emp.location_type_label || emp.location_type || '';
                     row['location']      = emp.location || 'Zamboanga City';
-                    const sSearch = document.querySelector(`#dst-${rowId} input[data-col="school-search"]`);
                     const sName   = document.querySelector(`#dst-${rowId} input[data-col="school-name"]`);
                     const sId     = document.querySelector(`#dst-${rowId} input[data-col="school-id"]`);
                     const sType   = document.querySelector(`#dst-${rowId} input[data-col="school-type"]`);
                     const sLoc    = document.querySelector(`#dst-${rowId} input[data-col="location"]`);
-                    if (sSearch) sSearch.value = emp.location_name;
+                    if (sSearch) {
+                        sSearch.value = emp.location_name;
+                        sSearch.disabled = true;
+                        sSearch.className = 'xls-input bg-slate-50 cursor-not-allowed';
+                    }
                     if (sName)   sName.value   = emp.location_name;
                     if (sId)     sId.value     = emp.location_id || '';
                     if (sType)   sType.value   = emp.location_type_label || emp.location_type || '';
                     if (sLoc)    sLoc.value    = emp.location || 'Zamboanga City';
+                } else {
+                    if (sSearch) {
+                        sSearch.disabled = false;
+                        sSearch.className = 'xls-input';
+                    }
                 }
             }
         }
@@ -203,22 +220,58 @@
             autofillLocation(rowId, loc.name);
         }
 
+        window.updateAcqSourceBadge = function(query) {
+            const badge = document.getElementById('acqSourceNewBadge');
+            if (!badge) return;
+            const q = (query || '').trim();
+            if (q === '') {
+                badge.classList.add('hidden');
+                return;
+            }
+            const exists = globalAcqSources.some(src => (src.name || '').trim().toLowerCase() === q.toLowerCase());
+            if (exists) {
+                badge.classList.add('hidden');
+            } else {
+                badge.classList.remove('hidden');
+            }
+        }
+
+        window.filterAcqSourceDropdown = function(query) {
+            const dd = document.getElementById('acq-source-dd');
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalAcqSources.slice(0, 50)
+                : globalAcqSources.filter(src =>
+                    src.name.toLowerCase().includes(q)
+                ).slice(0, 50);
+
+            if (matches.length === 0) {
+                dd.innerHTML = `<div class="xls-dd-empty">No matching sources found. Type to create new.</div>`;
+            } else {
+                dd.innerHTML = matches.map(src => `
+                    <div class="xls-dd-item" onmousedown="selectAcqSource(this.getAttribute('data-name'))" data-name="${(src.name||'').replace(/"/g, '&quot;')}">
+                        ${src.name}
+                        <span style="color:#64748b;font-size:8px;margin-left:6px;">(${src.source_type || 'Internal'})</span>
+                    </div>`).join('');
+            }
+            dd.style.display = 'block';
+            updateAcqSourceBadge(query);
+        }
+
+        window.selectAcqSource = function(name) {
+            const inp = document.getElementById('acqSourceInput');
+            if (inp) inp.value = name;
+            const dd = document.getElementById('acq-source-dd');
+            if (dd) dd.style.display = 'none';
+            updateAcqSourceBadge(name);
+        }
+
         window.filterPersonnelDropdown = function(rowId, query) {
             const dd = document.getElementById(`personnel-dd-${rowId}`);
             if (!dd) return;
             const q = (query || '').trim().toLowerCase();
             
-            // Filter employees
-            const matchedEmployees = globalEmployees.filter(e =>
-                e.full_name.toLowerCase().includes(q) ||
-                (e.employee_id && String(e.employee_id).toLowerCase().includes(q))
-            ).map(e => ({
-                name: e.full_name,
-                position: e.position || '',
-                type: 'Employee',
-                extra: e.employee_id ? `ID: ${e.employee_id}` : ''
-            }));
-
             // Filter acquisition contacts
             const matchedContacts = globalAcqContacts.filter(c =>
                 c.name.toLowerCase().includes(q) ||
@@ -228,6 +281,22 @@
                 position: c.position || '',
                 type: 'Supplier Contact',
                 extra: c.organization || ''
+            }));
+
+            // Exclude employees who already exist in supplier/acquisition contacts
+            const contactNamesSet = new Set(globalAcqContacts.map(c => (c.name || '').trim().toLowerCase()));
+
+            // Filter employees
+            const matchedEmployees = globalEmployees.filter(e => {
+                const nameKey = (e.full_name || '').trim().toLowerCase();
+                if (contactNamesSet.has(nameKey)) return false;
+                return e.full_name.toLowerCase().includes(q) ||
+                    (e.employee_id && String(e.employee_id).toLowerCase().includes(q));
+            }).map(e => ({
+                name: e.full_name,
+                position: e.position || '',
+                type: 'Employee',
+                extra: e.employee_id ? `ID: ${e.employee_id}` : ''
             }));
 
             const matches = [...matchedEmployees, ...matchedContacts].slice(0, 50);
@@ -281,17 +350,6 @@
             if (!dd) return;
             const q = (query || '').trim().toLowerCase();
             
-            // Filter employees
-            const matchedEmployees = globalEmployees.filter(e =>
-                e.full_name.toLowerCase().includes(q) ||
-                (e.employee_id && String(e.employee_id).toLowerCase().includes(q))
-            ).map(e => ({
-                name: e.full_name,
-                position: e.position || '',
-                type: 'Employee',
-                extra: e.employee_id ? `ID: ${e.employee_id}` : ''
-            }));
-
             // Filter acquisition contacts
             const matchedContacts = globalAcqContacts.filter(c =>
                 c.name.toLowerCase().includes(q) ||
@@ -301,6 +359,22 @@
                 position: c.position || '',
                 type: 'Supplier Contact',
                 extra: c.organization || ''
+            }));
+
+            // Exclude employees who already exist in supplier/acquisition contacts
+            const contactNamesSet = new Set(globalAcqContacts.map(c => (c.name || '').trim().toLowerCase()));
+
+            // Filter employees
+            const matchedEmployees = globalEmployees.filter(e => {
+                const nameKey = (e.full_name || '').trim().toLowerCase();
+                if (contactNamesSet.has(nameKey)) return false;
+                return e.full_name.toLowerCase().includes(q) ||
+                    (e.employee_id && String(e.employee_id).toLowerCase().includes(q));
+            }).map(e => ({
+                name: e.full_name,
+                position: e.position || '',
+                type: 'Employee',
+                extra: e.employee_id ? `ID: ${e.employee_id}` : ''
             }));
 
             const matches = [...matchedEmployees, ...matchedContacts].slice(0, 50);
@@ -634,6 +708,83 @@
             if (classInp && cat.classification_name) {
                 classInp.value = cat.classification_name;
                 if (typeof syncEditClass === 'function') syncEditClass(distId, cat.classification_name);
+            }
+            if (typeof renderEditTable === 'function') renderEditTable();
+        }
+
+        window.filterEditContactDropdown = function(distId, query) {
+            const dd = document.getElementById(`edit-contact-dd-${distId}`);
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            
+            // Filter acquisition contacts
+            const matchedContacts = globalAcqContacts.filter(c =>
+                c.name.toLowerCase().includes(q) ||
+                (c.organization && c.organization.toLowerCase().includes(q))
+            ).map(c => ({
+                name: c.name,
+                position: c.position || '',
+                type: 'Supplier Contact',
+                extra: c.organization || ''
+            }));
+
+            // Exclude employees who already exist in supplier/acquisition contacts
+            const contactNamesSet = new Set(globalAcqContacts.map(c => (c.name || '').trim().toLowerCase()));
+
+            // Filter employees
+            const matchedEmployees = globalEmployees.filter(e => {
+                const nameKey = (e.full_name || '').trim().toLowerCase();
+                if (contactNamesSet.has(nameKey)) return false;
+                return e.full_name.toLowerCase().includes(q) ||
+                    (e.employee_id && String(e.employee_id).toLowerCase().includes(q));
+            }).map(e => ({
+                name: e.full_name,
+                position: e.position || '',
+                type: 'Employee',
+                extra: e.employee_id ? `ID: ${e.employee_id}` : ''
+            }));
+
+            const matches = [...matchedEmployees, ...matchedContacts].slice(0, 50);
+
+            if (matches.length === 0) {
+                dd.innerHTML = `<div class="xls-dd-empty">No personnel found</div>`;
+            } else {
+                dd.innerHTML = matches.map(p => {
+                    const nameEscaped = p.name.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const posEscaped = p.position.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    const extraDisplay = p.extra ? `<span style="color:#64748b;font-size:8px;margin-left:6px;">(${p.extra})</span>` : '';
+                    return `
+                        <div class="xls-dd-item" onmousedown="selectEditContact(${distId}, '${nameEscaped}', '${posEscaped}')">
+                            ${p.name}
+                            <span style="color:#f59e0b;font-size:8px;margin-left:6px;font-weight:bold;">${p.type}</span>
+                            ${extraDisplay}
+                        </div>`;
+                }).join('');
+            }
+            dd.style.display = 'block';
+        }
+
+        window.selectEditContact = function(distId, name, position) {
+            const inp = document.querySelector(`input[data-col="source_personnel"][data-id="${distId}"]`);
+            if (inp) inp.value = name;
+            if (typeof syncEditPersonnel === 'function') syncEditPersonnel(distId, name);
+
+            const dd = document.getElementById(`edit-contact-dd-${distId}`);
+            if (dd) dd.style.display = 'none';
+
+            // Autofill position
+            const posInp = document.querySelector(`input[data-col="personnel_position"][data-id="${distId}"]`);
+            if (posInp) {
+                posInp.value = position || '';
+                // Update value in editAllData directly
+                const row = editAllData.find(r => r.dist_id === distId);
+                if (row) {
+                    const oldVal = row['personnel_position'] ?? '';
+                    if (String(oldVal).trim() !== String(position || '').trim()) {
+                        editUndoStack.push({ type: 'single', rowId: distId, col: 'personnel_position', oldVal: oldVal, newVal: position || '' });
+                        row['personnel_position'] = position || '';
+                    }
+                }
             }
             if (typeof renderEditTable === 'function') renderEditTable();
         }
@@ -1030,16 +1181,16 @@
                 </td>
                 <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'item', this.value)"           data-col="item"           value="${data.item}"           autocomplete="off" class="xls-input" placeholder="Item"></td>
                 <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'description', this.value)"    data-col="description"    value="${data.description}"    autocomplete="off" class="xls-input" placeholder="Description"></td>
-                <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'uom', this.value)"            data-col="uom"            value="${data.uom}"            autocomplete="off" class="xls-input" placeholder="e.g. Unit, Set, Pcs"></td>
-                <td class="xls-td col-status"><input type="text" oninput="syncState(${data.id}, 'mode', this.value)"           data-col="mode"           value="${data.mode}"           autocomplete="off" class="xls-input" placeholder="Mode of Procurement"></td>
+                <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'uom', this.value)"    data-col="uom"    value="${data.uom || ''}"    autocomplete="off" class="xls-input" placeholder="Unit"></td>
+                <td class="xls-td col-status"><input type="text" oninput="syncState(${data.id}, 'mode', this.value)"     data-col="mode"   value="${data.mode || ''}"   autocomplete="off" class="xls-input" placeholder="Mode"></td>
                 <td class="xls-td col-personnel" style="position:relative;overflow:visible">
                     <input type="text" oninput="syncState(${data.id}, 'personnel', this.value); filterPersonnelDropdown(${data.id}, this.value)" onfocus="filterPersonnelDropdown(${data.id}, this.value)" data-col="personnel" value="${data.personnel}" autocomplete="off" class="xls-input" placeholder="Personnel name">
                     <div id="personnel-dd-${data.id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
                 </td>
                 <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'position', this.value)"       data-col="position"       value="${data.position}"       autocomplete="off" class="xls-input" placeholder="Position"></td>
-                <td class="xls-td col-financial"><input type="number" oninput="syncState(${data.id}, 'cost', this.value)" data-col="cost" value="${data.cost}" class="xls-input text-right" placeholder="0.00" min="0" step="0.01"></td>
-                <td class="xls-td col-financial"><input type="number" oninput="syncState(${data.id}, 'qty', this.value)"  data-col="qty"  value="${data.qty}"  class="xls-input text-right ${data['property-no'] ? 'bg-slate-50 cursor-not-allowed' : ''}" placeholder="0" min="0" step="1" ${data['property-no'] ? 'readonly' : ''}></td>
-                <td class="xls-td col-temporal"><input type="number" oninput="syncState(${data.id}, 'useful-life', this.value)" data-col="useful-life" value="${data['useful-life'] || ''}" class="xls-input text-right" placeholder="0"    min="0" step="1"></td>
+                <td class="xls-td col-financial"><input type="number" oninput="syncState(${data.id}, 'cost', this.value)" data-col="cost" value="${data.cost}" class="xls-input text-right font-mono" placeholder="0.00" min="0" step="0.01"></td>
+                <td class="xls-td col-financial"><input type="number" oninput="syncState(${data.id}, 'qty', this.value)"  data-col="qty"  value="${data.qty}"  class="xls-input text-right font-mono ${data['property-no'] ? 'bg-slate-50 cursor-not-allowed' : ''}" placeholder="0" min="0" step="1" ${data['property-no'] ? 'readonly' : ''}></td>
+                <td class="xls-td col-temporal"><input type="number" oninput="syncState(${data.id}, 'useful-life', this.value)" data-col="useful-life" value="${data['useful-life'] || ''}" class="xls-input text-right font-mono" placeholder="0"    min="0" step="1"></td>
                 <td class="xls-td col-temporal"><input type="date"   oninput="syncState(${data.id}, 'acceptance-date', this.value)" data-col="acceptance-date" value="${data['acceptance-date']}" class="xls-input"></td>
                 <td class="xls-td col-status">
                     <select onchange="syncState(${data.id}, 'condition', this.value)" data-col="condition" class="xls-input bg-transparent">
@@ -1062,6 +1213,17 @@
             tr.id = `dst-${data.id}`;
             tr.className = 'xls-row group border-b border-slate-100';
             const total = (parseFloat(data.cost || 0) * parseInt(data.qty || 0)).toFixed(2);
+            
+            // Check if employee has a location assigned
+            let isLocSearchDisabled = '';
+            if (data['employee-search'] || data['employee-name']) {
+                const empName = data['employee-search'] || data['employee-name'];
+                const emp = globalEmployees.find(e => e.full_name === empName);
+                if (emp && emp.location_name) {
+                    isLocSearchDisabled = 'disabled class="xls-input bg-slate-50 cursor-not-allowed"';
+                }
+            }
+
             tr.innerHTML = `
                 <td class="xls-td xls-sticky-col text-center sticky left-0 w-10" style="background:inherit">
                     <span class="row-num text-[10px] font-black text-slate-300">${displayNum}</span>
@@ -1077,7 +1239,7 @@
                 <td class="xls-td col-personnel"><input type="text" data-col="employee-pos" value="${data['employee-pos'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
                 <td class="xls-td col-personnel"><input type="text" data-col="employee-status" value="${data['employee-status'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
                 <td class="xls-td col-identity" style="position:relative;overflow:visible">
-                    <input type="text" oninput="syncState(${data.id}, 'school-search', this.value); filterLocDropdown(${data.id}, this.value)" onfocus="filterLocDropdown(${data.id}, this.value)" data-col="school-search" value="${data['school-search'] || ''}" autocomplete="off" class="xls-input" placeholder="Search Location...">
+                    <input type="text" oninput="syncState(${data.id}, 'school-search', this.value); filterLocDropdown(${data.id}, this.value)" onfocus="filterLocDropdown(${data.id}, this.value)" data-col="school-search" value="${data['school-search'] || ''}" autocomplete="off" ${isLocSearchDisabled || 'class="xls-input"'} placeholder="Search Location...">
                     <div id="loc-dd-${data.id}" class="xls-custom-dd" style="display:none;"></div>
                 </td>
                 <td class="xls-td col-identity"><input type="text" data-col="school-id"   value="${data['school-id'] || ''}"   autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
@@ -1085,7 +1247,7 @@
                 <td class="xls-td col-identity"><input type="text" data-col="school-name" value="${data['school-name'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
                 <td class="xls-td col-identity"><input type="text" data-col="location"    value="${data.location || ''}"       autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
                 <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'property-no', this.value)" data-col="property-no" value="${data['property-no']}" autocomplete="off" class="xls-input" placeholder="Property number" id="dst-prop-${data.id}"></td>
-                <td class="xls-td col-financial"><input type="number" id="dst-cost-${data.id}" data-col="cost-total" value="${total}" autocomplete="off" class="xls-input text-right bg-slate-50 dark:bg-white/5 cursor-not-allowed" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1"></td>
+                <td class="xls-td col-financial"><input type="number" id="dst-cost-${data.id}" data-col="cost-total" value="${total}" autocomplete="off" class="xls-input text-right font-mono bg-slate-50 dark:bg-white/5 cursor-not-allowed" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1"></td>
                 <td class="xls-td col-temporal"><input type="date"   oninput="syncState(${data.id}, 'acquisition-date', this.value)" data-col="acquisition-date" value="${data['acquisition-date']}" autocomplete="off" class="xls-input"></td>
                 <td class="xls-td text-center w-10">
                     <button onclick="deleteRow(${data.id})" class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Remove row">

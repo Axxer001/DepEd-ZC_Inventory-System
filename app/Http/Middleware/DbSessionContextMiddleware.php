@@ -17,11 +17,13 @@ class DbSessionContextMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (Auth::check()) {
-            $user = Auth::user()->name;
-            DB::statement("SET @app_user = ?", [$user]);
-        } else {
-             DB::statement("SET @app_user = 'System'");
+        if (DB::getDriverName() !== 'sqlite') {
+            if (Auth::check()) {
+                $user = Auth::user()->name;
+                DB::statement("SET @app_user = ?", [$user]);
+            } else {
+                 DB::statement("SET @app_user = 'System'");
+            }
         }
 
         return $next($request);

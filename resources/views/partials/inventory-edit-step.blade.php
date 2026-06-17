@@ -51,6 +51,12 @@
                 </select>
             </div>
             <div>
+                <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Office Name</label>
+                <select id="editFilterOffice" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all text-slate-500">
+                    <option value="">All Offices</option>
+                </select>
+            </div>
+            <div>
                 <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Source of Acquisition</label>
                 <select id="editFilterSource" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-blue-50 focus:border-blue-500 transition-all text-slate-500">
                     <option value="">All Sources</option>
@@ -81,9 +87,12 @@
                     <option value="acceptance_date">Missing Acceptance Date</option>
                     <option value="school_id">Missing School ID</option>
                     <option value="school_name">Missing School Name</option>
-                    <option value="occupancy">Missing Nature of Occupancy</option>
                     <option value="location">Missing Location</option>
                     <option value="acquisition_date">Missing Acquisition Date</option>
+                    <option value="employee_id">Missing Custodian/Employee</option>
+                    <option value="useful_life">Missing Useful Life</option>
+                    <option value="personnel">Missing Source Personnel</option>
+                    <option value="condition">Missing Condition</option>
                 </select>
             </div>
         </div>
@@ -287,9 +296,13 @@
                         <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Unit of Measurement</label>
                         <input type="text" id="ebUom" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
                     </div>
-                    <div class="relative space-y-2">
-                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Acquisition Source</label>
-                        <input type="text" id="ebAcqSource" autocomplete="off" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                    <div class="relative space-y-2" style="position:relative;overflow:visible">
+                        <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                            <span>Acquisition Source</span>
+                            <span id="ebAcqSourceNewBadge" class="hidden px-1.5 py-0.5 text-[8px] font-extrabold uppercase bg-blue-600 text-white rounded tracking-wider leading-none">NEW</span>
+                        </label>
+                        <input type="text" id="ebAcqSource" autocomplete="off" oninput="filterEditBulkAcqSourceDropdown(this.value)" onfocus="filterEditBulkAcqSourceDropdown(this.value)" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl px-5 py-4 text-xs font-bold text-slate-300 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all placeholder:text-slate-700" placeholder="Leave empty to ignore">
+                        <div id="edit-bulk-acq-source-dd" class="xls-custom-dd" style="display:none; width: 100%;"></div>
                     </div>
                     <div class="relative space-y-2">
                         <label class="text-[9px] font-black text-blue-400 uppercase tracking-[0.2em] ml-1 block">Mode of Procurement</label>
@@ -450,6 +463,7 @@
     let editCurrentPage = 1;
     const editRowsPerPage = 50;
 
+
     function autofillLocationEdit(distId, val) {
         const row = editAllData.find(r => r.dist_id === distId);
         if(!row) return;
@@ -472,6 +486,12 @@
             row['custodian_name'] = emp.full_name;
             row['custodian_position'] = emp.position || '';
             row['custodian_status'] = emp.status || '';
+            if (emp.location_name) {
+                row['school_id'] = emp.location_id || '';
+                row['school_type'] = emp.location_type_label || emp.location_type || '';
+                row['office_school_name'] = emp.location_name;
+                row['location'] = emp.location || 'Zamboanga City';
+            }
             renderEditTable(); 
         }
     }
@@ -504,13 +524,21 @@
                 populateEditSelect('editFilterCat', data.categories);
                 populateEditSelect('editFilterItem', data.items);
                 populateEditSelect('editFilterSchool', data.schools);
+                populateEditSelect('editFilterOffice', data.offices);
                 populateEditSelect('editFilterSource', data.sources);
                 populateEditSelect('editFilterMode', data.modes);
+
+            });
+
+        fetch('/api/acquisition-sources/search?q=')
+            .then(res => res.json())
+            .then(sources => {
+                globalAcqSources = sources || [];
             });
     }
 
     function clearEditFilters() {
-        ['editFilterClass', 'editFilterCat', 'editFilterItem', 'editFilterSort', 'editFilterSchool', 'editFilterSource', 'editFilterMode', 'editFilterDate', 'editFilterIntegrity'].forEach(id => {
+        ['editFilterClass', 'editFilterCat', 'editFilterItem', 'editFilterSort', 'editFilterSchool', 'editFilterOffice', 'editFilterSource', 'editFilterMode', 'editFilterDate', 'editFilterIntegrity'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.value = '';
         });
@@ -536,6 +564,7 @@
             'editFilterCat': 'category',
             'editFilterItem': 'article',
             'editFilterSchool': 'schoolName',
+            'editFilterOffice': 'officeName',
             'editFilterSource': 'source',
             'editFilterMode': 'mode',
             'editFilterDate': 'dateAcquired',
@@ -641,6 +670,30 @@
                     return `<td class="xls-td p-0 relative"><input type="text" data-id="${row.dist_id}" data-col="${col}" class="xls-input edit-readonly w-full h-full" value="${safeVal}" readonly tabindex="-1">${badgeHtml}</td>`;
                 }
                 
+                if (col === 'unit_of_measurement') {
+                    return `<td class="xls-td p-0 relative">
+                        <input type="text" data-id="${row.dist_id}" data-col="unit_of_measurement" value="${safeVal}" onchange="syncEditCell(this)" autocomplete="off" class="xls-input w-full h-full bg-transparent">
+                        ${badgeHtml}
+                    </td>`;
+                }
+
+                if (col === 'mode_of_acquisition') {
+                    return `<td class="xls-td p-0 relative">
+                        <input type="text" data-id="${row.dist_id}" data-col="mode_of_acquisition" value="${safeVal}" onchange="syncEditCell(this)" autocomplete="off" class="xls-input w-full h-full bg-transparent">
+                        ${badgeHtml}
+                    </td>`;
+                }
+
+                if (col === 'acq_source') {
+                    const isNew = !globalAcqSources.some(s => s.name.toLowerCase() === val1.toLowerCase()) && val1 !== '';
+                    return `<td class="xls-td p-0 relative" style="overflow:visible">
+                        <input type="text" data-id="${row.dist_id}" data-col="acq_source" value="${safeVal}" oninput="syncEditAcqSource(${row.dist_id}, this.value); filterEditAcqSourceDropdown(${row.dist_id}, this.value)" onfocus="filterEditAcqSourceDropdown(${row.dist_id}, this.value)" autocomplete="off" class="xls-input w-full h-full bg-transparent pr-10">
+                        <div id="edit-acq-source-dd-${row.dist_id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
+                        <span id="edit-acq-source-badge-${row.dist_id}" class="absolute right-2 top-1/2 -translate-y-1/2 px-1 py-0.5 text-[7px] font-extrabold uppercase bg-blue-600 text-white rounded tracking-wider leading-none ${isNew ? '' : 'hidden'}">NEW</span>
+                        ${badgeHtml}
+                    </td>`;
+                }
+
                 if (col === 'classification') {
                     return `<td class="xls-td p-0 relative" style="overflow:visible">
                         <input type="text" data-id="${row.dist_id}" data-col="classification" value="${safeVal}" oninput="syncEditClass(${row.dist_id}, this.value); filterEditClassDropdown(${row.dist_id}, this.value)" onfocus="filterEditClassDropdown(${row.dist_id}, this.value)" autocomplete="off" class="xls-input w-full h-full bg-transparent">
@@ -657,6 +710,14 @@
                     </td>`;
                 }
 
+                if (col === 'source_personnel') {
+                    return `<td class="xls-td p-0 relative" style="overflow:visible">
+                        <input type="text" data-id="${row.dist_id}" data-col="source_personnel" value="${safeVal}" oninput="syncEditPersonnel(${row.dist_id}, this.value); filterEditContactDropdown(${row.dist_id}, this.value)" onfocus="filterEditContactDropdown(${row.dist_id}, this.value)" autocomplete="off" class="xls-input w-full h-full bg-transparent" placeholder="Search Personnel...">
+                        <div id="edit-contact-dd-${row.dist_id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
+                        ${badgeHtml}
+                    </td>`;
+                }
+
                 if (col === 'remarks') {
                     return `<td class="xls-td p-0 relative">
                         <select data-id="${row.dist_id}" data-col="${col}" onchange="syncEditCell(this)" class="xls-input w-full h-full bg-transparent">
@@ -668,7 +729,11 @@
                     </td>`;
                 }
                 
-                return `<td class="xls-td p-0 relative"><input type="text" data-id="${row.dist_id}" data-col="${col}" value="${safeVal}" onchange="syncEditCell(this)" class="xls-input w-full h-full bg-transparent">${badgeHtml}</td>`;
+                let extraClasses = '';
+                if (['asset_cost', 'quantity', 'estimated_useful_life'].includes(col)) {
+                    extraClasses = ' text-right font-mono';
+                }
+                return `<td class="xls-td p-0 relative"><input type="text" data-id="${row.dist_id}" data-col="${col}" value="${safeVal}" onchange="syncEditCell(this)" class="xls-input w-full h-full bg-transparent${extraClasses}">${badgeHtml}</td>`;
             };
 
             // Source Table Row
@@ -684,7 +749,7 @@
                 ${renderCell('acq_source', row.acq_source, false)}
                 ${renderCell('mode_of_acquisition', row.mode_of_acquisition, false)}
                 ${renderCell('source_personnel', row.source_personnel, false)}
-                ${renderCell('personnel_position', row.personnel_position, false)}
+                ${renderCell('personnel_position', row.personnel_position, true)}
                 ${renderCell('asset_cost', row.asset_cost, false)}
                 ${renderCell('quantity', row.quantity, false)}
                 ${renderCell('estimated_useful_life', row.estimated_useful_life, false)}
@@ -699,6 +764,18 @@
             const costVal = parseFloat(row.asset_cost || 0);
             const qtyVal = parseInt(row.quantity || 0);
             const totalCost = (costVal * qtyVal).toFixed(2);
+
+            // Check if custodian employee has a location assigned
+            let isLocSearchDisabled = '';
+            let locSearchVal = '';
+            if (row.custodian_name) {
+                const emp = globalEmployees.find(e => e.full_name === row.custodian_name);
+                if (emp && emp.location_name) {
+                    isLocSearchDisabled = 'disabled';
+                    locSearchVal = emp.location_name;
+                }
+            }
+
             dstTr.innerHTML = `
                 <td class="xls-td text-center sticky left-0 w-10 bg-white z-10"><span class="text-[10px] font-black text-slate-300">${displayNum}</span></td>
                 <td class="xls-td p-0 relative"><span class="xls-const w-full h-full flex items-center px-4">Region IX</span></td>
@@ -712,7 +789,7 @@
                 ${renderCell('custodian_position', row.custodian_position, true)}
                 ${renderCell('custodian_status', row.custodian_status, true)}
                 <td class="xls-td p-0 relative" style="overflow:visible">
-                    <input type="text" oninput="autofillLocationEdit(${row.dist_id}, this.value); filterEditLocDropdown(${row.dist_id}, this.value)" onfocus="filterEditLocDropdown(${row.dist_id}, this.value)" data-id="${row.dist_id}" data-col="school_search" value="" autocomplete="off" class="xls-input w-full h-full bg-transparent" placeholder="Search Location...">
+                    <input type="text" oninput="autofillLocationEdit(${row.dist_id}, this.value); filterEditLocDropdown(${row.dist_id}, this.value)" onfocus="filterEditLocDropdown(${row.dist_id}, this.value)" data-id="${row.dist_id}" data-col="school_search" value="${locSearchVal || ''}" autocomplete="off" class="xls-input w-full h-full bg-transparent ${isLocSearchDisabled ? 'bg-slate-50 cursor-not-allowed text-slate-500' : ''}" ${isLocSearchDisabled} placeholder="Search Location...">
                     <div id="edit-loc-dd-${row.dist_id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
                 </td>
                 ${renderCell('school_id', row.school_id, true)}
@@ -733,6 +810,108 @@
         document.getElementById('editTotalPages').textContent = totalPages;
         document.getElementById('editPrevBtn').disabled = editCurrentPage === 1;
         document.getElementById('editNextBtn').disabled = editCurrentPage === totalPages;
+    }
+
+    function filterEditBulkAcqSourceDropdown(query) {
+        const dd = document.getElementById('edit-bulk-acq-source-dd');
+        if (!dd) return;
+        const q = (query || '').trim().toLowerCase();
+        const matches = q.length === 0
+            ? globalAcqSources.slice(0, 50)
+            : globalAcqSources.filter(src => src.name.toLowerCase().includes(q)).slice(0, 50);
+
+        if (matches.length === 0) {
+            dd.innerHTML = `<div class="xls-dd-empty">No matching sources found. Type to create new.</div>`;
+        } else {
+            dd.innerHTML = matches.map(src => `
+                <div class="xls-dd-item" onmousedown="selectEditBulkAcqSource('${src.name.replace(/"/g, '&quot;')}')">
+                    ${src.name}
+                </div>`).join('');
+        }
+        dd.style.display = 'block';
+        updateEditBulkAcqSourceBadge(query);
+    }
+
+    function selectEditBulkAcqSource(name) {
+        const inp = document.getElementById('ebAcqSource');
+        if (inp) inp.value = name;
+        const dd = document.getElementById('edit-bulk-acq-source-dd');
+        if (dd) dd.style.display = 'none';
+        updateEditBulkAcqSourceBadge(name);
+    }
+
+    function updateEditBulkAcqSourceBadge(query) {
+        const badge = document.getElementById('ebAcqSourceNewBadge');
+        if (!badge) return;
+        const q = (query || '').trim();
+        if (q === '') {
+            badge.classList.add('hidden');
+            return;
+        }
+        const exists = globalAcqSources.some(src => (src.name || '').trim().toLowerCase() === q.toLowerCase());
+        if (exists) {
+            badge.classList.add('hidden');
+        } else {
+            badge.classList.remove('hidden');
+        }
+    }
+
+    function syncEditAcqSource(rowId, val) {
+        const idx = editAllData.findIndex(r => String(r.dist_id) === String(rowId));
+        if (idx !== -1) {
+            const oldVal = editAllData[idx].acq_source ?? '';
+            if (String(oldVal).trim() !== String(val).trim()) {
+                editUndoStack.push({ type: 'single', rowId: rowId, col: 'acq_source', oldVal: oldVal, newVal: val });
+                editAllData[idx].acq_source = val;
+                editRedoStack = [];
+                updateEditUndoBtn();
+            }
+        }
+        updateEditAcqSourceCellBadge(rowId, val);
+    }
+
+    function updateEditAcqSourceCellBadge(rowId, query) {
+        const badge = document.getElementById(`edit-acq-source-badge-${rowId}`);
+        if (!badge) return;
+        const q = (query || '').trim();
+        if (q === '') {
+            badge.classList.add('hidden');
+            return;
+        }
+        const exists = globalAcqSources.some(src => (src.name || '').trim().toLowerCase() === q.toLowerCase());
+        if (exists) {
+            badge.classList.add('hidden');
+        } else {
+            badge.classList.remove('hidden');
+        }
+    }
+
+    function filterEditAcqSourceDropdown(rowId, query) {
+        const dd = document.getElementById(`edit-acq-source-dd-${rowId}`);
+        if (!dd) return;
+        const q = (query || '').trim().toLowerCase();
+        const matches = q.length === 0
+            ? globalAcqSources.slice(0, 50)
+            : globalAcqSources.filter(src => src.name.toLowerCase().includes(q)).slice(0, 50);
+
+        if (matches.length === 0) {
+            dd.innerHTML = `<div class="xls-dd-empty">No matching sources found. Type to create new.</div>`;
+        } else {
+            dd.innerHTML = matches.map(src => `
+                <div class="xls-dd-item" onmousedown="selectEditAcqSource(${rowId}, '${src.name.replace(/"/g, '&quot;')}')">
+                    ${src.name}
+                </div>`).join('');
+        }
+        dd.style.display = 'block';
+        updateEditAcqSourceCellBadge(rowId, query);
+    }
+
+    function selectEditAcqSource(rowId, name) {
+        const input = document.querySelector(`input[data-id="${rowId}"][data-col="acq_source"]`);
+        if (input) input.value = name;
+        const dd = document.getElementById(`edit-acq-source-dd-${rowId}`);
+        if (dd) dd.style.display = 'none';
+        syncEditAcqSource(rowId, name);
     }
 
     function syncEditClass(distId, val) {
@@ -758,6 +937,30 @@
                 editRedoStack = [];
                 updateEditUndoBtn();
             }
+        }
+    }
+
+    function syncEditPersonnel(distId, val) {
+        const row = editAllData.find(r => r.dist_id === distId);
+        if (row) {
+            const oldVal = row['source_personnel'] ?? '';
+            if (String(oldVal).trim() !== String(val).trim()) {
+                editUndoStack.push({ type: 'single', rowId: distId, col: 'source_personnel', oldVal: oldVal, newVal: val });
+                row['source_personnel'] = val;
+                editRedoStack = [];
+                updateEditUndoBtn();
+            }
+        }
+    }
+
+    function autofillContactEdit(distId, val) {
+        const row = editAllData.find(r => r.dist_id === distId);
+        if(!row) return;
+        const contact = globalAcqContacts.find(c => c.name === val);
+        if(contact) {
+            row['source_personnel'] = contact.name;
+            row['personnel_position'] = contact.position || '';
+            renderEditTable();
         }
     }
 
@@ -1115,4 +1318,10 @@
             alert('A JavaScript error occurred: ' + e.message);
         }
     }
+
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.xls-custom-dd') && !e.target.hasAttribute('data-col') && !e.target.closest('[id^="ebAcqSource"]')) {
+            document.querySelectorAll('.xls-custom-dd').forEach(dd => dd.style.display = 'none');
+        }
+    });
 </script>

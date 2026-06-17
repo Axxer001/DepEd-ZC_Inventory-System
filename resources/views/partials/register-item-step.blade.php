@@ -2,14 +2,6 @@
 <div id="stepAddNew" class="step-content">
 
     {{-- DATALISTS (shared option pools - reduced as per search-only requirements) --}}
-    <datalist id="dl-acq-source">
-        <option value="DepEd Central Office">
-        <option value="Local Government Unit">
-        <option value="Private Donation">
-        <option value="Congressional Allocation">
-        <option value="MOOE Fund">
-    </datalist>
-    <!-- Datalists Removed: Replaced by custom custom dropdown component (.xls-custom-dd) -->
     <datalist id="dl-condition">
         <option value="Good Condition">
         <option value="Needs Repair">
@@ -24,7 +16,7 @@
     </datalist>
 
     {{-- ── Section 1: Acquisition Source ── --}}
-    <div id="acqSourceCard" class="mb-6 bg-white rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden">
+    <div id="acqSourceCard" class="mb-6 bg-white rounded-[2rem] border border-slate-100 shadow-lg">
         <div class="px-6 py-3 border-b border-slate-100 flex items-center gap-3">
             <div class="w-6 h-6 bg-[#c00000] rounded-lg flex items-center justify-center text-white text-[10px] font-black shrink-0">1</div>
             <div>
@@ -34,14 +26,20 @@
         </div>
         <div class="px-6 py-4">
             <div class="max-w-sm">
-                <label class="text-[9px] font-black text-[#c00000] uppercase tracking-widest mb-1.5 block">Source of Acquisition <span class="text-red-400">*</span></label>
+                <label class="text-[9px] font-black text-[#c00000] uppercase tracking-widest mb-1.5 flex items-center gap-2">
+                    <span>Source of Acquisition <span class="text-red-400">*</span></span>
+                    <span id="acqSourceNewBadge" class="hidden px-1.5 py-0.5 text-[8px] font-extrabold uppercase bg-blue-600 text-white rounded tracking-wider leading-none">NEW</span>
+                </label>
                 <div class="relative">
                     <input type="text" id="acqSourceInput" data-col="acq-source" autocomplete="off"
                         placeholder="Type or select a source..."
+                        oninput="filterAcqSourceDropdown(this.value)" onfocus="filterAcqSourceDropdown(this.value)"
                         class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-red-100 focus:border-[#c00000] transition-all">
+                    <div id="acq-source-dd" class="xls-custom-dd" style="display:none; width: 100%;"></div>
                 </div>
             </div>
         </div>
+
     </div>
 
     {{-- ── Section 2: Asset Source / Distribution Table ── --}}
