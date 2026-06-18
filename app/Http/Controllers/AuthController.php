@@ -14,19 +14,18 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    // Handle email-only login
+    // Handle email and password login
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email'
+            'email' => 'required|email',
+            'password' => 'required|string'
         ]);
 
         $email = strtolower(trim($request->email));
 
-        $user = User::where('email', $email)->where('approved', 1)->first();
-
-        if ($user) {
-            Auth::login($user);
+        if (Auth::attempt(['email' => $email, 'password' => $request->password, 'approved' => true])) {
+            $user = Auth::user();
             
             \Illuminate\Support\Facades\DB::table('system_logs')->insert([
                 'user' => $user->name,
@@ -48,6 +47,15 @@ class AuthController extends Controller
         // Check if blocked
         if (\App\Models\BlockedAccount::where('email', $email)->exists()) {
             return back()->with('error', 'This email has been blocked from accessing the system.');
+        }
+
+        // Check if user exists but wrong password/unapproved
+        $user = \App\Models\User::where('email', $email)->first();
+        if ($user) {
+            if (!$user->approved) {
+                return back()->with('error', 'Your account has not been approved yet.');
+            }
+            return back()->with('error', 'Invalid email or password.');
         }
 
         return back()->with('error', 'This account is not registered. Please register first.');

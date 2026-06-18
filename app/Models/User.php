@@ -22,7 +22,27 @@ class User extends Authenticatable
         'email',
         'password',
         'dark_mode',
+        'role',
+        'approved',
     ];
+
+    /**
+     * Role checking helpers
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin' || $this->role === 'super_admin';
+    }
+
+    public function isRegularUser(): bool
+    {
+        return $this->role === 'user';
+    }
 
     /**
      * The attributes that should be hidden for serialization.

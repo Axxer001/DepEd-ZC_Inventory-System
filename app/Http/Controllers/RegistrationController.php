@@ -23,6 +23,15 @@ class RegistrationController extends Controller
     {
         $request->validate([
             'email' => 'required|email|max:255',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]+$/'
+            ],
+        ], [
+            'password.regex' => 'The password must contain uppercase and lowercase letters, numbers, and no special characters.',
         ]);
 
         $email = strtolower(trim($request->email));
@@ -52,6 +61,7 @@ class RegistrationController extends Controller
 
         PendingRegistration::create([
             'email' => $email,
+            'password' => $request->password,
             'token' => $token,
             'expires_at' => now()->addHours(48),
         ]);
@@ -111,7 +121,7 @@ class RegistrationController extends Controller
             User::create([
                 'name' => Str::before($email, '@'),
                 'email' => $email,
-                'password' => bcrypt(Str::random(32)),
+                'password' => $pending->password ?? bcrypt(Str::random(32)),
                 'approved' => true,
             ]);
 

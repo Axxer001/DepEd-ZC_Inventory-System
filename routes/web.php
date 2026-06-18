@@ -11,6 +11,7 @@ use App\Http\Controllers\InventorySetupController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\BuildingImportController;
 use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\UserManagementController;
 
 // --- Public Routes ---
 Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
@@ -24,6 +25,17 @@ Route::post('/otp/verify', [RegistrationController::class, 'verifyOtp'])->name('
 
 // Redirect /login GET to root
 Route::get('/login', function() { return redirect('/'); });
+
+// --- Super Admin Only Routes ---
+Route::middleware(['auth', 'role:super_admin'])->group(function () {
+    Route::get('/admin/user-management', [UserManagementController::class, 'index'])->name('admin.user-management');
+    Route::post('/admin/users/{id}/approve', [UserManagementController::class, 'approve'])->name('admin.users.approve');
+    Route::delete('/admin/users/{id}/reject', [UserManagementController::class, 'reject'])->name('admin.users.reject');
+    Route::patch('/admin/users/{id}/role', [UserManagementController::class, 'updateRole'])->name('admin.users.role');
+    Route::patch('/admin/users/{id}/block', [UserManagementController::class, 'blockUser'])->name('admin.users.block');
+    Route::patch('/admin/users/{id}/unblock', [UserManagementController::class, 'unblock'])->name('admin.users.unblock');
+    Route::delete('/admin/users/{id}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
+});
 
 // --- Protected Admin Routes ---
 Route::middleware('auth')->group(function () {

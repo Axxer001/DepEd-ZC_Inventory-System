@@ -17,7 +17,6 @@
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: #f87171; border: 2px solid transparent; background-clip: padding-box; }
         .back-btn-cool { background: white; border: 1px solid #e2e8f0; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        .xls-th { padding: 14px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; white-space: nowrap; border-right: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: #f8fafc; position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
         .xls-td { height: 52px; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; vertical-align: middle; padding: 0; background: white; transition: all 0.3s ease; }
         .xls-row { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; position: relative; }
         .xls-row:hover { transform: translateX(4px); z-index: 10; }
@@ -107,17 +106,56 @@
         .filter-container::-webkit-scrollbar { width: 4px; }
         .filter-container::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
 
-        /* Dark Mode Overrides */
-        html.dark body { background-color: #0f172a; color: #f8fafc; }
-        html.dark .bg-white { background-color: #1e293b !important; border-color: #334155 !important; }
-        html.dark .text-slate-800 { color: #f8fafc !important; }
-        html.dark .text-slate-900 { color: #f8fafc !important; }
-        html.dark .bg-slate-50 { background-color: #0f172a !important; border-color: #1e293b !important; }
-        html.dark .bg-slate-50\/50 { background-color: #1e293b !important; }
-        html.dark .border-t { border-color: #334155 !important; }
-        html.dark .xls-td { background-color: #1e293b !important; border-color: #334155 !important; }
-        html.dark .xls-th { background-color: #0f172a !important; border-color: #334155 !important; color: #94a3b8 !important; }
-        html.dark .xls-scroll-wrap { background-color: #1e293b !important; border-color: #334155 !important; }
+        /* ── Table header — use slate-100 so it reads clearly in light mode ── */
+        .xls-th { padding: 14px 16px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: #475569; white-space: nowrap; border-right: 1px solid #e2e8f0; border-bottom: 2px solid #cbd5e1; background: #f1f5f9; position: sticky; top: 0; z-index: 20; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+
+        /* ══════════════════════════════════════════════
+           DARK MODE — Schools page (scoped to #schoolsPage)
+        ══════════════════════════════════════════════ */
+        html.dark #schoolsPage                          { background-color: #0f172a; color: #f8fafc; }
+
+        /* Table card wrapper */
+        html.dark #schoolTableCard                      { border-color: #334155 !important; }
+
+        /* Table cells */
+        html.dark #schoolTableCard .xls-td              { background-color: #1e293b !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+        html.dark #schoolTableCard .xls-th              { background-color: #0f172a !important; border-color: #334155 !important; color: #94a3b8 !important; }
+        html.dark #schoolTableCard .xls-scroll-wrap     { background-color: #1e293b !important; border-color: #334155 !important; }
+
+        /* Row hover */
+        html.dark #schoolTableCard .xls-row:hover .xls-td { background-color: rgba(192,0,0,0.08) !important; border-bottom-color: #c00000; }
+
+        /* Table footer */
+        html.dark #schoolTableFooter                    { background-color: #1e293b !important; border-color: #334155 !important; }
+        html.dark #schoolTableFooter .pg-btn            { background-color: #0f172a !important; border-color: #334155 !important; color: #94a3b8 !important; }
+        html.dark #schoolTableFooter .pg-btn:hover:not(:disabled) { border-color: #c00000 !important; color: #f87171 !important; }
+        html.dark #schoolTableFooter .glass-indicator   { background-color: #0f172a !important; border-color: #334155 !important; }
+        html.dark #schoolTableFooter .text-slate-400    { color: #475569 !important; }
+        html.dark #schoolTableFooter .border-slate-200  { border-color: #334155 !important; }
+
+        /* Page header & search */
+        html.dark #schoolsHeader input                  { background-color: #1e293b !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+        html.dark #schoolsHeader input::placeholder     { color: #475569 !important; }
+        html.dark #schoolsHeader .bg-white              { background-color: #1e293b !important; border-color: #334155 !important; color: #cbd5e1 !important; }
+
+        /* Filter panel */
+        html.dark #schoolFilterSection                  { background-color: #1e293b !important; border-color: #334155 !important; }
+        html.dark #schoolFilterSection .text-slate-900  { color: #f1f5f9 !important; }
+        html.dark #schoolFilterSection .border-t        { border-color: #334155 !important; }
+        html.dark #schoolFilterSection .filter-chip     { border-color: #334155 !important; color: #94a3b8 !important; }
+
+        /* Loading / empty overlays */
+        html.dark #schoolLoading                        { background-color: rgba(15,23,42,0.85) !important; }
+        html.dark #schoolLoading > div                  { background-color: #1e293b !important; border-color: #334155 !important; }
+        html.dark #schoolLoading .text-slate-800        { color: #e2e8f0 !important; }
+        html.dark #schoolEmpty > div                    { background-color: rgba(15,23,42,0.8) !important; border-color: #334155 !important; }
+        html.dark #schoolEmpty .text-slate-500          { color: #475569 !important; }
+
+        /* ── Type badge dark mode ── */
+        html.dark #schoolTableCard .type-elementary  { background-color: rgba(136,19,55,0.35) !important; color: #fda4af !important; border-color: rgba(159,18,57,0.5) !important; }
+        html.dark #schoolTableCard .type-jhs         { background-color: rgba(23,37,84,0.45) !important; color: #93c5fd !important; border-color: rgba(29,78,216,0.4) !important; }
+        html.dark #schoolTableCard .type-shs         { background-color: rgba(69,26,3,0.45) !important; color: #fcd34d !important; border-color: rgba(180,83,9,0.4) !important; }
+        html.dark #schoolTableCard .type-integrated  { background-color: rgba(49,10,101,0.45) !important; color: #a5b4fc !important; border-color: rgba(99,102,241,0.4) !important; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex text-slate-900 overflow-x-hidden selection:bg-red-100 selection:text-red-900 relative">
@@ -125,10 +163,10 @@
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll relative">
+    <div id="schoolsPage" class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll relative">
     <div class="w-full mx-auto p-6 lg:p-10 min-h-screen flex flex-col relative z-10">
 
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10 px-2 animate-fade">
+        <div id="schoolsHeader" class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10 px-2 animate-fade">
             <div class="shrink-0">
                 <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-700 to-red-500 uppercase italic leading-none drop-shadow-sm tracking-tight">School Registry</h2>
                 <p class="text-slate-500 text-[11px] font-bold uppercase tracking-[0.25em] mt-3 flex items-center gap-2">
@@ -204,7 +242,7 @@
             </div>
         </div>
 
-        <div class="rounded-[2rem] border border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col animate-fade relative ring-1 ring-black/5">
+        <div id="schoolTableCard" class="rounded-[2rem] border border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col animate-fade relative ring-1 ring-black/5">
             <div class="xls-scroll-wrap expanded">
                 <table class="w-full border-collapse" style="min-width:1200px;">
                     <thead><tr>
@@ -397,13 +435,13 @@
                     if (!val) return `<td class="xls-td relative"><span class="xls-const text-slate-300">—</span></td>`;
                     let colorClass = 'bg-slate-50 text-slate-500 border-slate-200';
                     if (val.includes('ELEMENTARY')) {
-                        colorClass = 'bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900/60';
+                        colorClass = 'bg-rose-100 text-rose-700 border-rose-300 type-elementary';
                     } else if (val.includes('JHS')) {
-                        colorClass = 'bg-blue-100 text-blue-700 border-blue-300 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900/60';
+                        colorClass = 'bg-blue-100 text-blue-700 border-blue-300 type-jhs';
                     } else if (val.includes('SHS')) {
-                        colorClass = 'bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900/60';
+                        colorClass = 'bg-amber-100 text-amber-800 border-amber-300 type-shs';
                     } else if (val.includes('INTEGRATED')) {
-                        colorClass = 'bg-indigo-100 text-indigo-700 border-indigo-300 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-900/60';
+                        colorClass = 'bg-indigo-100 text-indigo-700 border-indigo-300 type-integrated';
                     }
                     return `<td class="xls-td relative"><span class="xls-const"><span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border ${colorClass}">${val}</span></span></td>`;
                 };

@@ -11,10 +11,14 @@
 
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-4"
       x-data="{
           submitted: {{ session('success') ? 'true' : 'false' }},
+          step: 1,
           email: '{{ old('email', '') }}',
           otp: '',
           otpSent: false,
@@ -23,6 +27,22 @@
           verifyLoading: false,
           otpMessage: '',
           otpMessageType: '',
+          
+          password: '',
+          passwordConf: '',
+          showPw: false,
+          showConfPw: false,
+
+          get isPasswordValid() {
+              return this.password.length >= 8 && 
+                     /(?=.*[a-z])/.test(this.password) && 
+                     /(?=.*[A-Z])/.test(this.password) && 
+                     /(?=.*\d)/.test(this.password) && 
+                     /^[a-zA-Z\d]+$/.test(this.password);
+          },
+          get passwordsMatch() {
+              return this.password !== '' && this.password === this.passwordConf;
+          },
 
           async sendOtp() {
               if (!this.email) return;
@@ -72,6 +92,7 @@
                   if (data.success) {
                       this.otpVerified = true;
                       this.otpMessageType = 'success';
+                      setTimeout(() => { this.step = 2; }, 800);
                   } else {
                       this.otpMessageType = 'error';
                   }
@@ -100,7 +121,7 @@
 
             <div class="h-1.5 bg-deped-red w-full"></div>
 
-            <div class="p-8 md:p-10">
+            <div class="p-8 md:p-10 pb-6">
 
                 {{-- Registration Form --}}
                 <div x-show="!submitted">
@@ -111,68 +132,153 @@
 
                     <form action="{{ route('register.post') }}" method="POST" class="space-y-4">
                         @csrf
+                        <input type="hidden" name="email" :value="email">
 
-                        {{-- Email input --}}
-                        <div class="space-y-2">
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
-                            {{-- Hidden input always submits the email value --}}
-                            <input type="hidden" name="email" :value="email">
-                            {{-- Visible input is display-only after verification --}}
-                            <input type="email" required
-                                   x-model="email"
-                                   :readonly="otpVerified"
-                                   class="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus-ring-red transition-all duration-200 text-sm"
-                                   :class="otpVerified ? 'opacity-50 cursor-not-allowed' : ''"
-                                   placeholder="username@deped.gov.ph">
-                        </div>
+                        <!-- ================= STEP 1: EMAIL & OTP ================= -->
+                        <div x-show="step === 1" x-transition.opacity.duration.300ms class="w-full space-y-4">
+                            {{-- Email input --}}
+                            <div class="space-y-2">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
+                                <input type="email" required
+                                       x-model="email"
+                                       :readonly="otpVerified"
+                                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus-ring-red transition-all duration-200 text-sm"
+                                       :class="otpVerified ? 'opacity-50 cursor-not-allowed' : ''"
+                                       placeholder="username@deped.gov.ph">
+                            </div>
 
-                        {{-- Verify Email button --}}
-                        <div x-show="!otpVerified">
-                            <button type="button"
-                                    @click="sendOtp()"
-                                    :disabled="!email || otpLoading"
-                                    class="w-full py-3 rounded-2xl font-bold text-sm uppercase tracking-widest transition-all duration-200 border-2"
-                                    :class="otpLoading ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-wait' : 'bg-white text-[#c00000] border-[#c00000] hover:bg-red-50 active:scale-[0.98]'">
-                                <span x-show="!otpLoading">
-                                    <span x-show="!otpSent">✉ Verify Email</span>
-                                    <span x-show="otpSent">↻ Resend Code</span>
-                                </span>
-                                <span x-show="otpLoading">Sending...</span>
-                            </button>
-                        </div>
-
-                        {{-- Verified badge --}}
-                        <div x-show="otpVerified" x-transition class="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 p-3 rounded-2xl text-xs font-semibold justify-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                            Email Verified
-                        </div>
-
-                        {{-- OTP input --}}
-                        <div x-show="otpSent && !otpVerified" x-transition class="space-y-2">
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Verification Code</label>
-                            <div class="flex gap-2">
-                                <input type="text"
-                                       x-model="otp"
-                                       maxlength="6"
-                                       inputmode="numeric"
-                                       pattern="[0-9]*"
-                                       class="flex-1 px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus-ring-red transition-all duration-200 text-sm text-center tracking-[0.5em] font-bold text-lg"
-                                       placeholder="000000">
+                            {{-- Verify Email button --}}
+                            <div x-show="!otpVerified">
                                 <button type="button"
-                                        @click="verifyOtp()"
-                                        :disabled="otp.length !== 6 || verifyLoading"
-                                        class="px-6 py-4 rounded-2xl font-bold text-sm transition-all duration-200"
-                                        :class="otp.length === 6 && !verifyLoading ? 'bg-[#c00000] text-white hover:brightness-110 active:scale-[0.98]' : 'bg-slate-200 text-slate-400 cursor-not-allowed'">
-                                    <span x-show="!verifyLoading">✓</span>
-                                    <span x-show="verifyLoading">...</span>
+                                        @click="sendOtp()"
+                                        :disabled="!email || otpLoading"
+                                        class="w-full py-3 rounded-2xl font-bold text-sm uppercase tracking-widest transition-all duration-200 border-2"
+                                        :class="otpLoading ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-wait' : 'bg-white text-[#c00000] border-[#c00000] hover:bg-red-50 active:scale-[0.98]'">
+                                    <span x-show="!otpLoading">
+                                        <span x-show="!otpSent">✉ Verify Email</span>
+                                        <span x-show="otpSent">↻ Resend Code</span>
+                                    </span>
+                                    <span x-show="otpLoading">Sending...</span>
                                 </button>
                             </div>
-                            <p class="text-[11px] text-slate-400 ml-1">Enter the 6-digit code sent to your email. Expires in 10 minutes.</p>
-                        </div>
 
-                        {{-- Status messages --}}
+                            {{-- OTP input --}}
+                            <div x-show="otpSent && !otpVerified" x-transition class="space-y-2">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Verification Code</label>
+                                <div class="flex gap-2">
+                                    <input type="text"
+                                           x-model="otp"
+                                           maxlength="6"
+                                           inputmode="numeric"
+                                           pattern="[0-9]*"
+                                           class="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus-ring-red transition-all duration-200 text-sm text-center tracking-[0.5em] font-bold text-lg"
+                                           placeholder="000000">
+                                    <button type="button"
+                                            @click="verifyOtp()"
+                                            :disabled="otp.length !== 6 || verifyLoading"
+                                            class="px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-200"
+                                            :class="otp.length === 6 && !verifyLoading ? 'bg-[#c00000] text-white hover:brightness-110 active:scale-[0.98]' : 'bg-slate-200 text-slate-400 cursor-not-allowed'">
+                                        <span x-show="!verifyLoading">✓</span>
+                                        <span x-show="verifyLoading">...</span>
+                                    </button>
+                                </div>
+                                <p class="text-[11px] text-slate-400 ml-1">Enter the 6-digit code sent to your email. Expires in 10 minutes.</p>
+                            </div>
+
+                            {{-- Verified badge --}}
+                            <div x-show="otpVerified" x-transition class="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 p-3 rounded-2xl text-xs font-semibold justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Email Verified
+                            </div>
+                            
+                            {{-- Step transition button --}}
+                            <div x-show="otpVerified" x-transition class="mt-4">
+                                <button type="button" @click="step = 2" class="w-full py-3 rounded-2xl font-bold text-sm bg-slate-800 text-white hover:bg-slate-900 transition-colors">
+                                    Continue to Password &#8594;
+                                </button>
+                            </div>
+                        </div>
+                        <!-- ================= END STEP 1 ================= -->
+
+
+                        <!-- ================= STEP 2: PASSWORD ================= -->
+                        <div x-show="step === 2" x-transition.opacity.duration.300ms x-cloak class="w-full space-y-4">
+                            <div class="flex items-center mb-2">
+                                <button type="button" @click="step = 1" class="text-slate-400 hover:text-slate-700 mr-2 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </button>
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-widest">Create Password</span>
+                            </div>
+
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                {{-- Password Field --}}
+                                <div class="space-y-2 relative w-full sm:w-1/2">
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Secure Password</label>
+                                    <div class="relative">
+                                        <input :type="showPw ? 'text' : 'password'" name="password" required
+                                               x-model="password"
+                                               class="w-full px-4 py-3 bg-slate-50 border rounded-2xl focus:outline-none focus-ring-red transition-all duration-200 text-sm pr-10"
+                                               :class="password.length > 0 ? (isPasswordValid ? 'border-green-300' : 'border-red-300') : 'border-slate-200'"
+                                               placeholder="••••••••">
+                                        <button type="button" @click="showPw = !showPw" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                                            <svg x-show="!showPw" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            <svg x-show="showPw" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {{-- Confirm Password Field --}}
+                                <div class="space-y-2 relative w-full sm:w-1/2">
+                                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Confirm Password</label>
+                                    <div class="relative">
+                                        <input :type="showConfPw ? 'text' : 'password'" name="password_confirmation" required
+                                               x-model="passwordConf"
+                                               class="w-full px-4 py-3 bg-slate-50 border rounded-2xl focus:outline-none focus-ring-red transition-all duration-200 text-sm pr-10"
+                                               :class="passwordConf.length > 0 ? (passwordsMatch ? 'border-green-300' : 'border-red-300') : 'border-slate-200'"
+                                               placeholder="••••••••">
+                                        <button type="button" @click="showConfPw = !showConfPw" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                                            <svg x-show="!showConfPw" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            <svg x-show="showConfPw" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <p x-show="passwordConf.length > 0 && !passwordsMatch" class="text-[10px] text-red-500 font-bold ml-1 text-center sm:text-left">Passwords do not match</p>
+
+                            {{-- Dynamic Helper Rules (Grid layout for compactness) --}}
+                            <ul class="text-[9px] grid grid-cols-2 gap-x-2 gap-y-1 ml-1 font-semibold">
+                                <li :class="password.length >= 8 ? 'text-green-500' : 'text-slate-400'">✓ Minimum 8 characters</li>
+                                <li :class="/(?=.*[a-z])/.test(password) && /(?=.*[A-Z])/.test(password) ? 'text-green-500' : 'text-slate-400'">✓ Uppercase & Lowercase</li>
+                                <li :class="/(?=.*\d)/.test(password) ? 'text-green-500' : 'text-slate-400'">✓ Contains a number</li>
+                                <li :class="/^[a-zA-Z\d]+$/.test(password) && password.length > 0 ? 'text-green-500' : 'text-slate-400'">✓ No special characters</li>
+                            </ul>
+
+                            {{-- Submit Button --}}
+                            <button type="submit"
+                                    :disabled="!isPasswordValid || !passwordsMatch"
+                                    class="w-full mt-2 py-3 rounded-2xl font-bold text-lg transition-all duration-300"
+                                    :class="(isPasswordValid && passwordsMatch) ? 'btn-hover-effect bg-deped-red text-white active:scale-[0.98] shadow-md hover:shadow-lg' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'">
+                                Submit Registration
+                            </button>
+                        </div>
+                        <!-- ================= END STEP 2 ================= -->
+
+                        {{-- Server Status messages --}}
                         <div x-show="otpMessage" x-transition>
                             <div x-show="otpMessageType === 'error'" class="bg-red-50 border border-red-100 text-red-600 p-3 rounded-2xl text-xs text-center font-semibold" x-text="otpMessage"></div>
                             <div x-show="otpMessageType === 'success'" class="bg-green-50 border border-green-100 text-green-600 p-3 rounded-2xl text-xs text-center font-semibold" x-text="otpMessage"></div>
@@ -195,14 +301,6 @@
                                 {{ $errors->first() }}
                             </div>
                         @endif
-
-                        {{-- Register button: grey when not verified, red when verified --}}
-                        <button type="submit"
-                                :disabled="!otpVerified"
-                                class="w-full py-4 rounded-2xl font-bold text-lg transition-all duration-300"
-                                :class="otpVerified ? 'btn-hover-effect bg-deped-red text-white active:scale-[0.98]' : 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none'">
-                            Register Now
-                        </button>
                     </form>
 
                     <div class="mt-6 text-center">

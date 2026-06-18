@@ -1,0 +1,304 @@
+{
+    "acquisition_contacts": {
+        "id": "bigint(20) unsigned (PRI)",
+        "acquisition_source_id": "bigint(20) unsigned (NULL) (MUL)",
+        "name": "varchar(255) (NULL)",
+        "position": "varchar(255) (NULL)",
+        "contact_number": "varchar(255) (NULL)",
+        "email": "varchar(255) (NULL)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "acquisition_sources": {
+        "id": "bigint(20) unsigned (PRI)",
+        "name": "varchar(255)",
+        "source_type": "enum('Internal','External')",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "asset_assignments": {
+        "id": "bigint(20) unsigned (PRI)",
+        "asset_source_id": "bigint(20) unsigned (MUL)",
+        "employee_id": "bigint(20) unsigned (NULL) (MUL)",
+        "property_number": "varchar(255) (NULL) (MUL)",
+        "photo_path": "varchar(255) (NULL)",
+        "acquisition_cost": "decimal(15,2)",
+        "acquisition_date": "date",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "asset_documents": {
+        "id": "bigint(20) unsigned (PRI)",
+        "asset_distribution_id": "bigint(20) unsigned (MUL)",
+        "file_name": "varchar(255)",
+        "file_path": "varchar(255)",
+        "file_size": "bigint(20) unsigned",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "asset_sources": {
+        "id": "bigint(20) unsigned (PRI)",
+        "item_id": "bigint(20) unsigned (MUL)",
+        "description": "text (NULL)",
+        "unit_of_measurement": "varchar(255) (NULL)",
+        "acquisition_source_id": "bigint(20) unsigned (MUL)",
+        "asset_cost": "decimal(15,2)",
+        "quantity": "int(11)",
+        "estimated_useful_life": "int(11) (NULL)",
+        "acceptance_date": "date",
+        "condition": "enum('Good Condition','Needs Repair','Unserviceable') (NULL)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)",
+        "procurement_mode_id": "bigint(20) unsigned (NULL) (MUL)",
+        "acquisition_contact_id": "bigint(20) unsigned (NULL) (MUL)"
+    },
+    "asset_transfers": {
+        "id": "bigint(20) unsigned (PRI)",
+        "asset_assignment_id": "bigint(20) unsigned (MUL)",
+        "from_office_id": "bigint(20) unsigned (NULL) (MUL)",
+        "to_office_id": "bigint(20) unsigned (NULL) (MUL)",
+        "from_custodian_id": "bigint(20) unsigned (NULL) (MUL)",
+        "to_custodian_id": "bigint(20) unsigned (NULL) (MUL)",
+        "transfer_date": "date (MUL)",
+        "return_date": "date (NULL)",
+        "transfer_type": "varchar(255) (NULL)",
+        "remarks": "text (NULL)",
+        "authorized_by": "bigint(20) unsigned (NULL) (MUL)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "blocked_accounts": {
+        "id": "bigint(20) unsigned (PRI)",
+        "email": "varchar(255) (UNI)",
+        "blocked_at": "timestamp",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "building_classifications": {
+        "id": "bigint(20) unsigned (PRI)",
+        "name": "varchar(255) (UNI)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "building_records": {
+        "id": "bigint(20) unsigned (PRI)",
+        "school_id": "bigint(20) unsigned (NULL) (MUL)",
+        "region": "varchar(255)",
+        "division": "varchar(255)",
+        "office_type": "varchar(255) (NULL)",
+        "address": "varchar(255) (NULL)",
+        "location": "varchar(255) (NULL)",
+        "building_spec_id": "bigint(20) unsigned (NULL) (MUL)",
+        "occupancy_nature": "varchar(255) (NULL)",
+        "date_constructed": "date (NULL)",
+        "acquisition_date": "date (NULL)",
+        "property_number": "varchar(255) (NULL)",
+        "acquisition_cost": "decimal(15,2) (NULL)",
+        "estimated_useful_life": "int(11) (NULL)",
+        "appraised_value": "decimal(15,2) (NULL)",
+        "appraisal_date": "date (NULL)",
+        "remarks": "text (NULL)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "building_specs": {
+        "id": "bigint(20) unsigned (PRI)",
+        "building_type_id": "bigint(20) unsigned (MUL)",
+        "description": "varchar(255) (NULL)",
+        "storeys": "int(11) (NULL)",
+        "classrooms": "int(11) (NULL)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "building_types": {
+        "id": "bigint(20) unsigned (PRI)",
+        "building_classification_id": "bigint(20) unsigned (MUL)",
+        "name": "varchar(255)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "cache": {
+        "key": "varchar(255) (PRI)",
+        "value": "mediumtext",
+        "expiration": "int(11) (MUL)"
+    },
+    "cache_locks": {
+        "key": "varchar(255) (PRI)",
+        "owner": "varchar(255)",
+        "expiration": "int(11) (MUL)"
+    },
+    "categories": {
+        "id": "int(10) unsigned (PRI)",
+        "created_at": "timestamp",
+        "updated_at": "timestamp (NULL)",
+        "name": "varchar(255) (NULL)",
+        "classification_id": "bigint(20) unsigned (NULL) (MUL)"
+    },
+    "classifications": {
+        "id": "bigint(20) unsigned (PRI)",
+        "name": "varchar(255) (UNI)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "districts": {
+        "id": "bigint(20) unsigned (PRI)",
+        "name": "varchar(255)",
+        "quadrant_id": "bigint(20) unsigned (MUL)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "employees": {
+        "id": "bigint(20) unsigned (PRI)",
+        "first_name": "varchar(255)",
+        "middle_name": "varchar(255) (NULL)",
+        "last_name": "varchar(255)",
+        "employee_id": "varchar(255) (NULL) (UNI)",
+        "position": "varchar(255) (NULL)",
+        "office_id": "bigint(20) unsigned (NULL) (MUL)",
+        "school_id": "bigint(20) unsigned (NULL) (MUL)",
+        "status": "enum('Active','Inactive','On Leave','Retired','Resigned','Suspended') (MUL)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "items": {
+        "id": "bigint(20) unsigned (PRI)",
+        "name": "varchar(255)",
+        "category_id": "int(10) unsigned (NULL) (MUL)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "legislative_districts": {
+        "id": "bigint(20) unsigned (PRI)",
+        "name": "varchar(255)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "migrations": {
+        "id": "int(10) unsigned (PRI)",
+        "migration": "varchar(255)",
+        "batch": "int(11)"
+    },
+    "notifications": {
+        "id": "char(36) (PRI)",
+        "type": "varchar(255)",
+        "notifiable_type": "varchar(255) (MUL)",
+        "notifiable_id": "bigint(20) unsigned",
+        "data": "text",
+        "read_at": "timestamp (NULL)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "offices": {
+        "id": "bigint(20) unsigned (PRI)",
+        "name": "varchar(255)",
+        "type": "varchar(255) (NULL)",
+        "location": "varchar(255) (NULL)",
+        "office_id": "varchar(255) (NULL)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "password_reset_tokens": {
+        "email": "varchar(255) (PRI)",
+        "token": "varchar(255)",
+        "created_at": "timestamp (NULL)"
+    },
+    "pending_registrations": {
+        "id": "bigint(20) unsigned (PRI)",
+        "email": "varchar(255) (UNI)",
+        "password": "varchar(255) (NULL)",
+        "token": "varchar(64) (UNI)",
+        "expires_at": "timestamp (NULL)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "procurement_modes": {
+        "id": "bigint(20) unsigned (PRI)",
+        "name": "varchar(255) (UNI)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "pulse_aggregates": {
+        "id": "bigint(20) unsigned (PRI)",
+        "bucket": "int(10) unsigned (MUL)",
+        "period": "mediumint(8) unsigned (MUL)",
+        "type": "varchar(255) (MUL)",
+        "key": "mediumtext",
+        "key_hash": "binary(16) (NULL)",
+        "aggregate": "varchar(255)",
+        "value": "decimal(20,2)",
+        "count": "int(10) unsigned (NULL)"
+    },
+    "pulse_entries": {
+        "id": "bigint(20) unsigned (PRI)",
+        "timestamp": "int(10) unsigned (MUL)",
+        "type": "varchar(255) (MUL)",
+        "key": "mediumtext",
+        "key_hash": "binary(16) (NULL) (MUL)",
+        "value": "bigint(20) (NULL)"
+    },
+    "pulse_values": {
+        "id": "bigint(20) unsigned (PRI)",
+        "timestamp": "int(10) unsigned (MUL)",
+        "type": "varchar(255) (MUL)",
+        "key": "mediumtext",
+        "key_hash": "binary(16) (NULL)",
+        "value": "mediumtext"
+    },
+    "quadrants": {
+        "id": "bigint(20) unsigned (PRI)",
+        "name": "varchar(255)",
+        "legislative_district_id": "bigint(20) unsigned (MUL)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "schools": {
+        "id": "bigint(20) unsigned (PRI)",
+        "school_id": "varchar(255) (MUL)",
+        "name": "varchar(255)",
+        "type": "varchar(255) (NULL)",
+        "location": "varchar(255) (NULL)",
+        "district_id": "bigint(20) unsigned (NULL)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "sessions": {
+        "id": "varchar(255) (PRI)",
+        "user_id": "bigint(20) unsigned (NULL) (MUL)",
+        "ip_address": "varchar(45) (NULL)",
+        "user_agent": "text (NULL)",
+        "payload": "longtext",
+        "last_activity": "int(11) (MUL)"
+    },
+    "system_alerts": {
+        "id": "bigint(20) unsigned (PRI)",
+        "title": "varchar(255)",
+        "body": "text",
+        "priority": "varchar(255)",
+        "updated_by": "varchar(255) (NULL)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "system_logs": {
+        "id": "bigint(20) unsigned (PRI)",
+        "user": "varchar(255) (NULL)",
+        "activity": "text",
+        "module": "varchar(255) (NULL)",
+        "action_type": "enum('Create','Update','Delete','Others')",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    },
+    "users": {
+        "id": "bigint(20) unsigned (PRI)",
+        "name": "varchar(255)",
+        "email": "varchar(255) (UNI)",
+        "approved": "tinyint(1)",
+        "role": "varchar(255)",
+        "dark_mode": "tinyint(1)",
+        "alert_read_at": "timestamp (NULL)",
+        "email_verified_at": "timestamp (NULL)",
+        "password": "varchar(255) (NULL)",
+        "remember_token": "varchar(100) (NULL)",
+        "created_at": "timestamp (NULL)",
+        "updated_at": "timestamp (NULL)"
+    }
+}

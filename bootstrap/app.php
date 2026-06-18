@@ -19,6 +19,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'otp/send',
             'otp/verify',
         ]);
+        $middleware->alias([
+            'role' => \App\Http\Middleware\EnsureRole::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -142,6 +142,12 @@
             </div>
 
             <div class="flex items-center gap-4 shrink-0">
+                @can('write-inventory')
+                <button onclick="openCreateEmployeeModal()" class="px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white bg-red-700 hover:bg-red-800 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic shadow-md shadow-red-500/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:scale-110 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                    Add Employee
+                </button>
+                @endcan
                 <button onclick="toggleCustodianFilters()" id="toggleFilterBtn" class="px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 bg-white border border-slate-200 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:rotate-12 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
                     Filters
@@ -375,10 +381,198 @@
             }
         }
 
+        let createEmployeeModalLoaded = false;
+        async function openCreateEmployeeModal() {
+            const modal = document.getElementById('createEmployeeModal');
+            modal.classList.remove('hidden');
+
+            if (!createEmployeeModalLoaded) {
+                try {
+                    // Fetch Schools
+                    const schoolRes = await fetch("{{ route('api.locations.search') }}?type=school");
+                    const schools = await schoolRes.json();
+                    const schoolSelect = document.getElementById('modalSchoolSelect');
+                    schoolSelect.innerHTML = '<option value="">-- Select a School --</option>';
+                    schools.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id;
+                        opt.textContent = `${s.name} (${s.entity_id})`;
+                        schoolSelect.appendChild(opt);
+                    });
+
+                    // Fetch Offices
+                    const officeRes = await fetch("{{ route('api.locations.search') }}?type=office");
+                    const offices = await officeRes.json();
+                    const officeSelect = document.getElementById('modalOfficeSelect');
+                    officeSelect.innerHTML = '<option value="">-- Select an Office --</option>';
+                    offices.forEach(o => {
+                        const opt = document.createElement('option');
+                        opt.value = o.id;
+                        opt.textContent = `${o.name} (${o.entity_id})`;
+                        officeSelect.appendChild(opt);
+                    });
+
+                    createEmployeeModalLoaded = true;
+                } catch (e) {
+                    console.error('Failed to load stations', e);
+                }
+            }
+        }
+
+        function closeCreateEmployeeModal() {
+            document.getElementById('createEmployeeModal').classList.add('hidden');
+        }
+
+        function toggleStationTypeFields(type) {
+            const schoolField = document.getElementById('schoolAssignmentField');
+            const officeField = document.getElementById('officeAssignmentField');
+            const schoolSelect = document.getElementById('modalSchoolSelect');
+            const officeSelect = document.getElementById('modalOfficeSelect');
+
+            if (type === 'school') {
+                schoolField.classList.remove('hidden');
+                officeField.classList.add('hidden');
+                schoolSelect.required = true;
+                officeSelect.required = false;
+                officeSelect.value = '';
+            } else {
+                schoolField.classList.add('hidden');
+                officeField.classList.remove('hidden');
+                schoolSelect.required = false;
+                officeSelect.required = true;
+                schoolSelect.value = '';
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             custodianFetchFilters();
             custodianFetchData();
         });
     </script>
+
+    <!-- Create Employee Modal -->
+    <div id="createEmployeeModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeCreateEmployeeModal()"></div>
+        <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-xl p-8 relative z-10 animate-fade mx-4 max-h-[90vh] overflow-y-auto custom-scroll">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Register Employee</h3>
+                    <p class="text-slate-500 text-[11px] font-bold uppercase tracking-widest mt-1">Add new custodian or staff member</p>
+                </div>
+                <button onclick="closeCreateEmployeeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <form action="{{ route('admin.employees.store') }}" method="POST" class="space-y-5">
+                @csrf
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">First Name</label>
+                        <input type="text" name="first_name" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white" placeholder="John">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Middle Name</label>
+                        <input type="text" name="middle_name" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white" placeholder="Doe">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Last Name</label>
+                        <input type="text" name="last_name" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white" placeholder="Smith">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Employee ID</label>
+                        <input type="text" name="employee_id" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white" placeholder="EMP-2026-0001">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Position</label>
+                        <input type="text" name="position" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white" placeholder="Teacher I / Admin Assistant">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Initial Status</label>
+                        <select name="status" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="On Leave">On Leave</option>
+                            <option value="Suspended">Suspended</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Station Assignment</label>
+                    
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
+                            <input type="radio" name="station_type" value="school" checked onchange="toggleStationTypeFields('school')" class="text-red-600 focus:ring-red-500">
+                            School
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 dark:text-slate-300">
+                            <input type="radio" name="station_type" value="office" onchange="toggleStationTypeFields('office')" class="text-red-600 focus:ring-red-500">
+                            Office / Department
+                        </label>
+                    </div>
+
+                    <!-- School Selection -->
+                    <div id="schoolAssignmentField" class="space-y-1">
+                        <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Select School</label>
+                        <select name="school_id" id="modalSchoolSelect" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                            <option value="">-- Select a School --</option>
+                        </select>
+                    </div>
+
+                    <!-- Office Selection -->
+                    <div id="officeAssignmentField" class="space-y-1 hidden">
+                        <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Office</label>
+                        <select name="office_id" id="modalOfficeSelect" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                            <option value="">-- Select an Office --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                    <button type="button" onclick="closeCreateEmployeeModal()" class="px-6 py-3 border border-slate-200 text-slate-500 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900 transition-all">Cancel</button>
+                    <button type="submit" class="px-8 py-3 bg-gradient-to-r from-red-700 to-red-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:from-red-800 hover:to-red-600 transition-all shadow-md shadow-red-500/20">Register</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if(session('success'))
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: "{{ session('success') }}",
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000
+                });
+            });
+        </script>
+    @endif
+    @if($errors->any())
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: "{{ $errors->first() }}",
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 4000
+                });
+            });
+        </script>
+    @endif
 </body>
 </html>

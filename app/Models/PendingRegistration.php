@@ -9,6 +9,7 @@ class PendingRegistration extends Model
     protected $fillable = [
         'email',
         'token',
+        'password',
         'expires_at',
     ];
 
@@ -16,6 +17,7 @@ class PendingRegistration extends Model
     {
         return [
             'expires_at' => 'datetime',
+            'password' => 'hashed',
         ];
     }
 
