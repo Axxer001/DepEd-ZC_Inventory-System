@@ -18,6 +18,200 @@ class EmployeeController extends Controller
         return view('admin.custodians'); // Keep view name for now to avoid breaking too many things
     }
 
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'employee_id' => 'required|string|max:255|unique:employees,employee_id',
+            'position' => 'nullable|string|max:255',
+            'status' => 'required|string',
+            'school_id' => 'nullable|exists:schools,id',
+            'office_id' => 'nullable|exists:offices,id',
+        ]);
+
+        $employee = Employee::create([
+            'first_name' => $validated['first_name'],
+            'middle_name' => $validated['middle_name'],
+            'last_name' => $validated['last_name'],
+            'employee_id' => $validated['employee_id'],
+            'position' => $validated['position'],
+            'status' => $validated['status'],
+            'school_id' => $validated['school_id'],
+            'office_id' => $validated['office_id'],
+        ]);
+
+        \App\Models\EmployeeHistory::create([
+            'employee_id' => $employee->id,
+            'action' => 'Created',
+            'description' => 'Employee record created.',
+        ]);
+
+        return redirect()->route('admin.employee-management')->with('success', 'Employee registered successfully.');
+    }
+
+    public function managementIndex()
+    {
+        return view('admin.employee-management');
+    }
+
+    public function managementProfile($id)
+    {
+        $custodian = DB::table('employees')->where('id', $id)->first();
+
+        if (!$custodian) {
+            abort(404, 'Employee not found');
+        }
+
+        $stats = DB::table('asset_assignments as ad')
+            ->where('ad.employee_id', $id)
+            ->selectRaw('COUNT(ad.id) as total_assets, COALESCE(SUM(ad.acquisition_cost), 0) as total_value')
+            ->first();
+
+        $assets = DB::table('asset_assignments as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->join('items as i', 'asrc.item_id', '=', 'i.id')
+            ->join('categories as cat', 'i.category_id', '=', 'cat.id')
+            ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->leftJoin('schools as s', 'e.school_id', '=', 's.id')
+            ->leftJoin('offices as o', 'e.office_id', '=', 'o.id')
+            ->where('ad.employee_id', $id)
+            ->select(
+                'ad.id',
+                'ad.property_number',
+                'ad.acquisition_date',
+                'ad.acquisition_cost as asset_cost',
+                'ad.created_at as assigned_at',
+                'i.name as item_name',
+                'cat.name as category_name',
+                'asrc.condition',
+                DB::raw('COALESCE(s.name, o.name) as school_name')
+            )
+            ->orderByDesc('ad.acquisition_date')
+            ->get();
+
+        $schools = DB::table('employees as e')
+            ->leftJoin('schools as s', 'e.school_id', '=', 's.id')
+            ->leftJoin('offices as o', 'e.office_id', '=', 'o.id')
+            ->where('e.id', $id)
+            ->where(function ($query) {
+                $query->whereNotNull('e.school_id')
+                      ->orWhereNotNull('e.office_id');
+            })
+            ->select(
+                DB::raw('COALESCE(s.name, o.name) as name'),
+                DB::raw('(SELECT COUNT(*) FROM asset_assignments WHERE employee_id = e.id) as asset_count')
+            )
+            ->get();
+
+        $transfers = collect();
+        if ($assets->isNotEmpty()) {
+            $transfers = DB::table('asset_transfers as at')
+                ->leftJoin('offices as to_off', 'at.to_office_id', '=', 'to_off.id')
+                ->leftJoin('employees as to_emp', 'at.to_custodian_id', '=', 'to_emp.id')
+                ->whereIn('at.asset_assignment_id', $assets->pluck('id'))
+                ->select(
+                    'at.*',
+                    'to_off.name as to_office',
+                    DB::raw("TRIM(CONCAT(COALESCE(to_emp.first_name, ''), ' ', COALESCE(to_emp.last_name, ''))) as to_custodian")
+                )
+                ->orderByDesc('at.transfer_date')
+                ->get()
+                ->groupBy('asset_assignment_id');
+        }
+
+        $histories = \App\Models\EmployeeHistory::where('employee_id', $id)->orderByDesc('created_at')->get();
+
+        // Build asset events: receives (assigned_at) + transfers (transfer_date)
+        $assetEvents = collect();
+        foreach ($assets as $asset) {
+            $assetEvents->push((object)[
+                'type'          => 'received',
+                'event_date'    => $asset->assigned_at,
+                'item_name'     => $asset->item_name,
+                'category_name' => $asset->category_name,
+                'property_number' => $asset->property_number,
+                'asset_cost'    => $asset->asset_cost,
+                'to_custodian'  => null,
+                'to_office'     => null,
+            ]);
+            if (isset($transfers[$asset->id])) {
+                foreach ($transfers[$asset->id] as $t) {
+                    $assetEvents->push((object)[
+                        'type'          => 'transferred',
+                        'event_date'    => $t->transfer_date ?? $t->created_at,
+                        'item_name'     => $asset->item_name,
+                        'category_name' => $asset->category_name,
+                        'property_number' => $asset->property_number,
+                        'asset_cost'    => $asset->asset_cost,
+                        'to_custodian'  => $t->to_custodian ?? null,
+                        'to_office'     => $t->to_office ?? null,
+                    ]);
+                }
+            }
+        }
+        $assetEvents = $assetEvents->sortByDesc('event_date')->values();
+
+        return view('admin.employee-management-profile', compact('custodian', 'stats', 'schools', 'assets', 'transfers', 'histories', 'assetEvents'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $employee = Employee::findOrFail($id);
+
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'employee_id' => 'required|string|max:255|unique:employees,employee_id,'.$id,
+            'position' => 'nullable|string|max:255',
+            'status' => 'required|string',
+            'school_id' => 'nullable|exists:schools,id',
+            'office_id' => 'nullable|exists:offices,id',
+        ]);
+
+        $changes = [];
+        if ($employee->first_name !== $validated['first_name'] || $employee->last_name !== $validated['last_name']) {
+            $changes[] = 'name changed';
+        }
+        if ($employee->position !== $validated['position']) {
+            $changes[] = "position changed from '{$employee->position}' to '{$validated['position']}'";
+        }
+        if ($employee->school_id != $validated['school_id'] || $employee->office_id != $validated['office_id']) {
+            $changes[] = 'station reassigned';
+        }
+        if ($employee->status !== $validated['status']) {
+            $changes[] = "status changed to {$validated['status']}";
+        }
+
+        if ($request->has('return_assets') && $request->input('return_assets') == '1') {
+            \App\Models\AssetAssignment::where('employee_id', $employee->id)->update(['employee_id' => null]);
+            $changes[] = 'all assigned assets returned to inventory';
+        }
+
+        $employee->update([
+            'first_name' => $validated['first_name'],
+            'middle_name' => $validated['middle_name'],
+            'last_name' => $validated['last_name'],
+            'employee_id' => $validated['employee_id'],
+            'position' => $validated['position'],
+            'status' => $validated['status'],
+            'school_id' => $validated['school_id'],
+            'office_id' => $validated['office_id'],
+        ]);
+
+        if (count($changes) > 0) {
+            \App\Models\EmployeeHistory::create([
+                'employee_id' => $employee->id,
+                'action' => 'Updated',
+                'description' => ucfirst(implode(', ', $changes)) . '.',
+            ]);
+        }
+
+        return redirect()->route('admin.employee-management.profile', $id)->with('success', 'Employee updated successfully.');
+    }
+
     public function profile($id)
     {
         $custodian = DB::table('employees')->where('id', $id)->first();
@@ -85,7 +279,39 @@ class EmployeeController extends Controller
                 ->groupBy('asset_assignment_id');
         }
 
-        return view('admin.custodians.profile', compact('custodian', 'stats', 'schools', 'assets', 'transfers'));
+        $histories = \App\Models\EmployeeHistory::where('employee_id', $id)->orderByDesc('created_at')->get();
+
+        // Build asset events: receives (assigned_at) + transfers (transfer_date)
+        $assetEvents = collect();
+        foreach ($assets as $asset) {
+            $assetEvents->push((object)[
+                'type'          => 'received',
+                'event_date'    => $asset->assigned_at,
+                'item_name'     => $asset->item_name,
+                'category_name' => $asset->category_name,
+                'property_number' => $asset->property_number,
+                'asset_cost'    => $asset->asset_cost,
+                'to_custodian'  => null,
+                'to_office'     => null,
+            ]);
+            if (isset($transfers[$asset->id])) {
+                foreach ($transfers[$asset->id] as $t) {
+                    $assetEvents->push((object)[
+                        'type'          => 'transferred',
+                        'event_date'    => $t->transfer_date ?? $t->created_at,
+                        'item_name'     => $asset->item_name,
+                        'category_name' => $asset->category_name,
+                        'property_number' => $asset->property_number,
+                        'asset_cost'    => $asset->asset_cost,
+                        'to_custodian'  => $t->to_custodian ?? null,
+                        'to_office'     => $t->to_office ?? null,
+                    ]);
+                }
+            }
+        }
+        $assetEvents = $assetEvents->sortByDesc('event_date')->values();
+
+        return view('admin.custodians.profile', compact('custodian', 'stats', 'schools', 'assets', 'transfers', 'histories', 'assetEvents'));
     }
 
     /**

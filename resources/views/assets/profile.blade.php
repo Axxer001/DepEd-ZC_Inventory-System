@@ -102,6 +102,7 @@
 
             {{-- Actions Menu --}}
             <div class="flex items-center gap-3 shrink-0" x-data="{ open: false }">
+                @if(auth()->check() && auth()->user()->isAdmin())
                 <button @click="isEditing = true" x-show="!isEditing" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 uppercase tracking-widest hover:border-deped hover:text-deped hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group">
                     <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                     Edit
@@ -128,6 +129,7 @@
                     </div>
                 </div>
                 <div class="w-px h-8 bg-slate-200 mx-1"></div>
+                @endif
                 <a href="/view-assets" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 uppercase tracking-widest hover:border-deped hover:text-deped hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:-translate-x-1 transition-transform"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
                     Back
@@ -170,15 +172,18 @@
                             <button type="button" @click="showImageFullscreen = true" class="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full text-slate-700 hover:text-blue-600 shadow-sm flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
                             </button>
+                            @if(auth()->check() && auth()->user()->isAdmin())
                             <button type="button" @click="showRemoveConfirmModal = true" class="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full text-slate-700 hover:text-red-600 shadow-sm flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
+                            @endif
                         </div>
                         @endif
 
                         <div class="absolute inset-0 bg-gradient-to-t from-slate-900/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4 pointer-events-none">
                             
                             {{-- State: No new photo selected --}}
+                            @if(auth()->check() && auth()->user()->isAdmin())
                             <label x-show="!photoPreview" for="photo-upload" class="w-full py-2.5 bg-white/90 backdrop-blur-md rounded-lg text-xs font-black uppercase tracking-widest text-slate-800 hover:bg-white shadow-lg text-center cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 pointer-events-auto">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                 <span>{{ $asset->photo_path ? 'Change Photo' : 'Upload / Take Photo' }}</span>
@@ -189,6 +194,7 @@
                                 <button type="button" @click="photoPreview = null; document.getElementById('photo-upload').value = ''" class="flex-1 py-2.5 bg-white/90 backdrop-blur-md text-slate-700 hover:bg-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm transition-all active:scale-95">Cancel</button>
                                 <button type="button" @click="showPhotoConfirmModal = true" class="flex-[2] py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/30 transition-all active:scale-95">Save Photo</button>
                             </div>
+                            @endif
 
                         </div>
                     </div>
@@ -243,15 +249,58 @@
                             </a>
                         </div>
 
+                        @php
+                            $usefulLifeYears = $asset->estimated_useful_life ?? 0;
+                            $startDate = $asset->acceptance_date ? \Carbon\Carbon::parse($asset->acceptance_date) : null;
+                            
+                            $percentRemaining = 0;
+                            $progressClass = 'from-slate-400 to-slate-300';
+                            $statusText = "Lifespan Data Unavailable";
+
+                            if ($usefulLifeYears > 0 && $startDate) {
+                                $endDate = $startDate->copy()->addYears($usefulLifeYears);
+                                $now = \Carbon\Carbon::now();
+                                
+                                $totalDays = $startDate->diffInDays($endDate);
+                                $daysElapsed = $startDate->diffInDays($now, false);
+                                
+                                if ($daysElapsed < 0) {
+                                    $percentRemaining = 100;
+                                    $statusText = "{$usefulLifeYears} of {$usefulLifeYears} Years Remaining";
+                                } elseif ($daysElapsed >= $totalDays) {
+                                    $percentRemaining = 0;
+                                    $statusText = "0 of {$usefulLifeYears} Years Remaining (Depleted)";
+                                } else {
+                                    $daysRemaining = $totalDays - $daysElapsed;
+                                    $percentRemaining = round(($daysRemaining / $totalDays) * 100);
+                                    $yearsRemainingFloat = round($daysRemaining / 365.25, 1);
+                                    
+                                    // Strip trailing .0 if integer
+                                    $yearsStr = (floor($yearsRemainingFloat) == $yearsRemainingFloat) 
+                                        ? floor($yearsRemainingFloat) 
+                                        : $yearsRemainingFloat;
+                                        
+                                    $statusText = "{$yearsStr} of {$usefulLifeYears} Years Remaining";
+                                }
+                                
+                                if ($percentRemaining > 50) {
+                                    $progressClass = 'from-emerald-500 to-green-400';
+                                } elseif ($percentRemaining > 25) {
+                                    $progressClass = 'from-amber-500 to-amber-400';
+                                } else {
+                                    $progressClass = 'from-red-600 to-red-400';
+                                }
+                            }
+                        @endphp
                         <div class="pt-4 border-t border-slate-100">
                             <div class="flex justify-between items-end mb-1.5">
                                 <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Est. Lifespan</p>
-                                <p class="text-[10px] font-black text-slate-700">75%</p>
+                                <p class="text-[10px] font-black text-slate-700">{{ $percentRemaining }}%</p>
                             </div>
                             <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                <div class="bg-gradient-to-r from-deped to-blue-400 h-full rounded-full" style="width: 75%"></div>
+                                <div class="bg-gradient-to-r {{ $progressClass }} h-full rounded-full transition-all duration-1000" style="width: {{ $percentRemaining }}%"></div>
                             </div>
-                            <p class="text-[8px] font-bold text-slate-400 uppercase mt-1.5 text-right">3 of 4 Years Remaining</p>
+                            <p class="text-[8px] font-bold text-slate-400 uppercase mt-1.5 text-right">{{ $statusText }}</p>
                         </div>
                     </div>
                 </form>
@@ -505,6 +554,7 @@
                     {{-- TAB 3: Documents & Media --}}
                     <div x-show="activeTab === 'docs'" class="animate-fade space-y-6" x-cloak>
                         
+                        @if(auth()->check() && auth()->user()->isAdmin())
                         {{-- Upload Form --}}
                         <form action="{{ route('assets.document.upload', $asset->id) }}" method="POST" enctype="multipart/form-data" class="bg-white p-6 rounded-2xl border-2 border-dashed border-slate-200 hover:border-blue-500 transition-colors group relative" x-data="{ docName: null }">
                             @csrf
@@ -537,6 +587,7 @@
                                 <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/30 transition-all active:scale-95">Upload Document</button>
                             </div>
                         </form>
+                        @endif
 
                         {{-- Document List --}}
                         @if($documents->count() > 0)
@@ -557,6 +608,7 @@
                                             <a href="{{ asset('storage/' . $doc->file_path) }}" target="_blank" class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:text-blue-600 hover:bg-blue-50 flex items-center justify-center transition-colors">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                             </a>
+                                            @if(auth()->check() && auth()->user()->isAdmin())
                                             <form action="{{ route('assets.document.remove', $doc->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this document?');">
                                                 @csrf
                                                 @method('DELETE')
@@ -564,6 +616,7 @@
                                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                 </button>
                                             </form>
+                                            @endif
                                         </div>
                                     </div>
                                 @endforeach

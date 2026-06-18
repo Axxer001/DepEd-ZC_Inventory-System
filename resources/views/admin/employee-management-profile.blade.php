@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,800&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: { deped: '#c00000', deped_light: '#fef2f2' }
@@ -123,10 +124,16 @@
                 </div>
             </div>
 
-            <a href="{{ route('admin.employees') }}" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 uppercase tracking-widest hover:border-deped hover:text-deped hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group shrink-0">
-                <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
-                Back to Registry
-            </a>
+            <div class="flex items-center gap-3 shrink-0">
+                <button onclick="openEditEmployeeModal()" class="px-5 py-2.5 bg-red-700 text-white border border-red-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-800 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-md shadow-red-500/20 flex items-center gap-2 group">
+                    <svg class="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.89 1.12l-2.828.941.941-2.828a4.5 4.5 0 011.12-1.89L16.862 4.487zM19.5 7.125L16.862 4.487"/></svg>
+                    Edit Employee
+                </button>
+                <a href="{{ route('admin.employee-management') }}" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 uppercase tracking-widest hover:border-deped hover:text-deped hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group shrink-0">
+                    <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+                    Back
+                </a>
+            </div>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-grow pb-10">
@@ -208,7 +215,7 @@
             </aside>
 
             {{-- ===== MAIN CONTENT ===== --}}
-            <div x-data="{ activeTab: 'assets' }" class="lg:col-span-9 flex flex-col glass-card overflow-hidden anim-2">
+            <div class="lg:col-span-9 flex flex-col glass-card overflow-hidden anim-2">
                 {{-- Tabs --}}
                 <div class="flex border-b border-slate-100 bg-slate-50/60 px-3 pt-3">
                     <button @click="activeTab = 'assets'"
@@ -218,7 +225,7 @@
                     </button>
                     <button @click="activeTab = 'history'"
                         :class="{'bg-white border-slate-200 border-b-white text-deped shadow-sm': activeTab === 'history', 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-100': activeTab !== 'history'}"
-                        class="px-6 py-3 text-[10px] font-black uppercase tracking-[0.14em] border border-b-0 rounded-t-xl transition-all relative top-[1px]">
+                        class="px-6 py-3 text-[10px] font-black uppercase tracking-[0.14em] border border-b-0 rounded-t-xl transition-all relative top-[1px] ml-1">
                         Employee History
                     </button>
                 </div>
@@ -853,6 +860,230 @@
         }
         document.getElementById('cal-year-display').textContent = calViewYear;
         applyCustodianFilters();
+    });
+</script>
+
+<!-- Edit Employee Modal -->
+<div id="editEmployeeModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeEditEmployeeModal()"></div>
+    <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-xl p-8 relative z-10 animate-fade mx-4">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Edit Employee</h3>
+                <p class="text-slate-500 text-[11px] font-bold uppercase tracking-widest mt-1">Update personnel details</p>
+            </div>
+            <button onclick="closeEditEmployeeModal()" type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <form id="editEmployeeForm" action="{{ route('admin.employee-management.update', $custodian->id) }}" method="POST" class="space-y-5">
+            @csrf
+            <input type="hidden" name="return_assets" id="returnAssetsFlag" value="0">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">First Name</label>
+                    <input type="text" name="first_name" required value="{{ $custodian->first_name }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Middle Name</label>
+                    <input type="text" name="middle_name" value="{{ $custodian->middle_name }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Last Name</label>
+                    <input type="text" name="last_name" required value="{{ $custodian->last_name }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Employee ID</label>
+                    <input type="text" name="employee_id" required value="{{ $custodian->employee_id }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Position</label>
+                    <input type="text" name="position" value="{{ $custodian->position }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Status</label>
+                    <select name="status" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                        <option value="Active" {{ strtolower($custodian->status ?? '') == 'active' ? 'selected' : '' }}>Active</option>
+                        <option value="Inactive" {{ strtolower($custodian->status ?? '') == 'inactive' ? 'selected' : '' }}>Inactive (Resigned/Retired)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Station Assignment</label>
+
+                <!-- School Selection -->
+                <div id="schoolAssignmentField" class="space-y-1">
+                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Select School</label>
+                    <select name="school_id" id="modalSchoolSelect" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                        <option value="">-- Select a School --</option>
+                    </select>
+                </div>
+
+                <!-- Office Selection -->
+                <div id="officeAssignmentField" class="space-y-1 mt-3">
+                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Office</label>
+                    <select name="office_id" id="modalOfficeSelect" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                        <option value="">-- Select an Office --</option>
+                    </select>
+                </div>
+            </div>
+
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                <button type="button" onclick="closeEditEmployeeModal()" class="px-6 py-3 border border-slate-200 text-slate-500 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900 transition-all">Cancel</button>
+                <button type="submit" class="px-8 py-3 bg-gradient-to-r from-red-700 to-red-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:from-red-800 hover:to-red-600 transition-all shadow-md shadow-red-500/20">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<style>
+    /* TomSelect Custom Overrides for standard styling */
+    .ts-wrapper.single .ts-control {
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        border-color: #e2e8f0;
+        background-color: #f8fafc;
+        color: #1e293b;
+    }
+    .ts-dropdown { 
+        border-radius: 0.75rem; 
+        overflow: hidden; 
+        font-size: 0.875rem; 
+        font-weight: 600; 
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); 
+        border-color: #e2e8f0;
+    }
+    .ts-dropdown .option { padding: 0.5rem 1rem; }
+    
+    html.dark .ts-wrapper.single .ts-control {
+        background-color: #0f172a;
+        border-color: #334155;
+        color: #ffffff;
+    }
+    html.dark .ts-dropdown {
+        background-color: #1e293b;
+        border-color: #334155;
+        color: #e2e8f0;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); 
+    }
+    html.dark .ts-dropdown .option:hover, html.dark .ts-dropdown .option.active {
+        background-color: #334155;
+        color: #ffffff;
+    }
+    html.dark .ts-control > input {
+        color: #ffffff;
+    }
+</style>
+<script>
+    let editEmployeeModalLoaded = false;
+    let schoolTomSelect = null;
+    let officeTomSelect = null;
+
+    async function openEditEmployeeModal() {
+        const modal = document.getElementById('editEmployeeModal');
+        modal.classList.remove('hidden');
+
+        if (!editEmployeeModalLoaded) {
+            try {
+                // Fetch Schools
+                const schoolRes = await fetch("{{ route('api.locations.search') }}?type=school");
+                const schools = await schoolRes.json();
+                const schoolSelect = document.getElementById('modalSchoolSelect');
+                schools.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = `${s.name} (${s.entity_id})`;
+                    if (s.id == "{{ $custodian->school_id }}") opt.selected = true;
+                    schoolSelect.appendChild(opt);
+                });
+
+                // Fetch Offices
+                const officeRes = await fetch("{{ route('api.locations.search') }}?type=office");
+                const offices = await officeRes.json();
+                const officeSelect = document.getElementById('modalOfficeSelect');
+                offices.forEach(o => {
+                    const opt = document.createElement('option');
+                    opt.value = o.id;
+                    opt.textContent = `${o.name} (${o.entity_id})`;
+                    if (o.id == "{{ $custodian->office_id }}") opt.selected = true;
+                    officeSelect.appendChild(opt);
+                });
+
+                schoolTomSelect = new TomSelect('#modalSchoolSelect', { 
+                    create: false, 
+                    sortField: { field: "text", direction: "asc" },
+                    onChange: function(value) {
+                        if (value && value !== '') {
+                            officeTomSelect.disable();
+                        } else {
+                            officeTomSelect.enable();
+                        }
+                    }
+                });
+                officeTomSelect = new TomSelect('#modalOfficeSelect', { 
+                    create: false, 
+                    sortField: { field: "text", direction: "asc" },
+                    onChange: function(value) {
+                        if (value && value !== '') {
+                            schoolTomSelect.disable();
+                        } else {
+                            schoolTomSelect.enable();
+                        }
+                    }
+                });
+
+                // Trigger initial state
+                if (schoolTomSelect.getValue()) officeTomSelect.disable();
+                if (officeTomSelect.getValue()) schoolTomSelect.disable();
+
+                editEmployeeModalLoaded = true;
+            } catch (e) {
+                console.error('Failed to load stations', e);
+            }
+        }
+    }
+
+    function closeEditEmployeeModal() {
+        document.getElementById('editEmployeeModal').classList.add('hidden');
+    }
+
+    document.getElementById('editEmployeeForm').addEventListener('submit', function(e) {
+        const statusSelect = this.querySelector('select[name="status"]');
+        const initialStatus = "{{ $custodian->status }}";
+        const assetCount = {{ $assets->count() }};
+        
+        if (statusSelect.value === 'Inactive' && initialStatus !== 'Inactive' && assetCount > 0) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Active Assets Detected!',
+                text: "This employee still has " + assetCount + " assigned asset(s). What would you like to do?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#c00000',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Return Assets to Inventory',
+                cancelButtonText: 'Manage Assets (Cancel)'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('returnAssetsFlag').value = '1';
+                    this.submit();
+                }
+            });
+        }
     });
 </script>
 </body>

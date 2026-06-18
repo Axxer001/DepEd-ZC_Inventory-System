@@ -332,6 +332,7 @@ class AssetController extends Controller
                 'asrc.description',
                 'asrc.asset_cost',
                 'asrc.quantity',
+                'asrc.estimated_useful_life',
                 'pm.name as mode_of_acquisition',
                 'acquisition_sources.name as source_name',
                 'acquisition_sources.id as acquisition_source_id',

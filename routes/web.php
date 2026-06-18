@@ -35,6 +35,12 @@ Route::middleware(['auth', 'role:super_admin'])->group(function () {
     Route::patch('/admin/users/{id}/block', [UserManagementController::class, 'blockUser'])->name('admin.users.block');
     Route::patch('/admin/users/{id}/unblock', [UserManagementController::class, 'unblock'])->name('admin.users.unblock');
     Route::delete('/admin/users/{id}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
+    
+    // Employee Management
+    Route::get('/admin/employee-management', [EmployeeController::class, 'managementIndex'])->name('admin.employee-management');
+    Route::post('/admin/employee-management', [EmployeeController::class, 'store'])->name('admin.employee-management.store');
+    Route::get('/admin/employee-management/{id}', [EmployeeController::class, 'managementProfile'])->name('admin.employee-management.profile');
+    Route::post('/admin/employee-management/{id}/update', [EmployeeController::class, 'update'])->name('admin.employee-management.update');
 });
 
 // --- Protected Admin Routes ---
@@ -42,7 +48,7 @@ Route::middleware('auth')->group(function () {
     
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/api/dashboard/growth-data', [DashboardController::class, 'getGrowthData'])->name('api.dashboard.growth_data');
-    Route::post('/dashboard/quick-asset', [DashboardController::class, 'storeQuickAsset'])->name('inventory.dashboard.store');
+    Route::post('/dashboard/quick-asset', [DashboardController::class, 'storeQuickAsset'])->name('inventory.dashboard.store')->middleware('role:super_admin,admin');
 
     // --- Dark Mode Preference ---
     Route::post('/user/dark-mode', function (Request $request) {
@@ -151,7 +157,7 @@ Route::middleware('auth')->group(function () {
             ->get();
 
         return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'allSchools', 'subItems', 'stakeholders', 'stakeholderOwnerships', 'allCustodians'));
-    })->name('inventory.setup');
+    })->name('inventory.setup')->middleware('role:super_admin,admin');
 
 
     // --- Schools Registry ---
@@ -193,7 +199,7 @@ Route::middleware('auth')->group(function () {
         } catch (\Exception $e) {
             return redirect()->route('admin.schools')->with('error', 'Failed to delete school.');
         }
-    })->name('admin.schools.destroy');
+    })->name('admin.schools.destroy')->middleware('role:super_admin,admin');
 
     // --- System Logs ---
     Route::get('/admin/logs', function (Request $request) {
@@ -218,13 +224,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/schools/{id}/assets', [AssetController::class, 'getSchoolAssets'])->name('api.schools.assets');
     Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('assets.history');
     Route::get('/assets/{id}/profile', [AssetController::class, 'profile'])->name('assets.profile');
-    Route::post('/assets/{id}/update', [AssetController::class, 'update'])->name('assets.update');
-    Route::post('/assets/{id}/transfer', [AssetController::class, 'transfer'])->name('assets.transfer');
-    Route::post('/assets/{id}/return', [AssetController::class, 'returnAmu'])->name('assets.return');
-    Route::post('/assets/{id}/photo', [AssetController::class, 'uploadPhoto'])->name('assets.photo.upload');
-    Route::delete('/assets/{id}/photo', [AssetController::class, 'removePhoto'])->name('assets.photo.remove');
-    Route::post('/assets/{id}/document', [AssetController::class, 'uploadDocument'])->name('assets.document.upload');
-    Route::delete('/assets/document/{docId}', [AssetController::class, 'removeDocument'])->name('assets.document.remove');
+    Route::post('/assets/{id}/update', [AssetController::class, 'update'])->name('assets.update')->middleware('role:super_admin,admin');
+    Route::post('/assets/{id}/transfer', [AssetController::class, 'transfer'])->name('assets.transfer')->middleware('role:super_admin,admin');
+    Route::post('/assets/{id}/return', [AssetController::class, 'returnAmu'])->name('assets.return')->middleware('role:super_admin,admin');
+    Route::post('/assets/{id}/photo', [AssetController::class, 'uploadPhoto'])->name('assets.photo.upload')->middleware('role:super_admin,admin');
+    Route::delete('/assets/{id}/photo', [AssetController::class, 'removePhoto'])->name('assets.photo.remove')->middleware('role:super_admin,admin');
+    Route::post('/assets/{id}/document', [AssetController::class, 'uploadDocument'])->name('assets.document.upload')->middleware('role:super_admin,admin');
+    Route::delete('/assets/document/{docId}', [AssetController::class, 'removeDocument'])->name('assets.document.remove')->middleware('role:super_admin,admin');
     Route::get('/asset-explorer', [AssetController::class, 'explorer'])->name('assets.explorer');
 
     // --- Print QR Stickers ---
@@ -295,9 +301,9 @@ Route::middleware('auth')->group(function () {
 
     // --- Download Reports ---
     Route::match(['get', 'post'], '/reports/template', [\App\Http\Controllers\ImportController::class, 'downloadTemplate'])->name('assets.reports.template');
-    Route::get('/reports', [\App\Http\Controllers\ImportController::class, 'show'])->name('assets.reports');
-    Route::post('/reports', [\App\Http\Controllers\ImportController::class, 'process'])->name('assets.reports.process');
-    Route::post('/reports/confirm', [\App\Http\Controllers\ImportController::class, 'confirm'])->name('assets.reports.confirm');
+    Route::get('/reports', [\App\Http\Controllers\ImportController::class, 'show'])->name('assets.reports')->middleware('role:super_admin,admin');
+    Route::post('/reports', [\App\Http\Controllers\ImportController::class, 'process'])->name('assets.reports.process')->middleware('role:super_admin,admin');
+    Route::post('/reports/confirm', [\App\Http\Controllers\ImportController::class, 'confirm'])->name('assets.reports.confirm')->middleware('role:super_admin,admin');
     
     Route::post('/api/reports/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getPreview'])->name('api.reports.preview');
     Route::get('/api/reports/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getFilterOptions'])->name('api.reports.filters');
