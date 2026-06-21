@@ -58,68 +58,48 @@ Route::middleware('auth')->group(function () {
         return response()->json(['dark_mode' => $user->dark_mode]);
     })->name('user.dark-mode');
 
-    // --- System Alert / Notification API ---
-    Route::get('/api/system-alert', function () {
-        $alert = DB::table('system_alerts')->orderByDesc('updated_at')->first();
+    // --- Polymorphic Notifications API ---
+    Route::get('/api/notifications', function () {
         $user = auth()->user();
-        $hasUnread = false;
-        if ($alert) {
-            $hasUnread = is_null($user->alert_read_at) || $user->alert_read_at < $alert->updated_at;
-        }
+        $notifications = $user->unreadNotifications;
+        
         return response()->json([
-            'alert'     => $alert,
-            'hasUnread' => $hasUnread,
+            'notifications' => $notifications,
+            'unreadCount' => $notifications->count(),
         ]);
-    })->name('api.system_alert');
+    })->name('api.notifications.index');
 
-    Route::post('/api/system-alert', function (Request $request) {
-        $request->validate([
-            'title'    => 'required|string|max:255',
-            'body'     => 'required|string|max:2000',
-            'priority' => 'required|in:High,Medium,Low',
-        ]);
-
-        $alert = DB::table('system_alerts')->orderByDesc('updated_at')->first();
+    Route::post('/api/notifications/{id}/read', function ($id) {
         $user = auth()->user();
-
-        if ($alert) {
-            DB::table('system_alerts')->where('id', $alert->id)->update([
-                'title'      => $request->title,
-                'body'       => $request->body,
-                'priority'   => $request->priority,
-                'updated_by' => $user->name,
-                'updated_at' => now(),
-            ]);
-        } else {
-            DB::table('system_alerts')->insert([
-                'title'      => $request->title,
-                'body'       => $request->body,
-                'priority'   => $request->priority,
-                'updated_by' => $user->name,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        $notification = $user->notifications()->where('id', $id)->first();
+        if ($notification) {
+            $notification->markAsRead();
         }
-
-        DB::table('system_logs')->insert([
-            'user'        => $user->name,
-            'activity'    => 'Updated system alert: "' . $request->title . '"',
-            'module'      => 'Notifications',
-            'action_type' => 'Update',
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
-
         return response()->json(['success' => true]);
-    })->name('api.system_alert.save');
+    })->name('api.notifications.read');
 
-    Route::post('/api/system-alert/read', function () {
+    Route::post('/api/notifications/read-all', function () {
         $user = auth()->user();
-        DB::table('users')->where('id', $user->id)->update([
-            'alert_read_at' => now(),
-        ]);
+        $user->unreadNotifications->markAsRead();
         return response()->json(['success' => true]);
-    })->name('api.system_alert.read');
+    })->name('api.notifications.read_all');
+    
+    Route::post('/api/notifications/custom', function (Illuminate\Http\Request $request) {
+        if (auth()->user()->role !== 'super_admin') abort(403);
+        $request->validate(['message' => 'required|string']);
+        
+        $dummyData = (object)[
+            'title' => 'System Announcement',
+            'message' => \Illuminate\Support\Str::limit($request->message, 50),
+            'detailed_message' => $request->message
+        ];
+        
+        $users = \App\Models\User::where('approved', true)->get();
+        foreach ($users as $u) {
+            $u->notify(new \App\Notifications\SystemAnnouncementNotification($dummyData));
+        }
+        return response()->json(['success' => true]);
+    })->name('api.notifications.custom');
     
     Route::get('/inventory-setup', function () {
         set_time_limit(300);

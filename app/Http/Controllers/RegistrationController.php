@@ -70,6 +70,18 @@ class RegistrationController extends Controller
         $adminEmail = config('mail.admin_email', 'admin@deped.gov.ph');
         Mail::to($adminEmail)->send(new AdminRegistrationNotification($email, $token));
 
+        // Notify super admins via system notification
+        $dummyUser = (object)[
+            'title' => 'New User Registration',
+            'message' => 'A new user has registered and is pending approval.',
+            'detailed_message' => "User {$validated['first_name']} {$validated['last_name']} ({$validated['username']}) has registered with the role of {$validated['role']}."
+        ];
+        
+        $admins = User::where('approved', true)->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new \App\Notifications\NewUserRegistered($dummyUser));
+        }
+
         // Clear the OTP verification
         session()->forget('otp_verified_email');
 

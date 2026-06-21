@@ -9,6 +9,7 @@
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
@@ -76,134 +77,42 @@
                     <p class="text-[10px] font-bold text-[#c00000] uppercase tracking-widest mt-1.5">System Alerts & Notices</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    {{-- Customize lock button --}}
-                    <button @click="openPasswordModal()" title="Customize Alert" class="p-2.5 bg-slate-50 text-slate-500 rounded-xl hover:bg-amber-50 hover:text-amber-600 border border-slate-100 hover:border-amber-200 transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
-                    </button>
                     <button @click="showNotifications = false" class="p-2.5 bg-slate-50 text-slate-900 rounded-xl hover:text-red-600 hover:bg-red-50 border border-slate-100 transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
             </div>
 
-            {{-- PASSWORD MODAL --}}
-            <div x-show="showPwModal" class="alert-modal-overlay" x-cloak @click.self="showPwModal=false"
-                 x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
-                <div class="alert-modal">
-                    <div class="flex items-center gap-3 mb-5">
-                        <div class="w-10 h-10 bg-amber-50 border border-amber-100 rounded-xl flex items-center justify-center">
-                            <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
-                        </div>
-                        <div>
-                            <p class="text-xs font-black text-slate-800 uppercase tracking-widest">Alert Customization</p>
-                            <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Enter admin password to proceed</p>
-                        </div>
+            <div class="flex-grow overflow-y-auto custom-scroll p-6 space-y-4">
+                <template x-if="notifications.length === 0">
+                    <div class="flex flex-col items-center justify-center h-48 text-center text-slate-400">
+                        <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                        <p class="text-xs font-bold uppercase tracking-widest">No unread notifications</p>
                     </div>
-                    <input x-ref="pwInput" x-model="pwInput" type="password" placeholder="Password" class="alert-field mb-2"
-                           @keyup.enter="verifyPassword()">
-                    <p x-show="pwError" class="text-[9px] font-black text-red-500 uppercase tracking-widest mb-3" x-cloak x-text="pwError"></p>
-                    <div class="flex gap-2 mt-4">
-                        <button @click="showPwModal=false;pwInput='';pwError='';" class="flex-1 py-2.5 border border-slate-200 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-50 transition-all">Cancel</button>
-                        <button @click="verifyPassword()" class="flex-1 py-2.5 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#c00000] transition-all">Unlock</button>
-                    </div>
-                </div>
-            </div>
+                </template>
 
-            {{-- EDIT ALERT MODAL --}}
-            <div x-show="showEditModal" class="alert-modal-overlay" x-cloak @click.self="showEditModal=false"
-                 x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
-                <div class="alert-modal">
-                    <div class="flex items-center justify-between mb-5">
-                        <div>
-                            <p class="text-xs font-black text-slate-800 uppercase tracking-widest">Edit System Alert</p>
-                            <p class="text-[9px] font-bold text-[#c00000] uppercase tracking-widest mt-0.5">Changes apply immediately</p>
+                <template x-for="notification in notifications" :key="notification.id">
+                    <div class="p-5 bg-white rounded-2xl shadow-sm border border-slate-100 group relative">
+                        <div class="flex items-start gap-4">
+                            <div class="flex-1 min-w-0 pr-6">
+                                <p class="text-[11px] font-black text-slate-800 uppercase italic" x-text="notification.data.title"></p>
+                                <p class="text-[10px] font-bold text-slate-500 mt-1 leading-relaxed truncate" x-text="notification.data.message"></p>
+                                <div class="flex items-center justify-between mt-3">
+                                    <button type="button" @click="showNotificationDetails(notification.data)" class="text-[9px] font-black text-[#c00000] uppercase tracking-widest hover:underline cursor-pointer">View Details</button>
+                                </div>
+                            </div>
                         </div>
-                        <button @click="showEditModal=false" class="p-2 bg-slate-50 rounded-xl hover:bg-red-50 hover:text-red-500 transition-all">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                        <button @click="markAsRead(notification.id)" class="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Mark as read">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
                         </button>
                     </div>
-                    <div class="space-y-3">
-                        <div>
-                            <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Alert Title</label>
-                            <input x-model="editAlert.title" type="text" class="alert-field" placeholder="e.g. Quarterly Audit">
-                        </div>
-                        <div>
-                            <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Message Body</label>
-                            <textarea x-model="editAlert.body" class="alert-field" placeholder="Alert message..."></textarea>
-                        </div>
-                        <div>
-                            <label class="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Priority</label>
-                            <select x-model="editAlert.priority" class="alert-field">
-                                <option>High</option>
-                                <option>Medium</option>
-                                <option>Low</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="flex gap-2 mt-5">
-                        <button @click="resetAlert()" class="flex-1 py-2.5 border border-slate-200 rounded-xl text-[10px] font-black text-slate-500 uppercase tracking-widest hover:bg-slate-50 transition-all">Reset</button>
-                        <button @click="saveAlert()" class="flex-1 py-2.5 bg-[#c00000] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-800 transition-all">Save Changes</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex-grow overflow-y-auto custom-scroll p-8 space-y-8">
-                <div class="bg-[#c00000] p-7 rounded-[2.5rem] shadow-xl shadow-red-200 group hover:shadow-red-300 hover:scale-[1.01] transition-all duration-500 cursor-default relative overflow-hidden border border-white/10">
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="w-14 h-14 bg-white rounded-[1.5rem] shadow-lg flex items-center justify-center group-hover:rotate-6 transition-transform duration-500">
-                             <img src="{{ asset('images/megaphone-3d.webp') }}" alt="Megaphone" class="w-10 h-10 object-contain">
-                        </div>
-                        <div class="text-right">
-                            <span class="inline-block px-3 py-1 bg-white/20 backdrop-blur-md text-white text-[8px] font-black uppercase tracking-widest rounded-full mb-2 italic border border-white/20">System Alert</span>
-                        </div>
-                    </div>
-                    <div class="space-y-4 relative z-10">
-                        <h3 class="text-lg font-black text-white uppercase italic leading-tight" x-text="alert.title"></h3>
-                        <p class="text-[10px] font-bold text-white/70 leading-relaxed uppercase pr-4" x-text="alert.body"></p>
-                    </div>
-                    <div class="mt-8 pt-6 border-t border-white/10 flex justify-between items-center relative z-10">
-                        <div class="flex items-center gap-2">
-                            <div class="w-1.5 h-1.5 bg-white rounded-full animate-pulse shadow-[0_0_8px_rgba(255,255,255,0.8)]"></div>
-                            <span class="text-[8px] font-black text-white/60 uppercase italic" x-text="'Priority: ' + alert.priority"></span>
-                        </div>
-                        <span class="text-[9px] font-black text-white/40 uppercase italic" x-text="alert.time"></span>
-                    </div>
-                    <div class="absolute -right-4 -bottom-4 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors"></div>
-                </div>
-
-                <div class="space-y-6">
-                    <div class="flex items-center gap-3 px-2">
-                        <div class="w-1 h-3 bg-[#c00000] rounded-full group-hover:h-5 transition-all"></div>
-                        <h5 class="text-[10px] font-black uppercase tracking-widest text-slate-900">System Notifications</h5>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 group cursor-default hover:shadow-lg hover:bg-white hover:scale-[1.02] transition-all duration-300">
-                            <div class="flex items-center gap-4 mb-3">
-                                <div class="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center border border-emerald-100 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                </div>
-                                <div>
-                                    <p class="text-[11px] font-black text-slate-800 uppercase italic group-hover:text-[#c00000] transition-colors">Database Sync</p>
-                                    <p class="text-[8px] font-bold text-slate-900 uppercase tracking-widest">Successful • 5 mins ago</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100 group cursor-default hover:shadow-lg hover:bg-white hover:scale-[1.02] transition-all duration-300">
-                            <div class="flex items-center gap-4 mb-3">
-                                <div class="w-10 h-10 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center border border-amber-100 group-hover:bg-amber-500 group-hover:text-white transition-all duration-300">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                                </div>
-                                <div>
-                                    <p class="text-[11px] font-black text-slate-800 uppercase italic group-hover:text-[#c00000] transition-colors">Maintenance Alert</p>
-                                    <p class="text-[8px] font-bold text-slate-900 uppercase tracking-widest">Scheduled • Tonight 12:00 AM</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                </template>
             </div>
             <div class="p-8 border-t border-slate-50">
-                <button @click="markAlertRead()" class="w-full py-4 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] hover:bg-[#c00000] transition-all shadow-lg shadow-slate-200">Mark All as Read</button>
+                @if(auth()->user()->role === 'super_admin')
+                <button @click="createCustomNotification()" class="w-full mb-3 py-4 bg-[#c00000] text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] hover:bg-[#a00000] transition-all shadow-lg shadow-red-200">Create Notification</button>
+                @endif
+                <button @click="markAlertRead()" class="w-full py-4 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] hover:bg-slate-700 transition-all shadow-lg shadow-slate-200">Mark All as Read</button>
             </div>
         </aside>
 
@@ -715,97 +624,118 @@
                 showNotifications: false,
                 hasUnread: false,
 
-                // Alert state
-                alert: {...ALERT_DEFAULTS},
-                editAlert: {...ALERT_DEFAULTS},
-                showPwModal: false,
-                showEditModal: false,
-                pwInput: '',
-                pwError: '',
+                notifications: [],
 
                 init() {
-                    this.loadAlertFromServer();
+                    this.loadNotificationsFromServer();
                 },
 
-                async loadAlertFromServer() {
+                async loadNotificationsFromServer() {
                     try {
-                        const res = await fetch('/api/system-alert', { headers: { 'Accept': 'application/json' } });
+                        const res = await fetch('/api/notifications', { headers: { 'Accept': 'application/json' } });
                         if (!res.ok) return;
                         const data = await res.json();
-                        if (data.alert) {
-                            const a = data.alert;
-                            const time = a.updated_at ? new Date(a.updated_at).toLocaleString('en-PH', {
-                                timeZone: 'Asia/Manila', month: 'short', day: 'numeric', year: 'numeric',
-                                hour: 'numeric', minute: '2-digit', hour12: true
-                            }) : '';
-                            this.alert = { title: a.title, body: a.body, priority: a.priority, time: time };
-                        }
-                        this.hasUnread = data.hasUnread || false;
-                    } catch(e) { console.error('Failed to load alert:', e); }
+                        
+                        this.notifications = data.notifications || [];
+                        this.hasUnread = data.unreadCount > 0;
+                    } catch(e) { console.error('Failed to load notifications:', e); }
                 },
 
                 async openNotifications() {
                     this.showNotifications = true;
-                    if (this.hasUnread) {
-                        this.hasUnread = false;
+                },
+
+                showNotificationDetails(data) {
+                    // Extract detailed text from message or long_message if it exists
+                    const details = data.detailed_message || data.message;
+                    Swal.fire({
+                        title: data.title,
+                        html: `<p class="text-xs font-bold text-slate-600 mt-2 text-left">${details}</p>`,
+                        icon: 'info',
+                        customClass: {
+                            popup: 'rounded-3xl p-6',
+                            title: 'text-lg font-black text-slate-800 uppercase italic',
+                            confirmButton: 'bg-[#c00000] text-white font-black uppercase tracking-widest text-[10px] px-8 py-3 rounded-xl hover:bg-red-800 transition-colors shadow-lg outline-none border-0'
+                        },
+                        buttonsStyling: false,
+                        confirmButtonText: 'CLOSE'
+                    });
+                },
+
+                async createCustomNotification() {
+                    const { value: text } = await Swal.fire({
+                        title: 'Create Announcement',
+                        input: 'textarea',
+                        inputPlaceholder: 'Type your message here...',
+                        inputAttributes: {
+                            'aria-label': 'Type your message here'
+                        },
+                        showCancelButton: true,
+                        confirmButtonText: 'SEND NOTIFICATION',
+                        cancelButtonText: 'CANCEL',
+                        customClass: {
+                            popup: 'rounded-3xl p-6',
+                            title: 'text-lg font-black text-slate-800 uppercase italic',
+                            input: 'text-sm font-medium text-slate-700 bg-slate-50 border border-slate-200 rounded-xl focus:ring-[#c00000] focus:border-[#c00000] mt-4 p-4',
+                            confirmButton: 'bg-[#c00000] text-white font-black uppercase tracking-widest text-[10px] px-6 py-3 rounded-xl hover:bg-red-800 transition-colors shadow-lg outline-none border-0 mt-2',
+                            cancelButton: 'bg-slate-200 text-slate-700 font-black uppercase tracking-widest text-[10px] px-6 py-3 rounded-xl hover:bg-slate-300 transition-colors shadow-sm outline-none border-0 mt-2 ml-2'
+                        },
+                        buttonsStyling: false
+                    });
+
+                    if (text) {
                         try {
-                            await fetch('/api/system-alert/read', {
+                            const res = await fetch('/api/notifications/custom', {
                                 method: 'POST',
-                                headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                },
+                                body: JSON.stringify({ message: text })
                             });
-                        } catch(e) { console.error('Failed to mark alert read:', e); }
+
+                            if (res.ok) {
+                                this.loadNotificationsFromServer();
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Sent!',
+                                    text: 'Announcement has been sent to all users.',
+                                    customClass: {
+                                        popup: 'rounded-3xl p-6',
+                                        title: 'text-lg font-black text-slate-800 uppercase italic',
+                                        confirmButton: 'bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px] px-8 py-3 rounded-xl hover:bg-emerald-700 transition-colors shadow-lg outline-none border-0'
+                                    },
+                                    buttonsStyling: false
+                                });
+                            }
+                        } catch (e) {
+                            console.error('Failed to send notification:', e);
+                        }
                     }
                 },
 
                 async markAlertRead() {
+                    if (this.notifications.length === 0) return;
                     this.hasUnread = false;
                     try {
-                        await fetch('/api/system-alert/read', {
+                        await fetch('/api/notifications/read-all', {
                             method: 'POST',
                             headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
                         });
-                    } catch(e) { console.error('Failed to mark alert read:', e); }
+                        this.notifications = [];
+                    } catch(e) { console.error('Failed to mark all as read:', e); }
                 },
 
-                openPasswordModal() {
-                    this.pwInput = '';
-                    this.pwError = '';
-                    this.showPwModal = true;
-                    this.$nextTick(() => this.$refs.pwInput && this.$refs.pwInput.focus());
-                },
-
-                verifyPassword() {
-                    if (this.pwInput === ALERT_PW) {
-                        this.showPwModal = false;
-                        this.pwInput = '';
-                        this.pwError = '';
-                        this.editAlert = {...this.alert};
-                        this.showEditModal = true;
-                    } else {
-                        this.pwError = 'Incorrect password. Try again.';
-                        this.pwInput = '';
-                        this.$nextTick(() => this.$refs.pwInput && this.$refs.pwInput.focus());
-                    }
-                },
-
-                async saveAlert() {
+                async markAsRead(id) {
                     try {
-                        const res = await fetch('/api/system-alert', {
+                        await fetch(`/api/notifications/${id}/read`, {
                             method: 'POST',
-                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                            body: JSON.stringify({ title: this.editAlert.title, body: this.editAlert.body, priority: this.editAlert.priority })
+                            headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
                         });
-                        if (!res.ok) throw new Error('Save failed');
-                        // Reload alert from server to get the fresh timestamp
-                        await this.loadAlertFromServer();
-                        this.showEditModal = false;
-                    } catch(e) {
-                        console.error('Failed to save alert:', e);
-                    }
-                },
-
-                resetAlert() {
-                    this.editAlert = { title: ALERT_DEFAULTS.title, body: ALERT_DEFAULTS.body, priority: ALERT_DEFAULTS.priority };
+                        this.notifications = this.notifications.filter(n => n.id !== id);
+                        this.hasUnread = this.notifications.length > 0;
+                    } catch(e) { console.error('Failed to mark read:', e); }
                 },
                 
                 get filterLabel() {

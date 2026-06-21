@@ -125,6 +125,12 @@ class InventorySetupController extends Controller
                 'updated_at' => now(),
             ]);
 
+            $admins = \App\Models\User::where('approved', true)->get();
+            $dummyAsset = (object)['description' => $validated['item_name']];
+            foreach ($admins as $admin) {
+                $admin->notify(new \App\Notifications\AssetAddedNotification($dummyAsset));
+            }
+
             DB::commit();
 
             return response()->json([
@@ -205,6 +211,8 @@ class InventorySetupController extends Controller
         try {
             DB::beginTransaction();
 
+            $addedDetails = [];
+
             foreach ($rows as $rowIndex => $row) {
                 $rowNum = $rowIndex + 1;
 
@@ -268,6 +276,12 @@ class InventorySetupController extends Controller
                             continue; // skip row — partial import is valid
                         }
                     }
+                } else {
+                    $employeeName = DB::table('employees')->where('id', $employeeId)->value(DB::raw("CONCAT(first_name, ' ', last_name)"));
+                }
+
+                if (empty($employeeName)) {
+                    $employeeName = "Unassigned";
                 }
 
                 // ── Map Condition to ENUM (stored on asset_sources) ──────────
@@ -302,6 +316,9 @@ class InventorySetupController extends Controller
                     'updated_at'       => now(),
                 ]);
 
+                $propNoStr = ((int)($row['qty'] ?? 1) > 1) ? '' : ($row['property-no'] ?? '');
+                $addedDetails[] = "Added " . (int)($row['qty'] ?? 1) . " " . ($row['uom'] ?? 'Unit') . " [" . $propNoStr . "] {$itemName} assigned to {$employeeName}";
+
                 $inserted++;
             }
 
@@ -313,6 +330,18 @@ class InventorySetupController extends Controller
                 'created_at'  => now(),
                 'updated_at'  => now(),
             ]);
+
+            if ($inserted > 0) {
+                $admins = \App\Models\User::where('approved', true)->get();
+                $dummyAsset = (object)[
+                    'title' => 'Assets Registered',
+                    'message' => "Successfully registered {$inserted} item(s).",
+                    'detailed_message' => implode('<br><br>', $addedDetails)
+                ];
+                foreach ($admins as $admin) {
+                    $admin->notify(new \App\Notifications\AssetAddedNotification($dummyAsset));
+                }
+            }
 
             DB::commit();
 
@@ -430,6 +459,16 @@ class InventorySetupController extends Controller
                     'created_at'  => now(),
                     'updated_at'  => now(),
                 ]);
+
+                $admins = \App\Models\User::where('approved', true)->get();
+                $dummyAsset = (object)[
+                    'title' => 'Buildings Registered',
+                    'message' => "Successfully registered {$inserted} building(s).",
+                    'detailed_message' => "Registered {$inserted} building(s) via manual entry."
+                ];
+                foreach ($admins as $admin) {
+                    $admin->notify(new \App\Notifications\AssetAddedNotification($dummyAsset));
+                }
             }
 
             if (request()->expectsJson() || request()->ajax()) {
@@ -662,7 +701,7 @@ class InventorySetupController extends Controller
                         $school = DB::table('schools')->where('school_id', $data['school_id'])->first();
                         if ($school) {
                             DB::table('employees')->where('id', $employeeId)->update([
-                                'school_id' => $school->school_id,
+                                'school_id' => $school->id,
                                 'office_id' => null,
                             ]);
                         } else {
@@ -709,6 +748,18 @@ class InventorySetupController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            if ($updateCount > 0) {
+                $admins = \App\Models\User::where('approved', true)->get();
+                $dummyAsset = (object)[
+                    'title' => 'Bulk Edit Applied',
+                    'message' => "Successfully updated {$updateCount} asset records.",
+                    'detailed_message' => "A bulk edit operation updated {$updateCount} asset record(s)."
+                ];
+                foreach ($admins as $admin) {
+                    $admin->notify(new \App\Notifications\AssetUpdatedNotification($dummyAsset));
+                }
+            }
 
             DB::commit();
 
@@ -858,11 +909,24 @@ class InventorySetupController extends Controller
                     $recordData['building_spec_id'] = $specId;
                 }
 
-                $directCols = ['office_type', 'school_id', 'address', 'region', 'division', 'location', 'occupancy_nature', 'date_constructed', 'acquisition_date', 'property_number', 'acquisition_cost', 'estimated_useful_life', 'remarks', 'appraised_value', 'appraisal_date'];
+                $directCols = ['office_type', 'address', 'region', 'division', 'location', 'occupancy_nature', 'date_constructed', 'acquisition_date', 'property_number', 'acquisition_cost', 'estimated_useful_life', 'remarks', 'appraised_value', 'appraisal_date'];
                 
                 foreach ($directCols as $col) {
                     if (array_key_exists($col, $update)) {
                         $recordData[$col] = $update[$col];
+                    }
+                }
+
+                if (array_key_exists('school_id', $update)) {
+                    $schoolVal = trim($update['school_id']);
+                    if (!empty($schoolVal)) {
+                        $resolvedSchoolId = DB::table('schools')
+                            ->where('school_id', $schoolVal)
+                            ->orWhere('id', $schoolVal)
+                            ->value('id');
+                        $recordData['school_id'] = $resolvedSchoolId;
+                    } else {
+                        $recordData['school_id'] = null;
                     }
                 }
 

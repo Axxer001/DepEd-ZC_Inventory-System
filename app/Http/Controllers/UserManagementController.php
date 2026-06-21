@@ -42,13 +42,20 @@ class UserManagementController extends Controller
             return back()->with('error', "Registration for {$pending->email} has expired.");
         }
 
-        User::create([
+        $user = User::create([
             'name'     => Str::before($pending->email, '@'),
             'email'    => $pending->email,
             'password' => $pending->password ?? bcrypt(Str::random(32)),
             'approved' => true,
             'role'     => $request->role,
         ]);
+
+        $dummyData = (object)[
+            'title' => 'Account Approved',
+            'message' => 'Your account has been approved by the administrator.',
+            'detailed_message' => "Your account ({$user->email}) has been approved with the role of: {$user->role}. You can now login and access the system."
+        ];
+        $user->notify(new \App\Notifications\AccountApprovedNotification($dummyData));
 
         $pending->delete();
 

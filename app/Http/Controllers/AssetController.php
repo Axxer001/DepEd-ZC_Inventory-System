@@ -577,6 +577,26 @@ class AssetController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            $propNoStr = isset($validated['property_number']) ? '[' . $validated['property_number'] . '] ' : '';
+            $empName = 'Unassigned';
+            if (isset($validated['employee_id'])) {
+                $empName = DB::table('employees')->where('id', $validated['employee_id'])->value(DB::raw("CONCAT(first_name, ' ', last_name)")) ?: 'Unassigned';
+            }
+            $qty = $validated['quantity'] ?? 1;
+            $uom = DB::table('asset_sources')->where('id', $asset->asset_source_id)->value('unit_of_measurement') ?? 'Unit';
+
+            $detailedMessage = "Edited {$qty} {$uom} {$propNoStr}{$itemName} assigned to {$empName}.";
+
+            $admins = \App\Models\User::where('approved', true)->get();
+            $dummyAsset = (object)[
+                'title' => 'Asset Updated',
+                'message' => 'An asset has been updated.',
+                'detailed_message' => $detailedMessage
+            ];
+            foreach ($admins as $admin) {
+                $admin->notify(new \App\Notifications\AssetUpdatedNotification($dummyAsset));
+            }
         });
 
         return back()->with('success', 'Asset specifications updated successfully!');
@@ -641,6 +661,24 @@ class AssetController extends Controller
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+
+            $source = DB::table('asset_sources')->where('id', $asset->asset_source_id)->first();
+            $itemName = DB::table('items')->where('id', $source->item_id)->value('name');
+            $uom = $source->unit_of_measurement ?? 'Unit';
+            $qty = $source->quantity ?? 1;
+            $propNoStr = $asset->property_number ? '[' . $asset->property_number . '] ' : '';
+            $empName = DB::table('employees')->where('id', $validated['employee_id'])->value(DB::raw("CONCAT(first_name, ' ', last_name)")) ?: 'Unknown';
+            $detailedMessage = "Transferred {$qty} {$uom} {$propNoStr}{$itemName} to {$empName}.";
+
+            $admins = \App\Models\User::where('approved', true)->get();
+            $dummyAsset = (object)[
+                'title' => 'Asset Transferred',
+                'message' => 'An asset has been transferred.',
+                'detailed_message' => $detailedMessage
+            ];
+            foreach ($admins as $admin) {
+                $admin->notify(new \App\Notifications\AssetTransferNotification($dummyAsset));
+            }
         });
 
         return back()->with('success', 'Asset successfully transferred!');
@@ -699,6 +737,23 @@ class AssetController extends Controller
                 'condition' => $validated['condition'],
                 'updated_at' => now(),
             ]);
+
+            $source = DB::table('asset_sources')->where('id', $asset->asset_source_id)->first();
+            $itemName = DB::table('items')->where('id', $source->item_id)->value('name');
+            $uom = $source->unit_of_measurement ?? 'Unit';
+            $qty = $source->quantity ?? 1;
+            $propNoStr = $asset->property_number ? '[' . $asset->property_number . '] ' : '';
+            $detailedMessage = "Returned {$qty} {$uom} {$propNoStr}{$itemName} to AMU / Warehouse.";
+
+            $admins = \App\Models\User::where('approved', true)->get();
+            $dummyAsset = (object)[
+                'title' => 'Asset Returned',
+                'message' => 'An asset has been returned to AMU.',
+                'detailed_message' => $detailedMessage
+            ];
+            foreach ($admins as $admin) {
+                $admin->notify(new \App\Notifications\AssetReturnedNotification($dummyAsset));
+            }
         });
 
         return redirect()->route('assets.view_all')->with('success', 'Asset successfully returned to AMU / Warehouse!');
