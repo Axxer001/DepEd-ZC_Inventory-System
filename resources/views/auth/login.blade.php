@@ -66,6 +66,9 @@
                                 </button>
                             </div>
                         </div>
+                        <div class="flex justify-end mt-1">
+                            <a href="{{ route('password.request') }}" class="text-xs font-bold text-[#c00000] hover:underline">Forgot Password?</a>
+                        </div>
 
                         <button type="submit"
                                 class="btn-hover-effect w-full bg-deped-red text-white py-3 rounded-2xl font-bold text-lg active:scale-[0.98] shadow-md mt-2">

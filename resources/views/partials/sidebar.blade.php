@@ -283,12 +283,12 @@
         </div>
 
         {{-- Activity Divider --}}
-
         <div class="pt-4 border-t border-slate-100 sidebar-label hidden whitespace-nowrap text-center">
             <p class="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Activity</p>
         </div>
 
-        {{-- System Logs --}}
+        {{-- System Logs (Super Admin Only) --}}
+        @if(auth()->check() && auth()->user()->isSuperAdmin())
         <div class="relative group/navitem">
             @if(request()->routeIs('admin.logs'))
                 <a href="{{ route('admin.logs') }}" class="flex items-center gap-4 px-4 py-3 bg-red-50 text-[#c00000] rounded-xl font-bold border border-red-100 transition-all" title="System Logs">
@@ -307,6 +307,9 @@
                 </a>
             @endif
         </div>
+        @endif
+
+
 
         {{-- User Management — Super Admin Only --}}
         @if(auth()->check() && auth()->user()->isSuperAdmin())

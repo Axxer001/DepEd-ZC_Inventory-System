@@ -14,8 +14,21 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\UserManagementController;
 
 // --- Public Routes ---
-Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
-Route::post('/login', [AuthController::class, 'login'])->name('login');
+Route::middleware('guest')->group(function () {
+    Route::get('/', [AuthController::class, 'showLoginForm'])->name('login.form');
+    Route::post('/login', [AuthController::class, 'login'])->name('login');
+    
+    // --- Forgot Password Workflow ---
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetPin'])->name('password.email');
+    
+    Route::get('/verify-pin', [AuthController::class, 'showVerifyPin'])->name('password.verify');
+    Route::post('/verify-pin', [AuthController::class, 'verifyPin'])->name('password.verify.post');
+    
+    Route::get('/reset-password', [AuthController::class, 'showResetPassword'])->name('password.reset');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+});
+
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', function () { return view('auth.register'); })->name('register');
 Route::post('/register', [RegistrationController::class, 'register'])->name('register.post');
@@ -184,18 +197,22 @@ Route::middleware('auth')->group(function () {
     // --- System Logs ---
     Route::get('/admin/logs', function (Request $request) {
         $action = $request->query('action', 'All Actions');
+        $date = $request->query('date');
         $query = DB::table('system_logs');
         if ($action !== 'All Actions') {
             $actionTypes = ['Create', 'Update', 'Delete', 'Others'];
             if (in_array($action, $actionTypes)) { $query->where('action_type', $action); }
             else { $query->where('module', $action); }
         }
+        if ($date) {
+            $query->whereDate('created_at', $date);
+        }
         $logs = $query->orderBy('created_at', 'desc')->paginate(20);
         $logs->getCollection()->transform(function ($log) {
             $log->ph_time = Carbon::parse($log->created_at)->timezone('Asia/Manila');
             return $log;
         });
-        return view('admin.logs', compact('action', 'logs'));
+        return view('admin.logs', compact('action', 'date', 'logs'));
     })->name('admin.logs');
 
     // --- Asset Viewing & Explorer ---

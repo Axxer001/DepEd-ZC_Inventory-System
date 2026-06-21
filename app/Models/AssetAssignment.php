@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AssetAssignment extends Model
 {
+
     protected $table = 'asset_assignments';
 
     protected $fillable = [

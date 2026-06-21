@@ -74,10 +74,10 @@ class RegistrationController extends Controller
         $dummyUser = (object)[
             'title' => 'New User Registration',
             'message' => 'A new user has registered and is pending approval.',
-            'detailed_message' => "User {$validated['first_name']} {$validated['last_name']} ({$validated['username']}) has registered with the role of {$validated['role']}."
+            'detailed_message' => "User {$email} has registered and is awaiting admin approval."
         ];
         
-        $admins = User::where('approved', true)->get();
+        $admins = User::where('approved', true)->where('role', 'super_admin')->get();
         foreach ($admins as $admin) {
             $admin->notify(new \App\Notifications\NewUserRegistered($dummyUser));
         }

@@ -82,4 +82,102 @@ class AuthController extends Controller
 
         return redirect('/');
     }
+
+    // --- Forgot Password Workflow ---
+    
+    public function showForgotPassword()
+    {
+        return view('auth.forgot-password');
+    }
+
+    public function sendResetPin(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+        $email = strtolower(trim($request->email));
+
+        $user = \App\Models\User::where('email', $email)->first();
+        if (!$user) {
+            return back()->with('error', 'We cannot find a user with that email address.');
+        }
+
+        $pin = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        \Illuminate\Support\Facades\DB::table('password_reset_tokens')->updateOrInsert(
+            ['email' => $email],
+            ['token' => \Illuminate\Support\Facades\Hash::make($pin), 'created_at' => now()]
+        );
+
+        \Illuminate\Support\Facades\Mail::to($email)->send(new \App\Mail\PasswordResetPinMail($pin));
+
+        $request->session()->put('reset_email', $email);
+        
+        return redirect()->route('password.verify')->with('success', 'Verification PIN sent to your email.');
+    }
+
+    public function showVerifyPin(Request $request)
+    {
+        if (!$request->session()->has('reset_email')) {
+            return redirect()->route('password.request');
+        }
+        return view('auth.verify-pin');
+    }
+
+    public function verifyPin(Request $request)
+    {
+        $request->validate(['pin' => 'required|numeric|digits:6']);
+        $email = $request->session()->get('reset_email');
+        
+        if (!$email) {
+            return redirect()->route('password.request')->with('error', 'Session expired. Please try again.');
+        }
+
+        $record = \Illuminate\Support\Facades\DB::table('password_reset_tokens')->where('email', $email)->first();
+
+        if (!$record || !\Illuminate\Support\Facades\Hash::check($request->pin, $record->token)) {
+            return back()->with('error', 'Invalid or expired verification PIN.');
+        }
+
+        $request->session()->put('pin_verified', true);
+        return redirect()->route('password.reset')->with('success', 'PIN verified. You can now reset your password.');
+    }
+
+    public function showResetPassword(Request $request)
+    {
+        if (!$request->session()->has('pin_verified') || !$request->session()->get('pin_verified')) {
+            return redirect()->route('password.request');
+        }
+        return view('auth.reset-password');
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $email = $request->session()->get('reset_email');
+        if (!$email) {
+            return redirect()->route('password.request')->with('error', 'Session expired. Please try again.');
+        }
+
+        $user = \App\Models\User::where('email', $email)->first();
+        if ($user) {
+            $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
+            $user->save();
+
+            \Illuminate\Support\Facades\DB::table('system_logs')->insert([
+                'user' => $user->name,
+                'activity' => 'User reset their password',
+                'module' => 'Authentication',
+                'action_type' => 'Update',
+                'created_at' => now(),
+                'updated_at' => now()
+            ]);
+        }
+
+        \Illuminate\Support\Facades\DB::table('password_reset_tokens')->where('email', $email)->delete();
+        $request->session()->forget(['reset_email', 'pin_verified']);
+
+        return redirect()->route('login.form')->with('success', 'Password reset successfully. You can now log in.');
+    }
 }
