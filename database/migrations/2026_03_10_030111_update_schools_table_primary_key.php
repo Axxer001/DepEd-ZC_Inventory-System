@@ -13,15 +13,23 @@ return new class extends Migration
     public function up(): void
     {
         // 1. Drop the existing foreign key constraint from items targeting schools
-        $fks = DB::select("SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = 'defaultdb' AND REFERENCED_TABLE_NAME = 'schools' AND TABLE_NAME = 'items'");
-        if (count($fks) > 0) {
-            Schema::table('items', function (Blueprint $table) {
-                $table->dropForeign(['school_id']);
-            });
+        if (Schema::hasTable('items')) {
+            $driver = DB::connection()->getDriverName();
+            if ($driver === 'mysql') {
+                $fks = DB::select("SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = DATABASE() AND REFERENCED_TABLE_NAME = 'schools' AND TABLE_NAME = 'items'");
+                if (count($fks) > 0) {
+                    Schema::table('items', function (Blueprint $table) {
+                        $table->dropForeign(['school_id']);
+                    });
+                }
+            } else if ($driver === 'sqlite') {
+                // SQLite handles dropping tables with foreign keys differently, 
+                // but we can try to drop if we know the name, or just skip it for in-memory testing
+            }
         }
 
         // 2. We truncate the schools table before modifying to prevent primary key violation errors
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        Schema::disableForeignKeyConstraints();
         DB::table('schools')->truncate();
 
         // 3. Create a new table with the correct schema
@@ -46,7 +54,7 @@ return new class extends Migration
             $table->foreign('school_id')->references('id')->on('schools')->onDelete('cascade');
         });
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
