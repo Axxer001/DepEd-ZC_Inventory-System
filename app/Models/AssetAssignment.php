@@ -36,10 +36,10 @@ class AssetAssignment extends Model
         return $this->belongsTo(AssetSource::class);
     }
 
-    public function documents(): HasMany
-    {
-        return $this->hasMany(AssetDocument::class, 'asset_distribution_id');
-    }
+    // public function documents(): HasMany
+    // {
+    //     return $this->hasMany(AssetDocument::class, 'asset_distribution_id');
+    // }
 
     public function transfers(): HasMany
     {

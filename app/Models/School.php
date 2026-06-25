@@ -23,8 +23,8 @@ class School extends Model
         return $this->hasMany(Employee::class);
     }
 
-    public function district(): BelongsTo
-    {
-        return $this->belongsTo(District::class);
-    }
+    // public function district(): BelongsTo
+    // {
+    //     return $this->belongsTo(District::class);
+    // }
 }
