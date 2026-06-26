@@ -21,11 +21,6 @@ class ReportDownloadController extends Controller
 
         if ($tab === 'source') {
             $query = DB::table('asset_sources')
-                ->whereExists(function ($q) {
-                    $q->select(DB::raw(1))
-                      ->from('asset_assignments')
-                      ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id');
-                })
                 ->leftJoin('items', 'asset_sources.item_id', '=', 'items.id')
                 ->leftJoin('categories', 'items.category_id', '=', 'categories.id')
                 ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')
@@ -114,6 +109,18 @@ class ReportDownloadController extends Controller
         if (!empty($filters['schoolName']) && $tab === 'distribution') {
             $query->where('schools.name', 'LIKE', '%' . $filters['schoolName'] . '%');
         }
+        if (!empty($filters['district']) && $tab === 'distribution') {
+            $query->whereIn('schools.district_id', function($q) use ($filters) {
+                $q->select('id')->from('districts')->where('name', $filters['district']);
+            });
+        }
+        if (!empty($filters['quadrant']) && $tab === 'distribution') {
+            $query->whereIn('schools.district_id', function($q) use ($filters) {
+                $q->select('id')->from('districts')->whereIn('quadrant_id', function($q2) use ($filters) {
+                    $q2->select('id')->from('quadrants')->where('name', $filters['quadrant']);
+                });
+            });
+        }
         if (!empty($filters['officeName']) && $tab === 'distribution') {
             $query->where('offices.name', 'LIKE', '%' . $filters['officeName'] . '%');
         }
@@ -125,6 +132,53 @@ class ReportDownloadController extends Controller
         }
         if (!empty($filters['dateAcquired'])) {
             $query->whereDate('asset_sources.acceptance_date', $filters['dateAcquired']);
+        }
+
+        if (!empty($filters['status'])) {
+            $status = $filters['status'];
+            if ($status === 'distributed') {
+                if ($tab === 'source') {
+                    $query->whereExists(function ($q) {
+                        $q->select(DB::raw(1))
+                          ->from('asset_assignments')
+                          ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id')
+                          ->whereNotNull('asset_assignments.employee_id');
+                    });
+                } else {
+                    $query->whereNotNull('asset_assignments.employee_id');
+                }
+            } elseif ($status === 'not_distributed') {
+                if ($tab === 'source') {
+                    $query->whereNotExists(function ($q) {
+                        $q->select(DB::raw(1))
+                          ->from('asset_assignments')
+                          ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id')
+                          ->whereNotNull('asset_assignments.employee_id');
+                    });
+                } else {
+                    $query->whereNull('asset_assignments.employee_id');
+                }
+            } else {
+                $conditionMap = [
+                    'serviceable' => 'Good Condition',
+                    'to_repair' => 'Needs Repair',
+                    'unserviceable' => 'Unserviceable',
+                ];
+                if (isset($conditionMap[$status])) {
+                    $query->where('asset_sources.condition', $conditionMap[$status]);
+                }
+            }
+        }
+
+        if (!empty($filters['expiry'])) {
+            $expiry = $filters['expiry'];
+            if ($expiry === 'expired') {
+                $query->whereRaw('DATE_ADD(asset_sources.acceptance_date, INTERVAL asset_sources.estimated_useful_life YEAR) <= CURDATE()');
+            } elseif ($expiry === 'nearing_expiry') {
+                $query->whereRaw('DATE_ADD(asset_sources.acceptance_date, INTERVAL asset_sources.estimated_useful_life YEAR) BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 6 MONTH)');
+            } elseif ($expiry === 'active') {
+                $query->whereRaw('DATE_ADD(asset_sources.acceptance_date, INTERVAL asset_sources.estimated_useful_life YEAR) > DATE_ADD(CURDATE(), INTERVAL 6 MONTH)');
+            }
         }
 
         if (!empty($filters['search'])) {
@@ -275,6 +329,8 @@ class ReportDownloadController extends Controller
         $items = (clone $baseQuery)->whereNotNull('items.name')->pluck('items.name')->unique()->sort()->values();
         $schools = DB::table('schools')->whereNotNull('name')->where('name', '!=', '')->pluck('name')->unique()->sort()->values();
         $offices = DB::table('offices')->whereNotNull('name')->where('name', '!=', '')->pluck('name')->unique()->sort()->values();
+        $quadrants = DB::table('quadrants')->whereNotNull('name')->where('name', '!=', '')->pluck('name')->unique()->sort()->values();
+        $districts = DB::table('districts')->whereNotNull('name')->where('name', '!=', '')->pluck('name')->unique()->sort()->values();
         $sources = (clone $baseQuery)->whereNotNull('acquisition_sources.name')->pluck('acquisition_sources.name')->unique()->sort()->values();
         $modes = (clone $baseQuery)->whereNotNull('pm.name')->pluck('pm.name')->unique()->sort()->values();
 
@@ -291,6 +347,8 @@ class ReportDownloadController extends Controller
             'items' => $items,
             'schools' => $schools,
             'offices' => $offices,
+            'quadrants' => $quadrants,
+            'districts' => $districts,
             'sources' => $sources,
             'modes' => $modes,
             'units' => $units
@@ -793,6 +851,16 @@ class ReportDownloadController extends Controller
 
         if (!empty($filters['status'])) {
             $query->where('employees.status', $filters['status']);
+        }
+        if (!empty($filters['position'])) {
+            $query->where('employees.position', $filters['position']);
+        }
+        if (!empty($filters['clearance'])) {
+            if ($filters['clearance'] === 'cleared') {
+                $query->having('total_assets', '=', 0);
+            } elseif ($filters['clearance'] === 'has_assets') {
+                $query->having('total_assets', '>', 0);
+            }
         }
         if (!empty($filters['search'])) {
             $search = $filters['search'];

@@ -217,7 +217,7 @@ Route::middleware('auth')->group(function () {
 
     // --- Asset Viewing & Explorer ---
     Route::get('/view-assets', function () { return view('assets.view-assets'); })->name('assets.view');
-    Route::get('/view-all-assets', [AssetController::class, 'viewAll'])->name('assets.view_all');
+
     Route::get('/api/schools/{id}/assets', [AssetController::class, 'getSchoolAssets'])->name('api.schools.assets');
     Route::get('/assets/asset-history', [AssetController::class, 'history'])->name('assets.history');
     Route::get('/assets/{id}/profile', [AssetController::class, 'profile'])->name('assets.profile');

@@ -91,9 +91,14 @@
                     
                     <div class="relative col-personnel p-1 rounded-2xl" style="position:relative;overflow:visible">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee Search</label>
-                        <input type="text" id="bEmployeeSearch" data-col="employee-search" autocomplete="off" 
-                            oninput="bulkAutofillEmployee(this.value); filterBulkEmpDropdown(this.value)" onfocus="filterBulkEmpDropdown(this.value)"
-                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Employee...">
+                        <div class="relative w-full h-full">
+                            <input type="text" id="bEmployeeSearch" data-col="employee-search" autocomplete="off" 
+                                oninput="bulkAutofillEmployee(this.value); filterBulkEmpDropdown(this.value); document.getElementById('bEmployeeSearchClear').style.display = this.value ? 'block' : 'none';" onfocus="filterBulkEmpDropdown(this.value)"
+                                class="xls-input w-full pr-8 !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Employee...">
+                            <button type="button" id="bEmployeeSearchClear" onclick="document.getElementById('bEmployeeSearch').value=''; filterBulkEmpDropdown(''); bulkAutofillEmployee(''); this.style.display='none';" style="display:none;" class="absolute right-2 top-1/2 -translate-y-1/2 -mt-1 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
                         <div id="bulk-emp-dd" class="xls-custom-dd" style="display:none; width:100%;"></div>
                     </div>
                     <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee ID</label>
@@ -111,9 +116,14 @@
 
                     <div class="relative col-identity p-1 rounded-2xl" style="position:relative;overflow:visible">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">School/Office Search</label>
-                        <input type="text" id="bSchoolSearch" data-col="school-search" autocomplete="off" 
-                            oninput="bulkAutofillLocation(this.value); filterBulkLocDropdown(this.value)" onfocus="filterBulkLocDropdown(this.value)"
-                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Location...">
+                        <div class="relative w-full h-full">
+                            <input type="text" id="bSchoolSearch" data-col="school-search" autocomplete="off" 
+                                oninput="bulkAutofillLocation(this.value); filterBulkLocDropdown(this.value); document.getElementById('bSchoolClear').style.display = this.value ? 'block' : 'none';" onfocus="filterBulkLocDropdown(this.value)"
+                                class="xls-input w-full pr-8 !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Location...">
+                            <button type="button" id="bSchoolClear" onclick="document.getElementById('bSchoolSearch').value=''; filterBulkLocDropdown(''); bulkAutofillLocation(''); this.style.display='none';" style="display:none;" class="absolute right-2 top-1/2 -translate-y-1/2 -mt-1 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
                         <div id="bulk-loc-dd" class="xls-custom-dd" style="display:none; width:100%;"></div>
                     </div>
                     <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School ID</label>

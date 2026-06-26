@@ -457,6 +457,18 @@
                     </select>
                 </div>
                 <div class="relative">
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Quadrant</label>
+                    <select id="assetFilterQuadrant" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+                        <option value="">All Quadrants</option>
+                    </select>
+                </div>
+                <div class="relative">
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">District</label>
+                    <select id="assetFilterDistrict" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+                        <option value="">All Districts</option>
+                    </select>
+                </div>
+                <div class="relative">
                     <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">School</label>
                     <div class="relative">
                         <input type="text" id="assetFilterSchool" placeholder="Search School..." autocomplete="off" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500 pr-10">
@@ -485,6 +497,15 @@
                 <div>
                     <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Date Acquired (Acceptance)</label>
                     <input type="date" id="assetFilterDate" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Asset Expiry / Life</label>
+                    <select id="assetFilterExpiry" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+                        <option value="">All (Include Expired)</option>
+                        <option value="active">Active (Good Life)</option>
+                        <option value="nearing_expiry">Nearing Expiry (<= 6 Mo.)</option>
+                        <option value="expired">Expired (End of Life)</option>
+                    </select>
                 </div>
                 <div>
                     <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Data Integrity (Empty Fields)</label>
@@ -750,6 +771,8 @@
                 populate('assetFilterItem', data.items, 'Item');
                 populate('assetFilterSource', data.sources, 'Source');
                 populate('assetFilterMode', data.modes, 'Mode');
+                populate('assetFilterQuadrant', data.quadrants, 'Quadrant');
+                populate('assetFilterDistrict', data.districts, 'District');
                 allSchoolList = data.schools || [];
                 allOfficeList = data.offices || [];
                 if (!isSchoolInit) { initSchoolAutocomplete(); isSchoolInit = true; }
@@ -812,9 +835,12 @@
                 article: document.getElementById('assetFilterItem').value,
                 source: document.getElementById('assetFilterSource').value,
                 mode: document.getElementById('assetFilterMode').value,
+                quadrant: document.getElementById('assetFilterQuadrant').value,
+                district: document.getElementById('assetFilterDistrict').value,
                 dateAcquired: document.getElementById('assetFilterDate').value,
                 schoolName: document.getElementById('assetFilterSchool').value,
                 officeName: document.getElementById('assetFilterOffice').value,
+                expiry: document.getElementById('assetFilterExpiry').value,
                 sortCost: document.getElementById('assetFilterSort').value,
                 emptyCol: document.getElementById('assetFilterEmptyCol').value,
                 status: document.getElementById('assetFilterStatus').value,
@@ -1012,9 +1038,12 @@
             document.getElementById('assetFilterItem').value = '';
             document.getElementById('assetFilterSource').value = '';
             document.getElementById('assetFilterMode').value = '';
+            document.getElementById('assetFilterQuadrant').value = '';
+            document.getElementById('assetFilterDistrict').value = '';
             document.getElementById('assetFilterDate').value = '';
             document.getElementById('assetFilterSchool').value = '';
             document.getElementById('assetFilterOffice').value = '';
+            document.getElementById('assetFilterExpiry').value = '';
             document.getElementById('assetFilterSort').value = '';
             document.getElementById('assetFilterEmptyCol').value = '';
             document.getElementById('assetFilterStatus').value = '';

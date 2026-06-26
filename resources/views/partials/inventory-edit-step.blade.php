@@ -285,26 +285,15 @@
                     </div>
                     <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Item</label><input type="text" id="ebItem" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Leave empty to ignore"></div>
                     <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Description</label><input type="text" id="ebDescription" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Leave empty to ignore"></div>
-                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Unit of Measurement</label><input type="text" id="ebUom" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent edit-readonly" readonly disabled="disabled" placeholder="Leave empty to ignore"></div>
-                    
-                    <div class="relative col-personnel p-1 rounded-2xl">
-                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Source</label>
-                        <input type="text" id="ebAcqSource" class="xls-input !border border-slate-100 rounded-xl edit-readonly" placeholder="Cannot be modified" readonly disabled="disabled">
-                    </div>
-
-                    <div class="relative col-status p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Mode of Procurement</label><input type="text" id="ebMode" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent edit-readonly" readonly disabled="disabled" placeholder="Leave empty to ignore"></div>
-                    
-                    <div class="relative col-personnel p-1 rounded-2xl">
-                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Source Personnel</label>
-                        <input type="text" id="ebPersonnel" class="xls-input !border border-slate-100 rounded-xl edit-readonly" placeholder="Cannot be modified" readonly disabled="disabled">
-                    </div>
-                    
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Personnel Position</label><input type="text" id="ebPosition" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent edit-readonly" readonly disabled="disabled" placeholder="Leave empty to ignore"></div>
-                    
-                    <div class="relative col-financial p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Cost per Unit</label><input type="number" id="ebCost" class="xls-input !border border-slate-100 rounded-xl text-right bg-transparent edit-readonly" readonly disabled="disabled" placeholder="Leave empty to ignore" min="0" step="0.01"></div>
-                    <div class="relative col-financial p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Quantity</label><input type="number" id="ebQty" class="xls-input !border border-slate-100 rounded-xl text-right bg-transparent edit-readonly" readonly disabled="disabled" placeholder="Leave empty to ignore" min="0" step="1"></div>
-                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Expected Useful Life</label><input type="number" id="ebLife" class="xls-input !border border-slate-100 rounded-xl text-right bg-transparent edit-readonly" readonly disabled="disabled" placeholder="Leave empty to ignore" min="0" step="1"></div>
-                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acceptance Date</label><input type="date" id="ebDate1" class="xls-input !border border-slate-100 rounded-xl bg-transparent edit-readonly" readonly disabled="disabled"></div>
+                    <input type="hidden" id="ebUom" autocomplete="off">
+                    <input type="hidden" id="ebAcqSource">
+                    <input type="hidden" id="ebMode" autocomplete="off">
+                    <input type="hidden" id="ebPersonnel">
+                    <input type="hidden" id="ebPosition" autocomplete="off">
+                    <input type="hidden" id="ebCost" step="0.01">
+                    <input type="hidden" id="ebQty">
+                    <input type="hidden" id="ebLife">
+                    <input type="hidden" id="ebDate1">
                     <div class="relative col-status p-1 rounded-2xl">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Condition</label>
                         <select id="ebRemarks" class="xls-input !border border-slate-100 rounded-xl bg-transparent">
@@ -327,56 +316,51 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-x-6 gap-y-5">
-                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Region</label>
-                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-white/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Region IX <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
-                    </div>
-                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Division</label>
-                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-white/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Division of Zamboanga City <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
-                    </div>
+
                     
                     <div class="relative col-personnel p-1 rounded-2xl" style="position:relative;overflow:visible">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee Search</label>
-                        <input type="text" id="ebEmployeeSearch" autocomplete="off" 
-                            oninput="editBulkAutofillEmployee(this.value); filterEditBulkEmpDropdown(this.value)" onfocus="filterEditBulkEmpDropdown(this.value)"
-                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Employee...">
+                        <div class="relative w-full h-full">
+                            <input type="text" id="ebEmployeeSearch" autocomplete="off" 
+                                oninput="editBulkAutofillEmployee(this.value); filterEditBulkEmpDropdown(this.value); document.getElementById('ebEmployeeSearchClear').style.display = this.value ? 'block' : 'none';" onfocus="filterEditBulkEmpDropdown(this.value)"
+                                class="xls-input w-full pr-8 !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Employee...">
+                            <button type="button" id="ebEmployeeSearchClear" onclick="document.getElementById('ebEmployeeSearch').value=''; filterEditBulkEmpDropdown(''); editBulkAutofillEmployee(''); this.style.display='none';" style="display:none;" class="absolute right-2 top-1/2 -translate-y-1/2 -mt-1 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
                         <div id="edit-bulk-emp-dd" class="xls-custom-dd" style="display:none; width:100%;"></div>
                     </div>
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee ID</label>
-                        <input type="text" id="ebEmployeeId" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 outline-none edit-readonly cursor-not-allowed"" readonly disabled="disabled" placeholder="Leave empty to ignore">
-                    </div>
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee Name</label>
-                        <input type="text" id="ebEmployeeName" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 outline-none edit-readonly cursor-not-allowed"" readonly disabled="disabled" placeholder="Leave empty to ignore">
-                    </div>
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee Position</label>
-                        <input type="text" id="ebEmployeePos" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 outline-none edit-readonly cursor-not-allowed"" readonly disabled="disabled" placeholder="Leave empty to ignore">
-                    </div>
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee Status</label>
-                        <input type="text" id="ebEmployeeStatus" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 outline-none edit-readonly cursor-not-allowed"" readonly disabled="disabled" placeholder="Leave empty to ignore">
-                    </div>
+                    <input type="hidden" id="ebEmployeeId" autocomplete="off">
+                    <input type="hidden" id="ebEmployeeName" autocomplete="off">
+                    <input type="hidden" id="ebEmployeePos" autocomplete="off">
+                    <input type="hidden" id="ebEmployeeStatus" autocomplete="off">
 
                     <div class="relative col-identity p-1 rounded-2xl" style="position:relative;overflow:visible">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">School/Office Search</label>
-                        <input type="text" id="ebSchoolSearch" autocomplete="off" 
-                            oninput="editBulkAutofillLocation(this.value); filterEditBulkLocDropdown(this.value)" onfocus="filterEditBulkLocDropdown(this.value)"
-                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Location...">
+                        <div class="relative w-full h-full">
+                            <input type="text" id="ebSchoolSearch" autocomplete="off" 
+                                oninput="editBulkAutofillLocation(this.value); filterEditBulkLocDropdown(this.value); document.getElementById('ebSchoolClear').style.display = this.value ? 'block' : 'none';" onfocus="filterEditBulkLocDropdown(this.value)"
+                                class="xls-input w-full pr-8 !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Location...">
+                            <button type="button" id="ebSchoolClear" onclick="document.getElementById('ebSchoolSearch').value=''; filterEditBulkLocDropdown(''); editBulkAutofillLocation(''); this.style.display='none';" style="display:none;" class="absolute right-2 top-1/2 -translate-y-1/2 -mt-1 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all cursor-pointer">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
                         <div id="edit-bulk-loc-dd" class="xls-custom-dd" style="display:none; width:100%;"></div>
                     </div>
-                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School ID</label>
-                        <input type="text" id="ebSchoolId" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 outline-none edit-readonly cursor-not-allowed"" readonly disabled="disabled" placeholder="Leave empty to ignore">
-                    </div>
-                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Type</label>
-                        <input type="text" id="ebSchoolType" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 outline-none edit-readonly cursor-not-allowed"" readonly disabled="disabled" placeholder="Leave empty to ignore">
-                    </div>
-                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label>
-                        <input type="text" id="ebSchoolName" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 outline-none edit-readonly cursor-not-allowed"" readonly disabled="disabled" placeholder="Leave empty to ignore">
-                    </div>
-                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Location / Room</label>
-                        <input type="text" id="ebLocation" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 outline-none edit-readonly cursor-not-allowed"" readonly disabled="disabled" placeholder="Leave empty to ignore">
-                    </div>
+                    <input type="hidden" id="ebSchoolId" autocomplete="off">
+                    <input type="hidden" id="ebSchoolType" autocomplete="off">
+                    <input type="hidden" id="ebSchoolName" autocomplete="off">
+                    <input type="hidden" id="ebLocation" autocomplete="off">
                     
-
-                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Property Number</label><input type="text" id="ebPropertyNo" class="xls-input !border border-slate-100 rounded-xl bg-transparent edit-readonly" readonly disabled="disabled" placeholder="Leave empty to ignore"></div>
-                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label><input type="date" id="ebDate2" class="xls-input !border border-slate-100 rounded-xl bg-transparent edit-readonly" readonly disabled="disabled"></div>
+                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Property Number</label><input type="text" id="ebPropertyNo" oninput="editBulkAutofillPropertyNo(this.value)" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
+                    <div class="relative col-financial p-1 rounded-2xl">
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Cost</label>
+                        <div class="relative">
+                            <input type="number" id="ebCost2" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none text-right pr-10" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1">
+                            <svg class="w-3.5 h-3.5 opacity-50 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                        </div>
+                    </div>
+                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label><input type="date" id="ebDate2" oninput="editBulkAutofillAcqDate(this.value)" class="xls-input !border border-slate-100 rounded-xl bg-transparent"></div>
                 </div>
             </div>
 
@@ -418,17 +402,12 @@
                 ebSchoolSearch.classList.remove('edit-readonly', 'cursor-not-allowed');
                 ebSchoolSearch.value = '';
             }
+            
+            document.getElementById('ebSchoolName').value = '';
+            document.getElementById('ebSchoolId').value   = '';
+            document.getElementById('ebSchoolType').value = '';
+            document.getElementById('ebLocation').value   = '';
         }
-    }
-
-    // Helper: position a bulk-edit dd using fixed coords from the trigger input
-    function positionBulkEditDd(dd, triggerEl) {
-        const rect = triggerEl.getBoundingClientRect();
-        dd.style.position = 'fixed';
-        dd.style.top  = (rect.bottom + 4) + 'px';
-        dd.style.left = rect.left + 'px';
-        dd.style.width = rect.width + 'px';
-        dd.style.zIndex = '9999';
     }
 
     function filterBulkEditClassDropdown(query) {
@@ -448,8 +427,6 @@
 
         if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No classifications found</div>`;
         else dd.innerHTML = matches.map(c => `<div class="xls-dd-item" onmousedown="selectBulkEditClass(this.getAttribute('data-name'))" data-name="${c.name.replace(/"/g, '&quot;')}">${c.name}</div>`).join('');
-        dd.classList.add('bulk-edit-dd');
-        positionBulkEditDd(dd, inp);
         dd.style.display = 'block';
     }
 
@@ -492,8 +469,6 @@
 
         if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No categories found</div>`;
         else dd.innerHTML = matches.map(c => `<div class="xls-dd-item" onmousedown="selectBulkEditCat(this.getAttribute('data-name'))" data-name="${c.name.replace(/"/g, '&quot;')}">${c.name}<span style="color:#64748b;font-size:8px;margin-left:6px;">${c.classification_name || ''}</span></div>`).join('');
-        dd.classList.add('bulk-edit-dd');
-        positionBulkEditDd(dd, inp);
         dd.style.display = 'block';
     }
 
@@ -516,8 +491,6 @@
 
         if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No employees found</div>`;
         else dd.innerHTML = matches.map(e => `<div class="xls-dd-item" onmousedown="selectEditBulkEmp(this.getAttribute('data-name'))" data-name="${e.full_name.replace(/"/g, '&quot;')}">${e.full_name}<span style="font-size:8px;color:#64748b;margin-left:6px">${e.employee_id || ''}</span></div>`).join('');
-        dd.classList.add('bulk-edit-dd');
-        positionBulkEditDd(dd, inp);
         dd.style.display = 'block';
     }
 
@@ -526,6 +499,8 @@
         if (inp) {
             inp.value = name;
             editBulkAutofillEmployee(name);
+            const btn = document.getElementById('ebEmployeeSearchClear');
+            if (btn) btn.style.display = 'block';
         }
         const dd = document.getElementById('edit-bulk-emp-dd');
         if (dd) dd.style.display = 'none';
@@ -556,8 +531,6 @@
 
         if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No locations found</div>`;
         else dd.innerHTML = matches.map(l => `<div class="xls-dd-item" onmousedown="selectEditBulkLoc(this.getAttribute('data-name'))" data-name="${l.name.replace(/"/g, '&quot;')}">${l.name}<span style="font-size:8px;color:#64748b;margin-left:6px">${l.type || ''}</span></div>`).join('');
-        dd.classList.add('bulk-edit-dd');
-        positionBulkEditDd(dd, inp);
         dd.style.display = 'block';
     }
 
@@ -567,6 +540,8 @@
             inp.value = name;
             editBulkAutofillLocation(name);
         }
+        const btn = document.getElementById('ebSchoolClear');
+        if (btn) btn.style.display = 'block';
         const dd = document.getElementById('edit-bulk-loc-dd');
         if (dd) dd.style.display = 'none';
     }
@@ -576,14 +551,6 @@
     /* Bulk-edit modal dropdowns use position:fixed to escape overflow clipping */
     .bulk-edit-dd {
         position: fixed !important;
-        z-index: 9999 !important;
-        background: #fff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-        max-height: 220px;
-        overflow-y: auto;
-        min-width: 200px;
     }
     .update-badge {
         position: absolute; top: 3px; left: 3px; font-size: 8px; font-weight: 900; background: #3b82f6; color: white; padding: 1px 4px; border-radius: 4px; text-transform: uppercase; pointer-events: none; z-index: 10; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2); letter-spacing: 0.5px;
@@ -595,7 +562,7 @@
         background: rgba(59, 130, 246, 0.05); border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
     }
     .edit-readonly {
-        background: rgba(0,0,0,0.02) !important; color: #94a3b8 !important; cursor: not-allowed;
+        background: rgba(0,0,0,0.02) !important; color: #94a3b8 !important; cursor: not-allowed; opacity: 0.5 !important;
     }
 </style>
 
@@ -618,7 +585,23 @@
             row['office_school_name'] = loc.name;
             row['location'] = loc.location || '';
             renderEditTable(); // Optional: Re-render to show readonly updates, or just DOM mutate
+        } else if (!val) {
+            row['school_id'] = '';
+            row['school_type'] = '';
+            row['office_school_name'] = '';
+            row['location'] = '';
+            renderEditTable(); 
         }
+    }
+
+    function editBulkAutofillPropertyNo(val) {
+        editAllData.forEach(row => row['property_number'] = val);
+        renderEditTable();
+    }
+
+    function editBulkAutofillAcqDate(val) {
+        editAllData.forEach(row => row['acquisition_date'] = val);
+        renderEditTable();
     }
 
     function autofillEmployeeEdit(distId, val) {
@@ -636,6 +619,19 @@
                 row['office_school_name'] = emp.location_name;
                 row['location'] = emp.location || 'Zamboanga City';
             }
+            renderEditTable(); 
+        } else if (!val) {
+            row['custodian_employee_id'] = '';
+            row['custodian_name'] = '';
+            row['custodian_position'] = '';
+            row['custodian_status'] = '';
+            
+            row['school_search'] = '';
+            row['school_id'] = '';
+            row['school_type'] = '';
+            row['office_school_name'] = '';
+            row['location'] = '';
+            
             renderEditTable(); 
         }
     }
@@ -810,12 +806,25 @@
                 const badgeHtml = hasChanged ? `<span class="update-badge">Update</span>` : '';
                 const safeVal = (val ?? '').toString().replace(/"/g, '&quot;');
                 
+                let extraTdClass = '';
+                if (['custodian_employee_id', 'custodian_name', 'custodian_position', 'custodian_status', 'source_personnel', 'personnel_position'].includes(col)) {
+                    extraTdClass = ' col-personnel';
+                } else if (['school_id', 'school_type', 'office_school_name', 'location', 'property_number', 'classification', 'category', 'article'].includes(col)) {
+                    extraTdClass = ' col-identity';
+                } else if (['region', 'division', 'description', 'unit_of_measurement'].includes(col)) {
+                    extraTdClass = ' col-context';
+                } else if (['asset_cost', 'quantity'].includes(col)) {
+                    extraTdClass = ' col-financial';
+                } else if (['estimated_useful_life', 'acceptance_date', 'acquisition_date'].includes(col)) {
+                    extraTdClass = ' col-temporal';
+                }
+
                 if (isReadonly) {
-                    return `<td class="xls-td p-0 relative"><input type="text" data-id="${row.dist_id}" data-col="${col}" class="xls-input edit-readonly w-full h-full" value="${safeVal}" readonly tabindex="-1">${badgeHtml}</td>`;
+                    return `<td class="xls-td p-0 relative${extraTdClass}"><input type="text" data-id="${row.dist_id}" data-col="${col}" class="xls-input edit-readonly w-full h-full" value="${safeVal}" readonly tabindex="-1">${badgeHtml}</td>`;
                 }
                 
                 if (col === 'classification') {
-                    return `<td class="xls-td p-0 relative" style="overflow:visible">
+                    return `<td class="xls-td p-0 relative${extraTdClass}" style="overflow:visible">
                         <input type="text" data-id="${row.dist_id}" data-col="classification" value="${safeVal}" oninput="syncEditClass(${row.dist_id}, this.value); filterEditClassDropdown(${row.dist_id}, this.value)" onfocus="filterEditClassDropdown(${row.dist_id}, this.value)" autocomplete="off" class="xls-input w-full h-full bg-transparent">
                         <div id="edit-class-dd-${row.dist_id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
                         ${badgeHtml}
@@ -823,7 +832,7 @@
                 }
 
                 if (col === 'category') {
-                    return `<td class="xls-td p-0 relative" style="overflow:visible">
+                    return `<td class="xls-td p-0 relative${extraTdClass}" style="overflow:visible">
                         <input type="text" data-id="${row.dist_id}" data-col="category" value="${safeVal}" oninput="syncEditCat(${row.dist_id}, this.value); filterEditCatDropdown(${row.dist_id}, this.value)" onfocus="filterEditCatDropdown(${row.dist_id}, this.value)" autocomplete="off" class="xls-input w-full h-full bg-transparent">
                         <div id="edit-cat-dd-${row.dist_id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
                         ${badgeHtml}
@@ -833,7 +842,7 @@
 
 
                 if (col === 'remarks') {
-                    return `<td class="xls-td p-0 relative">
+                    return `<td class="xls-td p-0 relative${extraTdClass}">
                         <select data-id="${row.dist_id}" data-col="${col}" onchange="syncEditCell(this)" class="xls-input w-full h-full bg-transparent">
                             <option value="Good Condition" ${val === 'Good Condition' ? 'selected' : ''}>Good Condition</option>
                             <option value="Needs Repair" ${val === 'Needs Repair' ? 'selected' : ''}>Needs Repair</option>
@@ -847,7 +856,7 @@
                 if (['asset_cost', 'quantity', 'estimated_useful_life'].includes(col)) {
                     extraClasses = ' text-right font-mono';
                 }
-                return `<td class="xls-td p-0 relative"><input type="text" data-id="${row.dist_id}" data-col="${col}" value="${safeVal}" onchange="syncEditCell(this)" class="xls-input w-full h-full bg-transparent${extraClasses}">${badgeHtml}</td>`;
+                return `<td class="xls-td p-0 relative${extraTdClass}"><input type="text" data-id="${row.dist_id}" data-col="${col}" value="${safeVal}" onchange="syncEditCell(this)" class="xls-input w-full h-full bg-transparent${extraClasses}">${badgeHtml}</td>`;
             };
 
             // Source Table Row
@@ -892,27 +901,33 @@
 
             dstTr.innerHTML = `
                 <td class="xls-td text-center sticky left-0 w-10 bg-white z-10"><span class="text-[10px] font-black text-slate-300">${displayNum}</span></td>
-                <td class="xls-td p-0 relative"><span class="xls-const w-full h-full flex items-center px-4">Region IX</span></td>
-                <td class="xls-td p-0 relative"><span class="xls-const w-full h-full flex items-center px-4">Division of Zamboanga City</span></td>
-                <td class="xls-td p-0 relative" style="overflow:visible">
-                    <input type="text" oninput="autofillEmployeeEdit(${row.dist_id}, this.value); filterEditEmpDropdown(${row.dist_id}, this.value)" onfocus="filterEditEmpDropdown(${row.dist_id}, this.value)" data-id="${row.dist_id}" data-col="employee_search" value="" autocomplete="off" class="xls-input w-full h-full bg-transparent" placeholder="Search Employee...">
+                <td class="xls-td col-context p-0 relative"><span class="xls-const w-full h-full flex items-center px-4">Region IX</span></td>
+                <td class="xls-td col-context p-0 relative"><span class="xls-const w-full h-full flex items-center px-4">Division of Zamboanga City</span></td>
+                <td class="xls-td col-personnel p-0 relative" style="overflow:visible">
+                    <div class="relative w-full h-full">
+                        <input type="text" id="emp-search-${row.dist_id}" oninput="autofillEmployeeEdit(${row.dist_id}, this.value); filterEditEmpDropdown(${row.dist_id}, this.value); document.getElementById('emp-clear-${row.dist_id}').style.display = this.value ? 'block' : 'none';" onfocus="filterEditEmpDropdown(${row.dist_id}, this.value)" data-id="${row.dist_id}" data-col="employee_search" value="" autocomplete="off" class="xls-input w-full h-full pr-6 bg-transparent" placeholder="Search Employee...">
+                        <button type="button" id="emp-clear-${row.dist_id}" onclick="document.getElementById('emp-search-${row.dist_id}').value=''; filterEditEmpDropdown(${row.dist_id}, ''); autofillEmployeeEdit(${row.dist_id}, ''); this.style.display='none';" style="display:none;" class="absolute right-1 top-1/2 -translate-y-1/2 -mt-1 p-0.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                    </div>
                     <div id="edit-emp-dd-${row.dist_id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
                 </td>
                 ${renderCell('custodian_employee_id', row.custodian_employee_id, true)}
                 ${renderCell('custodian_name', row.custodian_name, true)}
                 ${renderCell('custodian_position', row.custodian_position, true)}
                 ${renderCell('custodian_status', row.custodian_status, true)}
-                <td class="xls-td p-0 relative" style="overflow:visible">
-                    <input type="text" oninput="autofillLocationEdit(${row.dist_id}, this.value); filterEditLocDropdown(${row.dist_id}, this.value)" onfocus="filterEditLocDropdown(${row.dist_id}, this.value)" data-id="${row.dist_id}" data-col="school_search" value="${locSearchVal || ''}" autocomplete="off" class="xls-input w-full h-full bg-transparent ${isLocSearchDisabled ? 'bg-slate-50 cursor-not-allowed text-slate-500' : ''}" ${isLocSearchDisabled} placeholder="Search Location...">
+                <td class="xls-td col-identity" style="position:relative;overflow:visible">
+                    <div class="relative w-full h-full">
+                        <input type="text" id="edit-loc-search-${row.dist_id}" oninput="autofillLocationEdit(${row.dist_id}, this.value); filterEditLocDropdown(${row.dist_id}, this.value); document.getElementById('edit-loc-clear-${row.dist_id}').style.display = this.value ? 'block' : 'none';" onfocus="filterEditLocDropdown(${row.dist_id}, this.value)" data-id="${row.dist_id}" data-col="school_search" value="${locSearchVal || ''}" autocomplete="off" class="xls-input w-full h-full pr-6 bg-transparent ${isLocSearchDisabled ? 'bg-slate-50 cursor-not-allowed text-slate-500' : ''}" ${isLocSearchDisabled} placeholder="Search Location...">
+                        <button type="button" id="edit-loc-clear-${row.dist_id}" onclick="document.getElementById('edit-loc-search-${row.dist_id}').value=''; autofillLocationEdit(${row.dist_id}, ''); filterEditLocDropdown(${row.dist_id}, ''); this.style.display='none';" style="display:${locSearchVal ? 'block' : 'none'};" class="absolute right-1 top-1/2 -translate-y-1/2 -mt-1 p-0.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                    </div>
                     <div id="edit-loc-dd-${row.dist_id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
                 </td>
                 ${renderCell('school_id', row.school_id, true)}
                 ${renderCell('school_type', row.school_type, true)}
                 ${renderCell('office_school_name', row.office_school_name, true)}
                 ${renderCell('location', row.location, true)}
-                ${renderCell('property_number', row.property_number, true)}
-                <td class="xls-td p-0 relative"><input type="text" class="xls-input edit-readonly text-right w-full h-full" value="${totalCost}" readonly tabindex="-1"></td>
-                ${renderCell('acquisition_date', row.acquisition_date, true)}
+                ${renderCell('property_number', row.property_number, false)}
+                <td class="xls-td col-financial p-0 relative"><input type="text" class="xls-input edit-readonly text-right w-full h-full" value="${totalCost}" readonly tabindex="-1"></td>
+                ${renderCell('acquisition_date', row.acquisition_date, false)}
             `;
             dstTbody.appendChild(dstTr);
         });
@@ -1104,6 +1119,8 @@
         m.classList.remove('hidden');
         document.querySelectorAll('#editBulkModal input:not([id="editBulkFrom"]):not([id="editBulkTo"])').forEach(i => i.value = '');
         document.getElementById('ebRemarks').value = '';
+        const ebEmpBtn = document.getElementById('ebEmployeeSearchClear');
+        if (ebEmpBtn) ebEmpBtn.style.display = 'none';
 
         // Default From=1, To=total fetched rows
         const maxRows = editAllData.length;
@@ -1437,9 +1454,5 @@
         }
     }
 
-    document.addEventListener('click', function(e) {
-        if (!e.target.closest('.xls-custom-dd') && !e.target.hasAttribute('data-col') && !e.target.closest('[id^="ebAcqSource"]')) {
-            document.querySelectorAll('.xls-custom-dd').forEach(dd => dd.style.display = 'none');
-        }
-    });
+    // (Duplicate click listener for custom dropdowns removed; handled globally in item-manager.blade.php)
 </script>

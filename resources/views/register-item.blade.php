@@ -204,6 +204,9 @@
                                 <input type="text" id="receiverName" x-model="employeeQuery" @input.debounce.300ms="searchEmployees()" placeholder="Search employee name or ID..."
                                     class="w-full p-6 bg-slate-50 border border-slate-100 rounded-3xl font-black text-sm outline-none focus:ring-4 focus:ring-red-50 transition-all"
                                     autocomplete="off">
+                                <button type="button" x-show="selectedEmployee" @click="selectedEmployee = null; employeeQuery = ''" class="absolute right-6 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all cursor-pointer" x-cloak>
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
                                 <div x-show="employeeResults.length > 0" class="autocomplete-dropdown custom-scroll">
                                     <template x-for="emp in employeeResults" :key="emp.id">
                                         <div @click="selectEmployee(emp)" class="autocomplete-item">

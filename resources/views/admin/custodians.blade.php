@@ -157,15 +157,42 @@
         <!-- Filter Configuration -->
         <div id="custodianFilterSection" class="hidden bg-white rounded-[2.5rem] shadow-xl border border-slate-100 p-8 mb-8 relative z-50 animate-fade transition-all duration-300 origin-top">
             <div class="flex flex-col gap-8 relative z-10">
-                <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest italic flex items-center gap-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                            Status
-                        </label>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest italic flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                                Status
+                            </label>
+                        </div>
+                        <div id="statusChipContainer" class="filter-container">
+                            {{-- Chips injected via JS --}}
+                        </div>
                     </div>
-                    <div id="statusChipContainer" class="filter-container">
-                        {{-- Chips injected via JS --}}
+
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest italic flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                                Clearance
+                            </label>
+                        </div>
+                        <div id="clearanceChipContainer" class="filter-container">
+                            <div class="filter-chip" data-value="has_assets" onclick="toggleChip(this, 'clearanceChipContainer', 'active-red')">Has Assets</div>
+                            <div class="filter-chip" data-value="cleared" onclick="toggleChip(this, 'clearanceChipContainer', 'active-red')">Cleared (No Assets)</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest italic flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                                Position
+                            </label>
+                        </div>
+                        <div id="positionChipContainer" class="filter-container">
+                            {{-- Chips injected via JS --}}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -267,7 +294,14 @@
                 };
                 
                 renderChips('statusChipContainer', data.statuses, 'active-red');
+                renderChips('positionChipContainer', data.positions, 'active-red');
             } catch (e) { console.error('Failed to fetch custodian filters', e); }
+        }
+
+        function toggleChip(chip, containerId, themeClass) {
+            const isActive = chip.classList.contains(themeClass);
+            document.querySelectorAll(`#${containerId} .filter-chip`).forEach(c => c.classList.remove(themeClass));
+            if (!isActive) chip.classList.add(themeClass);
         }
 
         let custodianSearchTimer;
@@ -287,6 +321,8 @@
 
             const filters = {
                 status: getSelected('statusChipContainer', 'active-red'),
+                position: getSelected('positionChipContainer', 'active-red'),
+                clearance: getSelected('clearanceChipContainer', 'active-red'),
                 search: document.getElementById('custodianFilterSearch').value
             };
             try {

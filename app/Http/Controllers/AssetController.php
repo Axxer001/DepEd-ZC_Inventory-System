@@ -162,64 +162,6 @@ class AssetController extends Controller
         return response()->json($categories);
     }
 
-    public function viewAll(Request $request)
-    {
-        $categories = DB::table('categories')->orderBy('name')->get();
-        $quadrants = DB::table('quadrants')->orderBy('name')->get();
-        $classifications = DB::table('classifications')->orderBy('name')->get();
-
-        // Data for Asset Source Tab
-        $assetSources = DB::table('asset_sources as asrc')
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('asset_assignments')
-                    ->whereColumn('asset_assignments.asset_source_id', 'asrc.id');
-            })
-            ->join('items', 'asrc.item_id', '=', 'items.id')
-            ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')
-            ->join('acquisition_sources', 'asrc.acquisition_source_id', '=', 'acquisition_sources.id')
-            ->select(
-                'asrc.*',
-                'items.name as item_name',
-                'categories.name as category_name',
-                'classifications.name as classification_name',
-                'acquisition_sources.name as acquisition_source_name'
-            )
-            ->orderBy('asrc.created_at', 'desc')
-            ->paginate(50, ['*'], 'source_page');
-
-        // Data for Asset Assignment Tab
-        $assetDistributions = DB::table('asset_assignments as ad')
-            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
-            ->join('items', 'asrc.item_id', '=', 'items.id')
-            ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
-            ->leftJoin('offices', 'e.office_id', '=', 'offices.id')
-            ->leftJoin('schools', 'e.school_id', '=', 'schools.id')
-            ->leftJoin('districts', 'schools.district_id', '=', 'districts.id')
-            ->leftJoin('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
-            ->select(
-                'ad.*',
-                'asrc.condition',
-                'items.name as item_name',
-                'asrc.description as asset_description',
-                DB::raw('COALESCE(schools.name, offices.name, "Warehouse") as office_school_name'),
-                'districts.name as district_name',
-                'quadrants.name as quadrant_name'
-            )
-            ->orderBy('ad.created_at', 'desc')
-            ->paginate(50, ['*'], 'dist_page');
-
-        $inventoryJson   = json_encode($this->buildInventoryData());
-        $categoriesJson  = json_encode($categories->values());
-        $quadrantsJson   = json_encode($quadrants->values());
-
-        return view('assets.view-all', compact(
-            'assetSources', 'assetDistributions',
-            'categories', 'quadrants', 'classifications',
-            'inventoryJson', 'categoriesJson', 'quadrantsJson'
-        ));
-    }
 
     public function explorer()
     {
@@ -756,7 +698,7 @@ class AssetController extends Controller
             }
         });
 
-        return redirect()->route('assets.view_all')->with('success', 'Asset successfully returned to AMU / Warehouse!');
+        return redirect()->route('assets.profile', $id)->with('success', 'Asset successfully returned to AMU / Warehouse!');
     }
 
     public function getSchoolAssets($id)

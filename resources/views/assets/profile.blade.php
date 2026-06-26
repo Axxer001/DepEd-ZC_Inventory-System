@@ -123,9 +123,15 @@
                         <button @click="showTransferModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 hover:pl-5 transition-all flex items-center gap-2 border-b border-slate-100">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg> Initiate Transfer
                         </button>
+                        @if($asset->employee_id)
                         <button @click="showReturnAmuModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-emerald-600 hover:pl-5 transition-all flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg> Return to AMU
                         </button>
+                        @else
+                        <button disabled class="w-full text-left px-4 py-3 text-xs font-bold text-slate-400 cursor-not-allowed flex items-center gap-2" title="Asset is currently unassigned or already in AMU">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg> Return to AMU
+                        </button>
+                        @endif
                     </div>
                 </div>
                 <div class="w-px h-8 bg-slate-200 mx-1"></div>
@@ -716,7 +722,10 @@
                             <div class="relative group" @click.away="showDropdown = false">
                                 <input type="text" x-model="searchQuery" @focus="showDropdown = true" @input="showDropdown = true" required autocomplete="off"
                                     class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="Type name or ID to search...">
-                                <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                <svg x-show="!selectedEmployee" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                <button type="button" x-show="selectedEmployee" @click="selectedEmployee = null; searchQuery = ''; showDropdown = true" class="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all cursor-pointer" x-cloak>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
                                 
                                 <div x-show="showDropdown && filteredEmployees.length > 0" x-cloak 
                                     class="absolute left-0 right-0 mt-2 bg-white border-2 border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scroll p-1 z-50">

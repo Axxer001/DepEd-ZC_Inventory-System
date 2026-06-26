@@ -247,8 +247,6 @@
                                     <span class="text-[10px] font-bold uppercase tracking-widest text-slate-900" x-text="cardFilter === 'Overall' ? 'System Verified' : (cardFilter === 'SemiExpendable' ? 'Semi-Expendable' : cardFilter) + ' Value'">System Verified</span>
                                     <select x-model="cardFilter" class="bg-slate-50 border-none text-slate-900 text-[8px] font-black uppercase tracking-widest rounded-lg px-2 py-0.5 focus:ring-0 cursor-pointer hover:bg-slate-100 transition-colors">
                                         <option value="Overall">All</option>
-                                        <option value="Items">Items</option>
-                                        <option value="Buildings">Buildings</option>
                                         <option value="PPE">PPE</option>
                                         <option value="SemiExpendable">Semi-Exp</option>
                                     </select>
@@ -436,17 +434,10 @@
                             <div class="grid grid-cols-2 gap-2">
                                 <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl border border-slate-100 hover:bg-white hover:border-[#c00000]/20 transition-all cursor-default">
                                     <div class="flex items-center gap-2">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-900"></span>
-                                        <span class="text-[8px] font-black uppercase text-slate-500">Buildings</span>
-                                    </div>
-                                    <span class="text-[8px] font-black text-slate-900">{{ $categoryPercents['buildings'] }}%</span>
-                                </div>
-                                <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl border border-slate-100 hover:bg-white hover:border-[#c00000]/20 transition-all cursor-default">
-                                    <div class="flex items-center gap-2">
                                         <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
                                         <span class="text-[8px] font-black uppercase text-slate-500">Items</span>
                                     </div>
-                                    <span class="text-[8px] font-black text-slate-900">{{ $categoryPercents['items'] }}%</span>
+                                    <span class="text-[8px] font-black text-slate-900">{{ $categoryPercents['items'] ?? 0 }}%</span>
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-2">
@@ -885,9 +876,8 @@
         function updateGrowthChart(labels, data) {
             if (!growthChart) return;
             growthChart.data.labels = labels;
-            growthChart.data.datasets[0].data = data.buildings;
-            growthChart.data.datasets[1].data = data.ppe;
-            growthChart.data.datasets[2].data = data.semi_exp;
+            growthChart.data.datasets[0].data = data.ppe;
+            growthChart.data.datasets[1].data = data.semi_exp;
             growthChart.update();
         }
 
@@ -897,11 +887,10 @@
             new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Buildings', 'Items', 'PPE', 'Semi-Exp'],
+                    labels: ['Items', 'PPE', 'Semi-Exp'],
                     datasets: [{
-                        data: [@json($categoryData['buildings']), @json($categoryData['items']), @json($categoryData['ppe']), @json($categoryData['semi_exp'])],
+                        data: [@json($categoryData['items']), @json($categoryData['ppe']), @json($categoryData['semi_exp'])],
                         backgroundColor: [
-                            '#0f172a', // Buildings (Slate-900)
                             '#dc2626', // Items (Red-600)
                             '#f59e0b', // PPE (Amber-500)
                             '#10b981'  // Semi-Exp (Emerald-500)
@@ -938,17 +927,6 @@
                 data: {
                     labels: @json($growthData['labels']),
                     datasets: [
-                        {
-                            label: 'Buildings',
-                            data: @json($growthData['data']['buildings']),
-                            borderColor: '#0f172a',
-                            borderWidth: 2,
-                            backgroundColor: 'rgba(15, 23, 42, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 0,
-                            pointHoverRadius: 4
-                        },
                         {
                             label: 'PPE (High-Value)',
                             data: @json($growthData['data']['ppe']),

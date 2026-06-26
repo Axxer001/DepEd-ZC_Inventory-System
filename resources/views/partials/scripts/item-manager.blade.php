@@ -143,6 +143,8 @@
             if (inp) inp.value = emp.full_name;
             const dd = document.getElementById(`emp-dd-${rowId}`);
             if (dd) dd.style.display = 'none';
+            const btn = document.getElementById(`add-emp-clear-${rowId}`);
+            if (btn) btn.style.display = 'block';
             syncState(rowId, 'employee-search', emp.full_name);
 
             // Directly apply all employee + location fields
@@ -212,8 +214,10 @@
         function selectLocForRow(rowId, locName) {
             const loc = globalLocations.find(l => l.name === locName);
             if (!loc) return;
-            const inp = document.querySelector(`#dst-${rowId} input[data-col="school-search"]`);
+            const inp = document.getElementById(`add-loc-search-${rowId}`) || document.querySelector(`#dst-${rowId} input[data-col="school-search"]`);
             if (inp) inp.value = loc.name;
+            const clearBtn = document.getElementById(`add-loc-clear-${rowId}`);
+            if (clearBtn) clearBtn.style.display = 'block';
             const dd = document.getElementById(`loc-dd-${rowId}`);
             if (dd) dd.style.display = 'none';
             syncState(rowId, 'school-search', loc.name);
@@ -335,9 +339,28 @@
 
         // Close all custom dropdowns when clicking outside
         document.addEventListener('click', e => {
-            if (!e.target.closest('.xls-custom-dd') && !e.target.hasAttribute('data-col') && !e.target.closest('[id^="bSchoolSearch"]') && !e.target.closest('[id^="bEmployeeSearch"]')) {
-                document.querySelectorAll('.xls-custom-dd').forEach(dd => dd.style.display = 'none');
+            if (e.target.closest('.xls-custom-dd')) return;
+            
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('svg') || e.target.hasAttribute('data-col')) {
+                let clickedContainerDd = null;
+                const dds = Array.from(document.querySelectorAll('.xls-custom-dd'));
+                for (const dd of dds) {
+                    if (dd.parentElement && dd.parentElement.contains(e.target)) {
+                        clickedContainerDd = dd;
+                        break;
+                    }
+                }
+                
+                document.querySelectorAll('.xls-custom-dd').forEach(dd => {
+                    if (dd !== clickedContainerDd) {
+                        dd.style.display = 'none';
+                    }
+                });
+                
+                if (clickedContainerDd || e.target.hasAttribute('data-col')) return;
             }
+            
+            document.querySelectorAll('.xls-custom-dd').forEach(dd => dd.style.display = 'none');
         });
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
@@ -426,6 +449,8 @@
             if (!loc) return;
             const inp = document.getElementById('bSchoolSearch');
             if (inp) inp.value = loc.name;
+            const btn = document.getElementById('bSchoolClear');
+            if (btn) btn.style.display = 'block';
             const dd = document.getElementById('bulk-loc-dd');
             if (dd) dd.style.display = 'none';
             bulkAutofillLocation(loc.name);
@@ -450,6 +475,8 @@
             if (inp) inp.value = emp.full_name;
             const dd = document.getElementById('bulk-emp-dd');
             if (dd) dd.style.display = 'none';
+            const btn = document.getElementById('bEmployeeSearchClear');
+            if (btn) btn.style.display = 'block';
             bulkAutofillEmployee(emp.full_name);
         }
 
@@ -469,8 +496,10 @@
         function selectEditLoc(distId, locName) {
             const loc = globalLocations.find(l => l.name === locName);
             if (!loc) return;
-            const inp = document.querySelector(`input[data-col="school_search"][data-id="${distId}"]`);
+            const inp = document.getElementById(`edit-loc-search-${distId}`) || document.querySelector(`input[data-col="school_search"][data-id="${distId}"]`);
             if (inp) inp.value = loc.name;
+            const clearBtn = document.getElementById(`edit-loc-clear-${distId}`);
+            if (clearBtn) clearBtn.style.display = 'block';
             const dd = document.getElementById(`edit-loc-dd-${distId}`);
             if (dd) dd.style.display = 'none';
             if (typeof autofillLocationEdit === 'function') autofillLocationEdit(distId, loc.name);
@@ -495,6 +524,8 @@
             if (inp) inp.value = emp.full_name;
             const dd = document.getElementById(`edit-emp-dd-${distId}`);
             if (dd) dd.style.display = 'none';
+            const btn = document.getElementById(`emp-clear-${distId}`);
+            if (btn) btn.style.display = 'block';
             if (typeof autofillEmployeeEdit === 'function') autofillEmployeeEdit(distId, emp.full_name);
         }
 
@@ -868,6 +899,16 @@
                 document.querySelector(`#dst-${rowId} input[data-col="school-type"]`).value = row['school-type'];
                 document.querySelector(`#dst-${rowId} input[data-col="school-name"]`).value = row['school-name'];
                 document.querySelector(`#dst-${rowId} input[data-col="location"]`).value = row['location'];
+            } else if (!val) {
+                row['school-id'] = '';
+                row['school-type'] = '';
+                row['school-name'] = '';
+                row['location'] = '';
+
+                document.querySelector(`#dst-${rowId} input[data-col="school-id"]`).value = '';
+                document.querySelector(`#dst-${rowId} input[data-col="school-type"]`).value = '';
+                document.querySelector(`#dst-${rowId} input[data-col="school-name"]`).value = '';
+                document.querySelector(`#dst-${rowId} input[data-col="location"]`).value = '';
             }
         }
 
@@ -906,6 +947,34 @@
                     if (typeInp)   typeInp.value   = row['school-type'];
                     if (locInp)    locInp.value    = row['location'];
                 }
+            } else if (!val) {
+                row['employee-id']     = '';
+                row['employee-name']   = '';
+                row['employee-pos']    = '';
+                row['employee-status'] = '';
+
+                document.querySelector(`#dst-${rowId} input[data-col="employee-id"]`).value     = '';
+                document.querySelector(`#dst-${rowId} input[data-col="employee-name"]`).value   = '';
+                document.querySelector(`#dst-${rowId} input[data-col="employee-pos"]`).value    = '';
+                document.querySelector(`#dst-${rowId} input[data-col="employee-status"]`).value = '';
+
+                row['school-search'] = '';
+                row['school-name']   = '';
+                row['school-id']     = '';
+                row['school-type']   = '';
+                row['location']      = '';
+
+                const searchInp = document.querySelector(`#dst-${rowId} input[data-col="school-search"]`);
+                const nameInp   = document.querySelector(`#dst-${rowId} input[data-col="school-name"]`);
+                const idInp     = document.querySelector(`#dst-${rowId} input[data-col="school-id"]`);
+                const typeInp   = document.querySelector(`#dst-${rowId} input[data-col="school-type"]`);
+                const locInp    = document.querySelector(`#dst-${rowId} input[data-col="location"]`);
+
+                if (searchInp) searchInp.value = '';
+                if (nameInp)   nameInp.value   = '';
+                if (idInp)     idInp.value     = '';
+                if (typeInp)   typeInp.value   = '';
+                if (locInp)    locInp.value    = '';
             }
         }
 
@@ -1220,7 +1289,7 @@
                 const empName = data['employee-search'] || data['employee-name'];
                 const emp = globalEmployees.find(e => e.full_name === empName);
                 if (emp && emp.location_name) {
-                    isLocSearchDisabled = 'disabled class="xls-input bg-slate-50 cursor-not-allowed"';
+                    isLocSearchDisabled = 'disabled';
                 }
             }
 
@@ -1231,7 +1300,10 @@
                 <td class="xls-td col-context"><input type="text" value="${data.region}" class="xls-input bg-slate-50 dark:bg-white/5 cursor-not-allowed text-slate-500" readonly tabindex="-1"></td>
                 <td class="xls-td col-context"><input type="text" value="${data.division}" class="xls-input bg-slate-50 dark:bg-white/5 cursor-not-allowed text-slate-500" readonly tabindex="-1"></td>
                 <td class="xls-td col-personnel" style="position:relative;overflow:visible">
-                    <input type="text" oninput="syncState(${data.id}, 'employee-search', this.value); filterEmpDropdown(${data.id}, this.value)" onfocus="filterEmpDropdown(${data.id}, this.value)" data-col="employee-search" value="${data['employee-search'] || ''}" autocomplete="off" class="xls-input" placeholder="Search Employee...">
+                    <div class="relative w-full h-full">
+                        <input type="text" id="add-emp-search-${data.id}" oninput="syncState(${data.id}, 'employee-search', this.value); filterEmpDropdown(${data.id}, this.value); document.getElementById('add-emp-clear-${data.id}').style.display = this.value ? 'block' : 'none';" onfocus="filterEmpDropdown(${data.id}, this.value)" data-col="employee-search" value="${data['employee-search'] || ''}" autocomplete="off" class="xls-input w-full h-full pr-6" placeholder="Search Employee...">
+                        <button type="button" id="add-emp-clear-${data.id}" onclick="document.getElementById('add-emp-search-${data.id}').value=''; syncState(${data.id}, 'employee-search', ''); filterEmpDropdown(${data.id}, ''); autofillEmployee(${data.id}, ''); this.style.display='none';" style="display:${data['employee-search'] ? 'block' : 'none'};" class="absolute right-1 top-1/2 -translate-y-1/2 -mt-1 p-0.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                    </div>
                     <div id="emp-dd-${data.id}" class="xls-custom-dd" style="display:none;"></div>
                 </td>
                 <td class="xls-td col-personnel"><input type="text" data-col="employee-id" value="${data['employee-id'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
@@ -1239,7 +1311,10 @@
                 <td class="xls-td col-personnel"><input type="text" data-col="employee-pos" value="${data['employee-pos'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
                 <td class="xls-td col-personnel"><input type="text" data-col="employee-status" value="${data['employee-status'] || ''}" autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
                 <td class="xls-td col-identity" style="position:relative;overflow:visible">
-                    <input type="text" oninput="syncState(${data.id}, 'school-search', this.value); filterLocDropdown(${data.id}, this.value)" onfocus="filterLocDropdown(${data.id}, this.value)" data-col="school-search" value="${data['school-search'] || ''}" autocomplete="off" ${isLocSearchDisabled || 'class="xls-input"'} placeholder="Search Location...">
+                    <div class="relative w-full h-full">
+                        <input type="text" id="add-loc-search-${data.id}" oninput="syncState(${data.id}, 'school-search', this.value); filterLocDropdown(${data.id}, this.value); document.getElementById('add-loc-clear-${data.id}').style.display = this.value ? 'block' : 'none';" onfocus="filterLocDropdown(${data.id}, this.value)" data-col="school-search" value="${data['school-search'] || ''}" autocomplete="off" class="xls-input w-full h-full pr-6 ${isLocSearchDisabled ? 'bg-slate-50 cursor-not-allowed text-slate-500' : ''}" ${isLocSearchDisabled} placeholder="Search Location...">
+                        <button type="button" id="add-loc-clear-${data.id}" onclick="document.getElementById('add-loc-search-${data.id}').value=''; syncState(${data.id}, 'school-search', ''); filterLocDropdown(${data.id}, ''); autofillLocation(${data.id}, ''); this.style.display='none';" style="display:${data['school-search'] ? 'block' : 'none'};" class="absolute right-1 top-1/2 -translate-y-1/2 -mt-1 p-0.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                    </div>
                     <div id="loc-dd-${data.id}" class="xls-custom-dd" style="display:none;"></div>
                 </td>
                 <td class="xls-td col-identity"><input type="text" data-col="school-id"   value="${data['school-id'] || ''}"   autocomplete="off" class="xls-input bg-slate-50 cursor-not-allowed" readonly tabindex="-1"></td>
@@ -1379,6 +1454,13 @@
                 document.getElementById('bEmployeeName').value   = '';
                 document.getElementById('bEmployeePos').value    = '';
                 document.getElementById('bEmployeeStatus').value = '';
+                
+                const bSchoolSearch = document.getElementById('bSchoolSearch');
+                if (bSchoolSearch) bSchoolSearch.value = '';
+                document.getElementById('bSchoolName').value = '';
+                document.getElementById('bSchoolId').value   = '';
+                document.getElementById('bSchoolType').value = '';
+                document.getElementById('bLocation').value   = '';
             }
         }
         function openBulkAddModal() {

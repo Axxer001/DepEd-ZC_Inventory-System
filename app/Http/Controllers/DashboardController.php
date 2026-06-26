@@ -17,23 +17,17 @@ class DashboardController extends Controller
 
         // 1. Total Assets Pool (Inventory Base)
         $itemPool = DB::table('asset_sources')->sum('quantity');
-        $buildingPool = DB::table('building_records')->count();
-        $totalAssets = $itemPool + $buildingPool;
+        $totalAssets = $itemPool;
 
         // 2. Distributed Assets (What is currently in schools/offices)
-        $distributedItems = DB::table('asset_assignments')
-            ->join('employees', 'asset_assignments.employee_id', '=', 'employees.id')
-            ->where(function($q) {
-                $q->whereNotNull('employees.office_id')
-                  ->orWhereNotNull('employees.school_id');
-            })
-            ->count();
-        $distributedCount = $distributedItems + $buildingPool; // Buildings are always "distributed"
+        $distributedCount = DB::table('asset_assignments')
+            ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+            ->whereNotNull('asset_assignments.employee_id')
+            ->sum('asset_sources.quantity');
 
         // 3. Total Asset Value
         $itemsValue = DB::table('asset_sources')->sum(DB::raw('quantity * asset_cost'));
-        $buildingsValue = DB::table('building_records')->sum('acquisition_cost');
-        $totalAmount = $itemsValue + $buildingsValue;
+        $totalAmount = $itemsValue;
 
         // 4. Asset Source Portfolio (Dynamic Acquisition Sources)
         $assetSources = DB::table('asset_sources')
@@ -59,7 +53,7 @@ class DashboardController extends Controller
             })
             ->toArray();
 
-        // 5. Per-Quadrant Totals (Combined Items + Buildings)
+        // 5. Per-Quadrant Totals
         $quadrantStats = DB::table('quadrants')
             ->select('id')
             ->get()
@@ -67,30 +61,21 @@ class DashboardController extends Controller
                 $itemId = $q->id;
                 
                 $itemData = DB::table('asset_assignments as ad')
+                    ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
                     ->join('employees as c', 'ad.employee_id', '=', 'c.id')
                     ->leftJoin('offices as o', 'c.office_id', '=', 'o.id')
                     ->leftJoin('schools as s', 's.id', '=', 'c.school_id')
                     ->join('districts as d', 's.district_id', '=', 'd.id')
                     ->where('d.quadrant_id', $itemId)
                     ->select(
-                        DB::raw('COUNT(ad.id) as qty'),
+                        DB::raw('SUM(asrc.quantity) as qty'),
                         DB::raw('SUM(ad.acquisition_cost) as value')
                     )
                     ->first();
 
-                $bldgData = DB::table('building_records as b')
-                    ->join('schools', 'b.school_id', '=', 'schools.id')
-                    ->join('districts', 'schools.district_id', '=', 'districts.id')
-                    ->where('districts.quadrant_id', $itemId)
-                    ->select(
-                        DB::raw('COUNT(b.id) as qty'),
-                        DB::raw('SUM(b.acquisition_cost) as value')
-                    )
-                    ->first();
-
                 return [$itemId => [
-                    'qty' => ($itemData->qty ?? 0) + ($bldgData->qty ?? 0),
-                    'value' => ($itemData->value ?? 0) + ($bldgData->value ?? 0)
+                    'qty' => ($itemData->qty ?? 0),
+                    'value' => ($itemData->value ?? 0)
                 ]];
             })
             ->toArray();
@@ -123,7 +108,6 @@ class DashboardController extends Controller
         $semiExpValue = $semiExpStats->value ?? 0;
         
         $categoryData = [
-            'buildings' => $buildingPool,
             'ppe' => $ppeCount,
             'semi_exp' => $semiExpCount,
             'items' => $itemPool - ($ppeCount + $semiExpCount) 
@@ -137,8 +121,6 @@ class DashboardController extends Controller
 
         $filterValues = [
             'Overall' => $totalAmount,
-            'Items' => $itemsValue,
-            'Buildings' => $buildingsValue,
             'PPE' => $ppeValue,
             'SemiExpendable' => $semiExpValue
         ];
@@ -187,19 +169,17 @@ class DashboardController extends Controller
 
     private function calculateGrowthData($mode, $value)
     {
-        $minBldgYear = DB::table('building_records')->whereNotNull('acquisition_date')->min(DB::raw('YEAR(acquisition_date)'));
         $minAssetYear = DB::table('asset_assignments')->whereNotNull('acquisition_date')->min(DB::raw('YEAR(acquisition_date)'));
-        $earliestYear = min($minBldgYear ?? date('Y'), $minAssetYear ?? date('Y'));
+        $earliestYear = $minAssetYear ?? date('Y');
         $currentYear = date('Y');
 
-        $bldgs = DB::table('building_records')->select('acquisition_cost', 'acquisition_date')->whereNotNull('acquisition_date')->get();
         $assets = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->select('ad.acquisition_cost', 'ad.acquisition_date', 'asrc.asset_cost')
             ->whereNotNull('ad.acquisition_date')->get();
 
         $labels = [];
-        $data = ['buildings' => [], 'ppe' => [], 'semi_exp' => []];
+        $data = ['ppe' => [], 'semi_exp' => []];
 
         if ($mode === 'specific') {
             // Monthly for a specific year
@@ -209,7 +189,6 @@ class DashboardController extends Controller
                 $labels[] = $monthNames[$m-1];
                 $lastDay = date('Y-m-d', strtotime("$year-$m-01 +1 month -1 day"));
                 
-                $data['buildings'][] = $bldgs->where('acquisition_date', '<=', $lastDay)->sum('acquisition_cost');
                 $monthAssets = $assets->where('acquisition_date', '<=', $lastDay);
                 $data['ppe'][] = $monthAssets->where('asset_cost', '>=', 50000)->sum('acquisition_cost');
                 $data['semi_exp'][] = $monthAssets->where('asset_cost', '<', 50000)->sum('acquisition_cost');
@@ -227,7 +206,6 @@ class DashboardController extends Controller
             foreach ($years as $y) {
                 $labels[] = (string)$y;
                 $lastDay = "$y-12-31";
-                $data['buildings'][] = $bldgs->where('acquisition_date', '<=', $lastDay)->sum('acquisition_cost');
                 $yearAssets = $assets->where('acquisition_date', '<=', $lastDay);
                 $data['ppe'][] = $yearAssets->where('asset_cost', '>=', 50000)->sum('acquisition_cost');
                 $data['semi_exp'][] = $yearAssets->where('asset_cost', '<', 50000)->sum('acquisition_cost');
