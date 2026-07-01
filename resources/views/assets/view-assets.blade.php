@@ -397,39 +397,70 @@
 
     <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll bg-slate-50">
 
-        <!-- Sticky Header Bar -->
+        <!-- Header -->
+        <div class="w-full mx-auto p-6 lg:p-10 min-h-screen flex flex-col relative z-10 gap-6">
 
-        <div class="sticky top-0 z-40 backdrop-blur-xl bg-white/90 border-b border-slate-100 py-5 px-10 flex justify-between items-center shadow-sm">
-            <div class="flex items-center gap-3">
-                <span class="p-2.5 bg-gradient-to-br from-red-50 to-rose-100 rounded-2xl text-[#c00000] shadow-sm border border-red-100">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                </span>
-                <div>
-                    <h2 class="text-2xl font-black text-slate-800 uppercase italic leading-none tracking-tight">Asset Inventory</h2>
-                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] mt-1">Division-Wide Property &amp; Equipment Registry</p>
+            <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 px-2 animate-fade">
+                <div class="shrink-0">
+                    <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-700 to-red-500 uppercase italic leading-none drop-shadow-sm tracking-tight">Asset Inventory</h2>
+                    <p class="text-slate-500 text-[11px] font-bold uppercase tracking-[0.25em] mt-3 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>
+                        Division-Wide Property & Equipment Registry
+                    </p>
+                </div>
+
+                {{-- Main Search --}}
+                <div class="flex-grow max-w-2xl relative" id="assetSearchContainer">
+                    <div class="relative group">
+                        <input type="text" id="assetSearchInput" oninput="debounceAssetSearch()" placeholder="SEARCH PROPERTY NO. OR DESCRIPTION..." autocomplete="off" class="w-full bg-white border-2 border-slate-100 rounded-2xl px-6 py-4 text-xs font-black uppercase tracking-widest focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-700 shadow-sm pr-12 group-hover:border-slate-200">
+                        <div class="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-red-500 transition-colors pointer-events-none">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </div>
+                    </div>
+                    {{-- Suggestions Dropdown --}}
+                    <div id="assetSearchSuggestions" class="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden hidden flex-col max-h-60 overflow-y-auto custom-scroll">
+                        <!-- Suggested items populated via JS -->
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4 shrink-0">
+                    <button onclick="toggleAssetColumns()" id="toggleColumnsBtn" class="px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 bg-white border border-slate-200 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:rotate-12 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                        View All Columns
+                    </button>
+                    <button onclick="toggleAssetFilters()" id="toggleFilterBtn" class="px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 bg-white border border-slate-200 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:rotate-12 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
+                        Filters
+                    </button>
+                    <a href="/dashboard" class="px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 bg-white border border-slate-200 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
+                        Back
+                    </a>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <button onclick="toggleAssetColumns()" id="toggleColumnsBtn" class="hdr-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
-                    View All Columns
-                </button>
-                <button onclick="toggleAssetFilters()" id="toggleFilterBtn" class="hdr-btn hdr-btn-filter">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
-                    Show Filters
-                </button>
-                <a href="/dashboard" class="hdr-btn hdr-btn-back" style="font-style:normal;">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-3.5 h-3.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18" /></svg>
-                    Back
-                </a>
-            </div>
-        </div>
-
-        <div class="w-full mx-auto p-6 lg:p-10 flex flex-col gap-6">
 
         <!-- Filter Configuration -->
         <div id="assetFilterSection" class="bg-white rounded-[2.5rem] shadow-lg border border-slate-100 p-8 mb-8 relative z-50 animate-fade transition-all duration-300 origin-top hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8 relative z-10">
+                <div>
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">PPE Type</label>
+                    <select id="assetPropertyType" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+                        <option value="ALL">All Assets</option>
+                        <option value="RPCPPE">PPE (≥ 50k)</option>
+                        <option value="RPCSP">Semi-PPE (&lt; 50k)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Status / Condition</label>
+                    <select id="assetFilterStatus" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+                        <option value="">All Conditions</option>
+                        <option value="distributed">Distributed</option>
+                        <option value="not_distributed">Not Yet Distributed</option>
+                        <option value="serviceable">Serviceable</option>
+                        <option value="to_repair">To Repair</option>
+                        <option value="unserviceable">Unserviceable</option>
+                    </select>
+                </div>
                 <div>
                     <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Classification</label>
                     <select id="assetFilterClassification" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
@@ -549,111 +580,6 @@
                 </button>
             </div>
 
-            {{-- PPE Type --}}
-            <div class="styled-select-wrap">
-                <span class="select-icon">
-                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                </span>
-                <select id="assetPropertyType" onchange="assetFetchData()">
-                    <option value="ALL">All Assets</option>
-                    <option value="RPCPPE">PPE (≥ 50k)</option>
-                    <option value="RPCSP">Semi-PPE (&lt; 50k)</option>
-                </select>
-                <span class="caret">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-                </span>
-            </div>
-
-            {{-- Status / Condition -- Custom SVG Dropdown --}}
-            <div class="relative" id="conditionDropdownWrap">
-                <button type="button" id="conditionDropdownBtn"
-                    onclick="toggleConditionDropdown()"
-                    class="inline-flex items-center gap-2.5 bg-white border-[1.5px] border-slate-200 rounded-[14px] px-4 py-[10px] text-[12px] font-black text-slate-700 uppercase tracking-widest shadow-sm cursor-pointer transition-all duration-250 hover:border-red-300 hover:shadow-[0_4px_12px_rgba(192,0,0,0.1)] focus:outline-none">
-                    <svg id="conditionSelectedIcon" class="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    <span id="conditionSelectedLabel">All Conditions</span>
-                    <svg class="w-3.5 h-3.5 text-slate-400 ml-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
-                    </svg>
-                </button>
-                {{-- Hidden real select for form value --}}
-                <select id="assetFilterStatus" onchange="assetFetchData()" class="sr-only" aria-hidden="true">
-                    <option value="">All Conditions</option>
-                    <option value="distributed">Distributed</option>
-                    <option value="not_distributed">Not Yet Distributed</option>
-                    <option value="serviceable">Serviceable</option>
-                    <option value="to_repair">To Repair</option>
-                    <option value="unserviceable">Unserviceable</option>
-                </select>
-                {{-- Custom dropdown panel --}}
-                <div id="conditionDropdownPanel"
-                    class="hidden absolute left-0 top-full mt-2 z-50 bg-white border border-slate-100 rounded-2xl shadow-2xl shadow-slate-200/60 overflow-hidden min-w-[220px]">
-                    <div class="p-1.5 flex flex-col gap-0.5">
-                        {{-- All --}}
-                        <button type="button" onclick="setConditionFilter('', this)"
-                            class="cond-item flex items-center gap-3 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider text-slate-600 hover:bg-slate-50 transition-all w-full text-left">
-                            <span class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-                                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
-                            </span>
-                            All Conditions
-                        </button>
-                        {{-- Distributed --}}
-                        <button type="button" onclick="setConditionFilter('distributed', this)"
-                            class="cond-item flex items-center gap-3 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all w-full text-left">
-                            <span class="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
-                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 7.5h-.75A2.25 2.25 0 004.5 9.75v7.5a2.25 2.25 0 002.25 2.25h7.5a2.25 2.25 0 002.25-2.25v-7.5a2.25 2.25 0 00-2.25-2.25h-.75m-6 3.75l3 3m0 0l3-3m-3 3V1.5m6 9h.75a2.25 2.25 0 012.25 2.25v7.5a2.25 2.25 0 01-2.25 2.25h-7.5a2.25 2.25 0 01-2.25-2.25v-.75"/></svg>
-                            </span>
-                            Distributed
-                        </button>
-                        {{-- Not Yet Distributed --}}
-                        <button type="button" onclick="setConditionFilter('not_distributed', this)"
-                            class="cond-item flex items-center gap-3 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider text-slate-600 hover:bg-amber-50 hover:text-amber-700 transition-all w-full text-left">
-                            <span class="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-                                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            </span>
-                            Not Yet Distributed
-                        </button>
-                        {{-- Serviceable --}}
-                        <button type="button" onclick="setConditionFilter('serviceable', this)"
-                            class="cond-item flex items-center gap-3 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 transition-all w-full text-left">
-                            <span class="w-7 h-7 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
-                                <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            </span>
-                            Serviceable
-                        </button>
-                        {{-- To Repair --}}
-                        <button type="button" onclick="setConditionFilter('to_repair', this)"
-                            class="cond-item flex items-center gap-3 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider text-slate-600 hover:bg-orange-50 hover:text-orange-700 transition-all w-full text-left">
-                            <span class="w-7 h-7 rounded-lg bg-orange-100 flex items-center justify-center shrink-0">
-                                <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.496-3.03c.317-.384.74-.626 1.208-.766M11.42 15.17l-4.655 5.653a2.548 2.548 0 11-3.586-3.586l6.837-5.63m5.108-.233c.55-.164 1.163-.188 1.743-.14a4.5 4.5 0 004.486-6.336l-3.276 3.277a3.004 3.004 0 01-2.25-2.25l3.276-3.276a4.5 4.5 0 00-6.336 4.486c.091 1.076-.071 2.264-.904 2.95l-.102.085m-1.745 1.437L5.909 7.5H4.5L2.25 3.75l1.5-1.5L7.5 4.5v1.409l4.26 4.26m-1.745 1.437l1.745-1.437m6.615 8.206L15.75 15.75M4.867 19.125h.008v.008h-.008v-.008z"/></svg>
-                            </span>
-                            To Repair
-                        </button>
-                        {{-- Unserviceable --}}
-                        <button type="button" onclick="setConditionFilter('unserviceable', this)"
-                            class="cond-item flex items-center gap-3 px-4 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-wider text-slate-600 hover:bg-red-50 hover:text-red-700 transition-all w-full text-left">
-                            <span class="w-7 h-7 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
-                                <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-                            </span>
-                            Unserviceable
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Search Bar --}}
-            <div class="ml-auto w-full max-w-md relative" id="assetSearchContainer">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="h-4 w-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </div>
-                <input type="text" id="assetSearchInput" oninput="debounceAssetSearch()" autocomplete="off" placeholder="Search Property No. or Description..." class="w-full bg-white border border-slate-200 rounded-[1.2rem] pl-10 pr-4 py-2.5 text-[10px] font-black text-slate-700 uppercase tracking-widest focus:ring-4 focus:ring-red-50 focus:border-[#c00000] transition-all outline-none shadow-sm placeholder:text-slate-400">
-                
-                {{-- Suggestions Dropdown --}}
-                <div id="assetSearchSuggestions" class="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-slate-100 z-50 overflow-hidden hidden flex-col max-h-60 overflow-y-auto custom-scroll">
-                    <!-- Suggested items populated via JS -->
-                </div>
-            </div>
         </div>
 
         <div class="rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden flex flex-col animate-fade relative">
@@ -883,6 +809,7 @@
                         <th class="xls-th" style="min-width:130px">Cost/Unit (₱)</th>
                         <th class="xls-th" style="min-width:80px">Quantity</th>
                         <th class="xls-th" style="min-width:110px">Useful Life (Yrs)</th>
+                        <th class="xls-th" style="min-width:110px">Warranty (Mos)</th>
                         <th class="xls-th" style="min-width:140px">Acceptance Date</th>
                         <th class="xls-th" style="min-width:130px">Condition</th>
                     </tr>`;
@@ -910,7 +837,7 @@
                         <th class="xls-th" style="min-width:130px">Employee Status</th>
                         <th class="xls-th" style="min-width:220px">School/Office Search</th>
                         <th class="xls-th" style="min-width:130px">Office/School ID</th>
-                        <th class="xls-th" style="min-width:150px">Office/School Type</th>
+                        <th class="xls-th" style="min-width:200px">Office/School Type</th>
                         <th class="xls-th" style="min-width:230px">Office/School Name</th>
                         <th class="xls-th" style="min-width:160px">Location</th>
                         <th class="xls-th" style="min-width:180px">Property No.</th>
@@ -969,6 +896,7 @@
                             ${costCell(row.asset_cost)}
                             ${cell(row.quantity, 'font-black text-amber-600')}
                             ${cell(row.estimated_useful_life, 'font-black text-slate-600')}
+                            ${cell(row.warranty, 'font-black text-slate-600')}
                             ${cell(row.acceptance_date)}
                             ${srcCondCell}`;
                     } else {
@@ -981,7 +909,6 @@
                             ${srcCondCell}`;
                     }
                 } else {
-                    // Employee Status badge
                     const empStatus = (row.custodian_status || '').toLowerCase();
                     let empBadge;
                     if (empStatus === 'active') {
@@ -1010,14 +937,14 @@
                             ${cell(row.school_type, 'text-slate-500')}
                             ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
                             ${cell(row.location)}
-                            ${cell(row.property_number, 'font-bold text-slate-800')}
+                            ${cell(row.property_number, 'font-bold text-emerald-600')}
                             ${costCell(row.acquisition_cost)}
                             ${cell(row.acquisition_date)}`;
                     } else {
                         tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
                             ${cell(row.custodian_name, 'font-bold text-blue-700')}
                             ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
-                            ${cell(row.property_number, 'font-bold text-slate-800')}
+                            ${cell(row.property_number, 'font-bold text-emerald-600')}
                             ${costCell(row.acquisition_cost)}
                             ${cell(row.acquisition_date)}`;
                     }
@@ -1126,40 +1053,7 @@
             }
         }
 
-        // ---- Condition Custom Dropdown ----
-        function toggleConditionDropdown() {
-            const panel = document.getElementById('conditionDropdownPanel');
-            panel.classList.toggle('hidden');
-        }
 
-        function setConditionFilter(value, btn) {
-            // Update hidden select
-            const sel = document.getElementById('assetFilterStatus');
-            sel.value = value;
-
-            // Update button label — grab only direct text nodes (ignore child element text)
-            const rawText = Array.from(btn.childNodes)
-                .filter(n => n.nodeType === Node.TEXT_NODE)
-                .map(n => n.textContent.trim())
-                .filter(Boolean)
-                .join(' ');
-            document.getElementById('conditionSelectedLabel').textContent = rawText || 'All Conditions';
-
-            // Grab the icon SVG from chosen item and copy to button icon slot
-            const itemIcon = btn.querySelector('svg');
-            const displayIcon = document.getElementById('conditionSelectedIcon');
-            if (itemIcon && displayIcon) {
-                displayIcon.innerHTML = itemIcon.innerHTML;
-                displayIcon.setAttribute('class', itemIcon.getAttribute('class') || 'w-4 h-4 shrink-0');
-            }
-
-            // Close panel
-            document.getElementById('conditionDropdownPanel').classList.add('hidden');
-
-            // Trigger filter
-            assetFetchData();
-        }
-        // ---- End Condition Dropdown ----
 
         document.addEventListener('DOMContentLoaded', () => { 
             const urlParams = new URLSearchParams(window.location.search);

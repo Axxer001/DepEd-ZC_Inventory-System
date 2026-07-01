@@ -6,316 +6,9 @@
     <title>Inventory Setup | DepEd Zamboanga City</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .step-content { display: none; }
-        .step-content.active { display: block; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        
-        @keyframes fadeIn { 
-            from { opacity: 0; transform: translateY(10px) scale(0.98); } 
-            to { opacity: 1; transform: translateY(0) scale(1); } 
-        }
-
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes slideOutRight {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        .toast-enter { animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .toast-exit { animation: slideOutRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-        .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
-
-        .back-btn-cool {
-            background: white;
-            border: 1px solid #e2e8f0;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .back-btn-cool:hover {
-            border-color: #c00000;
-            color: #c00000;
-            box-shadow: 0 10px 15px -3px rgba(192, 0, 0, 0.1);
-            transform: translateX(-4px);
-        }
-        html.dark .back-btn-cool {
-            background: #141f33;
-            border-color: #1e2e47;
-            color: #94a3b8;
-        }
-        html.dark .back-btn-cool:hover {
-            border-color: #c00000;
-            color: white;
-            background: #c00000;
-        }
-
-        /* â”€â”€ Excel-like registration table â”€â”€ */
-        .xls-th {
-            padding: 14px 16px;
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #64748b;
-            white-space: nowrap;
-            border-right: 1px solid #e2e8f0;
-            border-bottom: 2px solid #f1f5f9;
-            background: #f8fafc;
-            position: sticky;
-            top: 0;
-            z-index: 20;
-        }
-        .xls-td {
-            height: 48px;
-            border-right: 1px solid #e2e8f0;
-            border-bottom: 1px solid #f1f5f9;
-            vertical-align: middle;
-            position: relative;
-            padding: 0;
-            background: #ffffff;
-        }
-        /* row highlight */
-        .xls-row { transition: background 0.1s; }
-        .xls-row:hover .xls-td { background-color: #f8fafc !important; }
-        .xls-row:hover .xls-td.xls-sticky-col { background-color: #f8fafc !important; }
-        /* inputs inside cells */
-        .xls-input {
-            width: 100%;
-            padding: 11px 14px;
-            font-size: 11.5px;
-            font-weight: 600;
-            color: #334155;
-            background: transparent;
-            border: 1px solid transparent;
-            outline: none;
-            box-sizing: border-box;
-            line-height: 1.4;
-            transition: all 0.2s;
-        }
-        .xls-input:focus {
-            background: rgba(192,0,0,0.045);
-            border-color: #c00000;
-            box-shadow: 0 0 0 2px rgba(192,0,0,0.1);
-        }
-        .xls-input::placeholder { color: #cbd5e1; font-weight: 500; }
-        .xls-const {
-            display: flex;
-            align-items: center;
-            padding: 0 16px;
-            height: 100%;
-            font-size: 12px;
-            font-weight: 600;
-            color: #64748b;
-            white-space: nowrap;
-            font-style: normal;
-        }
-        /* Scroll container: min-height = 10 rows, scrollable beyond */
-        .xls-scroll-wrap {
-            position: relative;
-            overflow-x: auto;
-            overflow-y: auto;
-            width: 100%;
-            max-width: 100%;
-            min-height: 400px;
-            max-height: calc(100vh - 450px);
-            flex-grow: 1;
-            background: #ffffff;
-        }
-        .pg-btn {
-            padding: 8px 18px;
-            font-size: 10px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            border-radius: 9999px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid #e2e8f0;
-            background: white;
-            color: #64748b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-        html.dark .pg-btn {
-            background: white;
-            color: #1e293b;
-            border-color: rgba(255,255,255,0.1);
-        }
-        .pg-btn:hover:not(:disabled) {
-            border-color: #c00000;
-            color: #c00000;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        .pg-btn:disabled {
-            opacity: 0.3;
-            cursor: not-allowed;
-        }
-        .pg-btn-active {
-            background: #c00000 !important;
-            color: white !important;
-            border-color: #c00000 !important;
-        }
-        /* â”€â”€ Dark mode overrides (keeping table white/light even in dark mode if preferred, or matching dark theme) â”€â”€ */
-        html.dark .xls-th {
-            background: #0f172a !important;
-            color: #94a3b8 !important;
-            border-color: #1e293b !important;
-        }
-        html.dark .xls-td { 
-            background: #0f172a !important;
-            border-color: #1e293b !important; 
-        }
-        html.dark .xls-row:hover .xls-td { background-color: #1e293b !important; }
-        html.dark .xls-row:hover .xls-td.xls-sticky-col { background-color: #1e293b !important; }
-        /* Typebox enhancements */
-        html.dark .xls-input { background: transparent; color: #e2e8f0; }
-        html.dark .xls-input:focus { background: rgba(192,0,0,0.1); border-color: #c00000; box-shadow: 0 0 0 2px rgba(192,0,0,0.2); }
-        html.dark .xls-input::placeholder { color: #475569; }
-        html.dark .xls-scroll-wrap { background-color: #0f172a !important; }
-        html.dark .xls-const { color: #94a3b8 !important; }
-        html.dark .xls-sticky-col { background-color: #0f172a !important; }
-
-        /* Custom Autocomplete */
-        .custom-autocomplete {
-            position: absolute;
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 9999;
-            min-width: 150px;
-            font-family: inherit;
-        }
-        html.dark .custom-autocomplete {
-            background: #141f33;
-            border-color: #1e293b;
-        }
-        .custom-autocomplete-item {
-            padding: 10px 14px;
-            font-size: 11.5px;
-            font-weight: 600;
-            cursor: pointer;
-            color: #334155;
-            transition: background 0.1s;
-        }
-        html.dark .custom-autocomplete-item {
-            color: #cbd5e1;
-        }
-        .custom-autocomplete-item:hover {
-            background: #f8fafc;
-        }
-        html.dark .custom-autocomplete-item:hover {
-            background: #1a2535;
-        }
-
-        /* NEW Badge */
-        .new-badge {
-            position: absolute;
-            top: 3px;
-            right: 3px;
-            font-size: 8px;
-            font-weight: 900;
-            background: #10b981;
-            color: white;
-            padding: 1px 4px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            pointer-events: none;
-            z-index: 10;
-            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
-            letter-spacing: 0.5px;
-        }
-        html.dark .new-badge {
-            background: #059669;
-            color: #ecfdf5;
-            box-shadow: none;
-        }
-
-        html.dark .xls-const { color: #2e4060 !important; }
-        /* Dark: section 1 card */
-        html.dark #acqSourceCard { background-color: #141f33 !important; border-color: #1e2e47 !important; }
-        html.dark #acqSourceCard .border-b { border-color: #1e2e47 !important; }
-        html.dark #acqSourceInput {
-            background-color: #0d1525 !important;
-            border-color: #1e2e47 !important;
-            color: #94a3b8 !important;
-        }
-        /* Dark: section 2 table card */
-        html.dark #assetTableCard { background-color: #141f33 !important; border-color: #1e2e47 !important; }
-        html.dark #assetToolbar { background-color: #141f33 !important; border-color: #1e2e47 !important; }
-        html.dark #assetToolbar .bg-slate-100 { background-color: #0d1525 !important; }
-        html.dark #assetToolbar .bg-slate-50 { background-color: #0d1525 !important; border-color: #1e2e47 !important; }
-        html.dark #assetToolbar .text-slate-600 { color: #64748b !important; }
-        html.dark .xls-scroll-wrap { background-color: #141f33 !important; }
-        html.dark #assetSourceEmpty, html.dark #assetDistEmpty { background: #141f33 !important; }
-        html.dark #assetSourceEmpty p, html.dark #assetDistEmpty p { color: #253550 !important; }
-        html.dark #assetSourceEmpty svg, html.dark #assetDistEmpty svg { color: #253550 !important; }
-        /* Dark: footer */
-        html.dark #assetTableFooter { background-color: #0d1525 !important; border-color: #1e2e47 !important; }
-        html.dark #assetTableFooter #rowCountLabel { color: #2e4060 !important; }
-        /* Dark: sticky row num col */
-        html.dark .xls-sticky-col { background-color: #141f33 !important; }
-        html.dark .xls-row:hover .xls-sticky-col { background-color: #0d1525 !important; }
-
-        /* Pagination Styles */
-        .pg-btn {
-            padding: 8px 16px;
-            font-size: 10px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            border-radius: 12px;
-            transition: all 0.2s;
-            display: flex;
-            items-center: center;
-            gap: 6px;
-        }
-        .pg-btn:not(:disabled):hover { background: #f1f5f9; color: #c00000; }
-        .pg-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-        html.dark .pg-btn { background: #1e293b !important; color: #cbd5e1 !important; }
-        html.dark .pg-btn:not(:disabled):hover { background: #c00000 !important; color: white !important; }
-
-        /* Column Coloring */
-        .col-identity { background-color: #eff6ff !important; border-color: #dbeafe !important; }
-        .col-context  { background-color: #f8fafc !important; border-color: #f1f5f9 !important; }
-        .col-personnel{ background-color: #fffbeb !important; border-color: #fef3c7 !important; }
-        .col-financial{ background-color: #eef2ff !important; border-color: #e0e7ff !important; }
-        .col-temporal { background-color: #ecfdf5 !important; border-color: #d1fae5 !important; }
-        .col-status   { background-color: #f5f3ff !important; border-color: #ede9fe !important; }
-
-        html.dark .col-identity { background-color: rgba(30, 58, 138, 0.15) !important; border-color: rgba(30, 58, 138, 0.3) !important; }
-        html.dark .col-context  { background-color: rgba(30, 41, 59, 0.15) !important; border-color: rgba(30, 41, 59, 0.3) !important; }
-        html.dark .col-personnel{ background-color: rgba(120, 53, 15, 0.15) !important; border-color: rgba(120, 53, 15, 0.3) !important; }
-        html.dark .col-financial{ background-color: rgba(49, 46, 129, 0.15) !important; border-color: rgba(49, 46, 129, 0.3) !important; }
-        html.dark .col-temporal { background-color: rgba(6, 78, 59, 0.15) !important; border-color: rgba(6, 78, 59, 0.3) !important; }
-        html.dark .col-status   { background-color: rgba(76, 29, 149, 0.15) !important; border-color: rgba(76, 29, 149, 0.3) !important; }
-
-        /* Stronger background for TH */
-        th.col-identity { background-color: #dbeafe !important; }
-        th.col-context  { background-color: #f1f5f9 !important; }
-        th.col-personnel{ background-color: #fef3c7 !important; }
-        th.col-financial{ background-color: #e0e7ff !important; }
-        th.col-temporal { background-color: #d1fae5 !important; }
-        th.col-status   { background-color: #ede9fe !important; }
-
-        html.dark th.col-identity { background-color: rgba(30, 58, 138, 0.4) !important; }
-        html.dark th.col-context  { background-color: rgba(30, 41, 59, 0.4) !important; }
-        html.dark th.col-personnel{ background-color: rgba(120, 53, 15, 0.4) !important; }
-        html.dark th.col-financial{ background-color: rgba(49, 46, 129, 0.4) !important; }
-        html.dark th.col-temporal { background-color: rgba(6, 78, 59, 0.4) !important; }
-        html.dark th.col-status   { background-color: rgba(76, 29, 149, 0.4) !important; }
-    </style>
+    @include('partials.inventory-styles')
 
 </head>
 <body class="bg-slate-50 min-h-screen flex text-slate-800 overflow-x-hidden relative">
@@ -378,70 +71,49 @@
             {{-- Step 1: Add or Edit Selection --}}
             <div id="step1" class="step-content active">
                 <h3 class="text-center text-lg font-bold text-slate-400 uppercase tracking-[0.3em] mb-10">What would you like to do?</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-10 px-4 mb-10">
-                    <div onclick="nextStep(2, 'add')" class="group bg-white p-12 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-[#c00000] transition-all duration-300 cursor-pointer text-center">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 px-4 mb-10 max-w-4xl mx-auto">
+                    <div onclick="nextStep(2, 'register')" class="group bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-[#c00000] transition-all duration-300 cursor-pointer text-center">
                         <div class="w-20 h-20 bg-red-50 text-[#c00000] rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-10 h-10">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
                             </svg>
                         </div>
-                        <h4 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Add Item</h4>
-                        <p class="text-slate-400 text-xs font-bold uppercase mt-3 tracking-widest leading-tight">Register new items or equipment to the system</p>
+                        <h4 class="text-2xl font-black text-slate-800 tracking-tight uppercase">Register Asset</h4>
+                        <p class="text-slate-400 text-[10px] font-bold uppercase mt-3 tracking-widest leading-tight">Stock items to AMU</p>
                     </div>
 
-                    <div onclick="nextStep(2, 'building')" class="group bg-white p-12 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-[#c00000] transition-all duration-300 cursor-pointer text-center">
+                    <div onclick="nextStep(2, 'assign_asset')" class="group block bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-[#c00000] transition-all duration-300 cursor-pointer text-center">
+                        <div class="w-20 h-20 bg-red-50 text-[#c00000] rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-10 h-10">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+                            </svg>
+                        </div>
+                        <h4 class="text-2xl font-black text-slate-800 tracking-tight uppercase">Assign Asset</h4>
+                        <p class="text-slate-400 text-[10px] font-bold uppercase mt-3 tracking-widest leading-tight">Distribute to Personnel</p>
+                    </div>
+
+                    <div onclick="nextStep(2, 'building')" class="group bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-[#c00000] transition-all duration-300 cursor-pointer text-center">
                         <div class="w-20 h-20 bg-red-50 text-[#c00000] rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-10 h-10">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z" />
                             </svg>
                         </div>
-                        <h4 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Add Building</h4>
-                        <p class="text-slate-400 text-xs font-bold uppercase mt-3 tracking-widest leading-tight">Register new school buildings or infrastructure units</p>
+                        <h4 class="text-2xl font-black text-slate-800 tracking-tight uppercase">Register Building</h4>
+                        <p class="text-slate-400 text-[10px] font-bold uppercase mt-3 tracking-widest leading-tight">Unassigned buildings</p>
+                    </div>
+
+                    <div onclick="nextStep(2, 'assign_building')" class="group block bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/60 border-2 border-transparent hover:border-[#c00000] transition-all duration-300 cursor-pointer text-center">
+                        <div class="w-20 h-20 bg-red-50 text-[#c00000] rounded-3xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-10 h-10">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h5.25c.621 0 1.125.504 1.125 1.125V21m8.25-3v-6c0-1.242-.56-2.42-1.543-3.176l-9-6.938a3.75 3.75 0 00-4.614 0l-9 6.938A3.75 3.75 0 002.25 15v6" />
+                            </svg>
+                        </div>
+                        <h4 class="text-2xl font-black text-slate-800 tracking-tight uppercase">Assign Building</h4>
+                        <p class="text-slate-400 text-[10px] font-bold uppercase mt-3 tracking-widest leading-tight">Distribute to Schools</p>
                     </div>
                 </div>
 
-                {{-- Bottom Row: Management Cards (Slim Horizontal side-by-side) --}}
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 mt-10">
-                    {{-- Inventory Management --}}
-                    <div onclick="nextStep(2, 'edit')" class="group bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border-2 border-transparent hover:border-blue-600 transition-all duration-300 cursor-pointer flex items-center justify-between relative overflow-hidden">
-                        <div class="flex items-center gap-5 relative z-10">
-                            <div class="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-7 h-7">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                                </svg>
-                            </div>
-                            <div class="text-left">
-                                <h4 class="text-lg font-black text-slate-800 tracking-tight uppercase">Inventory Management</h4>
-                                <p class="text-slate-400 text-[8px] font-bold uppercase tracking-widest mt-1">Master Registry Records</p>
-                            </div>
-                        </div>
-                        <div class="text-blue-600 group-hover:translate-x-2 transition-transform relative z-10">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                            </svg>
-                        </div>
-                    </div>
 
-                    {{-- Infrastructure Management --}}
-                    <div onclick="nextStep(2, 'infra')" class="group bg-white p-6 rounded-[2.5rem] shadow-xl shadow-slate-200/40 border-2 border-transparent hover:border-emerald-600 transition-all duration-300 cursor-pointer flex items-center justify-between relative overflow-hidden">
-                        <div class="flex items-center gap-5 relative z-10">
-                            <div class="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-7 h-7">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5V10.75M2.25 21h1.5m18 0h-18M2.25 9l4.5-1.636M18.75 3l-1.5.545m0 6.205l3 1m1.5-1.5l-3-1m-3.182-5.182L15 4.5" />
-                                </svg>
-                            </div>
-                            <div class="text-left">
-                                <h4 class="text-lg font-black text-slate-800 tracking-tight uppercase">Infrastructure Management</h4>
-                                <p class="text-slate-400 text-[8px] font-bold uppercase tracking-widest mt-1">Buildings & Facilities</p>
-                            </div>
-                        </div>
-                        <div class="text-emerald-600 group-hover:translate-x-2 transition-transform relative z-10">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-6 h-6">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                            </svg>
-                        </div>
-                    </div>
-                </div>
 
             </div>
 
@@ -456,10 +128,14 @@
 </div>
 </div>
 
-{{-- â•â•â•â•â•â•â• STEP: ADD NEW RECORD â€” Registration Form â•â•â•â•â•â•â• --}}
+{{-- ═══════ STEP: ADD NEW RECORD — Registration Form ═══════ --}}
     @include('partials.register-item-step')
 
     @include('partials.register-building-step')
+    
+    @include('partials.assign-asset-step')
+    
+    @include('partials.assign-building-step')
 
     {{-- Step 3: Form Content --}}
             <div id="step3" class="step-content">
@@ -484,8 +160,7 @@
                 </div>
             </div>
 
-            @include('partials.inventory-edit-step')
-            @include('partials.building-edit-step')
+
 
         </main>
     </div>
@@ -520,6 +195,7 @@
         const rawCategories = {{ Js::from($categories) }};
         const rawItems = {{ Js::from($items) }};
         const rawSubItems = {{ Js::from($subItems) }};
+        const rawProcurementModes = {{ Js::from($procurementModes) }};
         
         const rawDistricts = @json($districts);
         const rawLds = @json($legislativeDistricts);
@@ -528,6 +204,8 @@
         const allCustodiansList = @json($allCustodians);
         const rawStakeholders = @json($stakeholders);
         const rawOwnerships = @json($stakeholderOwnerships);
+        const unassignedAssetsList = @json($unassignedAssets);
+        const unassignedBuildingsList = @json($unassignedBuildings);
         const districtMap = {};
         rawDistricts.forEach(d => {
             districtMap[d.name] = { ld: d.legislative_district_id, quad: d.quadrant_name.replace('Quadrant ', '') };
@@ -540,24 +218,25 @@
     if (step === 2) {
         currentMode = value;
 
-        // Add Item
-        if (value === 'add') {
+        // Register Asset
+        if (value === 'register') {
             document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
             document.getElementById('stepAddNew').classList.add('active');
             document.getElementById('mainContent').classList.replace('max-w-5xl', 'max-w-full');
-            stepHistory.push('addnew');
+            
+            stepHistory.push('register');
             updateBackButton();
             return;
         }
 
-        // Edit Items (Inventory Management)
-        if (value === 'edit') {
+        // Assign Asset
+        if (value === 'assign_asset') {
             document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-            document.getElementById('stepInventoryEdit').classList.add('active');
+            document.getElementById('stepAssignAsset').classList.add('active');
             document.getElementById('mainContent').classList.replace('max-w-5xl', 'max-w-full');
-            stepHistory.push('edit');
+            
+            stepHistory.push('assign_asset');
             updateBackButton();
-            if (typeof initInventoryEdit === 'function') initInventoryEdit();
             return;
         }
 
@@ -571,14 +250,13 @@
             return;
         }
 
-        // Infrastructure Management (Building Editor)
-        if (value === 'infra') {
+        // Assign Building
+        if (value === 'assign_building') {
             document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-            document.getElementById('stepBuildingEdit').classList.add('active');
+            document.getElementById('stepAssignBuilding').classList.add('active');
             document.getElementById('mainContent').classList.replace('max-w-5xl', 'max-w-full');
-            stepHistory.push('infra');
+            stepHistory.push('assign_building');
             updateBackButton();
-            if (typeof initBldgEdit === 'function') initBldgEdit();
             return;
         }
     }
@@ -602,7 +280,7 @@
                 stepHistory.pop();
                 const prevStep = stepHistory[stepHistory.length - 1];
 
-                if (leavingStep === 'addnew' || leavingStep === 'addbuilding' || leavingStep === 'edit' || leavingStep === 'infra') {
+                if (['register', 'assign', 'addbuilding', 'assign_asset', 'assign_building'].includes(leavingStep)) {
                     document.getElementById('mainContent').classList.replace('max-w-full', 'max-w-5xl');
                     document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
                     document.getElementById('step1').classList.add('active');
@@ -611,7 +289,7 @@
                 }
 
                 document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
-                const targetId = prevStep === 'addnew' ? 'stepAddNew' : ('step' + prevStep);
+                const targetId = (prevStep === 'register' || prevStep === 'assign') ? 'stepAddNew' : ('step' + prevStep);
                 document.getElementById(targetId).classList.add('active');
                 
                 updateBackButton();
@@ -642,3 +320,4 @@
 
 </body>
 </html>
+

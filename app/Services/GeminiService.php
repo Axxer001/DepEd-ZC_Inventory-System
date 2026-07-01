@@ -114,9 +114,9 @@ class GeminiService
 
             'manual_batch' => "
                 1. 'classification', 'category', 'item': Standardize and Title Case nomenclature.
-                2. 'mode': Standardize procurement mode strings (e.g. 'Direct Contracting', 'Shopping').
+                2. 'source', 'mode': Standardize source of acquisition and procurement mode strings (e.g. 'Direct Contracting', 'Shopping').
                 3. Employee fields ('employee-first', 'employee-middle', 'employee-last'): Clean name components, Proper Case.
-                4. 'cost': Float, strip currency symbols. 'qty': Integer. 'useful-life': Integer.
+                4. 'cost': Float, strip currency symbols. 'qty': Integer. 'useful-life': Integer. 'warranty': Integer.
                 5. 'acceptance-date', 'acquisition-date': Strict YYYY-MM-DD.
                 6. 'condition': Map to exactly one of: 'Good Condition', 'Needs Repair', 'Unserviceable'.",
 

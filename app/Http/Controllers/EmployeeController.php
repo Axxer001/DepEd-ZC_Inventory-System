@@ -82,7 +82,7 @@ class EmployeeController extends Controller
                 'ad.property_number',
                 'ad.acquisition_date',
                 'ad.acquisition_cost as asset_cost',
-                'ad.created_at as assigned_at',
+                'ad.acquisition_date as assigned_at',
                 'i.name as item_name',
                 'cat.name as category_name',
                 'asrc.condition',
@@ -238,7 +238,7 @@ class EmployeeController extends Controller
                 'ad.property_number',
                 'ad.acquisition_date',
                 'ad.acquisition_cost as asset_cost',
-                'ad.created_at as assigned_at',
+                'ad.acquisition_date as assigned_at',
                 'i.name as item_name',
                 'cat.name as category_name',
                 'asrc.condition',
@@ -488,11 +488,37 @@ class EmployeeController extends Controller
             ->limit(500)
             ->get()
             ->map(fn($src) => [
-                'id'          => $src->id,
-                'name'        => $src->name,
-                'source_type' => $src->source_type,
+                'id'               => $src->id,
+                'name'             => $src->name,
+                'source_type'      => $src->source_type,
+                'contact_person'   => $src->contact_person,
+                'contact_position' => $src->contact_position,
             ]);
 
         return response()->json($results);
+    }
+
+    public function uploadPhoto(Request $request, $id)
+    {
+        $employee = Employee::findOrFail($id);
+
+        $request->validate([
+            'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // Max 5MB
+        ]);
+
+        if ($request->hasFile('photo')) {
+            // Delete old photo if it exists
+            if ($employee->photo_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($employee->photo_path);
+            }
+
+            $path = $request->file('photo')->store('employee-photos', 'public');
+            $employee->photo_path = $path;
+            $employee->save();
+
+            return redirect()->back()->with('success', 'Profile photo updated successfully!');
+        }
+
+        return redirect()->back()->with('error', 'Failed to upload photo.');
     }
 }

@@ -109,8 +109,7 @@ class DashboardController extends Controller
         
         $categoryData = [
             'ppe' => $ppeCount,
-            'semi_exp' => $semiExpCount,
-            'items' => $itemPool - ($ppeCount + $semiExpCount) 
+            'semi_exp' => $semiExpCount
         ];
 
         $totalForPercent = array_sum($categoryData);
@@ -125,16 +124,37 @@ class DashboardController extends Controller
             'SemiExpendable' => $semiExpValue
         ];
 
-        // Requirement: all assets are set to serviceable by default
-        $serviceableCount = $totalAssets;
+        // Dynamically calculate asset condition summary based on database values
+        $conditions = DB::table('asset_sources')
+            ->select('condition', DB::raw('SUM(quantity) as qty'))
+            ->groupBy('condition')
+            ->get();
+
+        $serviceableCount = 0;
         $unserviceableCount = 0;
         $forRepairCount = 0;
+
+        foreach ($conditions as $c) {
+            $cond = strtolower(trim($c->condition ?? ''));
+            if ($cond === 'good condition' || $cond === 'serviceable') {
+                $serviceableCount += $c->qty;
+            } elseif ($cond === 'needs repair' || $cond === 'for repair') {
+                $forRepairCount += $c->qty;
+            } elseif ($cond === 'unserviceable') {
+                $unserviceableCount += $c->qty;
+            } else {
+                $serviceableCount += $c->qty;
+            }
+        }
 
         $categories = DB::table('categories')->orderBy('name')->get();
         $items = DB::table('items')->orderBy('name')->get();
 
         // 8. Default Growth Data (5-Year Intervals)
         $growthData = $this->calculateGrowthData('gap', 5);
+
+        // Fetch active global notice
+        $globalNotice = \App\Models\GlobalNotice::where('active', true)->latest()->first();
 
         return view('dashboard', compact(
             'schools',
@@ -152,7 +172,8 @@ class DashboardController extends Controller
             'filterValues',
             'categories',
             'items',
-            'growthData'
+            'growthData',
+            'globalNotice'
         ));
     }
 

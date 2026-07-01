@@ -14,12 +14,12 @@ class AssetSource extends Model
         'item_id',
         'acquisition_source_id',
         'procurement_mode_id',
-        'acquisition_contact_id',
         'description',
         'unit_of_measurement',
         'asset_cost',
         'quantity',
         'estimated_useful_life',
+        'warranty',
         'acceptance_date',
         'condition',           // renamed from remarks
     ];
@@ -44,10 +44,6 @@ class AssetSource extends Model
         return $this->belongsTo(ProcurementMode::class);
     }
 
-    public function acquisitionContact(): BelongsTo
-    {
-        return $this->belongsTo(AcquisitionContact::class);
-    }
 
     public function assignments(): HasMany
     {

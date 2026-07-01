@@ -197,50 +197,11 @@
                         </div>
                     </div>
                     
-                    <div class="pt-10 border-t border-slate-50 grid grid-cols-1 md:grid-cols-1 gap-10">
-                        <div class="space-y-3 relative">
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 italic">Authorized Personnel (Custodian) <span class="text-red-500">*</span></label>
-                            <div class="relative">
-                                <input type="text" id="receiverName" x-model="employeeQuery" @input.debounce.300ms="searchEmployees()" placeholder="Search employee name or ID..."
-                                    class="w-full p-6 bg-slate-50 border border-slate-100 rounded-3xl font-black text-sm outline-none focus:ring-4 focus:ring-red-50 transition-all"
-                                    autocomplete="off">
-                                <button type="button" x-show="selectedEmployee" @click="selectedEmployee = null; employeeQuery = ''" class="absolute right-6 top-1/2 -translate-y-1/2 p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all cursor-pointer" x-cloak>
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                                </button>
-                                <div x-show="employeeResults.length > 0" class="autocomplete-dropdown custom-scroll">
-                                    <template x-for="emp in employeeResults" :key="emp.id">
-                                        <div @click="selectEmployee(emp)" class="autocomplete-item">
-                                            <span class="font-medium" x-text="emp.full_name"></span>
-                                            <span class="ml-2 text-xs text-zinc-400" x-text="emp.employee_id"></span>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-
-                            <!-- Auto-filled fields (readonly) -->
-                            <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6" x-show="selectedEmployee">
-                                <div>
-                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Employee ID</label>
-                                    <input type="text" readonly :value="selectedEmployee?.employee_id"
-                                           class="w-full p-4 bg-slate-100 border border-slate-100 rounded-2xl font-bold text-xs outline-none"/>
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Position</label>
-                                    <input type="text" readonly :value="selectedEmployee?.position"
-                                           class="w-full p-4 bg-slate-100 border border-slate-100 rounded-2xl font-bold text-xs outline-none"/>
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 ml-1">Status</label>
-                                    <input type="text" readonly :value="selectedEmployee?.status"
-                                           class="w-full p-4 bg-slate-100 border border-slate-100 rounded-2xl font-bold text-xs outline-none"/>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
                 <div class="flex justify-end pb-12">
-                    <button id="step1-next" onclick="goToStep(2)" :disabled="!selectedLocation || !selectedEmployee" class="group px-14 py-6 rounded-[2.5rem] font-black uppercase tracking-widest text-xs transition-all flex items-center gap-4 shadow-sm"
-                        :class="selectedLocation && selectedEmployee ? 'bg-slate-900 text-white hover:bg-black cursor-pointer shadow-xl' : 'bg-slate-200 text-slate-400 cursor-not-allowed'">
+                    <button id="step1-next" onclick="goToStep(2)" :disabled="!selectedLocation" class="group px-14 py-6 rounded-[2.5rem] font-black uppercase tracking-widest text-xs transition-all flex items-center gap-4 shadow-sm"
+                        :class="selectedLocation ? 'bg-slate-900 text-white hover:bg-black cursor-pointer shadow-xl' : 'bg-slate-200 text-slate-400 cursor-not-allowed'">
                         Next Step
                         <svg class="w-5 h-5 transition-transform group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
@@ -255,9 +216,7 @@
             <div id="step2-content" class="hidden animate-fade space-y-8">
                 <form id="registerItemForm" action="{{ route('register.item.store') }}" method="POST">
                     @csrf
-                    {{-- Hidden source fields from Step 1 --}}
                     <input type="hidden" name="acquisition_source_id" :value="selectedLocation?.id">
-                    <input type="hidden" name="employee_id" :value="selectedEmployee?.id">
 
                   <div class="bg-white border border-slate-100 rounded-[3.5rem] p-12 shadow-sm">
     {{-- Header Section --}}
@@ -350,10 +309,6 @@
                             <div class="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 shadow-inner">
                                 <span class="text-[#c00000] text-[9px] font-black uppercase tracking-[0.3em] block mb-3">Asset Source</span>
                                 <h4 id="sumSource" class="text-2xl font-black text-white italic underline decoration-red-500 underline-offset-8" x-text="selectedLocation?.name || '--'">--</h4>
-                                <div id="sumPersonnelContainer" class="mt-3 border-l-2 border-[#c00000] pl-3 py-1 bg-white/5 rounded-r-xl pr-4 inline-block" x-show="selectedEmployee">
-                                    <span class="text-slate-400 text-[9px] font-black uppercase tracking-widest block mb-1">Authorized Personnel</span>
-                                    <p id="sumPersonnel" class="text-white text-sm font-bold m-0 leading-none" x-text="selectedEmployee?.full_name || '--'">--</p>
-                                </div>
                                 <p id="sumType" class="text-slate-500 text-[10px] font-bold uppercase mt-4 tracking-widest italic" x-text="(sourceType || 'Unknown').toUpperCase() + ' SOURCE'">--</p>
                             </div>
                             <div class="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 shadow-inner">
@@ -370,7 +325,6 @@
                                         <th class="p-6 text-[9px] font-black text-slate-500 uppercase italic tracking-[0.2em]">Unit Price</th>
                                         <th class="p-6 text-[9px] font-black text-slate-500 uppercase italic tracking-[0.2em]">Qty</th>
                                         <th class="p-6 text-[9px] font-black text-slate-500 uppercase italic tracking-[0.2em]">Condition</th>
-                                        <th class="p-6 text-[9px] font-black text-slate-500 uppercase italic text-right tracking-[0.2em]">Property No.</th>
                                     </tr>
                                 </thead>
                                 <tbody id="summaryTable" class="text-white text-xs font-bold uppercase tracking-tight"></tbody>
@@ -534,14 +488,7 @@ function addSubItemField() {
                         class="qty-val w-full p-4 bg-white border border-slate-100 rounded-2xl font-bold text-sm text-center outline-none shadow-sm transition-all focus:border-red-200">
                 </div>
 
-                <div class="lg:col-span-3">
-                    <button type="button" onclick="toggleSerial(${id})"
-                        class="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-md flex items-center justify-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37a1.724 1.724 0 002.572-1.065z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        Serial Info
-                    </button>
                 </div>
-            </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6 pt-6 border-t border-slate-100/50">
                 <div class="space-y-2">
@@ -559,23 +506,6 @@ function addSubItemField() {
                 </div>
             </div>
 
-            <div id="serial-panel-${id}" class="hidden mt-8 pt-8 border-t-2 border-dashed border-slate-100 animate-fade">
-                <div class="flex flex-col md:flex-row gap-8 items-center bg-white p-6 rounded-3xl border border-slate-100 shadow-inner">
-                    <label class="flex items-center gap-4 cursor-pointer min-w-[180px] group">
-                        <input type="hidden" name="serialized[]" value="0" id="serial-flag-${id}">
-                        <input type="checkbox" value="1"
-                            class="w-6 h-6 rounded-lg border-slate-200 accent-[#c00000] transition-all transform group-hover:scale-110"
-                            onchange="document.getElementById('serial-flag-${id}').value = this.checked ? '1' : '0'; handleSerializedChange(this, ${id})">
-                        <div class="flex flex-col">
-                            <span class="text-[10px] font-black uppercase text-slate-700 leading-none">Serialized?</span>
-                            <span class="text-[8px] font-bold text-slate-400 uppercase mt-1 italic tracking-tight">Locks Qty to 1</span>
-                        </div>
-                    </label>
-                    <div class="flex gap-4 w-full">
-                        <input type="text" name="property_number[]" placeholder="Property No. (e.g. 2026-ICT-001)" disabled
-                            class="prop-val flex-1 p-4 bg-slate-100 border border-slate-100 rounded-xl font-bold text-[11px] outline-none shadow-sm italic placeholder:text-slate-300 transition-all">
-                    </div>
-                </div>
             </div>
 
             <button type="button" onclick="document.getElementById('row-${id}').remove()" 
@@ -665,14 +595,12 @@ function addSubItemField() {
                 const price = row.querySelector('.price-val').value;
                 const qty   = row.querySelector('.qty-val').value || '0';
                 const cond  = row.querySelector('.cond-val').value || '—';
-                const prop  = row.querySelector('.prop-val') ? row.querySelector('.prop-val').value || '—' : '—';
                 table.innerHTML += `
                     <tr class="border-b border-white/5 hover:bg-white/5 transition-colors">
                         <td class="p-6 italic">${spec}</td>
                         <td class="p-6 text-emerald-400 italic">${price ? '₱ ' + parseFloat(price).toLocaleString() : '—'}</td>
                         <td class="p-6 text-slate-300">${qty}</td>
                         <td class="p-6 text-slate-300">${cond}</td>
-                        <td class="p-6 text-right text-slate-400">${prop}</td>
                     </tr>`;
             });
         }

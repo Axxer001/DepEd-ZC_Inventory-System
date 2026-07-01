@@ -43,6 +43,20 @@
         .notification-drawer.open {
             transform: translateX(0);
         }
+        /* Bell pulse glow */
+        @keyframes bellGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(192,0,0,0.5), 0 0 0 0 rgba(192,0,0,0.3); }
+            50%       { box-shadow: 0 0 0 6px rgba(192,0,0,0.15), 0 0 0 12px rgba(192,0,0,0.05); }
+        }
+        .bell-has-unread { animation: bellGlow 1.8s ease-in-out infinite; }
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50%       { transform: scale(1.4); opacity: 0.7; }
+        }
+        .badge-pulse { animation: badgePulse 1.2s ease-in-out infinite; }
+        /* Notification card states */
+        .notif-unread { background: #fff7f7; border-color: #fca5a5; }
+        .notif-read   { background: #f8fafc; border-color: #e2e8f0; opacity: 0.75; }
         /* Alert Edit Modal */
         .alert-modal-overlay { position:fixed;inset:0;background:rgba(15,23,42,0.55);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:center;justify-content:center;padding:1.5rem; }
         .alert-modal { background:#fff;border-radius:2rem;padding:2rem;width:100%;max-width:420px;box-shadow:0 30px 80px rgba(0,0,0,0.18);border:1.5px solid #f1f5f9; }
@@ -74,45 +88,65 @@
             <div class="p-6 flex items-center justify-between border-b border-slate-50">
                 <div>
                     <h3 class="text-2xl font-black tracking-tight italic uppercase leading-none text-slate-900">Notifications</h3>
-                    <p class="text-[10px] font-bold text-[#c00000] uppercase tracking-widest mt-1.5">System Alerts & Notices</p>
+                    <p class="text-[10px] font-bold text-[#c00000] uppercase tracking-widest mt-1.5">System Alerts &amp; Notices</p>
                 </div>
                 <div class="flex items-center gap-2">
+                    <span x-show="hasUnread" x-cloak class="px-2 py-0.5 bg-red-100 text-red-600 text-[9px] font-black uppercase tracking-widest rounded-full" x-text="unreadCount + ' new'"></span>
                     <button @click="showNotifications = false" class="p-2.5 bg-slate-50 text-slate-900 rounded-xl hover:text-red-600 hover:bg-red-50 border border-slate-100 transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
             </div>
 
-            <div class="flex-grow overflow-y-auto custom-scroll p-6 space-y-4">
-                <template x-if="notifications.length === 0">
+            <div class="flex-grow overflow-y-auto custom-scroll p-6 space-y-3">
+                <template x-if="notifications.length === 0 && !notifLoading">
                     <div class="flex flex-col items-center justify-center h-48 text-center text-slate-400">
                         <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
-                        <p class="text-xs font-bold uppercase tracking-widest">No unread notifications</p>
+                        <p class="text-xs font-bold uppercase tracking-widest">No notifications yet</p>
+                    </div>
+                </template>
+
+                <template x-if="notifLoading">
+                    <div class="flex items-center justify-center h-24 text-slate-400">
+                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
                     </div>
                 </template>
 
                 <template x-for="notification in notifications" :key="notification.id">
-                    <div class="p-5 bg-white rounded-2xl shadow-sm border border-slate-100 group relative">
-                        <div class="flex items-start gap-4">
+                    <div :class="notification.read_at ? 'notif-read' : 'notif-unread'" class="p-4 rounded-2xl border group relative transition-all">
+                        {{-- Unread dot --}}
+                        <div x-show="!notification.read_at" class="absolute top-4 left-4 w-2 h-2 bg-red-500 rounded-full badge-pulse"></div>
+                        <div class="flex items-start gap-4" :class="!notification.read_at ? 'pl-4' : ''">
                             <div class="flex-1 min-w-0 pr-6">
-                                <p class="text-[11px] font-black text-slate-800 uppercase italic" x-text="notification.data.title"></p>
+                                <p class="text-[11px] font-black uppercase italic" :class="notification.read_at ? 'text-slate-500' : 'text-slate-800'" x-text="notification.data.title"></p>
                                 <p class="text-[10px] font-bold text-slate-500 mt-1 leading-relaxed truncate" x-text="notification.data.message"></p>
-                                <div class="flex items-center justify-between mt-3">
+                                <div class="flex items-center justify-between mt-2">
                                     <button type="button" @click="showNotificationDetails(notification.data)" class="text-[9px] font-black text-[#c00000] uppercase tracking-widest hover:underline cursor-pointer">View Details</button>
+                                    <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest" x-text="formatNotifDate(notification.created_at)"></span>
                                 </div>
                             </div>
                         </div>
-                        <button @click="markAsRead(notification.id)" class="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Mark as read">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
-                        </button>
+                        <template x-if="!notification.read_at">
+                            <button @click="markAsRead(notification.id)" class="absolute top-3 right-3 p-1.5 text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors" title="Mark as read">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                            </button>
+                        </template>
                     </div>
                 </template>
+
+                {{-- Pagination --}}
+                <div x-show="notifPagination.last_page > 1" class="flex items-center justify-between pt-2">
+                    <button @click="loadNotificationsFromServer(notifPage - 1)" :disabled="notifPage <= 1" class="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all">← Prev</button>
+                    <span class="text-[10px] font-bold text-slate-400" x-text="'Page ' + notifPage + ' of ' + notifPagination.last_page"></span>
+                    <button @click="loadNotificationsFromServer(notifPage + 1)" :disabled="notifPage >= notifPagination.last_page" class="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all">Next →</button>
+                </div>
             </div>
-            <div class="p-8 border-t border-slate-50">
+
+            <div class="p-5 border-t border-slate-50 space-y-2">
                 @if(auth()->user()->role === 'super_admin')
-                <button @click="createCustomNotification()" class="w-full mb-3 py-4 bg-[#c00000] text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] hover:bg-[#a00000] transition-all shadow-lg shadow-red-200">Create Notification</button>
+                <button @click="createCustomNotification()" class="w-full py-3.5 bg-[#c00000] text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] hover:bg-[#a00000] transition-all shadow-lg shadow-red-200">Create Notification</button>
                 @endif
-                <button @click="markAlertRead()" class="w-full py-4 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] hover:bg-slate-700 transition-all shadow-lg shadow-slate-200">Mark All as Read</button>
+                <button @click="markAlertRead()" x-show="hasUnread" x-cloak class="w-full py-3.5 bg-slate-900 text-white rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] hover:bg-slate-700 transition-all shadow-lg shadow-slate-200">Mark All as Read</button>
             </div>
         </aside>
 
@@ -187,9 +221,9 @@
                         </div>
                     </div>
 
-                    <button @click="openNotifications()" class="relative p-3 bg-white border border-slate-200 text-slate-900 rounded-2xl hover:text-[#c00000] hover:border-[#c00000]/30 hover:shadow-lg hover:shadow-red-50 transition-all shadow-sm group active:scale-90">
-                        <svg class="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                        <span x-show="hasUnread" x-cloak class="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full animate-pulse group-hover:scale-125 transition-transform"></span>
+                    <button @click="openNotifications()" :class="hasUnread ? 'bell-has-unread border-red-200' : 'border-slate-200'" class="relative p-3 bg-white border text-slate-900 rounded-2xl hover:text-[#c00000] hover:border-[#c00000]/30 hover:shadow-lg hover:shadow-red-50 transition-all shadow-sm group active:scale-90">
+                        <svg :class="hasUnread ? 'text-[#c00000]' : ''" class="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                        <span x-show="hasUnread" x-cloak class="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-600 border-2 border-white rounded-full badge-pulse flex items-center justify-center text-white text-[8px] font-black" x-text="unreadCount > 9 ? '9+' : unreadCount"></span>
                     </button>
                 </div>
             </header>
@@ -267,17 +301,18 @@
                 </div>
 
                 {{-- 2. Middle Row: Analytics & Condition --}}
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                {{-- Row 1: Condition Summary & Global Notice Board --}}
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-stretch">
                     {{-- Condition Summary - Enhanced Visuals --}}
-                    <div class="lg:col-span-3 space-y-6">
+                    <div class="lg:col-span-3 space-y-6 flex flex-col justify-between">
                         <div class="flex items-center gap-3 px-4">
                             <div class="w-1.5 h-4 bg-[#c00000] rounded-full animate-pulse shadow-[0_0_10px_rgba(192,0,0,0.5)]"></div>
                             <h3 class="text-xs font-black text-slate-900 uppercase tracking-[0.3em]">Asset Condition Summary</h3>
                         </div>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
                             {{-- Serviceable --}}
-                            <div onclick="window.location.href='{{ url('/view-assets?tab=source&condition=serviceable') }}'" class="bg-white p-6 rounded-[2.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:scale-[1.02] hover:shadow-emerald-50 transition-all duration-500 cursor-pointer overflow-hidden relative">
+                            <div onclick="window.location.href='{{ url('/view-assets?tab=source&condition=serviceable') }}'" class="bg-white p-6 rounded-[2.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:scale-[1.02] hover:shadow-emerald-50 transition-all duration-500 cursor-pointer overflow-hidden relative flex flex-col justify-between h-full">
                                 <div class="flex justify-between items-start mb-6 relative z-10">
                                     <div class="p-2 bg-emerald-50 rounded-2xl group-hover:bg-white transition-all duration-500 shadow-sm">
                                         <img src="{{ asset('images/serviceable.png') }}" alt="Serviceable" class="w-12 h-12 object-contain group-hover:scale-110 transition-transform">
@@ -299,7 +334,7 @@
                             </div>
 
                             {{-- For Repair --}}
-                            <div onclick="window.location.href='{{ url('/view-assets?tab=source&condition=to_repair') }}'" class="bg-white p-6 rounded-[2.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:scale-[1.02] hover:shadow-amber-50 transition-all duration-500 cursor-pointer overflow-hidden relative">
+                            <div onclick="window.location.href='{{ url('/view-assets?tab=source&condition=to_repair') }}'" class="bg-white p-6 rounded-[2.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:scale-[1.02] hover:shadow-amber-50 transition-all duration-500 cursor-pointer overflow-hidden relative flex flex-col justify-between h-full">
                                 <div class="flex justify-between items-start mb-6 relative z-10">
                                     <div class="p-2 bg-amber-50 rounded-2xl group-hover:bg-white transition-all duration-500 shadow-sm">
                                         <img src="{{ asset('images/for_repair.png') }}" alt="For Repair" class="w-12 h-12 object-contain group-hover:scale-110 transition-transform">
@@ -321,7 +356,7 @@
                             </div>
 
                             {{-- Unserviceable --}}
-                            <div onclick="window.location.href='{{ url('/view-assets?tab=source&condition=unserviceable') }}'" class="bg-white p-6 rounded-[2.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:scale-[1.02] hover:shadow-red-50 transition-all duration-500 cursor-pointer overflow-hidden relative">
+                            <div onclick="window.location.href='{{ url('/view-assets?tab=source&condition=unserviceable') }}'" class="bg-white p-6 rounded-[2.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:scale-[1.02] hover:shadow-red-50 transition-all duration-500 cursor-pointer overflow-hidden relative flex flex-col justify-between h-full">
                                 <div class="flex justify-between items-start mb-6 relative z-10">
                                     <div class="p-2 bg-red-50 rounded-2xl group-hover:bg-white transition-all duration-500 shadow-sm">
                                         <img src="{{ asset('images/unserviceable.png') }}" alt="Unserviceable" class="w-12 h-12 object-contain group-hover:scale-110 transition-transform">
@@ -342,9 +377,49 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        {{-- UPDATED: Total Inventory Growth - Gradient Area Chart --}}
-                        <div class="bg-white p-8 rounded-[3rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:shadow-xl transition-all duration-500 relative z-0" x-data="growthChartFilter()">
+                    {{-- Global Notice Board --}}
+                    <div class="lg:col-span-1">
+                        <div class="bg-white p-8 rounded-[2.5rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border border-slate-100 group hover:shadow-xl hover:scale-[1.01] transition-all duration-500 h-full flex flex-col justify-between relative overflow-hidden">
+                            <div class="absolute -right-16 -top-16 w-48 h-48 bg-[#c00000]/5 rounded-full blur-3xl opacity-60 group-hover:scale-150 transition-all duration-700"></div>
+                            <div class="absolute -left-16 -bottom-16 w-48 h-48 bg-slate-50/50 rounded-full blur-3xl opacity-40"></div>
+                            
+                            <div class="relative z-10 flex flex-col justify-between h-full space-y-4 flex-1">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <span class="px-3 py-1 bg-[#c00000]/10 text-[#c00000] border border-[#c00000]/20 rounded-full text-[8px] font-black uppercase tracking-widest italic animate-pulse">📢 Division Notice</span>
+                                    @if(auth()->user()->role === 'super_admin')
+                                    <button onclick="editGlobalNotice()" class="text-[8px] font-black uppercase tracking-widest text-slate-500 hover:text-[#c00000] hover:bg-slate-50 bg-slate-50 px-2.5 py-1 rounded-xl border border-slate-100/50 transition-all flex items-center gap-1">
+                                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>
+                                        Manage
+                                    </button>
+                                    @endif
+                                </div>
+                                <div class="flex-1 py-2 text-left overflow-y-auto">
+                                    @if($globalNotice && !empty($globalNotice->content))
+                                        <p class="text-slate-900 text-xs font-black tracking-tight leading-relaxed uppercase line-clamp-4">{{ $globalNotice->content }}</p>
+                                    @else
+                                        <p class="text-slate-400 text-[10px] font-bold leading-relaxed italic">No active announcements at the moment.</p>
+                                    @endif
+                                </div>
+                                @if($globalNotice && !empty($globalNotice->content) && $globalNotice->link)
+                                    <div>
+                                        <a href="{{ $globalNotice->link }}" target="_blank" class="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-white bg-[#c00000] hover:bg-red-800 px-3.5 py-2 rounded-xl transition-all shadow-md active:scale-95 w-full justify-center">
+                                            {{ $globalNotice->link_label ?: 'View Notice Details' }}
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" /></svg>
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Row 2: Inventory Growth & Portfolio Analysis --}}
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-8 items-stretch">
+                    {{-- Total Inventory Growth - Gradient Area Chart --}}
+                    <div class="lg:col-span-3">
+                        <div class="bg-white p-8 rounded-[3rem] shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-t border-slate-50 group hover:shadow-xl transition-all duration-500 relative z-0 h-full flex flex-col justify-between" x-data="growthChartFilter()">
                             <div class="flex items-center justify-between mb-8 relative z-30">
                                 <div class="flex items-center gap-3">
                                     <div class="w-1.5 h-4 bg-[#c00000] rounded-full shadow-[0_0_8px_rgba(192,0,0,0.4)]"></div>
@@ -418,46 +493,39 @@
                     </div>
 
                     {{-- Category Distribution - Glassmorphism Circle Graph --}}
-                    <div class="bg-white p-8 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-50 flex flex-col items-center justify-between group hover:shadow-xl transition-all duration-500 relative overflow-hidden">
-                        <div class="w-full relative z-10">
-                            <h3 class="text-xs font-black text-slate-900 uppercase tracking-[0.3em] italic text-center mb-1">Portfolio Analysis</h3>
-                            <p class="text-[8px] font-bold text-slate-900 uppercase tracking-widest text-center">Category Distribution</p>
-                        </div>
-                        <div class="h-64 w-full relative z-10 py-4">
-                            <canvas id="categoryDistributionChart"></canvas>
-                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-4">
-                                <span class="text-xs font-black text-slate-900 uppercase tracking-tighter">Total Assets</span>
-                                <span class="text-xl font-black text-[#c00000] tracking-tighter" x-text="numberFormat(filteredStats.total)">{{ number_format($totalAssets) }}</span>
+                    <div class="lg:col-span-1">
+                        <div class="bg-white p-8 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-slate-50 flex flex-col items-center justify-between group hover:shadow-xl transition-all duration-500 relative overflow-hidden h-full">
+                            <div class="w-full relative z-10">
+                                <h3 class="text-xs font-black text-slate-900 uppercase tracking-[0.3em] italic text-center mb-1">Portfolio Analysis</h3>
+                                <p class="text-[8px] font-bold text-slate-900 uppercase tracking-widest text-center">Category Distribution</p>
                             </div>
-                        </div>
-                        <div class="w-full space-y-2 relative z-10">
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl border border-slate-100 hover:bg-white hover:border-[#c00000]/20 transition-all cursor-default">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                                        <span class="text-[8px] font-black uppercase text-slate-500">Items</span>
-                                    </div>
-                                    <span class="text-[8px] font-black text-slate-900">{{ $categoryPercents['items'] ?? 0 }}%</span>
+                            <div class="flex-1 w-full relative z-10 py-4 flex items-center justify-center min-h-[160px]">
+                                <canvas id="categoryDistributionChart"></canvas>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-4">
+                                    <span class="text-[8px] font-black text-slate-500 uppercase tracking-tighter">Total Assets</span>
+                                    <span class="text-sm font-black text-[#c00000] tracking-tighter" x-text="numberFormat(filteredStats.total)">{{ number_format($totalAssets) }}</span>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl border border-slate-100 hover:bg-white hover:border-[#c00000]/20 transition-all cursor-default">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                        <span class="text-[8px] font-black uppercase text-slate-500">PPE</span>
+                            <div class="w-full space-y-2 relative z-10 mt-2">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl border border-slate-100 hover:bg-white hover:border-[#c00000]/20 transition-all cursor-default">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                            <span class="text-[8px] font-black uppercase text-slate-500">PPE</span>
+                                        </div>
+                                        <span class="text-[8px] font-black text-slate-900">{{ $categoryPercents['ppe'] }}%</span>
                                     </div>
-                                    <span class="text-[8px] font-black text-slate-900">{{ $categoryPercents['ppe'] }}%</span>
-                                </div>
-                                <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl border border-slate-100 hover:bg-white hover:border-[#c00000]/20 transition-all cursor-default">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                        <span class="text-[8px] font-black uppercase text-slate-500">Semi-Exp</span>
+                                    <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl border border-slate-100 hover:bg-white hover:border-[#c00000]/20 transition-all cursor-default">
+                                        <div class="flex items-center gap-2">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                            <span class="text-[8px] font-black uppercase text-slate-500">Semi-Exp</span>
+                                        </div>
+                                        <span class="text-[8px] font-black text-slate-900">{{ $categoryPercents['semi_exp'] }}%</span>
                                     </div>
-                                    <span class="text-[8px] font-black text-slate-900">{{ $categoryPercents['semi_exp'] }}%</span>
                                 </div>
                             </div>
+                            <div class="absolute -left-10 -top-10 w-32 h-32 bg-red-50 rounded-full blur-3xl opacity-30 group-hover:scale-150 transition-all duration-700"></div>
                         </div>
-                        <div class="absolute -left-10 -top-10 w-32 h-32 bg-red-50 rounded-full blur-3xl opacity-30 group-hover:scale-150 transition-all duration-700"></div>
                     </div>
                 </div>
 
@@ -614,30 +682,47 @@
                 cardFilter: 'Overall',
                 showNotifications: false,
                 hasUnread: false,
-
+                unreadCount: 0,
                 notifications: [],
+                notifPage: 1,
+                notifPagination: { current_page: 1, last_page: 1, total: 0 },
+                notifLoading: false,
 
                 init() {
-                    this.loadNotificationsFromServer();
+                    this.loadNotificationsFromServer(1);
                 },
 
-                async loadNotificationsFromServer() {
+                async loadNotificationsFromServer(page = 1) {
+                    this.notifLoading = true;
+                    this.notifPage = page;
                     try {
-                        const res = await fetch('/api/notifications', { headers: { 'Accept': 'application/json' } });
+                        const res = await fetch(`/api/notifications?page=${page}`, { headers: { 'Accept': 'application/json' } });
                         if (!res.ok) return;
                         const data = await res.json();
-                        
                         this.notifications = data.notifications || [];
-                        this.hasUnread = data.unreadCount > 0;
+                        this.unreadCount = data.unreadCount || 0;
+                        this.hasUnread = this.unreadCount > 0;
+                        this.notifPagination = data.pagination || { current_page: page, last_page: 1, total: 0 };
                     } catch(e) { console.error('Failed to load notifications:', e); }
+                    finally { this.notifLoading = false; }
                 },
 
                 async openNotifications() {
                     this.showNotifications = true;
+                    // Refresh the current page when opening
+                    await this.loadNotificationsFromServer(this.notifPage);
+                },
+
+                formatNotifDate(dateStr) {
+                    if (!dateStr) return '';
+                    const d = new Date(dateStr);
+                    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                    const h = d.getHours(), m = d.getMinutes();
+                    const ampm = h >= 12 ? 'PM' : 'AM';
+                    return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()} ${(h%12||12)}:${String(m).padStart(2,'0')} ${ampm}`;
                 },
 
                 showNotificationDetails(data) {
-                    // Extract detailed text from message or long_message if it exists
                     const details = data.detailed_message || data.message;
                     Swal.fire({
                         title: data.title,
@@ -658,9 +743,7 @@
                         title: 'Create Announcement',
                         input: 'textarea',
                         inputPlaceholder: 'Type your message here...',
-                        inputAttributes: {
-                            'aria-label': 'Type your message here'
-                        },
+                        inputAttributes: { 'aria-label': 'Type your message here' },
                         showCancelButton: true,
                         confirmButtonText: 'SEND NOTIFICATION',
                         cancelButtonText: 'CANCEL',
@@ -685,47 +768,48 @@
                                 },
                                 body: JSON.stringify({ message: text })
                             });
-
                             if (res.ok) {
-                                this.loadNotificationsFromServer();
+                                await this.loadNotificationsFromServer(1);
                                 Swal.fire({
-                                    icon: 'success',
-                                    title: 'Sent!',
-                                    text: 'Announcement has been sent to all users.',
-                                    customClass: {
-                                        popup: 'rounded-3xl p-6',
-                                        title: 'text-lg font-black text-slate-800 uppercase italic',
-                                        confirmButton: 'bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px] px-8 py-3 rounded-xl hover:bg-emerald-700 transition-colors shadow-lg outline-none border-0'
-                                    },
+                                    icon: 'success', title: 'Sent!', text: 'Announcement has been sent to all users.',
+                                    customClass: { popup: 'rounded-3xl p-6', title: 'text-lg font-black text-slate-800 uppercase italic', confirmButton: 'bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px] px-8 py-3 rounded-xl hover:bg-emerald-700 transition-colors shadow-lg outline-none border-0' },
                                     buttonsStyling: false
                                 });
                             }
-                        } catch (e) {
-                            console.error('Failed to send notification:', e);
-                        }
+                        } catch (e) { console.error('Failed to send notification:', e); }
                     }
                 },
 
                 async markAlertRead() {
-                    if (this.notifications.length === 0) return;
-                    this.hasUnread = false;
+                    if (!this.hasUnread) return;
                     try {
-                        await fetch('/api/notifications/read-all', {
+                        const res = await fetch('/api/notifications/read-all', {
                             method: 'POST',
                             headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
                         });
-                        this.notifications = [];
+                        if (res.ok) {
+                            // Mark all in-memory items as read (preserve history)
+                            this.notifications = this.notifications.map(n => ({ ...n, read_at: n.read_at || new Date().toISOString() }));
+                            this.hasUnread = false;
+                            this.unreadCount = 0;
+                        }
                     } catch(e) { console.error('Failed to mark all as read:', e); }
                 },
 
                 async markAsRead(id) {
                     try {
-                        await fetch(`/api/notifications/${id}/read`, {
+                        const res = await fetch(`/api/notifications/${id}/read`, {
                             method: 'POST',
                             headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content }
                         });
-                        this.notifications = this.notifications.filter(n => n.id !== id);
-                        this.hasUnread = this.notifications.length > 0;
+                        if (res.ok) {
+                            // Update in-place, keep in list
+                            this.notifications = this.notifications.map(n =>
+                                n.id === id ? { ...n, read_at: new Date().toISOString() } : n
+                            );
+                            this.unreadCount = Math.max(0, this.unreadCount - 1);
+                            this.hasUnread = this.unreadCount > 0;
+                        }
                     } catch(e) { console.error('Failed to mark read:', e); }
                 },
                 
@@ -870,6 +954,91 @@
             }
         }
 
+        function editGlobalNotice() {
+            Swal.fire({
+                title: 'Manage Global Notice Board',
+                html: `
+                    <div class="space-y-4 text-left">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Notice Announcement Text</label>
+                            <textarea id="swal-notice-content" class="w-full bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold p-3 text-slate-800 focus:ring-[#c00000] focus:border-[#c00000] min-h-[80px]" placeholder="Type division-wide announcement here...">{{ $globalNotice->content ?? '' }}</textarea>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">External Link / URL (Optional)</label>
+                            <input id="swal-notice-link" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold px-3 py-2 text-slate-800 focus:ring-[#c00000] focus:border-[#c00000]" placeholder="https://example.com/pif-instructions" value="{{ $globalNotice->link ?? '' }}">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Link Label (Optional)</label>
+                            <input id="swal-notice-label" type="text" class="w-full bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold px-3 py-2 text-slate-800 focus:ring-[#c00000] focus:border-[#c00000]" placeholder="VIEW INSTRUCTIONS" value="{{ $globalNotice->link_label ?? '' }}">
+                        </div>
+                        <p class="text-[9px] font-bold text-slate-400 italic">Leaving the Content field blank will clear the notice board from the dashboard.</p>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'PUBLISH NOTICE',
+                cancelButtonText: 'CANCEL',
+                customClass: {
+                    popup: 'rounded-3xl p-6 max-w-md w-full',
+                    title: 'text-lg font-black text-slate-800 uppercase italic',
+                    confirmButton: 'bg-[#c00000] text-white font-black uppercase tracking-widest text-[10px] px-6 py-3 rounded-xl hover:bg-red-800 transition-colors shadow-lg outline-none border-0 mt-2',
+                    cancelButton: 'bg-slate-200 text-slate-700 font-black uppercase tracking-widest text-[10px] px-6 py-3 rounded-xl hover:bg-slate-300 transition-colors shadow-sm outline-none border-0 mt-2 ml-2'
+                },
+                buttonsStyling: false,
+                preConfirm: () => {
+                    return {
+                        content: document.getElementById('swal-notice-content').value,
+                        link: document.getElementById('swal-notice-link').value,
+                        link_label: document.getElementById('swal-notice-label').value
+                    }
+                }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    const data = result.value;
+                    try {
+                        const res = await fetch('/api/global-notice', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            },
+                            body: JSON.stringify(data)
+                        });
+                        
+                        if (res.ok) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Notice Updated',
+                                text: 'The global notice board has been updated successfully.',
+                                customClass: {
+                                    popup: 'rounded-3xl p-6',
+                                    title: 'text-lg font-black text-slate-800 uppercase italic',
+                                    confirmButton: 'bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px] px-8 py-3 rounded-xl hover:bg-emerald-700 transition-colors shadow-lg outline-none border-0'
+                                },
+                                buttonsStyling: false
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            throw new Error('Failed to save notice');
+                        }
+                    } catch (e) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Something went wrong while publishing the notice.',
+                            customClass: {
+                                popup: 'rounded-3xl p-6',
+                                title: 'text-lg font-black text-slate-800 uppercase italic',
+                                confirmButton: 'bg-red-600 text-white font-black uppercase tracking-widest text-[10px] px-8 py-3 rounded-xl hover:bg-red-700 transition-colors shadow-lg outline-none border-0'
+                            },
+                            buttonsStyling: false
+                        });
+                    }
+                }
+            });
+        }
+
         // Initialize Category Distribution Chart
         let growthChart = null;
 
@@ -887,11 +1056,10 @@
             new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Items', 'PPE', 'Semi-Exp'],
+                    labels: ['PPE', 'Semi-Exp'],
                     datasets: [{
-                        data: [@json($categoryData['items']), @json($categoryData['ppe']), @json($categoryData['semi_exp'])],
+                        data: [@json($categoryData['ppe']), @json($categoryData['semi_exp'])],
                         backgroundColor: [
-                            '#dc2626', // Items (Red-600)
                             '#f59e0b', // PPE (Amber-500)
                             '#10b981'  // Semi-Exp (Emerald-500)
                         ],

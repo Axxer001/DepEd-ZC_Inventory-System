@@ -80,7 +80,7 @@
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll p-4 lg:p-8" x-data="{ activeTab: 'specs', isEditing: false, showConfirmModal: false, showTransferModal: false, showReturnAmuModal: false, showImageFullscreen: false, showRemoveConfirmModal: false, isSaving: false }">
+    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll p-4 lg:p-8" x-data="{ activeTab: 'specs', isEditing: false, showConfirmModal: false, showTransferModal: false, showReturnAmuModal: false, showReturnSourceModal: false, showImageFullscreen: false, showRemoveConfirmModal: false, isSaving: false, historyLimit: 5 }">
         
         {{-- Global Header (Fixed/Sticky) --}}
         <header class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sticky top-0 z-50">
@@ -123,13 +123,23 @@
                         <button @click="showTransferModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 hover:pl-5 transition-all flex items-center gap-2 border-b border-slate-100">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg> Initiate Transfer
                         </button>
-                        @if($asset->employee_id)
-                        <button @click="showReturnAmuModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-emerald-600 hover:pl-5 transition-all flex items-center gap-2">
+                        @if($asset->employee_id || ($asset->is_in_source ?? false))
+                        <button @click="showReturnAmuModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-emerald-600 hover:pl-5 transition-all flex items-center gap-2 border-b border-slate-100">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg> Return to AMU
                         </button>
                         @else
-                        <button disabled class="w-full text-left px-4 py-3 text-xs font-bold text-slate-400 cursor-not-allowed flex items-center gap-2" title="Asset is currently unassigned or already in AMU">
+                        <button disabled class="w-full text-left px-4 py-3 text-xs font-bold text-slate-400 cursor-not-allowed flex items-center gap-2 border-b border-slate-100" title="Asset is currently unassigned or already in AMU">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg> Return to AMU
+                        </button>
+                        @endif
+
+                        @if(!($asset->is_in_source ?? false))
+                        <button @click="showReturnSourceModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-orange-600 hover:pl-5 transition-all flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-6a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"></path></svg> Return to Source
+                        </button>
+                        @else
+                        <button disabled class="w-full text-left px-4 py-3 text-xs font-bold text-slate-400 cursor-not-allowed flex items-center gap-2" title="Asset is already at the acquisition source">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-6a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"></path></svg> Return to Source
                         </button>
                         @endif
                     </div>
@@ -308,6 +318,57 @@
                             </div>
                             <p class="text-[8px] font-bold text-slate-400 uppercase mt-1.5 text-right">{{ $statusText }}</p>
                         </div>
+
+                        @php
+                            $warrantyMonths = $asset->warranty ?? 0;
+                            $warrantyPercentRemaining = 0;
+                            $warrantyProgressClass = 'from-slate-400 to-slate-300';
+                            $warrantyStatusText = "Warranty Data Unavailable";
+
+                            if ($warrantyMonths > 0 && $startDate) {
+                                $warrantyEndDate = $startDate->copy()->addMonths($warrantyMonths);
+                                $now = \Carbon\Carbon::now();
+                                
+                                $totalWarrantyDays = $startDate->diffInDays($warrantyEndDate);
+                                $daysWarrantyElapsed = $startDate->diffInDays($now, false);
+                                
+                                if ($daysWarrantyElapsed < 0) {
+                                    $warrantyPercentRemaining = 100;
+                                    $warrantyStatusText = "{$warrantyMonths} of {$warrantyMonths} Months Remaining";
+                                } elseif ($daysWarrantyElapsed >= $totalWarrantyDays) {
+                                    $warrantyPercentRemaining = 0;
+                                    $warrantyStatusText = "0 of {$warrantyMonths} Months Remaining (Expired)";
+                                } else {
+                                    $daysWarrantyRemaining = $totalWarrantyDays - $daysWarrantyElapsed;
+                                    $warrantyPercentRemaining = round(($daysWarrantyRemaining / $totalWarrantyDays) * 100);
+                                    $monthsRemainingFloat = round($daysWarrantyRemaining / 30.417, 1);
+                                    
+                                    $monthsStr = (floor($monthsRemainingFloat) == $monthsRemainingFloat) 
+                                        ? floor($monthsRemainingFloat) 
+                                        : $monthsRemainingFloat;
+                                        
+                                    $warrantyStatusText = "{$monthsStr} of {$warrantyMonths} Months Remaining";
+                                }
+                                
+                                if ($warrantyPercentRemaining > 50) {
+                                    $warrantyProgressClass = 'from-emerald-500 to-green-400';
+                                } elseif ($warrantyPercentRemaining > 25) {
+                                    $warrantyProgressClass = 'from-amber-500 to-amber-400';
+                                } else {
+                                    $warrantyProgressClass = 'from-red-600 to-red-400';
+                                }
+                            }
+                        @endphp
+                        <div class="pt-4 mt-4 border-t border-slate-100">
+                            <div class="flex justify-between items-end mb-1.5">
+                                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Est. Warranty</p>
+                                <p class="text-[10px] font-black text-slate-700">{{ $warrantyPercentRemaining }}%</p>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-gradient-to-r {{ $warrantyProgressClass }} h-full rounded-full transition-all duration-1000" style="width: {{ $warrantyPercentRemaining }}%"></div>
+                            </div>
+                            <p class="text-[8px] font-bold text-slate-400 uppercase mt-1.5 text-right">{{ $warrantyStatusText }}</p>
+                        </div>
                     </div>
                 </form>
             </aside>
@@ -382,70 +443,23 @@
                                 <span class="w-1.5 h-1.5 rounded-full bg-deped"></span> Technical Details
                             </h3>
                              <div class="grid grid-cols-1 md:grid-cols-3 gap-y-6 gap-x-8 bg-slate-50 rounded-xl p-6 border border-slate-100">
-                                {{-- Searchable Classification --}}
-                                <div x-data="{ 
-                                    open: false, 
-                                    search: '{{ $asset->classification_name }}', 
-                                    selectedId: '{{ $asset->classification_id }}',
-                                    options: @js($classifications)
-                                }" class="relative">
+                                {{-- Classification --}}
+                                <div>
                                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Classification</p>
-                                    <p x-show="!isEditing" class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $asset->classification_name }}</p>
-                                    <div x-show="isEditing" class="relative group" @click.away="open = false">
-                                        <input type="text" x-model="search" @focus="open = true" @input="open = true" placeholder="Search..." class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl px-4 py-3 text-xs font-black text-slate-100 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">
-                                        <input type="hidden" name="classification_id" :value="options.find(o => o.name.toLowerCase() === search.trim().toLowerCase())?.id || search.trim()">
-                                        <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-hover:text-deped transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                                        
-                                        <div x-show="open" x-cloak class="absolute z-50 w-full mt-2 bg-slate-800 border-2 border-slate-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto custom-scroll p-1 animate-in fade-in zoom-in duration-200">
-                                            <template x-for="opt in options.filter(o => o.name.toLowerCase().includes(search.toLowerCase()))" :key="opt.id">
-                                                <div @click="selectedId = opt.id; search = opt.name; open = false; $dispatch('input')" class="px-4 py-2.5 text-[10px] font-black text-slate-300 uppercase hover:bg-slate-700 hover:text-white rounded-lg cursor-pointer transition-colors" x-text="opt.name"></div>
-                                            </template>
-                                        </div>
-                                    </div>
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $asset->classification_name }}</p>
                                 </div>
 
-                                {{-- Searchable Category --}}
-                                <div x-data="{ 
-                                    open: false, 
-                                    search: '{{ $asset->category_name }}', 
-                                    selectedId: '{{ $asset->category_id }}',
-                                    options: @js($categories)
-                                }" class="relative">
+                                {{-- Category --}}
+                                <div>
                                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Category</p>
-                                    <p x-show="!isEditing" class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $asset->category_name }}</p>
-                                    <div x-show="isEditing" class="relative group" @click.away="open = false">
-                                        <input type="text" x-model="search" @focus="open = true" @input="open = true" placeholder="Search..." class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl px-4 py-3 text-xs font-black text-slate-100 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">
-                                        <input type="hidden" name="category_id" :value="options.find(o => o.name.toLowerCase() === search.trim().toLowerCase())?.id || search.trim()">
-                                        <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-hover:text-deped transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                                        
-                                        <div x-show="open" x-cloak class="absolute z-50 w-full mt-2 bg-slate-800 border-2 border-slate-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto custom-scroll p-1 animate-in fade-in zoom-in duration-200">
-                                            <template x-for="opt in options.filter(o => o.name.toLowerCase().includes(search.toLowerCase()))" :key="opt.id">
-                                                <div @click="selectedId = opt.id; search = opt.name; open = false; $dispatch('input')" class="px-4 py-2.5 text-[10px] font-black text-slate-300 uppercase hover:bg-slate-700 hover:text-white rounded-lg cursor-pointer transition-colors" x-text="opt.name"></div>
-                                            </template>
-                                        </div>
-                                    </div>
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $asset->category_name }}</p>
                                 </div>
 
-                                {{-- Searchable Item --}}
-                                <div x-data="{ 
-                                    open: false, 
-                                    search: '{{ $asset->item_name }}', 
-                                    selectedId: '{{ $asset->item_id }}',
-                                    options: @js($items)
-                                }" class="relative">
+                                 {{-- Item Name --}}
+                                <div>
                                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Article / Item</p>
                                     <p x-show="!isEditing" class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $asset->item_name }}</p>
-                                    <div x-show="isEditing" class="relative group" @click.away="open = false">
-                                        <input type="text" x-model="search" @focus="open = true" @input="open = true" placeholder="Search..." class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl px-4 py-3 text-xs font-black text-slate-100 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">
-                                        <input type="hidden" name="item_id" :value="options.find(o => o.name.toLowerCase() === search.trim().toLowerCase())?.id || search.trim()">
-                                        <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-hover:text-deped transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                                        
-                                        <div x-show="open" x-cloak class="absolute z-50 w-full mt-2 bg-slate-800 border-2 border-slate-700 rounded-xl shadow-2xl max-h-60 overflow-y-auto custom-scroll p-1 animate-in fade-in zoom-in duration-200">
-                                            <template x-for="opt in options.filter(o => o.name.toLowerCase().includes(search.toLowerCase()))" :key="opt.id">
-                                                <div @click="selectedId = opt.id; search = opt.name; open = false; $dispatch('input')" class="px-4 py-2.5 text-[10px] font-black text-slate-300 uppercase hover:bg-slate-700 hover:text-white rounded-lg cursor-pointer transition-colors" x-text="opt.name"></div>
-                                            </template>
-                                        </div>
-                                    </div>
+                                    <input x-show="isEditing" type="text" name="item_name" value="{{ $asset->item_name }}" placeholder="Item Name" class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl px-4 py-3 text-xs font-black text-slate-100 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">
                                 </div>
                                 <div>
                                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Description</p>
@@ -454,19 +468,11 @@
                                 </div>
                                 <div>
                                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Unit Cost</p>
-                                    <p x-show="!isEditing" class="text-xs font-bold text-emerald-600 mt-1 uppercase px-1">₱ {{ number_format($asset->asset_cost, 2) }}</p>
-                                    <div x-show="isEditing" class="relative flex items-center group">
-                                        <span class="absolute left-4 text-slate-500 font-black text-[13px] pointer-events-none">₱</span>
-                                        <input type="number" step="0.01" name="asset_cost" value="{{ $asset->asset_cost }}" class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl pl-8 pr-4 py-3 text-sm font-black text-slate-100 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm hover:border-slate-600">
-                                    </div>
+                                    <p class="text-xs font-bold text-emerald-600 mt-1 uppercase px-1">₱ {{ number_format($asset->asset_cost, 2) }}</p>
                                 </div>
                                 <div>
                                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Quantity</p>
-                                    <p x-show="!isEditing" class="text-xs font-black text-deped mt-1 uppercase px-1">{{ $asset->quantity }} Unit(s)</p>
-                                    <div x-show="isEditing" class="relative flex items-center group">
-                                        <input type="number" name="quantity" value="{{ $asset->quantity }}" class="w-full bg-slate-800 border-2 border-slate-700/50 rounded-xl pl-4 pr-16 py-3 text-sm font-black text-slate-100 focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-600">
-                                        <span class="absolute right-4 text-slate-500 font-black text-[10px] uppercase tracking-widest pointer-events-none">Unit(s)</span>
-                                    </div>
+                                    <p class="text-xs font-black text-deped mt-1 uppercase px-1">{{ $asset->quantity }} Unit(s)</p>
                                 </div>
                             </div>
                         </div>
@@ -482,27 +488,30 @@
                                 </div>
                                 <div>
                                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Funding / Source</p>
-                                    <p x-show="!isEditing" class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $asset->source_name }}</p>
-                                    <div x-show="isEditing" class="relative group mt-1.5">
-                                        <select name="acquisition_source_id" class="w-full appearance-none bg-white border-2 border-slate-100 rounded-xl px-4 py-2.5 text-xs font-black text-slate-700 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-200 cursor-pointer">
-                                            @foreach($acquisitionSources as $source)
-                                                <option value="{{ $source->id }}" {{ $asset->acquisition_source_id == $source->id ? 'selected' : '' }}>{{ $source->name }}</option>
-                                            @endforeach
-                                        </select>
-                                        <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                                    </div>
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $asset->source_name }}</p>
                                 </div>
                                 <div>
                                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Mode of Acquisition</p>
-                                    <p x-show="!isEditing" class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $asset->mode_of_acquisition }}</p>
-                                    <input x-show="isEditing" type="text" name="mode_of_acquisition" value="{{ $asset->mode_of_acquisition }}" class="w-full mt-1.5 bg-white border-2 border-slate-100 rounded-xl px-4 py-2.5 text-xs font-black text-slate-700 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-200">
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $asset->mode_of_acquisition }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Condition</p>
+                                    <p x-show="!isEditing" class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $asset->condition }}</p>
+                                    <div x-show="isEditing" class="relative group mt-1.5" x-cloak>
+                                        <select name="condition" class="w-full appearance-none bg-white border-2 border-slate-100 rounded-xl px-4 py-2.5 text-xs font-black text-slate-700 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-200 cursor-pointer">
+                                            <option value="Good Condition" {{ $asset->condition === 'Good Condition' ? 'selected' : '' }}>Good Condition</option>
+                                            <option value="Needs Repair" {{ $asset->condition === 'Needs Repair' ? 'selected' : '' }}>Needs Repair</option>
+                                            <option value="Unserviceable" {{ $asset->condition === 'Unserviceable' ? 'selected' : '' }}>Unserviceable</option>
+                                        </select>
+                                        <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </form>
 
                     {{-- TAB 2: Lifecycle & History --}}
-                    <div x-show="activeTab === 'history'" class="animate-fade relative" x-cloak>
+                    <div x-show="activeTab === 'history'" class="animate-fade h-full flex flex-col" x-cloak>
                         
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-xs font-black text-slate-800 uppercase tracking-[0.2em] flex items-center gap-2">
@@ -514,7 +523,7 @@
                             </div>
                         </div>
 
-                        <div class="relative pl-3 max-w-3xl">
+                        <div class="relative pl-3 max-w-3xl flex-1 min-h-0 overflow-y-auto custom-scroll pr-4">
                             <div class="timeline-line"></div>
                             
                             <div class="space-y-6">
@@ -523,6 +532,7 @@
                                     $colors = match($event['type']) {
                                         'Transfer' => ['border' => 'border-deped', 'bg' => 'bg-deped'],
                                         'Return' => ['border' => 'border-amber-500', 'bg' => 'bg-amber-500'],
+                                        'Return to Source' => ['border' => 'border-orange-500', 'bg' => 'bg-orange-500'],
                                         'Temporary Borrow' => ['border' => 'border-blue-500', 'bg' => 'bg-blue-500'],
                                         default => ['border' => 'border-emerald-500', 'bg' => 'bg-emerald-500'],
                                     };
@@ -884,6 +894,82 @@
                 <div class="bg-slate-50 border-t border-slate-100 p-6 flex items-center justify-end gap-3">
                     <button type="button" @click="showReturnAmuModal = false" class="px-6 py-3 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest transition-colors shadow-sm active:scale-95">Cancel</button>
                     <button type="submit" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-600/30 transition-all active:scale-95 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        Confirm Return
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
+        {{-- Return to Source Modal --}}
+        <div x-show="showReturnSourceModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center">
+            <div x-show="showReturnSourceModal" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showReturnSourceModal = false"></div>
+            <form action="{{ route('assets.return_source', $asset->id) }}" method="POST" x-show="showReturnSourceModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 translate-y-8 scale-95" class="bg-white rounded-3xl shadow-2xl w-full max-w-xl mx-4 relative z-10 flex flex-col overflow-hidden border border-slate-100">
+                @csrf
+                {{-- Modal Header --}}
+                <div class="bg-slate-50 border-b border-slate-100 px-6 py-5 flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-2xl flex items-center justify-center shadow-inner">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 15v-6a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-black text-slate-800 uppercase tracking-[0.1em]">Return to Source</h3>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Send asset back to acquisition source</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="showReturnSourceModal = false" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-2.5 rounded-full transition-colors active:scale-95">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                {{-- Modal Body --}}
+                <div class="p-6 space-y-6">
+                    
+                    {{-- Current Info --}}
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center relative overflow-hidden group">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-orange-500"></div>
+                        <div class="pl-2">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Returning From</p>
+                            <p class="text-xs font-black text-slate-700 uppercase">{{ $asset->office_school_name }}</p>
+                        </div>
+                        <div class="text-right pr-2">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Returning To</p>
+                            <p class="text-xs font-black text-slate-700 uppercase">{{ $asset->source_name }}</p>
+                        </div>
+                    </div>
+
+                    {{-- Form Fields --}}
+                    <div class="grid grid-cols-2 gap-5">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Date of Return <span class="text-deped">*</span></label>
+                            <input type="date" name="return_date" value="{{ date('Y-m-d') }}" required class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Asset Condition <span class="text-deped">*</span></label>
+                            <div class="relative group">
+                                <select name="condition" required class="w-full appearance-none bg-white border-2 border-slate-200 rounded-xl pl-4 pr-10 py-3 text-xs font-black text-slate-700 uppercase focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
+                                    <option value="" disabled selected>Select condition...</option>
+                                    <option value="Good Condition">Good Condition</option>
+                                    <option value="Needs Repair">Needs Repair</option>
+                                    <option value="Unserviceable">Unserviceable</option>
+                                </select>
+                                <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Reason for Return</label>
+                        <textarea name="remarks" rows="3" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-bold text-slate-700 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 outline-none transition-all shadow-sm resize-none hover:border-slate-300" placeholder="State reason why the asset is being returned to source..."></textarea>
+                    </div>
+
+                </div>
+
+                {{-- Modal Footer --}}
+                <div class="bg-slate-50 border-t border-slate-100 p-6 flex items-center justify-end gap-3">
+                    <button type="button" @click="showReturnSourceModal = false" class="px-6 py-3 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest transition-colors shadow-sm active:scale-95">Cancel</button>
+                    <button type="submit" class="px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-orange-600/30 transition-all active:scale-95 flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                         Confirm Return
                     </button>

@@ -12,9 +12,14 @@
         let globalCategories = [];
         let globalAcqContacts = [];
         let globalAcqSources = [];
+        let globalProcurementModes = [];
 
         async function initGlobalDatalists() {
             try {
+                if (typeof rawProcurementModes !== 'undefined') {
+                    globalProcurementModes = rawProcurementModes;
+                }
+
                 const locRes = await fetch('/api/locations/search?q=&type=all');
                 globalLocations = await locRes.json();
                 const dlLoc = document.getElementById('dl-locations');
@@ -39,21 +44,6 @@
                     const acqSrcRes = await fetch('/api/acquisition-sources/search?q=');
                     globalAcqSources = await acqSrcRes.json();
                 } catch (err) { console.error('Failed to fetch acquisition sources', err); }
-
-
-
-                try {
-                    const contactRes = await fetch('/api/supplier-contacts/preview', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                        },
-                        body: JSON.stringify({ filters: {} })
-                    });
-                    const contactData = await contactRes.json();
-                    globalAcqContacts = contactData.rows || [];
-                } catch (err) { console.error('Failed to fetch acquisition contacts', err); }
             } catch (e) { console.error('Failed to init datalists', e); }
         }
         document.addEventListener('DOMContentLoaded', initGlobalDatalists);
@@ -224,52 +214,6 @@
             autofillLocation(rowId, loc.name);
         }
 
-        window.updateAcqSourceBadge = function(query) {
-            const badge = document.getElementById('acqSourceNewBadge');
-            if (!badge) return;
-            const q = (query || '').trim();
-            if (q === '') {
-                badge.classList.add('hidden');
-                return;
-            }
-            const exists = globalAcqSources.some(src => (src.name || '').trim().toLowerCase() === q.toLowerCase());
-            if (exists) {
-                badge.classList.add('hidden');
-            } else {
-                badge.classList.remove('hidden');
-            }
-        }
-
-        window.filterAcqSourceDropdown = function(query) {
-            const dd = document.getElementById('acq-source-dd');
-            if (!dd) return;
-            const q = (query || '').trim().toLowerCase();
-            const matches = q.length === 0
-                ? globalAcqSources.slice(0, 50)
-                : globalAcqSources.filter(src =>
-                    src.name.toLowerCase().includes(q)
-                ).slice(0, 50);
-
-            if (matches.length === 0) {
-                dd.innerHTML = `<div class="xls-dd-empty">No matching sources found. Type to create new.</div>`;
-            } else {
-                dd.innerHTML = matches.map(src => `
-                    <div class="xls-dd-item" onmousedown="selectAcqSource(this.getAttribute('data-name'))" data-name="${(src.name||'').replace(/"/g, '&quot;')}">
-                        ${src.name}
-                        <span style="color:#64748b;font-size:8px;margin-left:6px;">(${src.source_type || 'Internal'})</span>
-                    </div>`).join('');
-            }
-            dd.style.display = 'block';
-            updateAcqSourceBadge(query);
-        }
-
-        window.selectAcqSource = function(name) {
-            const inp = document.getElementById('acqSourceInput');
-            if (inp) inp.value = name;
-            const dd = document.getElementById('acq-source-dd');
-            if (dd) dd.style.display = 'none';
-            updateAcqSourceBadge(name);
-        }
 
         window.filterPersonnelDropdown = function(rowId, query) {
             const dd = document.getElementById(`personnel-dd-${rowId}`);
@@ -604,6 +548,67 @@
             }
         }
 
+        window.filterSourceDropdown = function(rowId, query) {
+            const dd = document.getElementById(`source-dd-${rowId}`);
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalAcqSources.slice(0, 50)
+                : globalAcqSources.filter(s => s.name.toLowerCase().includes(q)).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No sources found</div>`;
+            else dd.innerHTML = matches.map(s => `<div class="xls-dd-item" onmousedown="selectSource(${rowId}, this.getAttribute('data-name'))" data-name="${s.name.replace(/"/g, '&quot;')}">${s.name}</div>`).join('');
+            dd.style.display = 'block';
+        }
+
+        window.selectSource = function(rowId, sourceName) {
+            const src = globalAcqSources.find(s => s.name === sourceName);
+            if (!src) return;
+
+            const inp = document.querySelector(`#src-${rowId} input[data-col="source"]`);
+            if (inp) {
+                inp.value = sourceName;
+                syncState(rowId, 'source', sourceName);
+            }
+            const dd = document.getElementById(`source-dd-${rowId}`);
+            if (dd) dd.style.display = 'none';
+
+            const clearBtn = document.getElementById(`add-source-clear-${rowId}`);
+            if (clearBtn) clearBtn.style.display = 'block';
+
+            // Auto-fill readonly fields
+            const personInp = document.querySelector(`#src-${rowId} input[data-col="personnel"]`);
+            const posInp = document.querySelector(`#src-${rowId} input[data-col="position"]`);
+            if (personInp) {
+                personInp.value = src.contact_person || '';
+                syncState(rowId, 'personnel', src.contact_person || '');
+            }
+            if (posInp) {
+                posInp.value = src.contact_position || '';
+                syncState(rowId, 'position', src.contact_position || '');
+            }
+        }
+
+        window.clearSource = function(rowId) {
+            const inp = document.getElementById(`add-source-${rowId}`);
+            if (inp) inp.value = '';
+            syncState(rowId, 'source', '');
+
+            const clearBtn = document.getElementById(`add-source-clear-${rowId}`);
+            if (clearBtn) clearBtn.style.display = 'none';
+
+            const pInp = document.querySelector(`#src-${rowId} input[data-col="personnel"]`);
+            const posInp = document.querySelector(`#src-${rowId} input[data-col="position"]`);
+            if (pInp) {
+                pInp.value = '';
+                syncState(rowId, 'personnel', '');
+            }
+            if (posInp) {
+                posInp.value = '';
+                syncState(rowId, 'position', '');
+            }
+        }
+
         // 2. BULK ADD ITEMS
         window.filterBulkClassDropdown = function(query) {
             const dd = document.getElementById('bulk-class-dd');
@@ -667,6 +672,91 @@
             if (classInp && cat.classification_name) {
                 classInp.value = cat.classification_name;
             }
+        }
+
+        window.filterBulkSourceDropdown = function(query) {
+            const dd = document.getElementById('bulk-source-dd');
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalAcqSources.slice(0, 50)
+                : globalAcqSources.filter(s => s.name.toLowerCase().includes(q)).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No sources found</div>`;
+            else dd.innerHTML = matches.map(s => `<div class="xls-dd-item" onmousedown="selectBulkSource(this.getAttribute('data-name'))" data-name="${s.name.replace(/"/g, '&quot;')}">${s.name}</div>`).join('');
+            dd.style.display = 'block';
+        }
+        window.selectBulkSource = function(sourceName) {
+            const src = globalAcqSources.find(s => s.name === sourceName);
+            if (!src) return;
+
+            const inp = document.getElementById('bSource');
+            if (inp) inp.value = sourceName;
+            const dd = document.getElementById('bulk-source-dd');
+            if (dd) dd.style.display = 'none';
+
+            const clearBtn = document.getElementById('bSourceClear');
+            if (clearBtn) clearBtn.style.display = 'block';
+
+            // Auto-fill personnel and position
+            const personInp = document.getElementById('bPersonnel');
+            const posInp = document.getElementById('bPosition');
+            if (personInp) personInp.value = src.contact_person || '';
+            if (posInp) posInp.value = src.contact_position || '';
+        }
+
+        window.clearBulkSource = function() {
+            const inp = document.getElementById('bSource');
+            if (inp) inp.value = '';
+            
+            const clearBtn = document.getElementById('bSourceClear');
+            if (clearBtn) clearBtn.style.display = 'none';
+
+            const personInp = document.getElementById('bPersonnel');
+            const posInp = document.getElementById('bPosition');
+            if (personInp) personInp.value = '';
+            if (posInp) posInp.value = '';
+        }
+
+        window.filterModeDropdown = function(rowId, query) {
+            const dd = document.getElementById(`mode-dd-${rowId}`);
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalProcurementModes.slice(0, 50)
+                : globalProcurementModes.filter(m => m.name.toLowerCase().includes(q)).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No modes found</div>`;
+            else dd.innerHTML = matches.map(m => `<div class="xls-dd-item" onmousedown="selectMode(${rowId}, this.getAttribute('data-name'))" data-name="${m.name.replace(/"/g, '&quot;')}">${m.name}</div>`).join('');
+            dd.style.display = 'block';
+        }
+        window.selectMode = function(rowId, modeName) {
+            const inp = document.querySelector(`#src-${rowId} input[data-col="mode"]`);
+            if (inp) {
+                inp.value = modeName;
+                syncState(rowId, 'mode', modeName);
+            }
+            const dd = document.getElementById(`mode-dd-${rowId}`);
+            if (dd) dd.style.display = 'none';
+        }
+
+        window.filterBulkModeDropdown = function(query) {
+            const dd = document.getElementById('bulk-mode-dd');
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalProcurementModes.slice(0, 50)
+                : globalProcurementModes.filter(m => m.name.toLowerCase().includes(q)).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No modes found</div>`;
+            else dd.innerHTML = matches.map(m => `<div class="xls-dd-item" onmousedown="selectBulkMode(this.getAttribute('data-name'))" data-name="${m.name.replace(/"/g, '&quot;')}">${m.name}</div>`).join('');
+            dd.style.display = 'block';
+        }
+        window.selectBulkMode = function(modeName) {
+            const inp = document.getElementById('bMode');
+            if (inp) inp.value = modeName;
+            const dd = document.getElementById('bulk-mode-dd');
+            if (dd) dd.style.display = 'none';
         }
 
         // 3. EDIT ITEMS
@@ -1008,25 +1098,7 @@
         }
 
         function switchAssetTab(tab) {
-            const srcPanel = document.getElementById('panelAssetSource');
-            const distPanel = document.getElementById('panelAssetDist');
-            const tabSrc   = document.getElementById('tabAssetSource');
-            const tabDst   = document.getElementById('tabAssetDist');
-            const label    = document.getElementById('assetTabLabel');
-            const ON  = 'px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg bg-[#c00000] text-white shadow-sm transition-all';
-            const OFF = 'px-4 py-2 text-[10px] font-black uppercase tracking-wider rounded-lg text-slate-900 hover:text-slate-900 transition-all';
-            if (tab === 'source') {
-                srcPanel.classList.remove('hidden');
-                distPanel.classList.add('hidden');
-                tabSrc.className = ON; tabDst.className = OFF;
-                label.textContent = 'Asset Source';
-            } else {
-                srcPanel.classList.add('hidden');
-                distPanel.classList.remove('hidden');
-                tabSrc.className = OFF; tabDst.className = ON;
-                label.textContent = 'Asset Distribution';
-            }
-            updateRowCount();
+            // Deprecated: Only Asset Source exists now.
         }
 
         function renderAssetTable() {
@@ -1034,23 +1106,19 @@
             if (currentPage > totalPages) currentPage = totalPages;
 
             const tbodySource = document.getElementById('assetSourceBody');
-            const tbodyDist = document.getElementById('assetDistBody');
-            if (!tbodySource || !tbodyDist) return;
-            tbodySource.innerHTML = ''; tbodyDist.innerHTML = '';
+            if (!tbodySource) return;
+            tbodySource.innerHTML = '';
             if (allRowsData.length === 0) {
                 document.getElementById('assetSourceEmpty').classList.remove('hidden');
-                document.getElementById('assetDistEmpty').classList.remove('hidden');
                 updatePaginationDisplay(); return;
             }
             document.getElementById('assetSourceEmpty').classList.add('hidden');
-            document.getElementById('assetDistEmpty').classList.add('hidden');
             const start = (currentPage - 1) * rowsPerPage;
             const end = start + rowsPerPage;
             const pageData = allRowsData.slice(start, end);
             pageData.forEach((row, index) => {
                 const displayNum = start + index + 1;
                 addSourceRowDOM(row, displayNum);
-                addDistRowDOM(row, displayNum);
             });
             updatePaginationDisplay();
             updateNewLabels();
@@ -1211,10 +1279,10 @@
             const newRow = {
                 id: ++_rowNumCounter,
                 classification: '', category: '', item: '', description: '', uom: '', 
-                mode: '', 
+                source: '', mode: '', 
                 personnel: '', position: '',
                 cost: '', qty: '', 
-                'useful-life': '', 
+                'useful-life': '', warranty: '', 
                 'acceptance-date': today,
                 condition: 'Good Condition',
                 region: 'Region IX', division: 'Zamboanga City Division',
@@ -1236,8 +1304,21 @@
             const tr = document.createElement('tr');
             tr.id = `src-${data.id}`;
             tr.className = 'xls-row group border-b border-slate-100';
+
+            const total = (parseFloat(data.cost || 0) * parseInt(data.qty || 0)).toFixed(2);
+            
+            // Check if employee has a location assigned
+            let isLocSearchDisabled = '';
+            if (data['employee-search'] || data['employee-name']) {
+                const empName = data['employee-search'] || data['employee-name'];
+                const emp = globalEmployees.find(e => e.full_name === empName);
+                if (emp && emp.location_name) {
+                    isLocSearchDisabled = 'disabled';
+                }
+            }
+
             tr.innerHTML = `
-                <td class="xls-td xls-sticky-col text-center sticky left-0 w-10" style="background:inherit">
+                <td class="xls-td xls-sticky-col text-center sticky left-0 w-10">
                     <span class="row-num text-[10px] font-black text-slate-300">${displayNum}</span>
                 </td>
                 <td class="xls-td col-identity" style="position:relative;overflow:visible">
@@ -1251,16 +1332,27 @@
                 <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'item', this.value)"           data-col="item"           value="${data.item}"           autocomplete="off" class="xls-input" placeholder="Item"></td>
                 <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'description', this.value)"    data-col="description"    value="${data.description}"    autocomplete="off" class="xls-input" placeholder="Description"></td>
                 <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'uom', this.value)"    data-col="uom"    value="${data.uom || ''}"    autocomplete="off" class="xls-input" placeholder="Unit"></td>
-                <td class="xls-td col-status"><input type="text" oninput="syncState(${data.id}, 'mode', this.value)"     data-col="mode"   value="${data.mode || ''}"   autocomplete="off" class="xls-input" placeholder="Mode"></td>
-                <td class="xls-td col-personnel" style="position:relative;overflow:visible">
-                    <input type="text" oninput="syncState(${data.id}, 'personnel', this.value); filterPersonnelDropdown(${data.id}, this.value)" onfocus="filterPersonnelDropdown(${data.id}, this.value)" data-col="personnel" value="${data.personnel}" autocomplete="off" class="xls-input" placeholder="Personnel name">
-                    <div id="personnel-dd-${data.id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
+                <td class="xls-td col-status" style="position:relative;overflow:visible">
+                    <input type="text" oninput="syncState(${data.id}, 'mode', this.value); filterModeDropdown(${data.id}, this.value)" onfocus="filterModeDropdown(${data.id}, this.value)" data-col="mode" value="${data.mode || ''}" autocomplete="off" class="xls-input" placeholder="Mode">
+                    <div id="mode-dd-${data.id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
                 </td>
-                <td class="xls-td col-personnel"><input type="text" oninput="syncState(${data.id}, 'position', this.value)"       data-col="position"       value="${data.position}"       autocomplete="off" class="xls-input" placeholder="Position"></td>
+                <td class="xls-td col-identity" style="position:relative;overflow:visible">
+                    <div class="relative w-full h-full">
+                        <input type="text" id="add-source-${data.id}" oninput="syncState(${data.id}, 'source', this.value); filterSourceDropdown(${data.id}, this.value); document.getElementById('add-source-clear-${data.id}').style.display = this.value ? 'block' : 'none';" onfocus="filterSourceDropdown(${data.id}, this.value)" data-col="source" value="${data.source || ''}" autocomplete="off" class="xls-input w-full h-full pr-6" placeholder="Search Source...">
+                        <button type="button" id="add-source-clear-${data.id}" onclick="clearSource(${data.id})" style="display:${data.source ? 'block' : 'none'};" class="absolute right-1 top-1/2 -translate-y-1/2 p-[2.3px] text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"><svg class="w-[13.2px] h-[13.2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                    </div>
+                    <div id="source-dd-${data.id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
+                </td>
+                <td class="xls-td col-personnel">
+                    <input type="text" data-col="personnel" value="${data.personnel || ''}" readonly class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" placeholder="Auto-filled">
+                </td>
+                <td class="xls-td col-personnel">
+                    <input type="text" data-col="position" value="${data.position || ''}" readonly class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" placeholder="Auto-filled">
+                </td>
                 <td class="xls-td col-financial"><input type="number" oninput="syncState(${data.id}, 'cost', this.value)" data-col="cost" value="${data.cost}" class="xls-input text-right font-mono" placeholder="0.00" min="0" step="0.01"></td>
                 <td class="xls-td col-financial"><input type="number" oninput="syncState(${data.id}, 'qty', this.value)"  data-col="qty"  value="${data.qty}"  class="xls-input text-right font-mono ${data['property-no'] ? 'bg-slate-50 cursor-not-allowed' : ''}" placeholder="0" min="0" step="1" ${data['property-no'] ? 'readonly' : ''}></td>
+                <td class="xls-td col-temporal"><input type="number" oninput="syncState(${data.id}, 'warranty', this.value)" data-col="warranty" value="${data['warranty'] || ''}" class="xls-input text-right font-mono" placeholder="0"    min="0" step="1"></td>
                 <td class="xls-td col-temporal"><input type="number" oninput="syncState(${data.id}, 'useful-life', this.value)" data-col="useful-life" value="${data['useful-life'] || ''}" class="xls-input text-right font-mono" placeholder="0"    min="0" step="1"></td>
-                <td class="xls-td col-temporal"><input type="date"   oninput="syncState(${data.id}, 'acceptance-date', this.value)" data-col="acceptance-date" value="${data['acceptance-date']}" class="xls-input"></td>
                 <td class="xls-td col-status">
                     <select onchange="syncState(${data.id}, 'condition', this.value)" data-col="condition" class="xls-input bg-transparent">
                         <option value="Good Condition" ${data.condition === 'Good Condition' ? 'selected' : ''}>Good Condition</option>
@@ -1268,6 +1360,7 @@
                         <option value="Not Useable" ${data.condition === 'Not Useable' ? 'selected' : ''}>Not Useable</option>
                     </select>
                 </td>
+                <td class="xls-td col-temporal"><input type="date"   oninput="syncState(${data.id}, 'acceptance-date', this.value)" data-col="acceptance-date" value="${data['acceptance-date']}" class="xls-input"></td>
                 <td class="xls-td text-center w-10">
                     <button onclick="deleteRow(${data.id})" class="p-1.5 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Remove row">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -1294,7 +1387,7 @@
             }
 
             tr.innerHTML = `
-                <td class="xls-td xls-sticky-col text-center sticky left-0 w-10" style="background:inherit">
+                <td class="xls-td xls-sticky-col text-center sticky left-0 w-10">
                     <span class="row-num text-[10px] font-black text-slate-300">${displayNum}</span>
                 </td>
                 <td class="xls-td col-context"><input type="text" value="${data.region}" class="xls-input bg-slate-50 dark:bg-white/5 cursor-not-allowed text-slate-500" readonly tabindex="-1"></td>
@@ -1490,12 +1583,14 @@
                 item: document.getElementById('bItem').value,
                 description: document.getElementById('bDescription').value,
                 uom: document.getElementById('bUom').value,
+                source: document.getElementById('bSource').value,
                 mode: document.getElementById('bMode').value,
                 personnel: document.getElementById('bPersonnel').value,
                 position: document.getElementById('bPosition').value,
                 cost1: document.getElementById('bCost').value,
                 qty1: document.getElementById('bQty1').value,
                 life: document.getElementById('bLife').value,
+                warranty: document.getElementById('bWarranty') ? document.getElementById('bWarranty').value : '',
                 date1: document.getElementById('bDate1').value,
                 remarks: document.getElementById('bRemarks').value || 'Good Condition',
 
@@ -1509,9 +1604,9 @@
                 employeePos: document.getElementById('bEmployeePos') ? document.getElementById('bEmployeePos').value : '',
                 employeeStatus: document.getElementById('bEmployeeStatus') ? document.getElementById('bEmployeeStatus').value : '',
                 location: document.getElementById('bLocation') ? document.getElementById('bLocation').value : '',
-                propertyNo: document.getElementById('bPropertyNo').value,
-                cost2: document.getElementById('bCost2').value,
-                date2: document.getElementById('bDate2').value
+                propertyNo: document.getElementById('bPropertyNo') ? document.getElementById('bPropertyNo').value : '',
+                cost2: document.getElementById('bCost2') ? document.getElementById('bCost2').value : '',
+                date2: document.getElementById('bDate2') ? document.getElementById('bDate2').value : ''
             };
 
             // Generate rows in data array first (fast)
@@ -1523,12 +1618,14 @@
                     item: data.item || '',
                     description: data.description || '',
                     uom: data.uom || '', 
+                    source: data.source || '',
                     mode: data.mode || '', 
                     personnel: data.personnel || '',
                     position: data.position || '',
                     cost: data.cost1 || '',
                     qty: data.qty1 || '', 
                     'useful-life': data.life || '', 
+                    warranty: data.warranty || '',
                     'acceptance-date': data.date1 || today,
                     condition: data.remarks,
                     region: 'Region IX', division: 'Zamboanga City Division',
@@ -2894,24 +2991,11 @@
                 Swal.fire({ icon: 'warning', title: 'No Data', text: 'Please add at least one row.', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]' } });
                 return;
             }
-            const acqSourceInput = document.getElementById('acqSourceInput').value.trim();
-            if (!acqSourceInput) {
-                Swal.fire({ icon: 'warning', title: 'Missing Source', text: 'Please specify the Source of Acquisition.', confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]' } });
-                return;
-            }
             let isValid = true;
             let errorMessage = 'Please fill in all required fields across all pages.';
             allRowsData.forEach(row => {
-                const required = ['classification', 'category', 'item', 'uom', 'cost', 'qty', 'useful-life', 'acceptance-date'];
+                const required = ['classification', 'category', 'item', 'uom', 'source', 'cost', 'qty', 'useful-life', 'acceptance-date'];
                 required.forEach(field => { if (!row[field]) isValid = false; });
-                
-                const hasEmployee = row['employee-name'] && row['employee-name'].trim() !== '';
-                const hasLocation = row['school-name'] && row['school-name'].trim() !== '';
-                
-                if (!hasEmployee && !hasLocation) {
-                    isValid = false;
-                    errorMessage = 'Please assign either an Employee or an Office/School for all items.';
-                }
             });
             if (!isValid) {
                 Swal.fire({ icon: 'error', title: 'Incomplete Fields', text: errorMessage, confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]' } });
@@ -2927,7 +3011,7 @@
                     fetch('/inventory-setup/batch', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') },
-                        body: JSON.stringify({ source_of_acquisition: acqSourceInput, rows: allRowsData })
+                        body: JSON.stringify({ rows: allRowsData })
                     })
                     .then(response => response.json())
                     .then(data => {

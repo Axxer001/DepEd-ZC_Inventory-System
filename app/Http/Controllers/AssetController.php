@@ -187,9 +187,9 @@ class AssetController extends Controller
                 DB::raw('COALESCE(schools.name, offices.name, "Warehouse") as school'),
                 DB::raw("'Assigned' as district"),
                 DB::raw('1 as qty'),
-                'ad.created_at as distributed_at'
+                'ad.acquisition_date as distributed_at'
             )
-            ->orderByDesc('ad.created_at')
+            ->orderByDesc('ad.acquisition_date')
             ->get();
 
         $items = $records->map(function ($r) {
@@ -236,7 +236,7 @@ class AssetController extends Controller
                 'categories.name as category_name',
                 DB::raw('COALESCE(schools.name, offices.name, "Warehouse") as school_name')
             )
-            ->orderByDesc('ad.created_at')
+            ->orderByDesc('ad.acquisition_date')
             ->get();
         
         return view('assets.asset-lifecycle', compact('assets'));
@@ -275,6 +275,7 @@ class AssetController extends Controller
                 'asrc.asset_cost',
                 'asrc.quantity',
                 'asrc.estimated_useful_life',
+                'asrc.warranty',
                 'pm.name as mode_of_acquisition',
                 'acquisition_sources.name as source_name',
                 'acquisition_sources.id as acquisition_source_id',
@@ -343,6 +344,7 @@ class AssetController extends Controller
                 DB::raw('COALESCE(from_sch.name, from_off.name) as from_school_name'),
                 DB::raw('COALESCE(to_sch.name, to_off.name) as to_school_name')
             )
+            ->orderBy('asset_transfers.transfer_date', 'asc')
             ->orderBy('asset_transfers.created_at', 'asc')
             ->get();
 
@@ -361,6 +363,13 @@ class AssetController extends Controller
                 if ($t->transfer_type === 'Return') {
                     $desc = 'Returned from ' . $fromName . ' to AMU / Warehouse.';
                     if ($t->remarks) $desc .= ' Reason: ' . $t->remarks;
+                } elseif ($t->transfer_type === 'Return to Source') {
+                    $desc = 'Returned from ' . $fromName . ' to Source: ' . ($asset->source_name ?? 'Source') . '.';
+                    if ($t->remarks) $desc .= ' Reason: ' . $t->remarks;
+                } elseif ($t->transfer_type === 'Initial Distribution') {
+                    $desc = 'Distributed from Warehouse to ' . $toName;
+                    $empName = trim(($t->first_name ?? '') . ' ' . ($t->last_name ?? ''));
+                    if ($empName) $desc .= ' (Custodian: ' . $empName . ')';
                 } else {
                     $desc = 'Transferred from ' . $fromName . ' to ' . $toName;
                     $empName = trim(($t->first_name ?? '') . ' ' . ($t->last_name ?? ''));
@@ -372,7 +381,7 @@ class AssetController extends Controller
 
                 $timeline[] = [
                     'date' => $t->transfer_date ? \Carbon\Carbon::parse($t->transfer_date)->format('Y-m-d') : 'N/A',
-                    'type' => in_array($t->transfer_type, ['Temporary Borrow', 'Return']) ? $t->transfer_type : 'Transfer',
+                    'type' => in_array($t->transfer_type, ['Temporary Borrow', 'Return', 'Return to Source', 'Initial Distribution']) ? $t->transfer_type : 'Transfer',
                     'user' => $t->user_name ?? 'Property Officer',
                     'description' => $desc
                 ];
@@ -380,6 +389,18 @@ class AssetController extends Controller
         }
 
         $documents = DB::table('asset_documents')->where('asset_distribution_id', $id)->orderByDesc('created_at')->get();
+
+        $latestTransfer = DB::table('asset_transfers')
+            ->where('asset_assignment_id', $id)
+            ->orderByDesc('transfer_date')
+            ->orderByDesc('created_at')
+            ->first();
+        if ($latestTransfer && $latestTransfer->transfer_type === 'Return to Source' && !$asset->employee_id) {
+            $asset->office_school_name = $asset->source_name;
+            $asset->is_in_source = true;
+        } else {
+            $asset->is_in_source = false;
+        }
 
         return view('assets.profile', [
             'asset' => $asset,
@@ -402,107 +423,43 @@ class AssetController extends Controller
         }
 
         $validated = $request->validate([
-            'classification_id' => 'required|string',
-            'category_id' => 'required|string',
-            'item_id' => 'required|string',
-            'quantity' => 'required|integer|min:1',
+            'item_name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
-            'property_number' => 'nullable|string|max:255',
-            'asset_cost' => 'required|numeric|min:0',
-            'acquisition_source_id' => 'required|exists:acquisition_sources,id',
-            'mode_of_acquisition' => 'required|string|max:255',
             'condition' => 'required|string|in:Good Condition,Needs Repair,Unserviceable',
-
-            'employee_id' => 'nullable|exists:employees,id',
         ]);
 
-        $asset = DB::table('asset_assignments')->where('id', $id)->first();
+        $asset = DB::table('asset_assignments as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->join('items', 'asrc.item_id', '=', 'items.id')
+            ->select('ad.*', 'asrc.id as asset_source_id', 'items.category_id', 'asrc.quantity', 'asrc.unit_of_measurement')
+            ->where('ad.id', $id)
+            ->first();
+
         if (!$asset) {
             return back()->with('error', 'Asset not found');
         }
 
         DB::transaction(function () use ($id, $asset, $validated, $request) {
-
-            // 1. Resolve Classification
-            $classInput = $validated['classification_id'];
-            $className = is_numeric($classInput) 
-                ? DB::table('classifications')->where('id', $classInput)->value('name') 
-                : strtoupper(trim($classInput));
-
-            if (!$className) $className = 'UNCATEGORIZED';
-
-            $classification = DB::table('classifications')->where('name', $className)->first();
-            $finalClassId = $classification ? $classification->id : DB::table('classifications')->insertGetId([
-                'name' => $className,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            // 2. Resolve Category
-            $catInput = $validated['category_id'];
-            $catName = is_numeric($catInput) 
-                ? DB::table('categories')->where('id', $catInput)->value('name') 
-                : strtoupper(trim($catInput));
-
-            if (!$catName) $catName = 'UNCATEGORIZED';
-
-            $category = DB::table('categories')
-                ->where('name', $catName)
-                ->where('classification_id', $finalClassId)
-                ->first();
-                
-            $finalCatId = $category ? $category->id : DB::table('categories')->insertGetId([
-                'classification_id' => $finalClassId,
-                'name' => $catName,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            // 3. Resolve Item
-            $itemInput = $validated['item_id'];
-            $itemName = is_numeric($itemInput) 
-                ? DB::table('items')->where('id', $itemInput)->value('name') 
-                : strtoupper(trim($itemInput));
-
+            // Resolve Item
+            $itemName = strtoupper(trim($validated['item_name']));
             if (!$itemName) $itemName = 'UNKNOWN ITEM';
 
             $item = DB::table('items')
                 ->where('name', $itemName)
-                ->where('category_id', $finalCatId)
+                ->where('category_id', $asset->category_id)
                 ->first();
                 
             $finalItemId = $item ? $item->id : DB::table('items')->insertGetId([
-                'category_id' => $finalCatId,
+                'category_id' => $asset->category_id,
                 'name' => $itemName,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            // 4. Update Asset Assignment
-            $distUpdate = ['updated_at' => now()];
-            if (array_key_exists('property_number', $validated)) $distUpdate['property_number'] = $validated['property_number'];
-            if (array_key_exists('employee_id', $validated)) $distUpdate['employee_id'] = $validated['employee_id'];
-
-            DB::table('asset_assignments')->where('id', $id)->update($distUpdate);
-
-            // 5. Update Asset Source (Description, Item link, etc.)
-            $modeName = trim($validated['mode_of_acquisition']);
-            $modeId = DB::table('procurement_modes')->whereRaw('LOWER(name) = ?', [strtolower($modeName)])->value('id');
-            if (!$modeId) {
-                $modeId = DB::table('procurement_modes')->insertGetId([
-                    'name' => $modeName,
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ]);
-            }
-
+            // Update Asset Source
             DB::table('asset_sources')->where('id', $asset->asset_source_id)->update([
                 'item_id' => $finalItemId,
                 'description' => $validated['description'],
-                'quantity' => $validated['quantity'],
-                'asset_cost' => $validated['asset_cost'],
-                'acquisition_source_id' => $validated['acquisition_source_id'],
-                'procurement_mode_id' => $modeId,
                 'condition' => $validated['condition'],
                 'updated_at' => now(),
             ]);
@@ -515,18 +472,18 @@ class AssetController extends Controller
                 'user' => $user ? $user->name : 'System',
                 'action_type' => 'UPDATE',
                 'module' => 'Assets',
-                'activity' => 'Updated specifications for asset ID ' . $id,
+                'activity' => 'Updated specifications (item, description, & condition) for asset ID ' . $id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
 
-            $propNoStr = isset($validated['property_number']) ? '[' . $validated['property_number'] . '] ' : '';
+            $propNoStr = $asset->property_number ? '[' . $asset->property_number . '] ' : '';
             $empName = 'Unassigned';
-            if (isset($validated['employee_id'])) {
-                $empName = DB::table('employees')->where('id', $validated['employee_id'])->value(DB::raw("CONCAT(first_name, ' ', last_name)")) ?: 'Unassigned';
+            if ($asset->employee_id) {
+                $empName = DB::table('employees')->where('id', $asset->employee_id)->value(DB::raw("CONCAT(first_name, ' ', last_name)")) ?: 'Unassigned';
             }
-            $qty = $validated['quantity'] ?? 1;
-            $uom = DB::table('asset_sources')->where('id', $asset->asset_source_id)->value('unit_of_measurement') ?? 'Unit';
+            $qty = $asset->quantity ?? 1;
+            $uom = $asset->unit_of_measurement ?? 'Unit';
 
             $detailedMessage = "Edited {$qty} {$uom} {$propNoStr}{$itemName} assigned to {$empName}.";
 
@@ -579,6 +536,7 @@ class AssetController extends Controller
             // Update Asset Assignment
             DB::table('asset_assignments')->where('id', $id)->update([
                 'employee_id' => $validated['employee_id'],
+                'acquisition_date' => $validated['transfer_date'] ?? now()->toDateString(),
                 'updated_at' => now(),
             ]);
 
@@ -668,9 +626,12 @@ class AssetController extends Controller
                 'updated_at' => now(),
             ]);
 
+            $source = DB::table('asset_sources')->where('id', $asset->asset_source_id)->first();
+
             // Nullify employee_id
             DB::table('asset_assignments')->where('id', $id)->update([
                 'employee_id' => null,
+                'acquisition_date' => $source->acceptance_date ?? now()->toDateString(),
                 'updated_at' => now(),
             ]);
 
@@ -680,7 +641,6 @@ class AssetController extends Controller
                 'updated_at' => now(),
             ]);
 
-            $source = DB::table('asset_sources')->where('id', $asset->asset_source_id)->first();
             $itemName = DB::table('items')->where('id', $source->item_id)->value('name');
             $uom = $source->unit_of_measurement ?? 'Unit';
             $qty = $source->quantity ?? 1;
@@ -699,6 +659,101 @@ class AssetController extends Controller
         });
 
         return redirect()->route('assets.profile', $id)->with('success', 'Asset successfully returned to AMU / Warehouse!');
+    }
+
+    public function returnSource(Request $request, $id)
+    {
+        if (!Auth::check() || !Auth::user()->approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $validated = $request->validate([
+            'return_date' => 'required|date',
+            'condition' => 'required|string|in:Good Condition,Needs Repair,Unserviceable',
+            'remarks' => 'nullable|string|max:1000',
+        ]);
+
+        $asset = DB::table('asset_assignments as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->join('acquisition_sources', 'asrc.acquisition_source_id', '=', 'acquisition_sources.id')
+            ->where('ad.id', $id)
+            ->select('ad.*', 'asrc.warranty', 'asrc.acceptance_date', 'acquisition_sources.name as source_name', 'asrc.id as asset_source_id')
+            ->first();
+
+        if (!$asset) {
+            return back()->with('error', 'Asset not found');
+        }
+
+        // Warranty validation: CANNOT be returned to source if warranty is expired OR has no warranty, AND condition is Needs Repair
+        $warrantyMonths = $asset->warranty ?? 0;
+        $startDate = $asset->acceptance_date ? \Carbon\Carbon::parse($asset->acceptance_date) : null;
+        $hasNoWarranty = ($warrantyMonths <= 0 || !$startDate);
+        $isExpired = false;
+        if (!$hasNoWarranty && $startDate) {
+            $warrantyEndDate = $startDate->copy()->addMonths($warrantyMonths);
+            $isExpired = now()->greaterThanOrEqualTo($warrantyEndDate);
+        }
+
+        if (($hasNoWarranty || $isExpired) && $validated['condition'] === 'Needs Repair') {
+            return back()->with('error', 'Unable to initiate Return to Source: This item requires repair, but its warranty has expired or is unavailable.');
+        }
+
+        DB::transaction(function () use ($id, $asset, $validated) {
+            // Resolve current office_id from the employee
+            $currentOfficeId = null;
+            if ($asset->employee_id) {
+                $currentEmployee = DB::table('employees')->where('id', $asset->employee_id)->first();
+                if ($currentEmployee) {
+                    $currentOfficeId = $currentEmployee->office_id;
+                }
+            }
+
+            // Log the return to source transfer
+            DB::table('asset_transfers')->insert([
+                'asset_assignment_id' => $id,
+                'from_office_id' => $currentOfficeId,
+                'to_office_id' => null,
+                'from_custodian_id' => $asset->employee_id,
+                'to_custodian_id' => null,
+                'transfer_date' => $validated['return_date'],
+                'transfer_type' => 'Return to Source',
+                'remarks' => $validated['remarks'],
+                'authorized_by' => Auth::id() ?? 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Nullify employee_id on asset_assignments
+            DB::table('asset_assignments')->where('id', $id)->update([
+                'employee_id' => null,
+                'updated_at' => now(),
+            ]);
+
+            // Update condition in asset_sources
+            DB::table('asset_sources')->where('id', $asset->asset_source_id)->update([
+                'condition' => $validated['condition'],
+                'updated_at' => now(),
+            ]);
+
+            $source = DB::table('asset_sources')->where('id', $asset->asset_source_id)->first();
+            $itemName = DB::table('items')->where('id', $source->item_id)->value('name');
+            $uom = $source->unit_of_measurement ?? 'Unit';
+            $qty = $source->quantity ?? 1;
+            $propNoStr = $asset->property_number ? '[' . $asset->property_number . '] ' : '';
+            $detailedMessage = "Returned {$qty} {$uom} {$propNoStr}{$itemName} to Source: {$asset->source_name}.";
+
+            $admins = \App\Models\User::where('approved', true)->get();
+            $dummyAsset = (object)[
+                'title' => 'Asset Returned to Source',
+                'message' => "An asset has been returned to its source: {$asset->source_name}.",
+                'detailed_message' => $detailedMessage
+            ];
+            foreach ($admins as $admin) {
+                $admin->notify(new \App\Notifications\AssetReturnedNotification($dummyAsset));
+            }
+        });
+
+        return redirect()->route('assets.profile', $id)->with('success', 'Asset successfully returned to Source!');
     }
 
     public function getSchoolAssets($id)

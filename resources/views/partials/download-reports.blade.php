@@ -289,17 +289,28 @@
                                 <th class="px-4 py-4">#</th>
                                 <th class="px-4 py-4">Region</th>
                                 <th class="px-4 py-4">Division</th>
-                                <th class="px-4 py-4">School Type</th>
+                                <th class="px-4 py-4">Office/School Type</th>
                                 <th class="px-4 py-4">School ID</th>
                                 <th class="px-4 py-4">School Name</th>
-                                <th class="px-4 py-4 text-slate-900">Article</th>
-                                <th class="px-4 py-4">Description</th>
                                 <th class="px-4 py-4">Classification</th>
+                                <th class="px-4 py-4">Category</th>
+                                <th class="px-4 py-4 text-slate-900">Item</th>
+                                <th class="px-4 py-4">Description</th>
+                                <th class="px-4 py-4">Unit of Measurement</th>
+                                <th class="px-4 py-4 text-right">Cost per Unit</th>
+                                <th class="px-4 py-4 text-center">Quantity</th>
+                                <th class="px-4 py-4 text-center">Useful Life (Yrs)</th>
+                                <th class="px-4 py-4 text-[#c00000]">Property Number</th>
                                 <th class="px-4 py-4">Occupancy</th>
                                 <th class="px-4 py-4">Location</th>
-                                <th class="px-4 py-4">Acq. Date</th>
-                                <th class="px-4 py-4 text-[#c00000]">Property No.</th>
-                                <th class="px-4 py-4 text-right">Cost</th>
+                                <th class="px-4 py-4">Source of Acquisition</th>
+                                <th class="px-4 py-4">Mode of Acquisition</th>
+                                <th class="px-4 py-4">Source Personnel</th>
+                                <th class="px-4 py-4">Contact Position</th>
+                                <th class="px-4 py-4 text-right">Total Cost</th>
+                                <th class="px-4 py-4">Acceptance Date</th>
+                                <th class="px-4 py-4">Acquisition Date</th>
+                                <th class="px-4 py-4">Remarks (Condition)</th>
                             </tr>
                         </thead>
                         <tbody class="text-xs">
@@ -308,21 +319,32 @@
                                     <td class="px-4 py-3 text-[10px] font-black text-slate-400" x-text="(currentPage - 1) * itemsPerPage + index + 1"></td>
                                     <td class="px-4 py-3 text-slate-500" x-text="row.region"></td>
                                     <td class="px-4 py-3 text-slate-500" x-text="row.division"></td>
-                                    <td class="px-4 py-3 text-slate-500" x-text="row.office_school_type"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.school_type"></td>
                                     <td class="px-4 py-3 text-slate-500" x-text="row.school_id"></td>
                                     <td class="px-4 py-3 font-bold text-slate-700" x-text="row.office_school_name"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.classification"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.category"></td>
                                     <td class="px-4 py-3 font-black text-slate-900" x-text="row.article"></td>
                                     <td class="px-4 py-3 text-slate-500 text-[10px] truncate max-w-[200px]" :title="row.description" x-text="row.description"></td>
-                                    <td class="px-4 py-3 text-slate-500" x-text="row.classification"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.unit_of_measurement"></td>
+                                    <td class="px-4 py-3 text-right" x-text="'₱' + parseFloat(row.asset_cost || 0).toLocaleString('en-US', {minimumFractionDigits: 2})"></td>
+                                    <td class="px-4 py-3 text-center" x-text="row.quantity"></td>
+                                    <td class="px-4 py-3 text-center" x-text="row.estimated_useful_life"></td>
+                                    <td class="px-4 py-3 font-black text-[#c00000]" x-text="row.property_number"></td>
                                     <td class="px-4 py-3 text-slate-500 text-[10px]" x-text="row.nature_of_occupancy"></td>
                                     <td class="px-4 py-3 text-slate-500" x-text="row.location"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.acq_source"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.mode_of_acquisition"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.source_personnel"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.personnel_position"></td>
+                                    <td class="px-4 py-3 font-black text-right" x-text="'₱' + parseFloat(row.acquisition_cost || 0).toLocaleString('en-US', {minimumFractionDigits: 2})"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.acceptance_date"></td>
                                     <td class="px-4 py-3 text-slate-500" x-text="row.acquisition_date"></td>
-                                    <td class="px-4 py-3 font-black text-[#c00000]" x-text="row.property_number"></td>
-                                    <td class="px-4 py-3 font-black text-right" x-text="'₱' + parseFloat(row.acquisition_cost).toLocaleString('en-US', {minimumFractionDigits: 2})"></td>
+                                    <td class="px-4 py-3 text-slate-500" x-text="row.remarks"></td>
                                 </tr>
                             </template>
                             <tr x-show="previewRows.length === 0 && !loading">
-                                <td colspan="14" class="px-4 py-12 text-center text-slate-400 text-xs font-bold uppercase tracking-widest italic">No matching records found. Adjust your filters.</td>
+                                <td colspan="25" class="px-4 py-12 text-center text-slate-400 text-xs font-bold uppercase tracking-widest italic">No matching records found. Adjust your filters.</td>
                             </tr>
                         </tbody>
                     </table>

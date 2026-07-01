@@ -28,7 +28,7 @@
             <div>
                 <div class="flex items-center gap-3 mb-6">
                     <div class="w-6 h-6 bg-amber-500/10 text-amber-600 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0">1</div>
-                    <h4 class="font-black text-slate-800 uppercase tracking-widest text-xs">Asset Data Entry (Source)</h4>
+                    <h4 class="font-black text-slate-800 uppercase tracking-widest text-xs">Asset Data Entry</h4>
                 </div>
                 <div class="grid grid-cols-2 gap-x-6 gap-y-5">
                     <div class="relative col-identity p-1 rounded-2xl" style="position:relative;overflow:visible">
@@ -48,21 +48,33 @@
                     <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Item</label><input type="text" id="bItem" data-col="item" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
                     <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Description</label><input type="text" id="bDescription" data-col="description" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
                     <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Unit of Measurement</label><input type="text" id="bUom" data-col="uom" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="e.g. Unit, Set, Pcs"></div>
-                    <div class="relative col-status p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Mode of Procurement</label><input type="text" id="bMode" data-col="mode" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="e.g. Public Bidding"></div>
-                    <div class="relative col-personnel p-1 rounded-2xl" style="position:relative;overflow:visible">
-                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Source Personnel</label>
-                        <input type="text" id="bPersonnel" data-col="personnel" autocomplete="off" 
-                            oninput="filterBulkPersonnelDropdown(this.value)" onfocus="filterBulkPersonnelDropdown(this.value)"
-                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select">
-                        <div id="bulk-personnel-dd" class="xls-custom-dd" style="display:none; width:100%;"></div>
+                    <div class="relative col-status p-1 rounded-2xl" style="position:relative;overflow:visible">
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Mode of Procurement</label>
+                        <input type="text" id="bMode" data-col="mode" autocomplete="off" 
+                            oninput="filterBulkModeDropdown(this.value)" onfocus="filterBulkModeDropdown(this.value)"
+                            class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="e.g. Public Bidding">
+                        <div id="bulk-mode-dd" class="xls-custom-dd" style="display:none; width: 100%;"></div>
                     </div>
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Personnel Position</label><input type="text" id="bPosition" data-col="position" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
-                    <div class="relative col-financial p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Cost per Unit</label><input type="number" id="bCost" oninput="calcBulkCost()" class="xls-input !border border-slate-100 rounded-xl text-right bg-transparent" placeholder="1" min="0" step="0.01"></div>
+                    <div class="relative col-status p-1 rounded-2xl" style="position:relative;overflow:visible">
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Source</label>
+                        <div class="relative w-full h-full">
+                            <input type="text" id="bSource" data-col="source" autocomplete="off" 
+                                oninput="filterBulkSourceDropdown(this.value); document.getElementById('bSourceClear').style.display = this.value ? 'block' : 'none';" onfocus="filterBulkSourceDropdown(this.value)"
+                                class="xls-input w-full pr-8 !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Source...">
+                            <button type="button" id="bSourceClear" onclick="clearBulkSource()" style="display:none;" class="absolute right-2 top-1/2 -translate-y-1/2 p-[4.4px] text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all cursor-pointer">
+                                <svg class="w-[17.6px] h-[17.6px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                        <div id="bulk-source-dd" class="xls-custom-dd" style="display:none; width:100%;"></div>
+                    </div>
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Source Personnel</label><input type="text" id="bPersonnel" data-col="personnel" autocomplete="off" readonly class="xls-input !border border-slate-100 rounded-xl bg-slate-50 cursor-not-allowed text-slate-500" placeholder="Auto-filled"></div>
+                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Personnel Position</label><input type="text" id="bPosition" data-col="position" autocomplete="off" readonly class="xls-input !border border-slate-100 rounded-xl bg-slate-50 cursor-not-allowed text-slate-500" placeholder="Auto-filled"></div>
+                    <div class="relative col-financial p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Cost per Unit (₱)</label><input type="number" id="bCost" oninput="calcBulkCost()" class="xls-input !border border-slate-100 rounded-xl text-right bg-transparent" placeholder="0.00" min="0" step="0.01"></div>
                     <div class="relative col-financial p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Quantity</label><input type="number" id="bQty1" oninput="calcBulkCost()" class="xls-input !border border-slate-100 rounded-xl text-right bg-transparent" placeholder="1" min="0" step="1"></div>
-                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Expected Useful Life</label><input type="number" id="bLife" class="xls-input !border border-slate-100 rounded-xl text-right bg-transparent" placeholder="1" min="0" step="1"></div>
-                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acceptance Date</label><input type="date" id="bDate1" class="xls-input !border border-slate-100 rounded-xl bg-transparent"></div>
+                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Warranty (Mos)</label><input type="number" id="bWarranty" class="xls-input !border border-slate-100 rounded-xl text-right bg-transparent" placeholder="0" min="0" step="1"></div>
+                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Expected Useful Life (Yrs)</label><input type="number" id="bLife" class="xls-input !border border-slate-100 rounded-xl text-right bg-transparent" placeholder="0" min="0" step="1"></div>
                     <div class="relative col-status p-1 rounded-2xl">
-                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Remarks</label>
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Condition</label>
                         <select id="bRemarks" class="xls-input !border border-slate-100 rounded-xl bg-transparent">
                             <option value="">-- Default (Good Condition) --</option>
                             <option value="Good Condition">Good Condition</option>
@@ -70,86 +82,11 @@
                             <option value="Not Useable">Not Useable</option>
                         </select>
                     </div>
+                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Date of Registration</label><input type="date" id="bDate1" class="xls-input !border border-slate-100 rounded-xl bg-transparent"></div>
                 </div>
             </div>
 
-            <div class="border-t border-slate-100"></div>
 
-            {{-- Target Section --}}
-            <div>
-                <div class="flex items-center gap-3 mb-6">
-                    <div class="w-6 h-6 bg-amber-500/10 text-amber-600 rounded-lg flex items-center justify-center text-[10px] font-black shrink-0">2</div>
-                    <h4 class="font-black text-slate-800 uppercase tracking-widest text-xs">Asset Distribution (Target)</h4>
-                </div>
-                <div class="grid grid-cols-2 gap-x-6 gap-y-5">
-                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Region</label>
-                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-white/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Region IX <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
-                    </div>
-                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Division</label>
-                        <div class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-white/50 border border-slate-100 rounded-xl text-slate-900 flex justify-between items-center cursor-not-allowed">Division of Zamboanga City <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
-                    </div>
-                    
-                    <div class="relative col-personnel p-1 rounded-2xl" style="position:relative;overflow:visible">
-                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee Search</label>
-                        <div class="relative w-full h-full">
-                            <input type="text" id="bEmployeeSearch" data-col="employee-search" autocomplete="off" 
-                                oninput="bulkAutofillEmployee(this.value); filterBulkEmpDropdown(this.value); document.getElementById('bEmployeeSearchClear').style.display = this.value ? 'block' : 'none';" onfocus="filterBulkEmpDropdown(this.value)"
-                                class="xls-input w-full pr-8 !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Employee...">
-                            <button type="button" id="bEmployeeSearchClear" onclick="document.getElementById('bEmployeeSearch').value=''; filterBulkEmpDropdown(''); bulkAutofillEmployee(''); this.style.display='none';" style="display:none;" class="absolute right-2 top-1/2 -translate-y-1/2 -mt-1 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all cursor-pointer">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                        </div>
-                        <div id="bulk-emp-dd" class="xls-custom-dd" style="display:none; width:100%;"></div>
-                    </div>
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee ID</label>
-                        <input type="text" id="bEmployeeId" data-col="employee-id" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
-                    </div>
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee Name</label>
-                        <input type="text" id="bEmployeeName" data-col="employee-name" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
-                    </div>
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee Position</label>
-                        <input type="text" id="bEmployeePos" data-col="employee-pos" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
-                    </div>
-                    <div class="relative col-personnel p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee Status</label>
-                        <input type="text" id="bEmployeeStatus" data-col="employee-status" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
-                    </div>
-
-                    <div class="relative col-identity p-1 rounded-2xl" style="position:relative;overflow:visible">
-                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">School/Office Search</label>
-                        <div class="relative w-full h-full">
-                            <input type="text" id="bSchoolSearch" data-col="school-search" autocomplete="off" 
-                                oninput="bulkAutofillLocation(this.value); filterBulkLocDropdown(this.value); document.getElementById('bSchoolClear').style.display = this.value ? 'block' : 'none';" onfocus="filterBulkLocDropdown(this.value)"
-                                class="xls-input w-full pr-8 !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Location...">
-                            <button type="button" id="bSchoolClear" onclick="document.getElementById('bSchoolSearch').value=''; filterBulkLocDropdown(''); bulkAutofillLocation(''); this.style.display='none';" style="display:none;" class="absolute right-2 top-1/2 -translate-y-1/2 -mt-1 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all cursor-pointer">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                        </div>
-                        <div id="bulk-loc-dd" class="xls-custom-dd" style="display:none; width:100%;"></div>
-                    </div>
-                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School ID</label>
-                        <input type="text" id="bSchoolId" data-col="school-id" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
-                    </div>
-                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Type</label>
-                        <input type="text" id="bSchoolType" data-col="school-type" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
-                    </div>
-                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Office/School Name</label>
-                        <input type="text" id="bSchoolName" data-col="school-name" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
-                    </div>
-                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Location</label>
-                        <input type="text" id="bLocation" data-col="location" autocomplete="off" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100 border border-slate-100 rounded-xl text-slate-500 cursor-not-allowed outline-none" readonly tabindex="-1">
-                    </div>
-
-                    <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Property Number</label><input type="text" id="bPropertyNo" oninput="checkBulkPropertyNumber()" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
-                    <div class="relative col-financial p-1 rounded-2xl">
-                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Cost</label>
-                        <div class="relative">
-                            <input type="number" id="bCost2" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-white/30 border border-slate-100 rounded-xl text-slate-900 cursor-not-allowed outline-none text-right pr-10" placeholder="0.00" min="0" step="0.01" readonly tabindex="-1">
-                            <svg class="w-3.5 h-3.5 opacity-50 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                        </div>
-                    </div>
-                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label><input type="date" id="bDate2" class="xls-input !border border-slate-100 rounded-xl bg-transparent"></div>
-                </div>
-            </div>
 
         </div>
     </div>

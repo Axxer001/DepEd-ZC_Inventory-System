@@ -12,6 +12,7 @@ use App\Http\Controllers\AssetController;
 use App\Http\Controllers\BuildingImportController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\AcquisitionSourceController;
 
 // --- Public Routes ---
 Route::middleware('guest')->group(function () {
@@ -49,11 +50,13 @@ Route::middleware(['auth', 'role:super_admin'])->group(function () {
     Route::patch('/admin/users/{id}/unblock', [UserManagementController::class, 'unblock'])->name('admin.users.unblock');
     Route::delete('/admin/users/{id}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
     
-    // Employee Management
-    Route::get('/admin/employee-management', [EmployeeController::class, 'managementIndex'])->name('admin.employee-management');
-    Route::post('/admin/employee-management', [EmployeeController::class, 'store'])->name('admin.employee-management.store');
-    Route::get('/admin/employee-management/{id}', [EmployeeController::class, 'managementProfile'])->name('admin.employee-management.profile');
-    Route::post('/admin/employee-management/{id}/update', [EmployeeController::class, 'update'])->name('admin.employee-management.update');
+    // Employee Management Actions (Super Admin Only)
+    Route::post('/admin/employees', [EmployeeController::class, 'store'])->name('admin.employees.store');
+    Route::post('/admin/employees/{id}/update', [EmployeeController::class, 'update'])->name('admin.employees.update');
+    
+    // Source Management Actions (Super Admin Only)
+    Route::post('/admin/sources', [AcquisitionSourceController::class, 'store'])->name('admin.sources.store');
+    Route::post('/admin/sources/{id}/update', [AcquisitionSourceController::class, 'update'])->name('admin.sources.update');
 });
 
 // --- Protected Admin Routes ---
@@ -72,15 +75,27 @@ Route::middleware('auth')->group(function () {
     })->name('user.dark-mode');
 
     // --- Polymorphic Notifications API ---
-    Route::get('/api/notifications', function () {
+    Route::get('/api/notifications', function (Illuminate\Http\Request $request) {
         $user = auth()->user();
-        $notifications = $user->unreadNotifications;
-        
+        $page = max(1, (int) $request->query('page', 1));
+        $notifications = $user->notifications()->latest()->paginate(20, ['*'], 'page', $page);
+
         return response()->json([
-            'notifications' => $notifications,
-            'unreadCount' => $notifications->count(),
+            'notifications' => $notifications->items(),
+            'unreadCount'   => $user->unreadNotifications()->count(),
+            'pagination'    => [
+                'current_page' => $notifications->currentPage(),
+                'last_page'    => $notifications->lastPage(),
+                'total'        => $notifications->total(),
+            ],
         ]);
     })->name('api.notifications.index');
+
+    Route::post('/api/notifications/read-all', function () {
+        $user = auth()->user();
+        $user->unreadNotifications->markAsRead();
+        return response()->json(['success' => true]);
+    })->name('api.notifications.read_all');
 
     Route::post('/api/notifications/{id}/read', function ($id) {
         $user = auth()->user();
@@ -90,12 +105,6 @@ Route::middleware('auth')->group(function () {
         }
         return response()->json(['success' => true]);
     })->name('api.notifications.read');
-
-    Route::post('/api/notifications/read-all', function () {
-        $user = auth()->user();
-        $user->unreadNotifications->markAsRead();
-        return response()->json(['success' => true]);
-    })->name('api.notifications.read_all');
     
     Route::post('/api/notifications/custom', function (Illuminate\Http\Request $request) {
         if (auth()->user()->role !== 'super_admin') abort(403);
@@ -113,6 +122,37 @@ Route::middleware('auth')->group(function () {
         }
         return response()->json(['success' => true]);
     })->name('api.notifications.custom');
+
+    // --- Global Notice Board API ---
+    Route::post('/api/global-notice', function (Illuminate\Http\Request $request) {
+        if (auth()->user()->role !== 'super_admin') {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $request->validate([
+            'content' => 'nullable|string',
+            'link' => 'nullable|string',
+            'link_label' => 'nullable|string|max:255',
+            'active' => 'nullable|boolean'
+        ]);
+
+        // Deactivate all previous active notices
+        \App\Models\GlobalNotice::where('active', true)->update(['active' => false]);
+
+        $content = $request->input('content');
+        if (!empty(trim($content ?? ''))) {
+            $notice = \App\Models\GlobalNotice::create([
+                'content' => $content,
+                'link' => $request->input('link'),
+                'link_label' => $request->input('link_label'),
+                'active' => $request->input('active', true) ?? true,
+                'created_by' => auth()->id()
+            ]);
+            return response()->json(['success' => true, 'notice' => $notice]);
+        }
+
+        return response()->json(['success' => true, 'notice' => null]);
+    })->name('api.global-notice.store');
     
     Route::get('/inventory-setup', function () {
         set_time_limit(300);
@@ -139,17 +179,33 @@ Route::middleware('auth')->group(function () {
         // Fetch assignments (asset_assignments)
         $stakeholderOwnerships = DB::table('asset_assignments')->get();
 
-        $allSchools = DB::table('schools')
-            ->select('id', 'school_id', 'name')
-            ->orderBy('name')
-            ->get();
+        $schools = DB::table('schools')->select('id', 'school_id', 'name', 'type', 'location')->get()->map(function($s) {
+            $s->is_office = false;
+            $s->global_id = $s->school_id;
+            return $s;
+        });
+        
+        $offices = DB::table('offices')->select('id', 'office_id as school_id', 'name', 'type', 'location')->get()->map(function($o) {
+            $o->is_office = true;
+            $o->global_id = $o->school_id;
+            $o->region = null;
+            $o->division = null;
+            return $o;
+        });
+
+        $allSchools = $schools->concat($offices)->sortBy('name')->values();
 
         $allCustodians = DB::table('employees')
-            ->select('id', 'first_name', 'middle_name', 'last_name', 'position', 'employee_id')
+            ->select('id', 'first_name', 'middle_name', 'last_name', 'position', 'employee_id', 'status', 'school_id', 'office_id')
             ->orderBy('last_name')
             ->get();
 
-        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'allSchools', 'subItems', 'stakeholders', 'stakeholderOwnerships', 'allCustodians'));
+        $inventoryController = app(\App\Http\Controllers\InventorySetupController::class);
+        $unassignedAssets = $inventoryController->getUnassignedAssets(request())->getData(true)['assets'] ?? [];
+        $unassignedBuildings = $inventoryController->getUnassignedBuildings(request())->getData(true)['assets'] ?? [];
+        $procurementModes = DB::table('procurement_modes')->orderBy('name')->get();
+
+        return view('inventory-setup', compact('districts', 'legislativeDistricts', 'quadrants', 'categories', 'items', 'allSchools', 'subItems', 'stakeholders', 'stakeholderOwnerships', 'allCustodians', 'unassignedAssets', 'unassignedBuildings', 'procurementModes'));
     })->name('inventory.setup')->middleware('role:super_admin,admin');
 
 
@@ -163,11 +219,9 @@ Route::middleware('auth')->group(function () {
         return view('admin.offices');
     })->name('admin.offices');
 
-    // --- Acquisition Source Registry ---
-    Route::get('/admin/supplier-contacts', [\App\Http\Controllers\AcquisitionContactController::class, 'index'])->name('admin.supplier_contacts');
-    Route::get('/api/supplier-contacts/filters', [\App\Http\Controllers\AcquisitionContactController::class, 'getFilters'])->name('api.supplier_contacts.filters');
-    Route::post('/api/supplier-contacts/preview', [\App\Http\Controllers\AcquisitionContactController::class, 'getPreview'])->name('api.supplier_contacts.preview');
-    Route::get('/admin/supplier-contacts/{id}', [\App\Http\Controllers\AcquisitionContactController::class, 'profile'])->name('supplier_contacts.profile');
+    // --- Sources Registry ---
+    Route::get('/admin/sources', [AcquisitionSourceController::class, 'managementIndex'])->name('admin.sources');
+    Route::get('/admin/sources/{id}', [AcquisitionSourceController::class, 'managementProfile'])->name('admin.sources.profile');
 
     // --- Employee (formerly Custodian) Registry ---
     Route::get('/admin/employees', [EmployeeController::class, 'index'])->name('admin.employees');
@@ -177,11 +231,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/classifications/search', [EmployeeController::class, 'searchClassifications'])->name('api.classifications.search');
     Route::get('/api/categories/search', [EmployeeController::class, 'searchCategories'])->name('api.categories.search');
     Route::get('/api/acquisition-sources/search', [EmployeeController::class, 'searchAcquisitionSources'])->name('api.acquisition_sources.search');
+    Route::get('/api/acquisition-sources/list', [AcquisitionSourceController::class, 'apiSearch'])->name('api.acquisition_sources.list');
 
     Route::post('/api/employees/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansPreview'])->name('api.employees.preview');
     Route::get('/api/employees/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansFilterOptions'])->name('api.employees.filters');
     Route::get('/admin/employees/{id}', [EmployeeController::class, 'profile'])->name('employees.profile');
     Route::get('/admin/custodians/{id}', [EmployeeController::class, 'profile'])->name('custodians.profile');
+    Route::post('/admin/employees/{id}/photo', [EmployeeController::class, 'uploadPhoto'])->name('admin.employees.photo.upload');
 
 
 
@@ -224,6 +280,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/assets/{id}/update', [AssetController::class, 'update'])->name('assets.update')->middleware('role:super_admin,admin');
     Route::post('/assets/{id}/transfer', [AssetController::class, 'transfer'])->name('assets.transfer')->middleware('role:super_admin,admin');
     Route::post('/assets/{id}/return', [AssetController::class, 'returnAmu'])->name('assets.return')->middleware('role:super_admin,admin');
+    Route::post('/assets/{id}/return-source', [AssetController::class, 'returnSource'])->name('assets.return_source')->middleware('role:super_admin,admin');
     Route::post('/assets/{id}/photo', [AssetController::class, 'uploadPhoto'])->name('assets.photo.upload')->middleware('role:super_admin,admin');
     Route::delete('/assets/{id}/photo', [AssetController::class, 'removePhoto'])->name('assets.photo.remove')->middleware('role:super_admin,admin');
     Route::post('/assets/{id}/document', [AssetController::class, 'uploadDocument'])->name('assets.document.upload')->middleware('role:super_admin,admin');
@@ -416,8 +473,25 @@ Route::middleware('auth')->group(function () {
         $allSchools = DB::table('schools')->select('id', 'school_id', 'name')->orderBy('name')->get();
         return view('register-item', compact('categories', 'items', 'stakeholders', 'subItems', 'allSchools'));
     })->name('register.item');
+    
+    Route::get('/assign-asset', function () {
+        return redirect()->route('inventory.setup');
+    })->name('assign.asset');
+
+    Route::get('/assign-building', function () {
+        return redirect()->route('inventory.setup');
+    })->name('assign.building');
+
     Route::post('/register-item', [InventorySetupController::class, 'storeItem'])->name('register.item.store');
     Route::post('/inventory-setup/batch', [InventorySetupController::class, 'storeBatch'])->name('inventory.setup.storeBatch');
+    
+    Route::get('/api/unassigned-assets', [InventorySetupController::class, 'getUnassignedAssets'])->name('api.unassigned_assets');
+    Route::post('/assign-asset', [InventorySetupController::class, 'assignItem'])->name('assign_asset.store');
+    Route::post('/assign-asset/batch', [InventorySetupController::class, 'assignBatch'])->name('assign_asset.storeBatch');
+    
+    Route::get('/api/unassigned-buildings', [InventorySetupController::class, 'getUnassignedBuildings'])->name('api.unassigned_buildings');
+    Route::post('/assign-building/batch', [InventorySetupController::class, 'assignBuildingBatch'])->name('assign_building.storeBatch');
+
     Route::post('/api/recipients/add', [\App\Http\Controllers\RecipientRegistryController::class, 'add'])->name('recipients.add');
 
 });

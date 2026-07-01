@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AcquisitionSource extends Model
 {
-    protected $fillable = ['name', 'source_type'];
+    protected $fillable = ['name', 'source_type', 'contact_person', 'contact_position'];
 
     public function assetSources(): HasMany
     {

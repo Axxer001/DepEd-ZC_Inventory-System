@@ -26,22 +26,22 @@ class ReportDownloadController extends Controller
                 ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')
                 ->leftJoin('acquisition_sources', 'asset_sources.acquisition_source_id', '=', 'acquisition_sources.id')
                 ->leftJoin('procurement_modes as pm', 'asset_sources.procurement_mode_id', '=', 'pm.id')
-                ->leftJoin('acquisition_contacts as ac', 'asset_sources.acquisition_contact_id', '=', 'ac.id')
                 ->select(
                     'asset_sources.*',
+                    'asset_sources.condition as remarks',
                     'items.name as article',
                     'categories.name as category',
                     'classifications.name as classification',
                     'acquisition_sources.name as acq_source',
                     'pm.name as mode_of_acquisition',
-                    'ac.name as source_personnel',
-                    'ac.position as personnel_position',
+                    'acquisition_sources.contact_person as source_personnel',
+                    'acquisition_sources.contact_position as personnel_position',
                     DB::raw('(asset_sources.asset_cost * asset_sources.quantity) as acquisition_cost'),
                     DB::raw("'Region IX' as region"),
                     DB::raw("'Division of Zamboanga City' as division"),
-                    DB::raw("NULL as office_school_type"),
+                    DB::raw("NULL as school_type"),
                     DB::raw("NULL as school_id"),
-                    DB::raw("NULL as location"),
+                    DB::raw("NULL as office_school_name"),
                     DB::raw("NULL as nature_of_occupancy"),
                     DB::raw("NULL as location"),
                     DB::raw("NULL as property_number"),
@@ -55,7 +55,6 @@ class ReportDownloadController extends Controller
                 ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')
                 ->leftJoin('acquisition_sources', 'asset_sources.acquisition_source_id', '=', 'acquisition_sources.id')
                 ->leftJoin('procurement_modes as pm', 'asset_sources.procurement_mode_id', '=', 'pm.id')
-                ->leftJoin('acquisition_contacts as ac', 'asset_sources.acquisition_contact_id', '=', 'ac.id')
                 ->leftJoin('employees as cus', 'asset_assignments.employee_id', '=', 'cus.id')
                 ->leftJoin('offices', 'cus.office_id', '=', 'offices.id')
                 ->leftJoin('schools', 'cus.school_id', '=', 'schools.id')
@@ -67,6 +66,7 @@ class ReportDownloadController extends Controller
                     DB::raw('COALESCE(schools.type, offices.type) as school_type'),
                     DB::raw('COALESCE(schools.name, offices.name) as office_school_name'),
                     DB::raw('COALESCE(schools.location, offices.location) as location'),
+                    DB::raw("NULL as nature_of_occupancy"),
                     'asset_sources.description',
                     'asset_sources.unit_of_measurement',
                     'asset_sources.asset_cost',
@@ -74,8 +74,8 @@ class ReportDownloadController extends Controller
                     'asset_sources.quantity as source_qty',
                     'asset_sources.estimated_useful_life',
                     'pm.name as mode_of_acquisition',
-                    'ac.name as source_personnel',
-                    'ac.position as personnel_position',
+                    'acquisition_sources.contact_person as source_personnel',
+                    'acquisition_sources.contact_position as personnel_position',
                     'asset_sources.acceptance_date',
                     'asset_sources.condition as remarks',
                     'items.name as article',
@@ -218,7 +218,7 @@ class ReportDownloadController extends Controller
             elseif ($eCol === 'mode_of_acquisition') $dbCol = 'pm.name';
             elseif ($eCol === 'acceptance_date') $dbCol = 'asset_sources.acceptance_date';
             elseif ($eCol === 'useful_life') $dbCol = 'asset_sources.estimated_useful_life';
-            elseif ($eCol === 'personnel') $dbCol = 'ac.name';
+            elseif ($eCol === 'personnel') $dbCol = 'acquisition_sources.contact_person';
             elseif ($eCol === 'condition') $dbCol = 'asset_sources.condition';
             
             // Distribution-specific columns
@@ -311,7 +311,6 @@ class ReportDownloadController extends Controller
         $type = $request->input('report_type');
 
         $baseQuery = DB::table('asset_sources')
-            ->join('asset_assignments', 'asset_sources.id', '=', 'asset_assignments.asset_source_id')
             ->leftJoin('items', 'asset_sources.item_id', '=', 'items.id')
             ->leftJoin('categories', 'items.category_id', '=', 'categories.id')
             ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')
@@ -327,8 +326,33 @@ class ReportDownloadController extends Controller
         $classifications = (clone $baseQuery)->whereNotNull('classifications.name')->pluck('classifications.name')->unique()->sort()->values();
         $categories = (clone $baseQuery)->whereNotNull('categories.name')->pluck('categories.name')->unique()->sort()->values();
         $items = (clone $baseQuery)->whereNotNull('items.name')->pluck('items.name')->unique()->sort()->values();
-        $schools = DB::table('schools')->whereNotNull('name')->where('name', '!=', '')->pluck('name')->unique()->sort()->values();
-        $offices = DB::table('offices')->whereNotNull('name')->where('name', '!=', '')->pluck('name')->unique()->sort()->values();
+
+        // Get schools that actually have assigned assets of this type
+        $schoolsQuery = DB::table('asset_assignments')
+            ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+            ->join('employees as e', 'asset_assignments.employee_id', '=', 'e.id')
+            ->join('schools as s', 'e.school_id', '=', 's.id');
+
+        if ($type === 'RPCPPE') {
+            $schoolsQuery->where('asset_sources.asset_cost', '>=', 50000);
+        } elseif ($type === 'RPCSP') {
+            $schoolsQuery->where('asset_sources.asset_cost', '<', 50000);
+        }
+        $schools = $schoolsQuery->whereNotNull('s.name')->where('s.name', '!=', '')->pluck('s.name')->unique()->sort()->values();
+
+        // Get offices that actually have assigned assets of this type
+        $officesQuery = DB::table('asset_assignments')
+            ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+            ->join('employees as e', 'asset_assignments.employee_id', '=', 'e.id')
+            ->join('offices as o', 'e.office_id', '=', 'o.id');
+
+        if ($type === 'RPCPPE') {
+            $officesQuery->where('asset_sources.asset_cost', '>=', 50000);
+        } elseif ($type === 'RPCSP') {
+            $officesQuery->where('asset_sources.asset_cost', '<', 50000);
+        }
+        $offices = $officesQuery->whereNotNull('o.name')->where('o.name', '!=', '')->pluck('o.name')->unique()->sort()->values();
+
         $quadrants = DB::table('quadrants')->whereNotNull('name')->where('name', '!=', '')->pluck('name')->unique()->sort()->values();
         $districts = DB::table('districts')->whereNotNull('name')->where('name', '!=', '')->pluck('name')->unique()->sort()->values();
         $sources = (clone $baseQuery)->whereNotNull('acquisition_sources.name')->pluck('acquisition_sources.name')->unique()->sort()->values();
@@ -458,9 +482,9 @@ class ReportDownloadController extends Controller
                 
                 $sheet->setCellValue('A' . $currentRow, $row->region);
                 $sheet->setCellValue('B' . $currentRow, $row->division);
-                $sheet->setCellValue('C' . $currentRow, $row->office_school_type);
+                $sheet->setCellValue('C' . $currentRow, $row->school_type);
                 $sheet->setCellValue('D' . $currentRow, $row->school_id);
-                $sheet->setCellValue('E' . $currentRow, $row->location);
+                $sheet->setCellValue('E' . $currentRow, $row->office_school_name);
                 $sheet->setCellValue('F' . $currentRow, $row->classification);
                 $sheet->setCellValue('G' . $currentRow, $row->category);
                 $sheet->setCellValue('H' . $currentRow, $row->article);

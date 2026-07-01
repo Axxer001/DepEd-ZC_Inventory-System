@@ -122,61 +122,52 @@
                     </div>
                 </div>
             </div>
-
-            <a href="{{ route('admin.employees') }}" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 uppercase tracking-widest hover:border-deped hover:text-deped hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group shrink-0">
-                <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
-                Back to Registry
-            </a>
+            <div class="flex items-center gap-3 shrink-0">
+                @if(auth()->check() && auth()->user()->isSuperAdmin())
+                <button onclick="openEditEmployeeModal()" class="px-5 py-2.5 bg-red-700 text-white border border-red-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-800 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-md shadow-red-500/20 flex items-center gap-2 group">
+                    <svg class="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.89 1.12l-2.828.941.941-2.828a4.5 4.5 0 011.12-1.89L16.862 4.487zM19.5 7.125L16.862 4.487"/></svg>
+                    Edit Employee
+                </button>
+                @endif
+                <a href="{{ route('admin.employees') }}" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 uppercase tracking-widest hover:border-deped hover:text-deped hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group shrink-0">
+                    <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+                    Back to Registry
+                </a>
+            </div>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-grow pb-10">
 
             {{-- ===== LEFT SIDEBAR ===== --}}
-            <aside class="lg:col-span-3 flex flex-col gap-5 anim-1">
+            <aside class="lg:col-span-3 flex flex-col gap-5 anim-1 z-40 relative">
+                <form action="{{ route('admin.employees.photo.upload', $custodian->id) }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible flex flex-col relative" x-data="{ photoPreview: null, showPhotoConfirmModal: false, isHoveringImage: false }">
+                    @csrf
+                    <div class="aspect-square bg-slate-50 border-b border-slate-100 flex items-center justify-center p-6 relative group rounded-t-2xl overflow-hidden" @mouseenter="isHoveringImage = true" @mouseleave="isHoveringImage = false">
+                        <input type="file" name="photo" id="photo-upload" class="hidden" accept="image/*" capture="environment" @change="
+                            const file = $event.target.files[0]; 
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onload = (e) => photoPreview = e.target.result;
+                                reader.readAsDataURL(file);
+                            }
+                        ">
+                        <img :src="photoPreview || '{{ $custodian->photo_path ? asset('storage/' . $custodian->photo_path) : asset('images/employee.png') }}'" alt="Profile Photo" class="w-full h-full object-cover rounded-xl transition-transform duration-500 cursor-pointer" :class="(photoPreview || '{{ $custodian->photo_path }}') ? 'opacity-100 scale-100 group-hover:scale-105' : 'opacity-50 group-hover:scale-105'" @click="if(!photoPreview && '{{ $custodian->photo_path }}') showImageFullscreen = true" onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($custodian->first_name . ' ' . $custodian->last_name) }}&background=fef2f2&color=c00000&size=256'">
+                        
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4 pointer-events-none rounded-t-2xl">
+                            <label x-show="!photoPreview" for="photo-upload" class="w-full py-2.5 bg-white/90 backdrop-blur-md rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-800 hover:bg-white shadow-lg text-center cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 pointer-events-auto">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                <span>{{ $custodian->photo_path ? 'Change Photo' : 'Upload Photo' }}</span>
+                            </label>
 
-                {{-- Info Card --}}
-                <div class="glass-card p-5 space-y-5">
-                    <div>
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.18em] mb-3">Personnel Details</p>
-                        <div class="space-y-3">
-                            @foreach([
-                                ['icon' => 'M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z', 'label' => 'Full Name', 'value' => $custodian->first_name . ' ' . ($custodian->middle_name ?? '') . ' ' . $custodian->last_name],
-                                ['icon' => 'M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.17-.789 3.376 3.376 0 0 1 6.34 0Z', 'label' => 'Employee ID', 'value' => $custodian->employee_id ?: '—'],
-                                ['icon' => 'M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z', 'label' => 'Contact', 'value' => $custodian->contact_number ?? '—'],
-                                ['icon' => 'M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 0 0 .75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 0 0-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0 1 12 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 0 1-.673-.38m0 0A2.18 2.18 0 0 1 3 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 0 1 3.413-.387m7.5 0V5.25A2.25 2.25 0 0 0 13.5 3h-3a2.25 2.25 0 0 0-2.25 2.25v.894m7.5 0a48.667 48.667 0 0 0-7.5 0M12 12.75h.008v.008H12v-.008Z', 'label' => 'Position', 'value' => $custodian->position ?? '—'],
-                                ['icon' => 'M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z', 'label' => 'School / Office', 'value' => $schools->first()?->name ?? '—'],
-                            ] as $row)
-                            <div class="flex items-start gap-3">
-                                <div class="w-7 h-7 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center shrink-0">
-                                    <svg class="w-3.5 h-3.5 text-deped" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $row['icon'] }}"/></svg>
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">{{ $row['label'] }}</p>
-                                    <p class="text-[11px] font-black text-slate-800 uppercase leading-tight mt-0.5">{{ trim($row['value']) }}</p>
-                                </div>
-                            </div>
-                            @endforeach
-
-                            {{-- Status — semantic badge, not plain text --}}
-                            @php $isActive = strtolower($custodian->status ?? '') === 'active'; @endphp
-                            <div class="flex items-start gap-3">
-                                <div class="w-7 h-7 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center shrink-0">
-                                    <svg class="w-3.5 h-3.5 text-deped" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Status</p>
-                                    <span class="inline-flex items-center gap-1.5 mt-0.5 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg border
-                                        {{ $isActive ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-slate-500 bg-slate-100 border-slate-200' }}">
-                                        <span class="w-1.5 h-1.5 rounded-full {{ $isActive ? 'bg-emerald-500' : 'bg-slate-400' }}"></span>
-                                        {{ ucfirst($custodian->status ?? 'Unknown') }}
-                                    </span>
-                                </div>
+                            <div x-show="photoPreview" x-cloak class="w-full flex gap-2 pointer-events-auto">
+                                <button type="button" @click="photoPreview = null; document.getElementById('photo-upload').value = ''" class="flex-1 py-2.5 bg-white/90 backdrop-blur-md text-slate-700 hover:bg-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm transition-all active:scale-95">Cancel</button>
+                                <button type="submit" class="flex-[2] py-2.5 bg-deped hover:bg-red-800 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-600/30 transition-all active:scale-95">Save Photo</button>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Stats --}}
-                    <div class="pt-4 border-t border-slate-100 space-y-3">
+                    {{-- Stats & Schools --}}
+                    <div class="p-5 space-y-4">
                         <div class="stat-card bg-deped_light border border-red-100">
                             <p class="text-[9px] font-black text-deped uppercase tracking-[0.16em] mb-1">Assets in Custody</p>
                             <p class="text-3xl font-black text-deped leading-none">{{ $stats->total_assets }}</p>
@@ -187,44 +178,88 @@
                             <p class="text-xl font-black text-emerald-700 leading-none italic">₱ {{ number_format($stats->total_value, 2) }}</p>
                             <p class="text-[9px] font-bold text-emerald-600/50 mt-1.5 uppercase">Cumulative Cost</p>
                         </div>
-                    </div>
 
-                    {{-- Schools --}}
-                    @if($schools->count() > 0)
-                    <div class="pt-4 border-t border-slate-100">
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.18em] mb-3">Assigned School(s)</p>
-                        <div class="space-y-2">
-                            @foreach($schools as $school)
-                            <div class="flex items-center justify-between px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl">
-                                <p class="text-[10px] font-bold text-slate-700 uppercase leading-tight truncate max-w-[140px]">{{ $school->name }}</p>
-                                <span class="text-[9px] font-black text-deped bg-deped_light border border-red-100 px-2 py-0.5 rounded-full shrink-0 ml-2">{{ $school->asset_count }}</span>
+                        @if($schools->count() > 0)
+                        <div class="pt-4 border-t border-slate-100">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.18em] mb-3">Assigned School(s)</p>
+                            <div class="space-y-2">
+                                @foreach($schools as $school)
+                                <div class="flex items-center justify-between px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl">
+                                    <p class="text-[10px] font-bold text-slate-700 uppercase leading-tight truncate max-w-[140px]">{{ $school->name }}</p>
+                                    <span class="text-[9px] font-black text-deped bg-deped_light border border-red-100 px-2 py-0.5 rounded-full shrink-0 ml-2">{{ $school->asset_count }}</span>
+                                </div>
+                                @endforeach
                             </div>
-                            @endforeach
                         </div>
+                        @endif
                     </div>
-                    @endif
-                </div>
-
+                </form>
             </aside>
 
             {{-- ===== MAIN CONTENT ===== --}}
-            <div x-data="{ activeTab: 'assets' }" class="lg:col-span-9 flex flex-col glass-card overflow-hidden anim-2">
+            <div x-data="{ activeTab: 'details' }" class="lg:col-span-9 flex flex-col glass-card overflow-hidden anim-2">
                 {{-- Tabs --}}
-                <div class="flex border-b border-slate-100 bg-slate-50/60 px-3 pt-3">
+                <div class="flex border-b border-slate-100 bg-slate-50/60 px-3 pt-3 overflow-x-auto custom-scroll">
+                    <button @click="activeTab = 'details'"
+                        :class="{'bg-white border-slate-200 border-b-white text-deped shadow-sm': activeTab === 'details', 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-100': activeTab !== 'details'}"
+                        class="px-6 py-3 text-[10px] font-black uppercase tracking-[0.14em] border border-b-0 rounded-t-xl transition-all relative top-[1px] whitespace-nowrap">
+                        Personnel Details
+                    </button>
                     <button @click="activeTab = 'assets'"
                         :class="{'bg-white border-slate-200 border-b-white text-deped shadow-sm': activeTab === 'assets', 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-100': activeTab !== 'assets'}"
-                        class="px-6 py-3 text-[10px] font-black uppercase tracking-[0.14em] border border-b-0 rounded-t-xl transition-all relative top-[1px]">
+                        class="px-6 py-3 text-[10px] font-black uppercase tracking-[0.14em] border border-b-0 rounded-t-xl transition-all relative top-[1px] whitespace-nowrap">
                         Assigned Equipment
                     </button>
                     <button @click="activeTab = 'history'"
                         :class="{'bg-white border-slate-200 border-b-white text-deped shadow-sm': activeTab === 'history', 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-100': activeTab !== 'history'}"
-                        class="px-6 py-3 text-[10px] font-black uppercase tracking-[0.14em] border border-b-0 rounded-t-xl transition-all relative top-[1px]">
-                        Employee History
+                        class="px-6 py-3 text-[10px] font-black uppercase tracking-[0.14em] border border-b-0 rounded-t-xl transition-all relative top-[1px] whitespace-nowrap">
+                        Lifecycle & History
                     </button>
                 </div>
 
-                <div class="p-5 flex-grow overflow-y-auto custom-scroll">
-                    <div x-show="activeTab === 'assets'" class="tab-fade">
+                <div class="p-5 lg:p-8 flex-grow overflow-y-auto custom-scroll">
+                    
+                    {{-- TAB: Personnel Details --}}
+                    <div x-show="activeTab === 'details'" class="tab-fade">
+                        <div>
+                            <h3 class="text-xs font-black text-slate-800 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-deped"></span> Employee Information
+                            </h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-8 bg-slate-50 rounded-xl p-6 border border-slate-100 mb-8">
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Full Name</p>
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $custodian->first_name . ' ' . ($custodian->middle_name ?? '') . ' ' . $custodian->last_name }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Employee ID</p>
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $custodian->employee_id ?? 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Contact No.</p>
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $custodian->contact_number ?? 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Position / Title</p>
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $custodian->position ?? 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Primary School / Office</p>
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $schools->first()?->name ?? 'Unassigned' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Status</p>
+                                    @php $isActive = strtolower($custodian->status ?? '') === 'active'; @endphp
+                                    <span class="inline-flex items-center gap-1.5 mt-1 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg border
+                                        {{ $isActive ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-slate-500 bg-slate-100 border-slate-200' }} ml-1">
+                                        <span class="w-1.5 h-1.5 rounded-full {{ $isActive ? 'bg-emerald-500' : 'bg-slate-400' }}"></span>
+                                        {{ ucfirst($custodian->status ?? 'Unknown') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div x-show="activeTab === 'assets'" class="tab-fade" x-cloak>
                         @php
                             $availableYears = $assets
                                 ->map(fn($a) => $a->acquisition_date ? (int)date('Y', strtotime($a->acquisition_date)) : null)
@@ -294,7 +329,7 @@
                             </div>
                         </div>
 
-                        <div class="space-y-3" id="custodian-asset-list">
+                        <div class="space-y-3 max-h-[600px] overflow-y-auto custom-scroll pr-4" id="custodian-asset-list">
                             @foreach($assets as $asset)
                             @php
                                 $assetTransfers = $transfers->get($asset->id, collect());
@@ -512,8 +547,8 @@
                         </div>
                         @endif
                     </div>
-                    <div x-show="activeTab === 'history'" class="tab-fade" x-cloak>
-                        <div class="space-y-8">
+                    <div x-show="activeTab === 'history'" class="tab-fade h-full flex flex-col" x-cloak>
+                        <div class="space-y-8 flex-1 min-h-0 overflow-y-auto custom-scroll pr-4">
 
                             {{-- ── SECTION 1: Profile Changes ── --}}
                             <div>
@@ -856,4 +891,226 @@
     });
 </script>
 </body>
+<!-- Edit Employee Modal -->
+<div id="editEmployeeModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeEditEmployeeModal()"></div>
+    <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-xl p-8 relative z-10 animate-fade mx-4">
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h3 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Edit Employee</h3>
+                <p class="text-slate-500 text-[11px] font-bold uppercase tracking-widest mt-1">Update personnel details</p>
+            </div>
+            <button onclick="closeEditEmployeeModal()" type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+
+        <form id="editEmployeeForm" action="{{ route('admin.employees.update', $custodian->id) }}" method="POST" class="space-y-5">
+            @csrf
+            <input type="hidden" name="return_assets" id="returnAssetsFlag" value="0">
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">First Name</label>
+                    <input type="text" name="first_name" required value="{{ $custodian->first_name }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Middle Name</label>
+                    <input type="text" name="middle_name" value="{{ $custodian->middle_name }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Last Name</label>
+                    <input type="text" name="last_name" required value="{{ $custodian->last_name }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Employee ID</label>
+                    <input type="text" name="employee_id" required value="{{ $custodian->employee_id }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Position</label>
+                    <input type="text" name="position" value="{{ $custodian->position }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Status</label>
+                    <select name="status" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                        <option value="Active" {{ strtolower($custodian->status ?? '') == 'active' ? 'selected' : '' }}>Active</option>
+                        <option value="Inactive" {{ strtolower($custodian->status ?? '') == 'inactive' ? 'selected' : '' }}>Inactive (Resigned/Retired)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="space-y-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Station Assignment</label>
+
+                <!-- School Selection -->
+                <div id="schoolAssignmentField" class="space-y-1">
+                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Select School</label>
+                    <select name="school_id" id="modalSchoolSelect" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                        <option value="">-- Select a School --</option>
+                    </select>
+                </div>
+
+                <!-- Office Selection -->
+                <div id="officeAssignmentField" class="space-y-1 mt-3">
+                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Office</label>
+                    <select name="office_id" id="modalOfficeSelect" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-800 dark:border-slate-700 dark:text-white">
+                        <option value="">-- Select an Office --</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                <button type="button" onclick="closeEditEmployeeModal()" class="px-6 py-3 border border-slate-200 text-slate-500 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900 transition-all">Cancel</button>
+                <button type="submit" class="px-8 py-3 bg-gradient-to-r from-red-700 to-red-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:from-red-800 hover:to-red-600 transition-all shadow-md shadow-red-500/20">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<style>
+    /* TomSelect Custom Overrides for standard styling */
+    .ts-wrapper.single .ts-control {
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        border-color: #e2e8f0;
+        background-color: #f8fafc;
+        color: #1e293b;
+    }
+    .ts-dropdown { 
+        border-radius: 0.75rem; 
+        overflow: hidden; 
+        font-size: 0.875rem; 
+        font-weight: 600; 
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); 
+        border-color: #e2e8f0;
+    }
+    .ts-dropdown .option { padding: 0.5rem 1rem; }
+    
+    html.dark .ts-wrapper.single .ts-control {
+        background-color: #0f172a;
+        border-color: #334155;
+        color: #ffffff;
+    }
+    html.dark .ts-dropdown {
+        background-color: #1e293b;
+        border-color: #334155;
+        color: #e2e8f0;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); 
+    }
+    html.dark .ts-dropdown .option:hover, html.dark .ts-dropdown .option.active {
+        background-color: #334155;
+        color: #ffffff;
+    }
+    html.dark .ts-control > input {
+        color: #ffffff;
+    }
+</style>
+<script>
+    let editEmployeeModalLoaded = false;
+    let schoolTomSelect = null;
+    let officeTomSelect = null;
+
+    async function openEditEmployeeModal() {
+        const modal = document.getElementById('editEmployeeModal');
+        modal.classList.remove('hidden');
+
+        if (!editEmployeeModalLoaded) {
+            try {
+                // Fetch Schools
+                const schoolRes = await fetch("{{ route('api.locations.search') }}?type=school");
+                const schools = await schoolRes.json();
+                const schoolSelect = document.getElementById('modalSchoolSelect');
+                schools.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = `${s.name} (${s.entity_id})`;
+                    if (s.id == "{{ $custodian->school_id }}") opt.selected = true;
+                    schoolSelect.appendChild(opt);
+                });
+
+                // Fetch Offices
+                const officeRes = await fetch("{{ route('api.locations.search') }}?type=office");
+                const offices = await officeRes.json();
+                const officeSelect = document.getElementById('modalOfficeSelect');
+                offices.forEach(o => {
+                    const opt = document.createElement('option');
+                    opt.value = o.id;
+                    opt.textContent = `${o.name} (${o.entity_id})`;
+                    if (o.id == "{{ $custodian->office_id }}") opt.selected = true;
+                    officeSelect.appendChild(opt);
+                });
+
+                schoolTomSelect = new TomSelect('#modalSchoolSelect', { 
+                    create: false, 
+                    sortField: { field: "text", direction: "asc" },
+                    onChange: function(value) {
+                        if (value && value !== '') {
+                            officeTomSelect.disable();
+                        } else {
+                            officeTomSelect.enable();
+                        }
+                    }
+                });
+                officeTomSelect = new TomSelect('#modalOfficeSelect', { 
+                    create: false, 
+                    sortField: { field: "text", direction: "asc" },
+                    onChange: function(value) {
+                        if (value && value !== '') {
+                            schoolTomSelect.disable();
+                        } else {
+                            schoolTomSelect.enable();
+                        }
+                    }
+                });
+
+                // Trigger initial state
+                if (schoolTomSelect.getValue()) officeTomSelect.disable();
+                if (officeTomSelect.getValue()) schoolTomSelect.disable();
+
+                editEmployeeModalLoaded = true;
+            } catch (e) {
+                console.error('Failed to load stations', e);
+            }
+        }
+    }
+
+    function closeEditEmployeeModal() {
+        document.getElementById('editEmployeeModal').classList.add('hidden');
+    }
+
+    document.getElementById('editEmployeeForm').addEventListener('submit', function(e) {
+        const statusSelect = this.querySelector('select[name="status"]');
+        const initialStatus = "{{ $custodian->status }}";
+        const assetCount = {{ $assets->count() }};
+        
+        if (statusSelect.value === 'Inactive' && initialStatus !== 'Inactive' && assetCount > 0) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Active Assets Detected!',
+                text: "This employee still has " + assetCount + " assigned asset(s). What would you like to do?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#c00000',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Return Assets to Inventory',
+                cancelButtonText: 'Manage Assets (Cancel)'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('returnAssetsFlag').value = '1';
+                    this.submit();
+                }
+            });
+        }
+    });
+</script>
 </html>

@@ -67,7 +67,7 @@ class ImportController extends Controller
      */
     public function downloadTemplate(Request $request)
     {
-        $headers = ['classification', 'category', 'item_name', 'sub_item_name', 'quantity', 'condition', 'source', 'source_type', 'unit_price', 'date_acquired', 'is_serialized', 'property_number', 'employee_name'];
+        $headers = ['classification', 'category', 'item_name', 'sub_item_name', 'quantity', 'condition', 'source', 'source_type', 'unit_price', 'date_acquired', 'is_serialized'];
         
         $callback = function () use ($headers, $request) {
             $file = fopen('php://output', 'w');
@@ -86,10 +86,8 @@ class ImportController extends Controller
                         $r['source'] ?? '',
                         $r['source_type'] ?? 'Internal',
                         '', // unit_price
-                        now()->toDateString(), // date_acquired — auto-set to today
-                        $r['is_serialized'] ?? 'no',
-                        '', // property_number
-                        $r['employee_name'] ?? ''
+                        now()->toDateString(), // date_acquired
+                        $r['is_serialized'] ?? 'no'
                     ];
                     fputcsv($file, $row);
                 }
@@ -100,7 +98,7 @@ class ImportController extends Controller
 
         return response()->stream($callback, 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="DepEd_Asset_Import_Template.csv"',
+            'Content-Disposition' => 'attachment; filename="DepEd_Asset_Registration_Template.csv"',
         ]);
     }
 
@@ -136,7 +134,7 @@ class ImportController extends Controller
         }
 
         // Validate headers
-        $expectedHeaders = ['classification', 'category', 'item_name', 'sub_item_name', 'quantity', 'condition', 'source', 'source_type', 'unit_price', 'date_acquired', 'is_serialized', 'property_number', 'employee_name'];
+        $expectedHeaders = ['classification', 'category', 'item_name', 'sub_item_name', 'quantity', 'condition', 'source', 'source_type', 'unit_price', 'date_acquired', 'is_serialized'];
         $actualHeaders = array_map('strtolower', array_map('trim', $csvRows[0]));
 
         $missingHeaders = array_diff($expectedHeaders, $actualHeaders);
@@ -208,7 +206,6 @@ class ImportController extends Controller
                 $sourceName = $data['source'] ?? '';
                 $sourceType = $data['source_type'] ?? '';
                 $rawCondition = strtolower(trim($data['condition'] ?? ''));
-                $employeeName = trim($data['employee_name'] ?? '');
 
                 // ── Resolve Hierarchy (Classification -> Category -> Item) ──
                 $classId = $cache['classifications'][$className] ?? null;
@@ -266,18 +263,8 @@ class ImportController extends Controller
                     $cache['procurement_modes'][$modeName] = $modeId;
                 }
 
-                // ── Resolve Employee (Match-only) ──
+                // ── Employee Logic Removed (Default to AMU/Warehouse) ──
                 $employeeId = null;
-                if (!empty($employeeName)) {
-                    $employee = $cache['employees'][strtolower($employeeName)] ?? null;
-                    if ($employee) {
-                        $employeeId = $employee->id;
-                    } else {
-                        $errors[] = "Row " . ($rowIndex + 1) . ": Employee '{$employeeName}' not found. Register employee first.";
-                        $totalSkipped++;
-                        continue;
-                    }
-                }
 
                 // ── Condition Mapping ──
                 $conditionMap = [
@@ -317,11 +304,11 @@ class ImportController extends Controller
                     'condition'              => $condition,
                 ]);
 
-                // ── Insert Asset Assignment ──
+                // ── Insert Asset Assignment (Unassigned/AMU) ──
                 AssetAssignment::create([
                     'asset_source_id'  => $assetSource->id,
-                    'employee_id'      => $employeeId,
-                    'property_number'  => ($quantity > 1) ? null : ($data['property_number'] ?? null),
+                    'employee_id'      => null,
+                    'property_number'  => null,
                     'acquisition_cost' => $unitPrice * $quantity,
                     'acquisition_date' => $dateAcquired,
                 ]);

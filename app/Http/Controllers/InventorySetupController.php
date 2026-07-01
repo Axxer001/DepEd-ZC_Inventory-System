@@ -72,10 +72,6 @@ class InventorySetupController extends Controller
             'acceptance_date'   => 'nullable|date',
             'acquisition_source_id' => 'required|exists:acquisition_sources,id',
             'procurement_mode_id'   => 'nullable|exists:procurement_modes,id',
-            // Assignment fields
-            'employee_id'       => 'nullable|exists:employees,id',
-            'property_number'   => 'nullable|string|max:255',
-            'acquisition_date'  => 'nullable|date',
         ]);
 
         $userName = Auth::user() ? Auth::user()->name : 'System';
@@ -103,17 +99,18 @@ class InventorySetupController extends Controller
                 'asset_cost'             => $validated['asset_cost'],
                 'quantity'               => $validated['quantity'],
                 'estimated_useful_life'  => $validated['useful_life'] ?? 0,
+                'warranty'               => $validated['warranty'] ?? null,
                 'acceptance_date'        => $validated['acceptance_date'] ?? now(),
                 'condition'              => $validated['condition'],
             ]);
 
-            // 4. Create Asset Assignment
+            // 4. Create Asset Assignment (In Warehouse/AMU)
             AssetAssignment::create([
                 'asset_source_id'  => $assetSource->id,
-                'employee_id'      => $validated['employee_id'] ?? null,
-                'property_number'  => ((int)$validated['quantity'] > 1) ? null : ($validated['property_number'] ?? null),
+                'employee_id'      => null,
+                'property_number'  => null,
                 'acquisition_cost' => $validated['asset_cost'] * $validated['quantity'],
-                'acquisition_date' => $validated['acquisition_date'] ?? now(),
+                'acquisition_date' => $validated['acceptance_date'] ?? now(),
             ]);
 
             DB::table('system_logs')->insert([
@@ -160,7 +157,6 @@ class InventorySetupController extends Controller
     public function storeBatch(Request $request)
     {
         $payload = $request->validate([
-            'source_of_acquisition' => 'required|string|max:255',
             'rows'                  => 'required|array|min:1',
         ]);
 
@@ -172,24 +168,12 @@ class InventorySetupController extends Controller
         $user     = \Illuminate\Support\Facades\Auth::user();
         $userName = $user?->name ?? 'System';
 
-        // ── Step 2: Resolve acquisition source (upsert — it's a reference entity) ─
-        $acqSourceName = trim($payload['source_of_acquisition']);
-        DB::table('acquisition_sources')->updateOrInsert(
-            ['name' => $acqSourceName],
-            ['source_type' => 'Internal', 'updated_at' => now()]
-        );
-        $acqSourceId = DB::table('acquisition_sources')->where('name', $acqSourceName)->value('id');
-
-        // ── Step 3: Single in-memory lookup cache (one DB read per table) ──────
         $cache = [
+            'acq_source' => array_change_key_case(DB::table('acquisition_sources')->pluck('id', 'name')->toArray(), CASE_LOWER),
             'class'   => array_change_key_case(DB::table('classifications')->pluck('id', 'name')->toArray(), CASE_LOWER),
             'cat'     => array_change_key_case(DB::table('categories')->pluck('id', 'name')->toArray(), CASE_LOWER),
             'item'    => array_change_key_case(DB::table('items')->pluck('id', 'name')->toArray(), CASE_LOWER),
             'mode'    => array_change_key_case(DB::table('procurement_modes')->pluck('id', 'name')->toArray(), CASE_LOWER),
-            // Employee cache keyed by "firstname lastname" (lowercased, trimmed)
-            'emp'     => DB::table('employees')->get()->mapWithKeys(
-                fn($e) => [strtolower(trim("{$e->first_name} {$e->last_name}")) => $e->id]
-            )->toArray(),
         ];
 
         $conditionMap = [
@@ -234,55 +218,17 @@ class InventorySetupController extends Controller
                 $modeId   = $cache['mode'][strtolower($modeName)]
                     ??= DB::table('procurement_modes')->insertGetId(['name' => $modeName, 'created_at' => now(), 'updated_at' => now()]);
 
-                // ── Resolve Acquisition Contact (source personnel) ───────────
-                $contactId = null;
-                $personnel = trim($row['personnel'] ?? $row['employee-first'] ?? '');
-                if (!empty($personnel)) {
-                    DB::table('acquisition_contacts')->updateOrInsert(
-                        ['acquisition_source_id' => $acqSourceId, 'name' => $personnel],
-                        ['position' => $row['position'] ?? null, 'updated_at' => now()]
-                    );
-                    $contactId = DB::table('acquisition_contacts')
-                        ->where(['acquisition_source_id' => $acqSourceId, 'name' => $personnel])
-                        ->value('id');
+                // ── Resolve Acquisition Source (lookup only) ─────────────────
+                $acqSourceName = trim($row['source'] ?? '');
+                $acqSourceId = $cache['acq_source'][strtolower($acqSourceName)] ?? null;
+                if (!$acqSourceId) {
+                    $errors[] = "Row {$rowNum}: Source of Acquisition '{$acqSourceName}' does not exist. Please create it in Source Management first.";
+                    continue;
                 }
 
-                // ── Resolve Employee — prefer direct ID code sent by frontend ──
+                // ── Assets go to Warehouse (AMU) by default ──────────────────
                 $employeeId = null;
-
-                // 1. Frontend sends the employee_id CODE (not DB PK) as 'employee-id'
-                $directEmpCode = $row['employee-id'] ?? null;
-                if (!empty($directEmpCode)) {
-                    $employeeId = DB::table('employees')
-                        ->where('employee_id', $directEmpCode)
-                        ->value('id');
-                    if ($employeeId === null) {
-                        $errors[] = "Row {$rowNum}: Employee code '{$directEmpCode}' not found.";
-                        continue;
-                    }
-                }
-
-                // 2. Fallback: name-based lookup (for legacy import rows)
-                if ($employeeId === null) {
-                    $employeeName = trim(implode(' ', array_filter([
-                        $row['employee-first']  ?? $row['custodian-first']  ?? '',
-                        $row['employee-last']   ?? $row['custodian-last']   ?? '',
-                    ])));
-
-                    if (!empty($employeeName)) {
-                        $employeeId = $cache['emp'][strtolower($employeeName)] ?? null;
-                        if ($employeeId === null) {
-                            $errors[] = "Row {$rowNum}: Employee '{$employeeName}' not found. Register the employee first.";
-                            continue; // skip row — partial import is valid
-                        }
-                    }
-                } else {
-                    $employeeName = DB::table('employees')->where('id', $employeeId)->value(DB::raw("CONCAT(first_name, ' ', last_name)"));
-                }
-
-                if (empty($employeeName)) {
-                    $employeeName = "Unassigned";
-                }
+                $employeeName = "Unassigned";
 
                 // ── Map Condition to ENUM (stored on asset_sources) ──────────
                 $rawCondition = strtolower(trim($row['condition'] ?? ''));
@@ -293,31 +239,30 @@ class InventorySetupController extends Controller
                     'item_id'                => $itemId,
                     'acquisition_source_id'  => $acqSourceId,
                     'procurement_mode_id'    => $modeId,
-                    'acquisition_contact_id' => $contactId,
                     'description'            => $row['description']      ?? null,
                     'unit_of_measurement'    => $row['uom']               ?? 'Unit',
                     'asset_cost'             => (float) ($row['cost']     ?? 0),
                     'quantity'               => (int)   ($row['qty']      ?? 1),
                     'estimated_useful_life'  => (int)   ($row['useful-life'] ?? 0),
+                    'warranty'               => isset($row['warranty']) && $row['warranty'] !== '' ? (int)$row['warranty'] : null,
                     'acceptance_date'        => $row['acceptance-date']   ?? now()->toDateString(),
                     'condition'              => $condition,
                     'created_at'             => now(),
                     'updated_at'             => now(),
                 ]);
 
-                // ── Insert asset_assignments ─────────────────────────────────
+                // ── Insert asset_assignments (Unassigned / AMU) ───────────────
                 DB::table('asset_assignments')->insert([
                     'asset_source_id'  => $assetSourceId,
-                    'employee_id'      => $employeeId,
-                    'property_number'  => ((int)($row['qty'] ?? 1) > 1) ? null : ($row['property-no'] ?? null),
+                    'employee_id'      => null,
+                    'property_number'  => null,
                     'acquisition_cost' => (float) ($row['cost']     ?? 0) * (int) ($row['qty'] ?? 1),
-                    'acquisition_date' => $row['acquisition-date']  ?? now()->toDateString(),
+                    'acquisition_date' => $row['acceptance-date']  ?? now()->toDateString(),
                     'created_at'       => now(),
                     'updated_at'       => now(),
                 ]);
 
-                $propNoStr = ((int)($row['qty'] ?? 1) > 1) ? '' : ($row['property-no'] ?? '');
-                $addedDetails[] = "Added " . (int)($row['qty'] ?? 1) . " " . ($row['uom'] ?? 'Unit') . " [" . $propNoStr . "] {$itemName} assigned to {$employeeName}";
+                $addedDetails[] = "Added " . (int)($row['qty'] ?? 1) . " " . ($row['uom'] ?? 'Unit') . " {$itemName} to Warehouse/AMU";
 
                 $inserted++;
             }
@@ -381,18 +326,16 @@ class InventorySetupController extends Controller
         DB::beginTransaction();
         try {
             foreach ($rows as $row) {
-                $officeName = trim($row['office_name'] ?? '');
-                if (empty($officeName)) continue; // skip rows without office name
-
-                // Resolve school FK
+                // We are registering unassigned buildings, so schoolId is always null initially.
                 $schoolId = null;
-                $schoolIdentifier = trim($row['school_identifier'] ?? '');
-                if (!empty($schoolIdentifier)) {
-                    $school = DB::table('schools')
-                        ->where('school_id', $schoolIdentifier)
-                        ->first();
-                    if ($school) $schoolId = $school->id;
-                }
+                
+                // At least require an article or description to consider the row valid
+                $article = trim($row['article'] ?? '');
+                $description = trim($row['description'] ?? '');
+                $propertyNo = trim($row['property_number'] ?? '');
+                
+                if (empty($article) && empty($description) && empty($propertyNo)) continue;
+
 
                 // Parse numeric fields
                 $storeys    = !empty($row['storeys']) ? (int)$row['storeys'] : null;
@@ -610,24 +553,17 @@ class InventorySetupController extends Controller
                     }
 
                     if ($acqSourceId) {
-                        $currentContact = DB::table('asset_sources')
-                            ->leftJoin('acquisition_contacts', 'asset_sources.acquisition_contact_id', '=', 'acquisition_contacts.id')
-                            ->where('asset_sources.id', $data['src_id'])
-                            ->select('acquisition_contacts.name', 'acquisition_contacts.position')
-                            ->first();
+                        $currentSourceRec = DB::table('acquisition_sources')->where('id', $acqSourceId)->first();
 
-                        $contactName = trim($data['personnel'] ?? ($currentContact ? $currentContact->name : ''));
-                        $contactPos = trim($data['position'] ?? ($currentContact ? $currentContact->position : ''));
+                        $contactName = trim($data['personnel'] ?? ($currentSourceRec ? $currentSourceRec->contact_person : ''));
+                        $contactPos = trim($data['position'] ?? ($currentSourceRec ? $currentSourceRec->contact_position : ''));
 
                         if (!empty($contactName)) {
-                            DB::table('acquisition_contacts')->updateOrInsert(
-                                ['acquisition_source_id' => $acqSourceId, 'name' => $contactName],
-                                ['position' => $contactPos ?: null, 'updated_at' => now()]
-                            );
-                            $contactId = DB::table('acquisition_contacts')
-                                ->where(['acquisition_source_id' => $acqSourceId, 'name' => $contactName])
-                                ->value('id');
-                            $srcUpdates['acquisition_contact_id'] = $contactId;
+                            DB::table('acquisition_sources')->where('id', $acqSourceId)->update([
+                                'contact_person' => $contactName,
+                                'contact_position' => $contactPos ?: null,
+                                'updated_at' => now()
+                            ]);
                         }
                     }
                 }
@@ -940,6 +876,280 @@ class InventorySetupController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Failed: ' . $e->getMessage()], 500);
+        }
+    }
+    /**
+     * Fetch all unassigned assets (in AMU/Warehouse)
+     */
+    public function getUnassignedAssets(Request $request)
+    {
+        $query = DB::table('asset_assignments')
+            ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+            ->join('items', 'asset_sources.item_id', '=', 'items.id')
+            ->join('categories', 'items.category_id', '=', 'categories.id')
+            ->join('classifications', 'categories.classification_id', '=', 'classifications.id')
+            ->whereNull('asset_assignments.employee_id')
+            ->select(
+                'asset_assignments.id as assignment_id',
+                'classifications.name as classification',
+                'categories.name as category',
+                'items.name as item_name',
+                'asset_sources.description as sub_item_name',
+                'asset_sources.quantity',
+                'asset_sources.unit_of_measurement as uom',
+                'asset_sources.asset_cost',
+                'asset_sources.condition',
+                'asset_sources.acceptance_date'
+            );
+
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('items.name', 'like', "%{$search}%")
+                  ->orWhere('asset_sources.description', 'like', "%{$search}%");
+            });
+        }
+
+        return response()->json(['assets' => $query->get()]);
+    }
+
+    /**
+     * Assign a single asset from the warehouse
+     */
+    public function assignItem(Request $request)
+    {
+        $validated = $request->validate([
+            'assignment_id'    => 'required|exists:asset_assignments,id',
+            'employee_id'      => 'required|exists:employees,id',
+            'property_number'  => 'nullable|string|max:255',
+            'acquisition_date' => 'nullable|date',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $assignment = DB::table('asset_assignments')->where('id', $validated['assignment_id'])->first();
+            
+            if ($assignment->employee_id !== null) {
+                return response()->json(['success' => false, 'message' => 'Asset is already assigned.'], 400);
+            }
+
+            DB::table('asset_assignments')->where('id', $validated['assignment_id'])->update([
+                'employee_id'      => $validated['employee_id'],
+                'property_number'  => $validated['property_number'],
+                'acquisition_date' => $validated['acquisition_date'] ?? now()->toDateString(),
+                'updated_at'       => now(),
+            ]);
+
+            $targetEmployee = DB::table('employees')->where('id', $validated['employee_id'])->first();
+
+            DB::table('asset_transfers')->insert([
+                'asset_assignment_id' => $validated['assignment_id'],
+                'from_office_id'      => null,
+                'to_office_id'        => $targetEmployee->office_id ?? null,
+                'from_custodian_id'   => null,
+                'to_custodian_id'     => $validated['employee_id'],
+                'transfer_date'       => $validated['acquisition_date'] ?? now()->toDateString(),
+                'transfer_type'       => 'Initial Distribution',
+                'remarks'             => 'Assigned to custodian from warehouse.',
+                'authorized_by'       => Auth::id() ?? 1,
+                'created_at'          => now(),
+                'updated_at'          => now(),
+            ]);
+
+            $userName = Auth::user() ? Auth::user()->name : 'System';
+            DB::table('system_logs')->insert([
+                'user'        => $userName,
+                'activity'    => "Assigned asset ID {$validated['assignment_id']} to employee ID {$validated['employee_id']}",
+                'module'      => 'Assets',
+                'action_type' => 'Update',
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Asset assigned successfully.']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Failed to assign asset: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Assign multiple assets via batch update
+     */
+    public function assignBatch(Request $request)
+    {
+        $validated = $request->validate([
+            'assignments'                    => 'required|array|min:1',
+            'assignments.*.assignment_id'    => 'required|exists:asset_assignments,id',
+            'assignments.*.employee_id'      => 'nullable|exists:employees,id',
+            'assignments.*.property_number'  => 'nullable|string|max:255',
+            'assignments.*.acquisition_date' => 'nullable|date',
+            'assignments.*.school_name'      => 'nullable|string',
+            'assignments.*.school_id'        => 'nullable|string',
+            'assignments.*.school_db_id'     => 'nullable|integer',
+            'assignments.*.is_office'        => 'nullable|boolean',
+            'assignments.*.school_type'      => 'nullable|string',
+            'assignments.*.location'         => 'nullable|string',
+            'assignments.*.asset_cost'       => 'nullable',
+            'assignments.*.quantity'         => 'nullable',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $count = 0;
+            foreach ($validated['assignments'] as $data) {
+                $assignment = DB::table('asset_assignments')->where('id', $data['assignment_id'])->first();
+                if ($assignment->employee_id !== null) continue; // Skip if already assigned
+
+                // Determine employee_id. If no employee_id is given but location is, 
+                // we technically can't assign it without an employee in the current schema.
+                // We'll proceed with what's given.
+                if (isset($data['employee_id'])) {
+                    DB::table('asset_assignments')->where('id', $data['assignment_id'])->update([
+                        'employee_id'      => $data['employee_id'],
+                        'property_number'  => $data['property_number'] ?? null,
+                        'acquisition_date' => $data['acquisition_date'] ?? now()->toDateString(),
+                        'updated_at'       => now(),
+                    ]);
+
+                    $targetEmployee = DB::table('employees')->where('id', $data['employee_id'])->first();
+
+                    DB::table('asset_transfers')->insert([
+                        'asset_assignment_id' => $data['assignment_id'],
+                        'from_office_id'      => null,
+                        'to_office_id'        => $targetEmployee->office_id ?? null,
+                        'from_custodian_id'   => null,
+                        'to_custodian_id'     => $data['employee_id'],
+                        'transfer_date'       => $data['acquisition_date'] ?? now()->toDateString(),
+                        'transfer_type'       => 'Initial Distribution',
+                        'remarks'             => 'Assigned to custodian via batch distribution.',
+                        'authorized_by'       => Auth::id() ?? 1,
+                        'created_at'          => now(),
+                        'updated_at'          => now(),
+                    ]);
+
+                    // Update employee's location if provided
+                    if (!empty($data['school_db_id'])) {
+                        if (isset($data['is_office']) && $data['is_office']) {
+                            DB::table('employees')->where('id', $data['employee_id'])->update([
+                                'office_id'  => $data['school_db_id'],
+                                'school_id'  => null,
+                                'updated_at' => now(),
+                            ]);
+                        } else {
+                            DB::table('employees')->where('id', $data['employee_id'])->update([
+                                'school_id'  => $data['school_db_id'],
+                                'office_id'  => null,
+                                'updated_at' => now(),
+                            ]);
+                        }
+                    }
+                    $count++;
+                }
+            }
+
+            $userName = Auth::user() ? Auth::user()->name : 'System';
+            DB::table('system_logs')->insert([
+                'user'        => $userName,
+                'activity'    => "Batch Assignment: Assigned {$count} asset(s).",
+                'module'      => 'Assets',
+                'action_type' => 'Update',
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => "Successfully assigned {$count} asset(s)."]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Failed to assign assets in batch: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Fetch all floating/unassigned buildings (school_id is null)
+     */
+    public function getUnassignedBuildings(Request $request)
+    {
+        $query = DB::table('building_records')
+            ->leftJoin('building_specs', 'building_records.building_spec_id', '=', 'building_specs.id')
+            ->leftJoin('building_types', 'building_specs.building_type_id', '=', 'building_types.id')
+            ->leftJoin('building_classifications', 'building_types.building_classification_id', '=', 'building_classifications.id')
+            ->whereNull('building_records.school_id')
+            ->select(
+                'building_records.id as assignment_id',
+                'building_records.property_number',
+                'building_types.name as item_name',
+                'building_specs.description as sub_item_name',
+                'building_classifications.name as classification',
+                'building_records.acquisition_cost as asset_cost',
+                'building_records.remarks as condition',
+                'building_records.acquisition_date as acceptance_date'
+            );
+
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function($q) use ($search) {
+                $q->where('building_types.name', 'like', "%{$search}%")
+                  ->orWhere('building_specs.description', 'like', "%{$search}%")
+                  ->orWhere('building_records.property_number', 'like', "%{$search}%");
+            });
+        }
+
+        return response()->json(['assets' => $query->get()]);
+    }
+
+    /**
+     * Assign multiple buildings to a school
+     */
+    public function assignBuildingBatch(Request $request)
+    {
+        $validated = $request->validate([
+            'assignments'                    => 'required|array|min:1',
+            'assignments.*.assignment_id'    => 'required|exists:building_records,id',
+            'assignments.*.school_id'        => 'required|exists:schools,id',
+            'assignments.*.property_number'  => 'nullable|string|max:255',
+            'assignments.*.acquisition_date' => 'nullable|date',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $count = 0;
+            foreach ($validated['assignments'] as $data) {
+                $assignment = DB::table('building_records')->where('id', $data['assignment_id'])->first();
+                if ($assignment->school_id !== null) continue; // Skip if already assigned
+
+                DB::table('building_records')->where('id', $data['assignment_id'])->update([
+                    'school_id'        => $data['school_id'],
+                    'property_number'  => $data['property_number'] ?? null,
+                    'acquisition_date' => $data['acquisition_date'] ?? now()->toDateString(),
+                    'updated_at'       => now(),
+                ]);
+                $count++;
+            }
+
+            $userName = Auth::user() ? Auth::user()->name : 'System';
+            DB::table('system_logs')->insert([
+                'user'        => $userName,
+                'activity'    => "Batch Assignment: Assigned {$count} building(s).",
+                'module'      => 'Buildings',
+                'action_type' => 'Update',
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => "Successfully assigned {$count} building(s)."]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Failed to assign buildings in batch: ' . $e->getMessage()], 500);
         }
     }
 
