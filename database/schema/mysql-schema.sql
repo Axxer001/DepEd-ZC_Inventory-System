@@ -111,7 +111,7 @@ CREATE TABLE `categories` (
   PRIMARY KEY (`id`),
   KEY `categories_classification_id_foreign` (`classification_id`),
   CONSTRAINT `categories_classification_id_foreign` FOREIGN KEY (`classification_id`) REFERENCES `classifications` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 DROP TABLE IF EXISTS `classifications`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
@@ -236,7 +236,7 @@ CREATE TABLE `schools` (
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`avnadmin`@`%`*/ /*!50003 TRIGGER `trg_schools_insert` AFTER INSERT ON `schools` FOR EACH ROW BEGIN
+/*!50003 CREATE*/ /*!50003 TRIGGER `trg_schools_insert` AFTER INSERT ON `schools` FOR EACH ROW BEGIN
                 INSERT INTO system_logs (user, activity, module, action_type, created_at, updated_at)
                 VALUES (
                     IFNULL(@app_user, CURRENT_USER()),
@@ -261,7 +261,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`avnadmin`@`%`*/ /*!50003 TRIGGER `trg_schools_delete` AFTER DELETE ON `schools` FOR EACH ROW BEGIN
+/*!50003 CREATE*/ /*!50003 TRIGGER `trg_schools_delete` AFTER DELETE ON `schools` FOR EACH ROW BEGIN
                 INSERT INTO system_logs (user, activity, module, action_type, created_at, updated_at)
                 VALUES (
                     IFNULL(@app_user, CURRENT_USER()),
@@ -333,7 +333,7 @@ CREATE TABLE `users` (
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`avnadmin`@`%`*/ /*!50003 TRIGGER `trg_users_insert` AFTER INSERT ON `users` FOR EACH ROW BEGIN
+/*!50003 CREATE*/ /*!50003 TRIGGER `trg_users_insert` AFTER INSERT ON `users` FOR EACH ROW BEGIN
                 INSERT INTO system_logs (user, activity, module, action_type, created_at, updated_at)
                 VALUES (
                     IFNULL(@app_user, CURRENT_USER()),
@@ -358,7 +358,7 @@ DELIMITER ;
 /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
 /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
 DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`avnadmin`@`%`*/ /*!50003 TRIGGER `trg_users_delete` AFTER DELETE ON `users` FOR EACH ROW BEGIN
+/*!50003 CREATE*/ /*!50003 TRIGGER `trg_users_delete` AFTER DELETE ON `users` FOR EACH ROW BEGIN
                 INSERT INTO system_logs (user, activity, module, action_type, created_at, updated_at)
                 VALUES (
                     IFNULL(@app_user, CURRENT_USER()),
