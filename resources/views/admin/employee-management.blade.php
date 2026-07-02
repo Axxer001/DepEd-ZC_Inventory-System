@@ -343,7 +343,7 @@
                 const displayNum = start + idx + 1;
                 const tr = document.createElement('tr');
                 tr.className = 'xls-row group border-b border-slate-100';
-                tr.onclick = () => window.location.href = '{{ url('/admin/employee-management') }}/' + row.id;
+                tr.onclick = () => window.location.href = '{{ url('/admin/employees') }}/' + row.id;
                 
                 const cell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const uppercase">${val || ''}</span></td>`;
                 const costCell = (val, color) => `<td class="xls-td relative text-right"><span class="xls-const font-black italic ${color} justify-end">₱ ${Number(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></td>`;
@@ -479,7 +479,7 @@
                 </button>
             </div>
 
-            <form action="{{ route('admin.employee-management.store') }}" method="POST" class="space-y-5">
+            <form action="{{ route('admin.employees.store') }}" method="POST" class="space-y-5">
                 @csrf
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -30,7 +30,7 @@ class EmployeeStatusAlert extends Notification
         return [
             'title' => 'Employee Status Changed',
             'message' => "{$this->employee->first_name} {$this->employee->last_name} status is now {$this->status}. They have {$this->assetCount} active assets.",
-            'action_url' => route('admin.employee-management.profile', ['id' => $this->employee->id]),
+            'action_url' => route('custodians.profile', ['id' => $this->employee->id]),
             'icon' => 'fas fa-exclamation-triangle text-warning',
             'type' => 'employee_status',
         ];

@@ -53,6 +53,8 @@ Route::middleware(['auth', 'role:super_admin'])->group(function () {
     // Employee Management Actions (Super Admin Only)
     Route::post('/admin/employees', [EmployeeController::class, 'store'])->name('admin.employees.store');
     Route::post('/admin/employees/{id}/update', [EmployeeController::class, 'update'])->name('admin.employees.update');
+    Route::post('/admin/employee-management/store', [EmployeeController::class, 'store'])->name('admin.employee-management.store');
+    Route::post('/admin/employee-management/{id}/update', [EmployeeController::class, 'update'])->name('admin.employee-management.update');
     
     // Source Management Actions (Super Admin Only)
     Route::post('/admin/sources', [AcquisitionSourceController::class, 'store'])->name('admin.sources.store');
@@ -226,6 +228,7 @@ Route::middleware('auth')->group(function () {
     // --- Employee (formerly Custodian) Registry ---
     Route::get('/admin/employees', [EmployeeController::class, 'index'])->name('admin.employees');
     Route::get('/admin/custodians', [EmployeeController::class, 'index'])->name('admin.custodians');
+    Route::get('/admin/employee-management', [EmployeeController::class, 'index'])->name('admin.employee-management');
     Route::get('/api/employees/search', [EmployeeController::class, 'searchEmployees'])->name('api.employees.search');
     Route::get('/api/locations/search', [EmployeeController::class, 'searchLocations'])->name('api.locations.search');
     Route::get('/api/classifications/search', [EmployeeController::class, 'searchClassifications'])->name('api.classifications.search');
@@ -237,6 +240,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/employees/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getCustodiansFilterOptions'])->name('api.employees.filters');
     Route::get('/admin/employees/{id}', [EmployeeController::class, 'profile'])->name('employees.profile');
     Route::get('/admin/custodians/{id}', [EmployeeController::class, 'profile'])->name('custodians.profile');
+    Route::get('/admin/employee-management/{id}', [EmployeeController::class, 'profile'])->name('admin.employee-management.profile');
     Route::post('/admin/employees/{id}/photo', [EmployeeController::class, 'uploadPhoto'])->name('admin.employees.photo.upload');
 
 

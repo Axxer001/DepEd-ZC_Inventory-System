@@ -39,11 +39,11 @@ class EmployeeController extends Controller
             'last_name' => $validated['last_name'],
             'sex' => $validated['sex'] ?? null,
             'employee_id' => $validated['employee_id'],
-            'position' => $validated['position'],
+            'position' => $validated['position'] ?? null,
             'date_of_birth' => $validated['date_of_birth'] ?? null,
             'status' => $validated['status'],
-            'school_id' => $validated['school_id'],
-            'office_id' => $validated['office_id'],
+            'school_id' => $validated['school_id'] ?? null,
+            'office_id' => $validated['office_id'] ?? null,
         ]);
 
         \App\Models\EmployeeHistory::create([
@@ -52,7 +52,7 @@ class EmployeeController extends Controller
             'description' => 'Employee record created.',
         ]);
 
-        return redirect()->route('admin.employee-management')->with('success', 'Employee registered successfully.');
+        return redirect()->route('admin.employees')->with('success', 'Employee registered successfully.');
     }
 
     public function managementIndex()
@@ -184,13 +184,13 @@ class EmployeeController extends Controller
         if ($employee->sex !== ($validated['sex'] ?? null)) {
             $changes[] = "sex changed to '" . ($validated['sex'] ?? 'none') . "'";
         }
-        if ($employee->position !== $validated['position']) {
-            $changes[] = "position changed from '{$employee->position}' to '{$validated['position']}'";
+        if ($employee->position !== ($validated['position'] ?? null)) {
+            $changes[] = "position changed from '{$employee->position}' to '" . ($validated['position'] ?? '') . "'";
         }
         if ($employee->date_of_birth !== ($validated['date_of_birth'] ?? null)) {
             $changes[] = "date of birth changed to '" . ($validated['date_of_birth'] ?? 'none') . "'";
         }
-        if ($employee->school_id != $validated['school_id'] || $employee->office_id != $validated['office_id']) {
+        if ($employee->school_id != ($validated['school_id'] ?? null) || $employee->office_id != ($validated['office_id'] ?? null)) {
             $changes[] = 'station reassigned';
         }
         if ($employee->status !== $validated['status']) {
@@ -204,15 +204,15 @@ class EmployeeController extends Controller
 
         $employee->update([
             'first_name' => $validated['first_name'],
-            'middle_name' => $validated['middle_name'],
+            'middle_name' => $validated['middle_name'] ?? null,
             'last_name' => $validated['last_name'],
             'sex' => $validated['sex'] ?? null,
             'employee_id' => $validated['employee_id'],
-            'position' => $validated['position'],
+            'position' => $validated['position'] ?? null,
             'date_of_birth' => $validated['date_of_birth'] ?? null,
             'status' => $validated['status'],
-            'school_id' => $validated['school_id'],
-            'office_id' => $validated['office_id'],
+            'school_id' => $validated['school_id'] ?? null,
+            'office_id' => $validated['office_id'] ?? null,
         ]);
 
         if (count($changes) > 0) {
@@ -223,7 +223,7 @@ class EmployeeController extends Controller
             ]);
         }
 
-        return redirect()->route('admin.employee-management.profile', $id)->with('success', 'Employee updated successfully.');
+        return redirect()->route('custodians.profile', $id)->with('success', 'Employee updated successfully.');
     }
 
     public function profile($id)
