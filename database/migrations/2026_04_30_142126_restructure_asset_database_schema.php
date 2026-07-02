@@ -32,17 +32,21 @@ return new class extends Migration
         // =====================================================================
         // 2. MODIFY `categories` — Add classification_id FK
         // =====================================================================
-        Schema::table('categories', function (Blueprint $table) {
-            $table->unsignedBigInteger('classification_id')->nullable()->after('name');
-            $table->foreign('classification_id')->references('id')->on('classifications')->onDelete('set null');
-        });
+        if (!Schema::hasColumn('categories', 'classification_id')) {
+            Schema::table('categories', function (Blueprint $table) {
+                $table->unsignedBigInteger('classification_id')->nullable()->after('name');
+                $table->foreign('classification_id')->references('id')->on('classifications')->onDelete('set null');
+            });
+        }
 
         // =====================================================================
         // 3. MODIFY `items` — Drop master_quantity (now derived from asset_sources)
         // =====================================================================
-        Schema::table('items', function (Blueprint $table) {
-            $table->dropColumn('master_quantity');
-        });
+        if (Schema::hasColumn('items', 'master_quantity')) {
+            Schema::table('items', function (Blueprint $table) {
+                $table->dropColumn('master_quantity');
+            });
+        }
 
         // =====================================================================
         // 4. CREATE `acquisition_sources` — Source organizations (replaces stakeholders)

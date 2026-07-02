@@ -1,30 +1,3 @@
-<?php
-
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::table('ownerships', function (Blueprint $table) {
-            $table->string('property_number')->nullable();
-            $table->string('serial_number')->nullable();
-            $table->boolean('is_serialized')->default(false);
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('ownerships', function (Blueprint $table) {
-            $table->dropColumn(['property_number', 'serial_number', 'is_serialized']);
-        });
-    }
-};
+<?php use Illuminate\Database\Migrations\Migration; return new class extends Migration {
+    // No-op: ownerships table dropped in April 30 restructure.
+    public function up(): void {} public function down(): void {} };

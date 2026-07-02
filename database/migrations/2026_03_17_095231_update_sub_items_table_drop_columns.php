@@ -1,28 +1,8 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::table('sub_items', function (Blueprint $table) {
-            $table->dropColumn('quantity');
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('sub_items', function (Blueprint $table) {
-            $table->integer('quantity')->default(0);
-        });
-    }
+return new class extends Migration {
+    // No-op: sub_items table didn't exist at this point in a fresh install.
+    // This table is dropped entirely in the April 30 restructure.
+    public function up(): void {}
+    public function down(): void {}
 };

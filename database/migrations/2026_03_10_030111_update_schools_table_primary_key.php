@@ -1,67 +1,21 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * No-op: This migration was a one-time fix for an old pre-existing schools table.
+     * The schools table created by 2026_03_17_092831_create_schools_table already
+     * has the correct structure (auto-increment id + school_id index).
      */
     public function up(): void
     {
-        // 1. Drop the existing foreign key constraint from items targeting schools
-        if (Schema::hasTable('items')) {
-            $driver = DB::connection()->getDriverName();
-            if ($driver === 'mysql') {
-                $fks = DB::select("SELECT CONSTRAINT_NAME FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_SCHEMA = DATABASE() AND REFERENCED_TABLE_NAME = 'schools' AND TABLE_NAME = 'items'");
-                if (count($fks) > 0) {
-                    Schema::table('items', function (Blueprint $table) {
-                        $table->dropForeign(['school_id']);
-                    });
-                }
-            } else if ($driver === 'sqlite') {
-                // SQLite handles dropping tables with foreign keys differently, 
-                // but we can try to drop if we know the name, or just skip it for in-memory testing
-            }
-        }
-
-        // 2. We truncate the schools table before modifying to prevent primary key violation errors
-        Schema::disableForeignKeyConstraints();
-        DB::table('schools')->truncate();
-
-        // 3. Create a new table with the correct schema
-        Schema::create('schools_new', function (Blueprint $table) {
-            $table->id(); // Auto-incrementing primary key
-            $table->string('school_id')->index(); // The 6-digit DepEd ID
-            $table->string('name');
-            $table->unsignedBigInteger('district_id')->nullable();
-            $table->timestamps();
-            
-            // Re-adding the foreign key for district if it existed
-            // $table->foreign('district_id')->references('id')->on('districts')->onDelete('cascade');
-        });
-
-        // 4. Drop the old table and rename the new one
-        Schema::dropIfExists('schools');
-        Schema::rename('schools_new', 'schools');
-
-        // 5. Re-add the foreign key constraint on items
-        // Wait, items.school_id is currently a 'bigint' maybe? Let's make sure it matches the new schools.id
-        Schema::table('items', function (Blueprint $table) {
-            $table->foreign('school_id')->references('id')->on('schools')->onDelete('cascade');
-        });
-
-        Schema::enableForeignKeyConstraints();
+        // No-op
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        // ... omitted down migration for brevity
+        // No-op
     }
 };

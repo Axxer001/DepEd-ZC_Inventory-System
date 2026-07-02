@@ -1,28 +1,8 @@
 <?php
-
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
-    {
-        Schema::table('items', function (Blueprint $table) {
-            $table->integer('master_quantity')->default(0)->after('category_id')->comment('Total units available in the system registry');
-        });
-    }
-
-    /**
-     * Reverse the migrations.
-     */
-    public function down(): void
-    {
-        Schema::table('items', function (Blueprint $table) {
-            $table->dropColumn('master_quantity');
-        });
-    }
+return new class extends Migration {
+    // No-op: items/master_quantity column never exists in a fresh install.
+    // The master_quantity column is dropped in the April 30 restructure anyway.
+    public function up(): void {}
+    public function down(): void {}
 };

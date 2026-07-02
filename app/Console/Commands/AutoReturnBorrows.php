@@ -72,7 +72,7 @@ class AutoReturnBorrows extends Command
                     'transfer_date' => $today,
                     'transfer_type' => 'Return',
                     'remarks' => 'Automatic return: Temporary borrow period expired (due: ' . $borrow->return_date . ').',
-                    'authorized_by' => 1, // System default authorization ID
+                    'authorized_by' => null, // System-initiated; no user actor
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
