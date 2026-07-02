@@ -24,8 +24,10 @@ class EmployeeController extends Controller
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
+            'sex' => 'nullable|string|in:Male,Female',
             'employee_id' => 'required|string|max:255|unique:employees,employee_id',
             'position' => 'nullable|string|max:255',
+            'date_of_birth' => 'nullable|date',
             'status' => 'required|string',
             'school_id' => 'nullable|exists:schools,id',
             'office_id' => 'nullable|exists:offices,id',
@@ -35,8 +37,10 @@ class EmployeeController extends Controller
             'first_name' => $validated['first_name'],
             'middle_name' => $validated['middle_name'],
             'last_name' => $validated['last_name'],
+            'sex' => $validated['sex'] ?? null,
             'employee_id' => $validated['employee_id'],
             'position' => $validated['position'],
+            'date_of_birth' => $validated['date_of_birth'] ?? null,
             'status' => $validated['status'],
             'school_id' => $validated['school_id'],
             'office_id' => $validated['office_id'],
@@ -164,8 +168,10 @@ class EmployeeController extends Controller
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
+            'sex' => 'nullable|string|in:Male,Female',
             'employee_id' => 'required|string|max:255|unique:employees,employee_id,'.$id,
             'position' => 'nullable|string|max:255',
+            'date_of_birth' => 'nullable|date',
             'status' => 'required|string',
             'school_id' => 'nullable|exists:schools,id',
             'office_id' => 'nullable|exists:offices,id',
@@ -175,8 +181,14 @@ class EmployeeController extends Controller
         if ($employee->first_name !== $validated['first_name'] || $employee->last_name !== $validated['last_name']) {
             $changes[] = 'name changed';
         }
+        if ($employee->sex !== ($validated['sex'] ?? null)) {
+            $changes[] = "sex changed to '" . ($validated['sex'] ?? 'none') . "'";
+        }
         if ($employee->position !== $validated['position']) {
             $changes[] = "position changed from '{$employee->position}' to '{$validated['position']}'";
+        }
+        if ($employee->date_of_birth !== ($validated['date_of_birth'] ?? null)) {
+            $changes[] = "date of birth changed to '" . ($validated['date_of_birth'] ?? 'none') . "'";
         }
         if ($employee->school_id != $validated['school_id'] || $employee->office_id != $validated['office_id']) {
             $changes[] = 'station reassigned';
@@ -194,8 +206,10 @@ class EmployeeController extends Controller
             'first_name' => $validated['first_name'],
             'middle_name' => $validated['middle_name'],
             'last_name' => $validated['last_name'],
+            'sex' => $validated['sex'] ?? null,
             'employee_id' => $validated['employee_id'],
             'position' => $validated['position'],
+            'date_of_birth' => $validated['date_of_birth'] ?? null,
             'status' => $validated['status'],
             'school_id' => $validated['school_id'],
             'office_id' => $validated['office_id'],
@@ -338,6 +352,8 @@ class EmployeeController extends Controller
                 'full_name'          => $e->full_name,
                 'employee_id'        => $e->employee_id,
                 'position'           => $e->position,
+                'sex'                => $e->sex,
+                'date_of_birth'      => $e->date_of_birth,
                 'status'             => $e->status,
                 'location_type'      => $e->school_id ? 'school' : 'office',
                 'location_id'        => $e->school?->school_id ?? $e->office?->office_id,

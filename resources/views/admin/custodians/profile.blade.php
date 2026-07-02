@@ -181,7 +181,7 @@
 
                         @if($schools->count() > 0)
                         <div class="pt-4 border-t border-slate-100">
-                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.18em] mb-3">Assigned School(s)</p>
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.18em] mb-3">Assigned Office/School</p>
                             <div class="space-y-2">
                                 @foreach($schools as $school)
                                 <div class="flex items-center justify-between px-3 py-2.5 bg-slate-50 border border-slate-100 rounded-xl">
@@ -235,8 +235,14 @@
                                     <p class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $custodian->employee_id ?? 'N/A' }}</p>
                                 </div>
                                 <div>
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Contact No.</p>
-                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $custodian->contact_number ?? 'N/A' }}</p>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Sex</p>
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">{{ $custodian->sex ?? 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Date of Birth</p>
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase px-1">
+                                        {{ $custodian->date_of_birth ? date('F d, Y', strtotime($custodian->date_of_birth)) . ' (Age ' . \Carbon\Carbon::parse($custodian->date_of_birth)->age . ')' : 'N/A' }}
+                                    </p>
                                 </div>
                                 <div>
                                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Position / Title</p>
@@ -928,6 +934,21 @@
                 <div class="space-y-1">
                     <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Employee ID</label>
                     <input type="text" name="employee_id" required value="{{ $custodian->employee_id }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Sex</label>
+                    <select name="sex" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+                        <option value="">-- Select Sex --</option>
+                        <option value="Male" {{ ($custodian->sex ?? '') == 'Male' ? 'selected' : '' }}>Male</option>
+                        <option value="Female" {{ ($custodian->sex ?? '') == 'Female' ? 'selected' : '' }}>Female</option>
+                    </select>
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Date of Birth</label>
+                    <input type="date" name="date_of_birth" value="{{ $custodian->date_of_birth }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
                 </div>
             </div>
 
