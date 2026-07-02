@@ -58,10 +58,10 @@
             margin-bottom: 2px;
         }
 
-        /* ── Sticker card (75mm × 50mm) ── */
+        /* ── Sticker card (95mm × 75mm, landscape waybill) ── */
         .sticker-card {
-            width: 75mm;
-            height: 50mm;
+            width: 95mm;
+            height: 75mm;
             border: 2px solid #c00000;
             padding: 0;
             box-sizing: border-box;
@@ -73,23 +73,24 @@
             overflow: hidden;
         }
 
-        /* ── Long bond paper container (227mm × 355.6mm - Legal Page) ── */
+        /* ── Long bond paper container (216mm × 279mm - Letter, 2 columns of 2×4") ── */
         .bond-paper {
-            width: 227mm;
-            height: 355.6mm;
+            width: 216mm;
+            height: 279mm;
             margin: 0 auto;
             background: white;
-            padding: 2.8mm 1mm;
+            padding: 5mm 4mm;
             box-shadow: 0 20px 40px rgba(15, 23, 42, 0.15);
             display: grid;
-            grid-template-columns: repeat(3, 75mm);
-            grid-template-rows: repeat(7, 50mm);
-            gap: 0.6mm 0.8mm;
+            grid-template-columns: repeat(2, 101.6mm);
+            grid-template-rows: repeat(5, 50.8mm);
+            gap: 0.8mm 1mm;
             box-sizing: border-box;
         }
 
-        /* ── Print media ── */
+        /* ── Print media (default: bond paper) ── */
         @media print {
+            @page { size: 216mm 279mm; margin: 0; }
             .no-print { display: none !important; }
             body { background: white; margin: 0; padding: 0; }
             .bond-paper { box-shadow: none; margin: 0; }
@@ -465,29 +466,34 @@ function showPreview(mode) {
 
     if (printMode === 'waybill') {
         // Setup dynamic style for waybill printing
+        // Key: use explicit `size: 4in 2in` (width > height = landscape)
+        // DO NOT use the `landscape` keyword — Chrome ignores it when
+        // paper size is pre-selected in the print dialog.
         const styleEl = document.createElement('style');
         styleEl.id = 'waybill-print-style';
         styleEl.innerHTML = `
             @media print {
                 @page {
-                    size: 75mm 50mm;
+                    size: 95mm 75mm;
                     margin: 0;
                 }
+                html, body { width: 95mm; height: 75mm; margin: 0 !important; padding: 0 !important; }
                 body > * { display: none !important; }
                 #printArea { display: block !important; }
                 #printArea * { box-sizing: border-box; }
                 .waybill-sticker-wrapper {
-                    width: 75mm !important;
-                    height: 50mm !important;
+                    width: 95mm !important;
+                    height: 75mm !important;
                     page-break-after: always !important;
                     break-after: page !important;
                     display: block !important;
                     margin: 0 !important;
                     padding: 0 !important;
+                    overflow: hidden !important;
                 }
                 .sticker-card {
-                    width: 75mm !important;
-                    height: 50mm !important;
+                    width: 95mm !important;
+                    height: 75mm !important;
                     border: none !important;
                 }
             }
@@ -557,7 +563,7 @@ function buildBondPaperHTML(assets) {
 
 function buildWaybillPreviewHTML(assets) {
     const stickersHTML = assets.map(a => `
-        <div class="waybill-sticker-wrapper shadow-md bg-white mb-4 overflow-hidden" style="width: 75mm; height: 50mm; display: block;">
+        <div class="waybill-sticker-wrapper shadow-md bg-white mb-4 overflow-hidden" style="width: 95mm; height: 75mm; display: block;">
             ${buildStickerHTML(a)}
         </div>
     `).join('');
@@ -603,54 +609,54 @@ function buildStickerHTML(a) {
         serialFontSize = '9px';
     }
 
-    return `<div class="sticker-card" style="width: 75mm; height: 50mm; border: 2.5px solid #c00000; padding: 0; box-sizing: border-box; background: white; display: flex; flex-direction: column; overflow: hidden; font-family: Arial, sans-serif; position: relative;">
+    return `<div class="sticker-card" style="width: 95mm; height: 75mm; border: 2.5px solid #c00000; padding: 0; box-sizing: border-box; background: white; display: flex; flex-direction: column; overflow: hidden; font-family: Arial, sans-serif; position: relative;">
         <!-- Header -->
-        <div style="display: flex; align-items: center; border-bottom: 1.5px solid #c00000; padding: 4px 8px; gap: 6px; background: #fff; flex-shrink: 0; min-height: 40px; box-sizing: border-box; overflow: hidden;">
-            <img src="/images/deped_logo.png" style="height: 30px; width: auto; flex-shrink: 0;" onerror="this.style.display='none'">
-            <div style="flex-grow: 1; text-align: center; display: flex; flex-direction: column; justify-content: center; line-height: 1.15;">
-                <div style="font-size: 7.5px; color: #000; font-weight: normal; font-family: Arial, sans-serif; text-transform: none;">Republic of the Philippines</div>
-                <div style="font-size: 7.5px; color: #000; font-weight: normal; font-family: Arial, sans-serif; text-transform: none;">Department of Education</div>
-                <div style="font-size: 9.5px; color: #1e3a8a; font-weight: bold; font-family: Arial, sans-serif; letter-spacing: 0.1px; text-transform: none;">DIVISION OF ZAMBOANGA CITY</div>
-                <div style="font-size: 7.5px; color: #000; font-weight: normal; font-family: Arial, sans-serif; text-transform: none;">Region IX-Zamboanga Peninsula</div>
+        <div style="display: flex; align-items: center; border-bottom: 1.5px solid #c00000; padding: 5px 8px; gap: 6px; background: #fff; flex-shrink: 0; min-height: 46px; box-sizing: border-box; overflow: hidden;">
+            <img src="/images/deped_logo.png" style="height: 34px; width: auto; flex-shrink: 0;" onerror="this.style.display='none'">
+            <div style="flex-grow: 1; text-align: center; display: flex; flex-direction: column; justify-content: center; line-height: 1.2;">
+                <div style="font-size: 7.5px; color: #000; font-weight: normal; font-family: Arial, sans-serif;">Republic of the Philippines</div>
+                <div style="font-size: 7.5px; color: #000; font-weight: normal; font-family: Arial, sans-serif;">Department of Education</div>
+                <div style="font-size: 9.5px; color: #1e3a8a; font-weight: bold; font-family: Arial, sans-serif; letter-spacing: 0.1px;">DIVISION OF ZAMBOANGA CITY</div>
+                <div style="font-size: 7.5px; color: #000; font-weight: normal; font-family: Arial, sans-serif;">Region IX-Zamboanga Peninsula</div>
             </div>
         </div>
 
         <!-- Title -->
-        <div style="text-align: center; color: #c00000; font-size: 9px; font-weight: bold; letter-spacing: 0.5px; padding: 3px 0; border-bottom: 1.5px solid #c00000; background: #fff; text-transform: uppercase; font-family: Arial, sans-serif; flex-shrink: 0; box-sizing: border-box;">
+        <div style="text-align: center; color: #c00000; font-size: 9px; font-weight: bold; letter-spacing: 0.5px; padding: 4px 0; border-bottom: 1.5px solid #c00000; background: #fff; text-transform: uppercase; font-family: Arial, sans-serif; flex-shrink: 0; box-sizing: border-box;">
             PROPERTY INVENTORY STICKER
         </div>
 
         <!-- Body -->
         <div style="display: flex; flex-grow: 1; background: #fff; overflow: hidden; box-sizing: border-box;">
             <!-- Left Side (Property details) -->
-            <div style="display: flex; flex-direction: column; width: 64%; border-right: 1px solid #cbd5e1; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; width: 62%; border-right: 1px solid #cbd5e1; box-sizing: border-box;">
                 <!-- Row 1: Property Number -->
-                <div style="flex: 3; border-bottom: 1px solid #cbd5e1; padding: 2px 6px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: hidden;">
-                    <div style="font-size: 7px; font-weight: bold; color: #64748b; letter-spacing: 0.2px; text-transform: uppercase; line-height: 1;">PROPERTY NUMBER</div>
-                    <div style="font-size: ${propNumFontSize}; font-weight: bold; color: #000; line-height: 1.1; word-break: break-all; margin-top: 1px;">${propNum}</div>
+                <div style="flex: 3; border-bottom: 1px solid #cbd5e1; padding: 4px 7px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: hidden;">
+                    <div style="font-size: 7.5px; font-weight: bold; color: #64748b; letter-spacing: 0.3px; text-transform: uppercase; line-height: 1;">PROPERTY NUMBER</div>
+                    <div style="font-size: ${propNumFontSize}; font-weight: bold; color: #000; line-height: 1.2; word-break: break-all; margin-top: 2px;">${propNum}</div>
                 </div>
                 <!-- Row 2: Item Brand Model -->
-                <div style="flex: 4.5; border-bottom: 1px solid #cbd5e1; padding: 2px 6px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: hidden;">
-                    <div style="font-size: 7px; font-weight: bold; color: #64748b; letter-spacing: 0.2px; text-transform: uppercase; line-height: 1;">ITEM/BRAND/MODEL</div>
-                    <div style="font-size: ${itemBrandFontSize}; font-weight: bold; color: #000; line-height: 1.1; word-break: break-word; margin-top: 1px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">${itemBrand}</div>
+                <div style="flex: 5; border-bottom: 1px solid #cbd5e1; padding: 4px 7px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: hidden;">
+                    <div style="font-size: 7.5px; font-weight: bold; color: #64748b; letter-spacing: 0.3px; text-transform: uppercase; line-height: 1;">ITEM/BRAND/MODEL</div>
+                    <div style="font-size: ${itemBrandFontSize}; font-weight: bold; color: #000; line-height: 1.2; word-break: break-word; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">${itemBrand}</div>
                 </div>
                 <!-- Row 3: Serial Number -->
-                <div style="flex: 3; padding: 2px 6px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: hidden;">
-                    <div style="font-size: 7px; font-weight: bold; color: #64748b; letter-spacing: 0.2px; text-transform: uppercase; line-height: 1;">SERIAL NUMBER</div>
-                    <div style="font-size: ${serialFontSize}; font-weight: bold; color: #000; line-height: 1.1; word-break: break-all; margin-top: 1px;">${serial}</div>
+                <div style="flex: 3; padding: 4px 7px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: hidden;">
+                    <div style="font-size: 7.5px; font-weight: bold; color: #64748b; letter-spacing: 0.3px; text-transform: uppercase; line-height: 1;">SERIAL NUMBER</div>
+                    <div style="font-size: ${serialFontSize}; font-weight: bold; color: #000; line-height: 1.2; word-break: break-all; margin-top: 2px;">${serial}</div>
                 </div>
             </div>
 
             <!-- Right Side (QR & Scan Me) -->
-            <div style="width: 36%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px; box-sizing: border-box; background: #fff; overflow: hidden;">
-                <div id="qr-${a.id}" style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; margin-bottom: 4px; background: #fff; overflow: hidden; flex-shrink: 0;"></div>
-                <div style="font-size: 8px; font-weight: bold; color: #64748b; letter-spacing: 0.2px; text-transform: uppercase; line-height: 1; text-align: center;">SCAN ME</div>
-                <div style="font-size: 8px; font-weight: bold; color: #000; line-height: 1; text-align: center; margin-top: 2px;">FOR INFO</div>
+            <div style="width: 38%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 6px; box-sizing: border-box; background: #fff; overflow: hidden; gap: 4px;">
+                <div id="qr-${a.id}" style="width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; background: #fff; overflow: hidden; flex-shrink: 0;"></div>
+                <div style="font-size: 8px; font-weight: bold; color: #64748b; letter-spacing: 0.3px; text-transform: uppercase; line-height: 1; text-align: center;">SCAN ME</div>
+                <div style="font-size: 8px; font-weight: bold; color: #000; line-height: 1; text-align: center;">FOR INFO</div>
             </div>
         </div>
 
         <!-- Footer -->
-        <div style="border-top: 1.5px solid #c00000; padding: 4px 6px; text-align: center; line-height: 1.1; background: #fff; box-sizing: border-box; flex-shrink: 0; min-height: 24px; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
+        <div style="border-top: 1.5px solid #c00000; padding: 5px 6px; text-align: center; line-height: 1.1; background: #fff; box-sizing: border-box; flex-shrink: 0; min-height: 26px; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
             <div style="font-size: 9px; font-weight: bold; color: #c00000; letter-spacing: 0.3px; text-transform: uppercase; font-family: Arial, sans-serif; line-height: 1;">DO NOT REMOVE UNDER PENALTY OF LAW</div>
         </div>
     </div>`;
@@ -665,8 +671,8 @@ function generateAllQRs(assets) {
             try {
                 new QRCode(el, {
                     text: qrData,
-                    width: 56,
-                    height: 56,
+                    width: 72,
+                    height: 72,
                     colorDark: '#000000',
                     colorLight: '#ffffff',
                     correctLevel: QRCode.CorrectLevel.M
