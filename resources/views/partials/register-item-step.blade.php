@@ -46,10 +46,10 @@
         {{-- ── Asset Source Table ── --}}
         <div id="panelAssetSource">
             <div class="xls-scroll-wrap">
-            <table class="w-full border-collapse" style="min-width:1890px;">
+            <table id="assetSourceTable" class="w-full border-collapse" style="min-width:1890px;">
                 <thead>
                     <tr>
-                        <th class="xls-th w-10 text-center sticky left-0" style="z-index:6">#</th>
+                        <th class="xls-th xls-sticky-col w-10 text-center sticky left-0" style="z-index:6">#</th>
                         <th class="xls-th col-identity" style="min-width:147px">Classification</th>
                         <th class="xls-th col-identity" style="min-width:147px">Category</th>
                         <th class="xls-th col-identity" style="min-width:147px">Item</th>

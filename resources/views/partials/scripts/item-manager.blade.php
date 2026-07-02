@@ -5,6 +5,17 @@
         const rowsPerPage = 50;
         let _rowNumCounter = 0; 
 
+        window.resetAssetRegistrationState = function() {
+            allRowsData = [];
+            _rowNumCounter = 0;
+            currentPage = 1;
+            const tbodySource = document.getElementById('assetSourceBody');
+            if (tbodySource) {
+                tbodySource.innerHTML = '';
+            }
+            renderAssetTable();
+        };
+
         // Global datalist caches
         let globalLocations = [];
         let globalEmployees = [];
@@ -46,7 +57,17 @@
                 } catch (err) { console.error('Failed to fetch acquisition sources', err); }
             } catch (e) { console.error('Failed to init datalists', e); }
         }
-        document.addEventListener('DOMContentLoaded', initGlobalDatalists);
+        document.addEventListener('DOMContentLoaded', () => {
+            initGlobalDatalists();
+            if (typeof window.resetAssetRegistrationState === 'function') {
+                window.resetAssetRegistrationState();
+            }
+        });
+        window.addEventListener('pageshow', (event) => {
+            if (typeof window.resetAssetRegistrationState === 'function') {
+                window.resetAssetRegistrationState();
+            }
+        });
 
         // ─── CUSTOM DROPDOWN HELPERS ──────────────────────────────────────
         // Inject shared dropdown styles once
@@ -60,7 +81,9 @@
                     top: 100%;
                     left: 0;
                     z-index: 9999;
-                    min-width: 260px;
+                    width: 100%;
+                    min-width: 100%;
+                    max-width: 100%;
                     max-height: 220px;
                     overflow-y: auto;
                     background: #1e293b;
@@ -1110,9 +1133,13 @@
             tbodySource.innerHTML = '';
             if (allRowsData.length === 0) {
                 document.getElementById('assetSourceEmpty').classList.remove('hidden');
+                const tbl = document.getElementById('assetSourceTable');
+                if (tbl) tbl.style.display = 'none';
                 updatePaginationDisplay(); return;
             }
             document.getElementById('assetSourceEmpty').classList.add('hidden');
+            const tbl = document.getElementById('assetSourceTable');
+            if (tbl) tbl.style.display = 'table';
             const start = (currentPage - 1) * rowsPerPage;
             const end = start + rowsPerPage;
             const pageData = allRowsData.slice(start, end);
@@ -1293,10 +1320,6 @@
             allRowsData.push(newRow);
             currentPage = Math.ceil(allRowsData.length / rowsPerPage);
             renderAssetTable();
-            setTimeout(() => {
-                const tr = document.getElementById(`src-${newRow.id}`);
-                if (tr) tr.querySelector('input').focus();
-            }, 50);
         }
 
         function addSourceRowDOM(data, displayNum) {
@@ -1331,14 +1354,14 @@
                 </td>
                 <td class="xls-td col-identity"><input type="text" oninput="syncState(${data.id}, 'item', this.value)"           data-col="item"           value="${data.item}"           autocomplete="off" class="xls-input" placeholder="Item"></td>
                 <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'description', this.value)"    data-col="description"    value="${data.description}"    autocomplete="off" class="xls-input" placeholder="Description"></td>
-                <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'uom', this.value)"    data-col="uom"    value="${data.uom || ''}"    autocomplete="off" class="xls-input" placeholder="Unit"></td>
+                <td class="xls-td col-context"><input type="text" oninput="syncState(${data.id}, 'uom', this.value)"    data-col="uom"    value="${data.uom || ''}"    autocomplete="off" class="xls-input" placeholder="Unit" list="dl-uom"></td>
                 <td class="xls-td col-status" style="position:relative;overflow:visible">
                     <input type="text" oninput="syncState(${data.id}, 'mode', this.value); filterModeDropdown(${data.id}, this.value)" onfocus="filterModeDropdown(${data.id}, this.value)" data-col="mode" value="${data.mode || ''}" autocomplete="off" class="xls-input" placeholder="Mode">
                     <div id="mode-dd-${data.id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
                 </td>
                 <td class="xls-td col-identity" style="position:relative;overflow:visible">
                     <div class="relative w-full h-full">
-                        <input type="text" id="add-source-${data.id}" oninput="syncState(${data.id}, 'source', this.value); filterSourceDropdown(${data.id}, this.value); document.getElementById('add-source-clear-${data.id}').style.display = this.value ? 'block' : 'none';" onfocus="filterSourceDropdown(${data.id}, this.value)" data-col="source" value="${data.source || ''}" autocomplete="off" class="xls-input w-full h-full pr-6" placeholder="Search Source...">
+                        <input type="text" id="add-source-${data.id}" readonly onfocus="filterSourceDropdown(${data.id}, '')" data-col="source" value="${data.source || ''}" autocomplete="off" class="xls-input w-full h-full pr-6 cursor-pointer bg-white" placeholder="Select Source...">
                         <button type="button" id="add-source-clear-${data.id}" onclick="clearSource(${data.id})" style="display:${data.source ? 'block' : 'none'};" class="absolute right-1 top-1/2 -translate-y-1/2 p-[2.3px] text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"><svg class="w-[13.2px] h-[13.2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                     </div>
                     <div id="source-dd-${data.id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>

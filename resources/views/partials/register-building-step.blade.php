@@ -579,4 +579,26 @@ function updateBldgNewLabels() {
 
 // Hook into nextStep render call
 window.renderBldgTable = function() { renderBldgEntryTable(); };
+
+window.resetBuildingRegistrationState = function() {
+    bldgEntryRows = [];
+    _bldgRowNum = 0;
+    bldgEntryPage = 1;
+    const tbodyIdent = document.getElementById('bldgIdentityBody');
+    const tbodyDet   = document.getElementById('bldgDetailsBody');
+    if (tbodyIdent) tbodyIdent.innerHTML = '';
+    if (tbodyDet) tbodyDet.innerHTML = '';
+    renderBldgEntryTable();
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof window.resetBuildingRegistrationState === 'function') {
+        window.resetBuildingRegistrationState();
+    }
+});
+window.addEventListener('pageshow', (event) => {
+    if (typeof window.resetBuildingRegistrationState === 'function') {
+        window.resetBuildingRegistrationState();
+    }
+});
 </script>

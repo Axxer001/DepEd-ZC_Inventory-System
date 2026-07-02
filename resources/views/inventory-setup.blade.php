@@ -220,6 +220,9 @@
 
         // Register Asset
         if (value === 'register') {
+            if (typeof window.resetAssetRegistrationState === 'function') {
+                window.resetAssetRegistrationState();
+            }
             document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
             document.getElementById('stepAddNew').classList.add('active');
             document.getElementById('mainContent').classList.replace('max-w-5xl', 'max-w-full');
@@ -242,6 +245,9 @@
 
         // Add Building
         if (value === 'building') {
+            if (typeof window.resetBuildingRegistrationState === 'function') {
+                window.resetBuildingRegistrationState();
+            }
             document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
             document.getElementById('stepAddBuilding').classList.add('active');
             document.getElementById('mainContent').classList.replace('max-w-5xl', 'max-w-full');

@@ -47,7 +47,7 @@
                     </div>
                     <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Item</label><input type="text" id="bItem" data-col="item" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
                     <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Description</label><input type="text" id="bDescription" data-col="description" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Combo-box: type/select"></div>
-                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Unit of Measurement</label><input type="text" id="bUom" data-col="uom" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="e.g. Unit, Set, Pcs"></div>
+                    <div class="relative col-context p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Unit of Measurement</label><input type="text" id="bUom" data-col="uom" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="e.g. Unit, Set, Pcs" list="dl-uom"></div>
                     <div class="relative col-status p-1 rounded-2xl" style="position:relative;overflow:visible">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Mode of Procurement</label>
                         <input type="text" id="bMode" data-col="mode" autocomplete="off" 
@@ -58,9 +58,9 @@
                     <div class="relative col-status p-1 rounded-2xl" style="position:relative;overflow:visible">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Source</label>
                         <div class="relative w-full h-full">
-                            <input type="text" id="bSource" data-col="source" autocomplete="off" 
-                                oninput="filterBulkSourceDropdown(this.value); document.getElementById('bSourceClear').style.display = this.value ? 'block' : 'none';" onfocus="filterBulkSourceDropdown(this.value)"
-                                class="xls-input w-full pr-8 !border border-slate-100 rounded-xl bg-transparent" placeholder="Search Source...">
+                            <input type="text" id="bSource" readonly data-col="source" autocomplete="off" 
+                                onfocus="filterBulkSourceDropdown('')"
+                                class="xls-input w-full pr-8 !border border-slate-100 rounded-xl bg-white cursor-pointer" placeholder="Select Source...">
                             <button type="button" id="bSourceClear" onclick="clearBulkSource()" style="display:none;" class="absolute right-2 top-1/2 -translate-y-1/2 p-[4.4px] text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all cursor-pointer">
                                 <svg class="w-[17.6px] h-[17.6px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
