@@ -209,7 +209,7 @@
                 const displayNum = start + i + 1;
                 const tr = document.createElement('tr');
                 tr.className = 'xls-row group border-b border-slate-100';
-                tr.onclick = () => window.location.href = '/admin/source-management/' + s.id;
+                tr.onclick = () => window.location.href = '/admin/sources/' + s.id;
                 
                 const cell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const uppercase">${val || '-'}</span></td>`;
                 const typeBadge = (val) => {

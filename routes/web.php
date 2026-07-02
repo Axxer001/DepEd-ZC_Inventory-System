@@ -292,6 +292,8 @@ Route::middleware('auth')->group(function () {
         $assets = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
+            ->leftJoin('categories as cat', 'items.category_id', '=', 'cat.id')
+            ->leftJoin('classifications as class', 'cat.classification_id', '=', 'class.id')
             ->leftJoin('employees as emp', 'ad.employee_id', '=', 'emp.id')
             ->leftJoin('offices as off', 'emp.office_id', '=', 'off.id')
             ->leftJoin('schools as sch', 'emp.school_id', '=', 'sch.id')
@@ -300,6 +302,7 @@ Route::middleware('auth')->group(function () {
                 'ad.property_number',
                 'asrc.condition',
                 'items.name as item_name',
+                'class.name as classification_name',
                 DB::raw('COALESCE(asrc.description, items.name) as description'),
                 DB::raw('COALESCE(sch.name, off.name) as location')
             )
@@ -313,6 +316,8 @@ Route::middleware('auth')->group(function () {
         $assets = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
+            ->leftJoin('categories as cat', 'items.category_id', '=', 'cat.id')
+            ->leftJoin('classifications as class', 'cat.classification_id', '=', 'class.id')
             ->leftJoin('employees as emp', 'ad.employee_id', '=', 'emp.id')
             ->leftJoin('offices as off', 'emp.office_id', '=', 'off.id')
             ->leftJoin('schools as sch', 'emp.school_id', '=', 'sch.id')
@@ -321,6 +326,7 @@ Route::middleware('auth')->group(function () {
                 'ad.property_number',
                 'asrc.condition',
                 'items.name as item_name',
+                'class.name as classification_name',
                 DB::raw('COALESCE(asrc.description, items.name) as description'),
                 DB::raw('COALESCE(sch.name, off.name) as location')
             )
