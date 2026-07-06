@@ -389,6 +389,40 @@
         /* Spec pills inside table cells */
         html.dark .xls-td .border-slate-100 { border-color: #334155 !important; }
         html.dark .xls-td .bg-white { background-color: #0f172a !important; }
+
+        /* Filter Dropdowns & Inputs */
+        .filter-select-wrap { display: flex; flex-direction: column; gap: 6px; }
+        .filter-select-label {
+            font-size: 9px; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 0.15em; color: #94a3b8;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .filter-select {
+            width: 100%; padding: 10px 14px; font-size: 11px; font-weight: 700;
+            border: 1.5px solid #e2e8f0; border-radius: 12px; background: #f8fafc;
+            color: #334155; appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.5' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center;
+            background-size: 14px; padding-right: 36px; cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s; outline: none;
+        }
+        .filter-select:focus { border-color: #c00000; box-shadow: 0 0 0 3px rgba(192,0,0,0.08); }
+        .filter-select:hover { border-color: #cbd5e1; }
+
+        .filter-input {
+            width: 100%; padding: 10px 14px; font-size: 11px; font-weight: 700;
+            border: 1.5px solid #e2e8f0; border-radius: 12px; background: #f8fafc;
+            color: #334155; outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .filter-input:focus { border-color: #c00000; box-shadow: 0 0 0 3px rgba(192,0,0,0.08); }
+        .filter-input:hover { border-color: #cbd5e1; }
+
+        html.dark .filter-select { background-color: #1e293b; border-color: #334155; color: #e2e8f0; }
+        html.dark .filter-select:focus { border-color: #c00000; }
+        html.dark .filter-input { background-color: #1e293b; border-color: #334155; color: #e2e8f0; }
+        html.dark .filter-input:focus { border-color: #c00000; }
+        html.dark .filter-select-label { color: #64748b; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex text-slate-900 overflow-x-hidden">
@@ -442,17 +476,26 @@
         <!-- Filter Configuration -->
         <div id="assetFilterSection" class="bg-white rounded-[2.5rem] shadow-lg border border-slate-100 p-8 mb-8 relative z-50 animate-fade transition-all duration-300 origin-top hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8 relative z-10">
-                <div>
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">PPE Type</label>
-                    <select id="assetPropertyType" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+                {{-- PPE Type --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        PPE Type
+                    </label>
+                    <select id="assetPropertyType" class="filter-select">
                         <option value="ALL">All Assets</option>
                         <option value="RPCPPE">PPE (≥ 50k)</option>
                         <option value="RPCSP">Semi-PPE (&lt; 50k)</option>
                     </select>
                 </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Status / Condition</label>
-                    <select id="assetFilterStatus" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+
+                {{-- Status / Condition --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                        Status / Condition
+                    </label>
+                    <select id="assetFilterStatus" class="filter-select">
                         <option value="">All Conditions</option>
                         <option value="distributed">Distributed</option>
                         <option value="not_distributed">Not Yet Distributed</option>
@@ -461,86 +504,151 @@
                         <option value="unserviceable">Unserviceable</option>
                     </select>
                 </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Classification</label>
-                    <select id="assetFilterClassification" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+
+                {{-- Classification --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.884 2.233c.124 2.207 1.256 4.946 2.68 7.3a2.25 2.25 0 001.884 1.233h11.492a2.25 2.25 0 001.884-1.233c1.424-2.354 2.556-5.093 2.68-7.3a2.25 2.25 0 00-1.884-2.233m-16.5 0V6.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v3.375m16.5 0V6.375c0-.621-.504-1.125-1.125-1.125h-2.25c-.621 0-1.125.504-1.125 1.125v3.375m-9.75-3h9.75"/></svg>
+                        Classification
+                    </label>
+                    <select id="assetFilterClassification" class="filter-select">
                         <option value="">All Classifications</option>
                     </select>
                 </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Category</label>
-                    <select id="assetFilterCategory" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+
+                {{-- Category --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6.429 9.75L2.25 12l4.179 2.25m11.142 0L21.75 12l-4.179-2.25M12 5.75L6.429 9.75 12 13.75l5.571-4L12 5.75zM6.429 14.25L12 18.25l5.571-4"/></svg>
+                        Category
+                    </label>
+                    <select id="assetFilterCategory" class="filter-select">
                         <option value="">All Categories</option>
                     </select>
                 </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Item (Article)</label>
-                    <select id="assetFilterItem" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+
+                {{-- Item (Article) --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                        Item (Article)
+                    </label>
+                    <select id="assetFilterItem" class="filter-select">
                         <option value="">All Items</option>
                     </select>
                 </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Cost Sorting</label>
-                    <select id="assetFilterSort" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+
+                {{-- Cost Sorting --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"/></svg>
+                        Cost Sorting
+                    </label>
+                    <select id="assetFilterSort" class="filter-select">
                         <option value="">Default (ID)</option>
                         <option value="high_to_low">Value: High to Low</option>
                         <option value="low_to_high">Value: Low to High</option>
                     </select>
                 </div>
-                <div class="relative">
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Quadrant</label>
-                    <select id="assetFilterQuadrant" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+
+                {{-- Quadrant --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"/></svg>
+                        Quadrant
+                    </label>
+                    <select id="assetFilterQuadrant" class="filter-select">
                         <option value="">All Quadrants</option>
                     </select>
                 </div>
-                <div class="relative">
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">District</label>
-                    <select id="assetFilterDistrict" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+
+                {{-- District --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm-3 11.25s-7.5-4.108-7.5-11.25a7.5 7.5 0 1115 0c0 7.142-7.5 11.25-7.5 11.25z"/></svg>
+                        District
+                    </label>
+                    <select id="assetFilterDistrict" class="filter-select">
                         <option value="">All Districts</option>
                     </select>
                 </div>
-                <div class="relative">
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">School</label>
-                    <div class="relative">
-                        <input type="text" id="assetFilterSchool" placeholder="Search School..." autocomplete="off" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500 pr-10">
+
+                {{-- School --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A4.833 4.833 0 0012 9a4.833 4.833 0 00-7.5 1.332V21m15 0h-15"/></svg>
+                        School
+                    </label>
+                    <div class="relative w-full">
+                        <input type="text" id="assetFilterSchool" placeholder="Search School..." autocomplete="off" class="filter-input pr-10">
                         <div id="assetSchoolDropdown" class="custom-autocomplete hidden"></div>
                     </div>
                 </div>
-                <div class="relative">
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Office</label>
-                    <div class="relative">
-                        <input type="text" id="assetFilterOffice" placeholder="Search Office..." autocomplete="off" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500 pr-10">
+
+                {{-- Office --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15"/></svg>
+                        Office
+                    </label>
+                    <div class="relative w-full">
+                        <input type="text" id="assetFilterOffice" placeholder="Search Office..." autocomplete="off" class="filter-input pr-10">
                         <div id="assetOfficeDropdown" class="custom-autocomplete hidden"></div>
                     </div>
                 </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Source of Acquisition</label>
-                    <select id="assetFilterSource" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+
+                {{-- Source of Acquisition --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"/></svg>
+                        Source of Acquisition
+                    </label>
+                    <select id="assetFilterSource" class="filter-select">
                         <option value="">All Sources</option>
                     </select>
                 </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Mode of Acquisition</label>
-                    <select id="assetFilterMode" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+
+                {{-- Mode of Acquisition --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"/></svg>
+                        Mode of Acquisition
+                    </label>
+                    <select id="assetFilterMode" class="filter-select">
                         <option value="">All Modes</option>
                     </select>
                 </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Date Acquired (Acceptance)</label>
-                    <input type="date" id="assetFilterDate" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+
+                {{-- Date Acquired (Acceptance) --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z"/></svg>
+                        Date Acquired
+                    </label>
+                    <input type="date" id="assetFilterDate" class="filter-input">
                 </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Asset Expiry / Life</label>
-                    <select id="assetFilterExpiry" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+
+                {{-- Asset Expiry / Life --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Asset Expiry / Life
+                    </label>
+                    <select id="assetFilterExpiry" class="filter-select">
                         <option value="">All (Include Expired)</option>
                         <option value="active">Active (Good Life)</option>
                         <option value="nearing_expiry">Nearing Expiry (<= 6 Mo.)</option>
                         <option value="expired">Expired (End of Life)</option>
                     </select>
                 </div>
-                <div>
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Data Integrity (Empty Fields)</label>
-                    <select id="assetFilterEmptyCol" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
+
+                {{-- Data Integrity (Empty Fields) --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v3.75m0-10.03L3.07 19.5h17.86L12 2.72zm0 15.75h.007v.008H12v-.008z"/></svg>
+                        Data Integrity
+                    </label>
+                    <select id="assetFilterEmptyCol" class="filter-select">
                         <option value="">None (All Records)</option>
                         <option value="classification">Missing Classification</option>
                         <option value="category">Missing Category</option>
@@ -559,7 +667,7 @@
                     </select>
                 </div>
             </div>
-            <div class="mt-8 flex justify-end items-center gap-8 relative z-10">
+            <div class="mt-8 flex justify-end items-center gap-8 relative z-10 border-t border-slate-100/60 pt-6">
                 <button onclick="clearAssetFilters()" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-[#c00000] hover:-translate-y-0.5 transition-all duration-300 italic">Clear All Filters</button>
                 <button onclick="assetFetchData()" class="px-8 py-2.5 bg-[#c00000] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-800 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-red-200 active:translate-y-0 transition-all duration-300 shadow-md shadow-red-200 italic group flex items-center gap-2">
                     Apply Configuration
@@ -699,8 +807,6 @@
                 populate('assetFilterMode', data.modes, 'Mode');
                 populate('assetFilterQuadrant', data.quadrants, 'Quadrant');
                 populate('assetFilterDistrict', data.districts, 'District');
-                allSchoolList = data.schools || [];
-                allOfficeList = data.offices || [];
                 if (!isSchoolInit) { initSchoolAutocomplete(); isSchoolInit = true; }
                 if (!isOfficeInit) { initOfficeAutocomplete(); isOfficeInit = true; }
             } catch (e) { console.error('Failed to fetch filters', e); }
@@ -709,46 +815,86 @@
         function initSchoolAutocomplete() {
             const input = document.getElementById('assetFilterSchool');
             const dropdown = document.getElementById('assetSchoolDropdown');
-            input.onfocus = () => showDropdown(input.value);
-            input.oninput = (e) => showDropdown(e.target.value);
+            let timeout = null;
+
+            input.onfocus = () => {
+                showDropdown(input.value);
+            };
+            input.oninput = (e) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    showDropdown(e.target.value);
+                }, 250);
+            };
+
             document.addEventListener('click', (e) => {
                 if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.add('hidden');
             });
-            function showDropdown(query = '') {
-                const filtered = allSchoolList.filter(s => s.toLowerCase().includes(query.toLowerCase()));
-                dropdown.innerHTML = '';
-                if (filtered.length === 0) { dropdown.classList.add('hidden'); return; }
-                filtered.slice(0, 10).forEach(school => {
-                    const item = document.createElement('div');
-                    item.className = 'custom-autocomplete-item';
-                    item.textContent = school;
-                    item.onclick = () => { input.value = school; dropdown.classList.add('hidden'); assetFetchData(); };
-                    dropdown.appendChild(item);
-                });
-                dropdown.classList.remove('hidden');
+
+            async function showDropdown(query = '') {
+                try {
+                    const res = await fetch(`/api/locations/search?type=school&q=${encodeURIComponent(query)}`);
+                    const data = await res.json();
+                    
+                    dropdown.innerHTML = '';
+                    if (data.length === 0) { dropdown.classList.add('hidden'); return; }
+                    
+                    data.slice(0, 10).forEach(itemData => {
+                        const item = document.createElement('div');
+                        item.className = 'custom-autocomplete-item';
+                        item.textContent = itemData.name;
+                        item.onclick = () => {
+                            input.value = itemData.name;
+                            dropdown.classList.add('hidden');
+                            assetFetchData();
+                        };
+                        dropdown.appendChild(item);
+                    });
+                    dropdown.classList.remove('hidden');
+                } catch (e) { console.error('Failed to search schools', e); }
             }
         }
 
         function initOfficeAutocomplete() {
             const input = document.getElementById('assetFilterOffice');
             const dropdown = document.getElementById('assetOfficeDropdown');
-            input.onfocus = () => showDropdown(input.value);
-            input.oninput = (e) => showDropdown(e.target.value);
+            let timeout = null;
+
+            input.onfocus = () => {
+                showDropdown(input.value);
+            };
+            input.oninput = (e) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    showDropdown(e.target.value);
+                }, 250);
+            };
+
             document.addEventListener('click', (e) => {
                 if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.add('hidden');
             });
-            function showDropdown(query = '') {
-                const filtered = allOfficeList.filter(s => s.toLowerCase().includes(query.toLowerCase()));
-                dropdown.innerHTML = '';
-                if (filtered.length === 0) { dropdown.classList.add('hidden'); return; }
-                filtered.slice(0, 10).forEach(office => {
-                    const item = document.createElement('div');
-                    item.className = 'custom-autocomplete-item';
-                    item.textContent = office;
-                    item.onclick = () => { input.value = office; dropdown.classList.add('hidden'); assetFetchData(); };
-                    dropdown.appendChild(item);
-                });
-                dropdown.classList.remove('hidden');
+
+            async function showDropdown(query = '') {
+                try {
+                    const res = await fetch(`/api/locations/search?type=office&q=${encodeURIComponent(query)}`);
+                    const data = await res.json();
+                    
+                    dropdown.innerHTML = '';
+                    if (data.length === 0) { dropdown.classList.add('hidden'); return; }
+                    
+                    data.slice(0, 10).forEach(itemData => {
+                        const item = document.createElement('div');
+                        item.className = 'custom-autocomplete-item';
+                        item.textContent = itemData.name;
+                        item.onclick = () => {
+                            input.value = itemData.name;
+                            dropdown.classList.add('hidden');
+                            assetFetchData();
+                        };
+                        dropdown.appendChild(item);
+                    });
+                    dropdown.classList.remove('hidden');
+                } catch (e) { console.error('Failed to search offices', e); }
             }
         }
 
