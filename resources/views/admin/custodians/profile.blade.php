@@ -900,98 +900,141 @@
 <!-- Edit Employee Modal -->
 <div id="editEmployeeModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
     <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeEditEmployeeModal()"></div>
-    <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-xl p-8 relative z-10 animate-fade mx-4">
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h3 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Edit Employee</h3>
-                <p class="text-slate-500 text-[11px] font-bold uppercase tracking-widest mt-1">Update personnel details</p>
+    <form id="editEmployeeForm" action="{{ route('admin.employees.update', $custodian->id) }}" method="POST" class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-xl mx-4 relative z-10 flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700">
+        @csrf
+        <input type="hidden" name="return_assets" id="returnAssetsFlag" value="0">
+        
+        {{-- Modal Header --}}
+        <div class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700 px-6 py-5 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center shadow-inner">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                </div>
+                <div>
+                    <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-[0.1em]">Edit Employee</h3>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Update personnel details</p>
+                </div>
             </div>
-            <button onclick="closeEditEmployeeModal()" type="button" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            <button type="button" onclick="closeEditEmployeeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-700 p-2.5 rounded-full transition-colors active:scale-95">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
 
-        <form id="editEmployeeForm" action="{{ route('admin.employees.update', $custodian->id) }}" method="POST" class="space-y-5">
-            @csrf
-            <input type="hidden" name="return_assets" id="returnAssetsFlag" value="0">
+        {{-- Modal Body --}}
+        <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scroll bg-slate-50/50 dark:bg-slate-900/50">
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-1">
-                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">First Name</label>
-                    <input type="text" name="first_name" required value="{{ $custodian->first_name }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
-                </div>
-                <div class="space-y-1">
-                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Middle Name</label>
-                    <input type="text" name="middle_name" value="{{ $custodian->middle_name }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-1">
-                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Last Name</label>
-                    <input type="text" name="last_name" required value="{{ $custodian->last_name }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
-                </div>
-                <div class="space-y-1">
-                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Employee ID</label>
-                    <input type="text" name="employee_id" required value="{{ $custodian->employee_id }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-1">
-                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Sex</label>
-                    <select name="sex" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
-                        <option value="">-- Select Sex --</option>
-                        <option value="Male" {{ ($custodian->sex ?? '') == 'Male' ? 'selected' : '' }}>Male</option>
-                        <option value="Female" {{ ($custodian->sex ?? '') == 'Female' ? 'selected' : '' }}>Female</option>
-                    </select>
-                </div>
-                <div class="space-y-1">
-                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Date of Birth</label>
-                    <input type="date" name="date_of_birth" value="{{ $custodian->date_of_birth }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
+            {{-- Always Editable --}}
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                <h4 class="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Always Editable</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">First Name <span class="text-red-500">*</span></label>
+                        <input type="text" name="first_name" required value="{{ $custodian->first_name }}" class="w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Last Name <span class="text-red-500">*</span></label>
+                        <input type="text" name="last_name" required value="{{ $custodian->last_name }}" class="w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Employee ID <span class="text-red-500">*</span></label>
+                        <input type="text" name="employee_id" required value="{{ $custodian->employee_id }}" class="w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Status <span class="text-red-500">*</span></label>
+                        <div class="relative group">
+                            <select name="status" required class="w-full appearance-none bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600 cursor-pointer">
+                                <option value="Active" {{ strtolower($custodian->status ?? '') == 'active' ? 'selected' : '' }}>Active</option>
+                                <option value="Inactive" {{ strtolower($custodian->status ?? '') == 'inactive' ? 'selected' : '' }}>Inactive (Resigned/Retired)</option>
+                            </select>
+                            <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-red-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="space-y-1">
-                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Position</label>
-                    <input type="text" name="position" value="{{ $custodian->position }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
-                </div>
-                <div class="space-y-1">
-                    <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Status</label>
-                    <select name="status" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
-                        <option value="Active" {{ strtolower($custodian->status ?? '') == 'active' ? 'selected' : '' }}>Active</option>
-                        <option value="Inactive" {{ strtolower($custodian->status ?? '') == 'inactive' ? 'selected' : '' }}>Inactive (Resigned/Retired)</option>
-                    </select>
+            {{-- Conditionally Editable --}}
+            <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                <h4 class="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Editable if Empty</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Middle Name</label>
+                        <input type="text" name="middle_name" value="{{ $custodian->middle_name }}" {{ $custodian->middle_name ? "readonly class='w-full bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700/50 text-slate-400 dark:text-slate-500 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner'" : "class='w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600'" }}>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Sex</label>
+                        @if($custodian->sex)
+                            <input type="text" name="sex" value="{{ $custodian->sex }}" readonly class="w-full bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700/50 text-slate-400 dark:text-slate-500 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner">
+                        @else
+                            <div class="relative group">
+                                <select name="sex" class="w-full appearance-none bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600 cursor-pointer">
+                                    <option value="">-- Select Sex --</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                                <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-red-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        @endif
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Date of Birth</label>
+                        <input type="date" name="date_of_birth" value="{{ $custodian->date_of_birth }}" {{ $custodian->date_of_birth ? "readonly class='w-full bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700/50 text-slate-400 dark:text-slate-500 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner'" : "class='w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600 cursor-pointer'" }}>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Position</label>
+                        <input type="text" name="position" value="{{ $custodian->position }}" {{ $custodian->position ? "readonly class='w-full bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700/50 text-slate-400 dark:text-slate-500 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner'" : "class='w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600'" }}>
+                    </div>
+
+                    {{-- School / Office select --}}
+                    @if($custodian->school_id || $custodian->office_id)
+                        <div class="md:col-span-2 space-y-4 border-t border-slate-100 dark:border-slate-700 pt-4 mt-2">
+                            <h5 class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Station Assignment</h5>
+                            @if($custodian->school_id)
+                                <div>
+                                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">School</label>
+                                    <input type="text" value="{{ $custodian->school_name ?? 'N/A' }}" readonly class="w-full bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700/50 text-slate-400 dark:text-slate-500 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner">
+                                    <input type="hidden" name="school_id" value="{{ $custodian->school_id }}">
+                                </div>
+                            @endif
+                            @if($custodian->office_id)
+                                <div class="mt-3">
+                                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Office</label>
+                                    <input type="text" value="{{ $custodian->office_name ?? 'N/A' }}" readonly class="w-full bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700/50 text-slate-400 dark:text-slate-500 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner">
+                                    <input type="hidden" name="office_id" value="{{ $custodian->office_id }}">
+                                </div>
+                            @endif
+                        </div>
+                    @else
+                        <div class="md:col-span-2 space-y-4 border-t border-slate-100 dark:border-slate-700 pt-4 mt-2">
+                            <h5 class="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Station Assignment (Select One)</h5>
+                            <div id="schoolAssignmentField" class="space-y-1">
+                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Select School</label>
+                                <div class="relative group">
+                                    <select name="school_id" id="modalSchoolSelect" class="w-full appearance-none bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600 cursor-pointer">
+                                        <option value="">-- Select a School --</option>
+                                    </select>
+                                    <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-red-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
+                            <div id="officeAssignmentField" class="space-y-1 mt-3">
+                                <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Office</label>
+                                <div class="relative group">
+                                    <select name="office_id" id="modalOfficeSelect" class="w-full appearance-none bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600 cursor-pointer">
+                                        <option value="">-- Select an Office --</option>
+                                    </select>
+                                    <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-red-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
 
-            <div class="space-y-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
-                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Station Assignment</label>
-
-                <!-- School Selection -->
-                <div id="schoolAssignmentField" class="space-y-1">
-                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Select School</label>
-                    <select name="school_id" id="modalSchoolSelect" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-800 dark:border-slate-700 dark:text-white">
-                        <option value="">-- Select a School --</option>
-                    </select>
-                </div>
-
-                <!-- Office Selection -->
-                <div id="officeAssignmentField" class="space-y-1 mt-3">
-                    <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Office</label>
-                    <select name="office_id" id="modalOfficeSelect" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-800 dark:border-slate-700 dark:text-white">
-                        <option value="">-- Select an Office --</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
-                <button type="button" onclick="closeEditEmployeeModal()" class="px-6 py-3 border border-slate-200 text-slate-500 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900 transition-all">Cancel</button>
-                <button type="submit" class="px-8 py-3 bg-gradient-to-r from-red-700 to-red-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:from-red-800 hover:to-red-600 transition-all shadow-md shadow-red-500/20">Save</button>
+            {{-- Modal Footer --}}
+            <div class="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700 p-6 flex items-center justify-end gap-3">
+                <button type="button" onclick="closeEditEmployeeModal()" class="px-6 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-colors shadow-sm active:scale-95">Cancel</button>
+                <button type="submit" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-600/30 transition-all active:scale-95 flex items-center justify-center gap-2">Save Changes</button>
             </div>
         </form>
-    </div>
 </div>
 
 <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">

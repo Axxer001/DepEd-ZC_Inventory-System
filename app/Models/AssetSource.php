@@ -13,6 +13,7 @@ class AssetSource extends Model
     protected $fillable = [
         'item_id',
         'acquisition_source_id',
+        'supplier_id',
         'procurement_mode_id',
         'description',
         'unit_of_measurement',
@@ -37,6 +38,11 @@ class AssetSource extends Model
     public function acquisitionSource(): BelongsTo
     {
         return $this->belongsTo(AcquisitionSource::class);
+    }
+
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
     }
 
     public function procurementMode(): BelongsTo

@@ -251,6 +251,7 @@ class AssetController extends Controller
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->join('classifications', 'categories.classification_id', '=', 'classifications.id')
             ->join('acquisition_sources', 'asrc.acquisition_source_id', '=', 'acquisition_sources.id')
+            ->leftJoin('suppliers', 'asrc.supplier_id', '=', 'suppliers.id')
             ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
             ->leftJoin('offices', 'e.office_id', '=', 'offices.id')
             ->leftJoin('schools', 'e.school_id', '=', 'schools.id')
@@ -278,6 +279,7 @@ class AssetController extends Controller
                 'asrc.warranty',
                 'pm.name as mode_of_acquisition',
                 'acquisition_sources.name as source_name',
+                'suppliers.name as supplier_name',
                 'acquisition_sources.id as acquisition_source_id',
                 'items.name as item_name',
                 'items.id as item_id',
@@ -363,8 +365,8 @@ class AssetController extends Controller
                 if ($t->transfer_type === 'Return') {
                     $desc = 'Returned from ' . $fromName . ' to AMU / Warehouse.';
                     if ($t->remarks) $desc .= ' Reason: ' . $t->remarks;
-                } elseif ($t->transfer_type === 'Return to Source') {
-                    $desc = 'Returned from ' . $fromName . ' to Source: ' . ($asset->source_name ?? 'Source') . '.';
+                } elseif ($t->transfer_type === 'Return to Supplier') {
+                    $desc = 'Returned from ' . $fromName . ' to Supplier: ' . ($asset->source_name ?? 'Supplier') . '.';
                     if ($t->remarks) $desc .= ' Reason: ' . $t->remarks;
                 } elseif ($t->transfer_type === 'Initial Distribution') {
                     $desc = 'Distributed from Warehouse to ' . $toName;
@@ -381,7 +383,7 @@ class AssetController extends Controller
 
                 $timeline[] = [
                     'date' => $t->transfer_date ? \Carbon\Carbon::parse($t->transfer_date)->format('Y-m-d') : 'N/A',
-                    'type' => in_array($t->transfer_type, ['Temporary Borrow', 'Return', 'Return to Source', 'Initial Distribution']) ? $t->transfer_type : 'Transfer',
+                    'type' => in_array($t->transfer_type, ['Temporary Borrow', 'Return', 'Return to Supplier', 'Initial Distribution']) ? $t->transfer_type : 'Transfer',
                     'user' => $t->user_name ?? 'Property Officer',
                     'description' => $desc
                 ];
@@ -395,7 +397,7 @@ class AssetController extends Controller
             ->orderByDesc('transfer_date')
             ->orderByDesc('created_at')
             ->first();
-        if ($latestTransfer && $latestTransfer->transfer_type === 'Return to Source' && !$asset->employee_id) {
+        if ($latestTransfer && $latestTransfer->transfer_type === 'Return to Supplier' && !$asset->employee_id) {
             $asset->office_school_name = $asset->source_name;
             $asset->is_in_source = true;
         } else {
@@ -426,12 +428,16 @@ class AssetController extends Controller
             'item_name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
             'condition' => 'required|string|in:Good Condition,Needs Repair,Unserviceable',
+            'property_number' => 'nullable|string|max:255',
+            'asset_cost' => 'nullable|numeric|min:0',
+            'quantity' => 'nullable|integer|min:1',
+            'acquisition_date' => 'nullable|date',
         ]);
 
         $asset = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
-            ->select('ad.*', 'asrc.id as asset_source_id', 'items.category_id', 'asrc.quantity', 'asrc.unit_of_measurement')
+            ->select('ad.*', 'asrc.id as asset_source_id', 'items.category_id', 'asrc.quantity', 'asrc.unit_of_measurement', 'asrc.asset_cost', 'asrc.condition')
             ->where('ad.id', $id)
             ->first();
 
@@ -457,12 +463,35 @@ class AssetController extends Controller
             ]);
 
             // Update Asset Source
-            DB::table('asset_sources')->where('id', $asset->asset_source_id)->update([
+            $sourceUpdates = [
                 'item_id' => $finalItemId,
                 'description' => $validated['description'],
                 'condition' => $validated['condition'],
                 'updated_at' => now(),
-            ]);
+            ];
+            
+            if (empty($asset->asset_cost) && isset($validated['asset_cost'])) {
+                $sourceUpdates['asset_cost'] = $validated['asset_cost'];
+            }
+            if (empty($asset->quantity) && isset($validated['quantity'])) {
+                $sourceUpdates['quantity'] = $validated['quantity'];
+            }
+
+            DB::table('asset_sources')->where('id', $asset->asset_source_id)->update($sourceUpdates);
+
+            // Update Asset Assignment
+            $assignmentUpdates = [];
+            if (empty($asset->property_number) && isset($validated['property_number'])) {
+                $assignmentUpdates['property_number'] = $validated['property_number'];
+            }
+            if (empty($asset->acquisition_date) && isset($validated['acquisition_date'])) {
+                $assignmentUpdates['acquisition_date'] = $validated['acquisition_date'];
+            }
+
+            if (!empty($assignmentUpdates)) {
+                $assignmentUpdates['updated_at'] = now();
+                DB::table('asset_assignments')->where('id', $id)->update($assignmentUpdates);
+            }
             
             /** @var \App\Models\User|null $user */
             $user = Auth::user();
@@ -472,7 +501,7 @@ class AssetController extends Controller
                 'user' => $user ? $user->name : 'System',
                 'action_type' => 'UPDATE',
                 'module' => 'Assets',
-                'activity' => 'Updated specifications (item, description, & condition) for asset ID ' . $id,
+                'activity' => 'Updated specifications for asset ID ' . $id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -676,8 +705,9 @@ class AssetController extends Controller
         $asset = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('acquisition_sources', 'asrc.acquisition_source_id', '=', 'acquisition_sources.id')
+            ->leftJoin('suppliers', 'asrc.supplier_id', '=', 'suppliers.id')
             ->where('ad.id', $id)
-            ->select('ad.*', 'asrc.warranty', 'asrc.acceptance_date', 'acquisition_sources.name as source_name', 'asrc.id as asset_source_id')
+            ->select('ad.*', 'asrc.warranty', 'asrc.acceptance_date', 'acquisition_sources.name as source_name', 'suppliers.name as supplier_name', 'asrc.id as asset_source_id')
             ->first();
 
         if (!$asset) {
@@ -695,7 +725,7 @@ class AssetController extends Controller
         }
 
         if (($hasNoWarranty || $isExpired) && $validated['condition'] === 'Needs Repair') {
-            return back()->with('error', 'Unable to initiate Return to Source: This item requires repair, but its warranty has expired or is unavailable.');
+            return back()->with('error', 'Unable to initiate Return to Supplier: This item requires repair, but its warranty has expired or is unavailable.');
         }
 
         DB::transaction(function () use ($id, $asset, $validated) {
@@ -716,7 +746,7 @@ class AssetController extends Controller
                 'from_custodian_id' => $asset->employee_id,
                 'to_custodian_id' => null,
                 'transfer_date' => $validated['return_date'],
-                'transfer_type' => 'Return to Source',
+                'transfer_type' => 'Return to Supplier',
                 'remarks' => $validated['remarks'],
                 'authorized_by' => Auth::id() ?? 1,
                 'created_at' => now(),
@@ -740,12 +770,13 @@ class AssetController extends Controller
             $uom = $source->unit_of_measurement ?? 'Unit';
             $qty = $source->quantity ?? 1;
             $propNoStr = $asset->property_number ? '[' . $asset->property_number . '] ' : '';
-            $detailedMessage = "Returned {$qty} {$uom} {$propNoStr}{$itemName} to Source: {$asset->source_name}.";
+            $supName = $asset->supplier_name ?? $asset->source_name ?? 'Supplier';
+            $detailedMessage = "Returned {$qty} {$uom} {$propNoStr}{$itemName} to Supplier: {$supName}.";
 
             $admins = \App\Models\User::where('approved', true)->get();
             $dummyAsset = (object)[
-                'title' => 'Asset Returned to Source',
-                'message' => "An asset has been returned to its source: {$asset->source_name}.",
+                'title' => 'Asset Returned to Supplier',
+                'message' => "An asset has been returned to its supplier: {$supName}.",
                 'detailed_message' => $detailedMessage
             ];
             foreach ($admins as $admin) {
@@ -753,7 +784,7 @@ class AssetController extends Controller
             }
         });
 
-        return redirect()->route('assets.profile', $id)->with('success', 'Asset successfully returned to Source!');
+        return redirect()->route('assets.profile', $id)->with('success', 'Asset successfully returned to Supplier!');
     }
 
     public function getSchoolAssets($id)

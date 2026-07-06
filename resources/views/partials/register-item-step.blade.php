@@ -56,6 +56,9 @@
                         <th class="xls-th col-context" style="min-width:189px">Description</th>
                         <th class="xls-th col-context" style="min-width:126px">Unit</th>
                         <th class="xls-th col-status" style="min-width:158px">Mode of Acquisition</th>
+                        <th class="xls-th col-identity" style="min-width:189px">Supplier</th>
+                        <th class="xls-th col-personnel" style="min-width:168px">Supplier Personnel</th>
+                        <th class="xls-th col-context" style="min-width:168px">Service Center</th>
                         <th class="xls-th col-identity" style="min-width:189px">Acquisition Source</th>
                         <th class="xls-th col-personnel" style="min-width:168px">Source Personnel</th>
                         <th class="xls-th col-personnel" style="min-width:168px">Personnel Position</th>

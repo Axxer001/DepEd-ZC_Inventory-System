@@ -13,6 +13,7 @@ use App\Http\Controllers\BuildingImportController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\AcquisitionSourceController;
+use App\Http\Controllers\SupplierController;
 
 // --- Public Routes ---
 Route::middleware('guest')->group(function () {
@@ -59,6 +60,10 @@ Route::middleware(['auth', 'role:super_admin'])->group(function () {
     // Source Management Actions (Super Admin Only)
     Route::post('/admin/sources', [AcquisitionSourceController::class, 'store'])->name('admin.sources.store');
     Route::post('/admin/sources/{id}/update', [AcquisitionSourceController::class, 'update'])->name('admin.sources.update');
+
+    // Supplier Management Actions (Super Admin Only)
+    Route::post('/admin/suppliers', [SupplierController::class, 'store'])->name('admin.suppliers.store');
+    Route::post('/admin/suppliers/{id}/update', [SupplierController::class, 'update'])->name('admin.suppliers.update');
 });
 
 // --- Protected Admin Routes ---
@@ -224,6 +229,11 @@ Route::middleware('auth')->group(function () {
     // --- Sources Registry ---
     Route::get('/admin/sources', [AcquisitionSourceController::class, 'managementIndex'])->name('admin.sources');
     Route::get('/admin/sources/{id}', [AcquisitionSourceController::class, 'managementProfile'])->name('admin.sources.profile');
+
+    // --- Suppliers Registry ---
+    Route::get('/admin/suppliers', [SupplierController::class, 'index'])->name('admin.suppliers');
+    Route::get('/admin/suppliers/{id}', [SupplierController::class, 'profile'])->name('admin.suppliers.profile');
+    Route::get('/api/suppliers/search', [SupplierController::class, 'apiSearch'])->name('api.suppliers.search');
 
     // --- Employee (formerly Custodian) Registry ---
     Route::get('/admin/employees', [EmployeeController::class, 'index'])->name('admin.employees');

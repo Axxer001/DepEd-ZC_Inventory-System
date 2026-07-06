@@ -24,6 +24,7 @@
         let globalAcqContacts = [];
         let globalAcqSources = [];
         let globalProcurementModes = [];
+        let globalSuppliers = [];
 
         async function initGlobalDatalists() {
             try {
@@ -55,6 +56,11 @@
                     const acqSrcRes = await fetch('/api/acquisition-sources/search?q=');
                     globalAcqSources = await acqSrcRes.json();
                 } catch (err) { console.error('Failed to fetch acquisition sources', err); }
+
+                try {
+                    const suppRes = await fetch('/api/suppliers/search?q=');
+                    globalSuppliers = await suppRes.json();
+                } catch (err) { console.error('Failed to fetch suppliers', err); }
             } catch (e) { console.error('Failed to init datalists', e); }
         }
         document.addEventListener('DOMContentLoaded', () => {
@@ -629,6 +635,67 @@
             if (posInp) {
                 posInp.value = '';
                 syncState(rowId, 'position', '');
+            }
+        }
+
+        window.filterSupplierDropdown = function(rowId, query) {
+            const dd = document.getElementById(`supplier-dd-${rowId}`);
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalSuppliers.slice(0, 50)
+                : globalSuppliers.filter(s => s.name.toLowerCase().includes(q)).slice(0, 50);
+
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No suppliers found</div>`;
+            else dd.innerHTML = matches.map(s => `<div class="xls-dd-item" onmousedown="selectSupplier(${rowId}, this.getAttribute('data-name'))" data-name="${s.name.replace(/"/g, '&quot;')}">${s.name}</div>`).join('');
+            dd.style.display = 'block';
+        }
+
+        window.selectSupplier = function(rowId, supplierName) {
+            const supp = globalSuppliers.find(s => s.name === supplierName);
+            if (!supp) return;
+
+            const inp = document.querySelector(`#src-${rowId} input[data-col="supplier"]`);
+            if (inp) {
+                inp.value = supplierName;
+                syncState(rowId, 'supplier', supplierName);
+            }
+            const dd = document.getElementById(`supplier-dd-${rowId}`);
+            if (dd) dd.style.display = 'none';
+
+            const clearBtn = document.getElementById(`add-supplier-clear-${rowId}`);
+            if (clearBtn) clearBtn.style.display = 'block';
+
+            // Auto-fill readonly fields
+            const personInp = document.querySelector(`#src-${rowId} input[data-col="supplier_personnel"]`);
+            const centerInp = document.querySelector(`#src-${rowId} input[data-col="service_center"]`);
+            if (personInp) {
+                personInp.value = supp.supplier_personnel || '';
+                syncState(rowId, 'supplier_personnel', supp.supplier_personnel || '');
+            }
+            if (centerInp) {
+                centerInp.value = supp.service_center || '';
+                syncState(rowId, 'service_center', supp.service_center || '');
+            }
+        }
+
+        window.clearSupplier = function(rowId) {
+            const inp = document.getElementById(`add-supplier-${rowId}`);
+            if (inp) inp.value = '';
+            syncState(rowId, 'supplier', '');
+
+            const clearBtn = document.getElementById(`add-supplier-clear-${rowId}`);
+            if (clearBtn) clearBtn.style.display = 'none';
+
+            const personInp = document.querySelector(`#src-${rowId} input[data-col="supplier_personnel"]`);
+            const centerInp = document.querySelector(`#src-${rowId} input[data-col="service_center"]`);
+            if (personInp) {
+                personInp.value = '';
+                syncState(rowId, 'supplier_personnel', '');
+            }
+            if (centerInp) {
+                centerInp.value = '';
+                syncState(rowId, 'service_center', '');
             }
         }
 
@@ -1306,7 +1373,7 @@
             const newRow = {
                 id: ++_rowNumCounter,
                 classification: '', category: '', item: '', description: '', uom: '', 
-                source: '', mode: '', 
+                source: '', mode: '', supplier: '', supplier_personnel: '', service_center: '',
                 personnel: '', position: '',
                 cost: '', qty: '', 
                 'useful-life': '', warranty: '', 
@@ -1358,6 +1425,19 @@
                 <td class="xls-td col-status" style="position:relative;overflow:visible">
                     <input type="text" oninput="syncState(${data.id}, 'mode', this.value); filterModeDropdown(${data.id}, this.value)" onfocus="filterModeDropdown(${data.id}, this.value)" data-col="mode" value="${data.mode || ''}" autocomplete="off" class="xls-input" placeholder="Mode">
                     <div id="mode-dd-${data.id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
+                </td>
+                <td class="xls-td col-identity" style="position:relative;overflow:visible">
+                    <div class="relative w-full h-full">
+                        <input type="text" id="add-supplier-${data.id}" readonly onfocus="filterSupplierDropdown(${data.id}, '')" data-col="supplier" value="${data.supplier || ''}" autocomplete="off" class="xls-input w-full h-full pr-6 cursor-pointer bg-white" placeholder="Select Supplier...">
+                        <button type="button" id="add-supplier-clear-${data.id}" onclick="clearSupplier(${data.id})" style="display:${data.supplier ? 'block' : 'none'};" class="absolute right-1 top-1/2 -translate-y-1/2 p-[2.3px] text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"><svg class="w-[13.2px] h-[13.2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                    </div>
+                    <div id="supplier-dd-${data.id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
+                </td>
+                <td class="xls-td col-personnel">
+                    <input type="text" data-col="supplier_personnel" value="${data.supplier_personnel || ''}" readonly class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" placeholder="Auto-filled">
+                </td>
+                <td class="xls-td col-context">
+                    <input type="text" data-col="service_center" value="${data.service_center || ''}" readonly class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" placeholder="Auto-filled">
                 </td>
                 <td class="xls-td col-identity" style="position:relative;overflow:visible">
                     <div class="relative w-full h-full">

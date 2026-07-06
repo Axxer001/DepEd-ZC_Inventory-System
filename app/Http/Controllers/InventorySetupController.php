@@ -174,6 +174,7 @@ class InventorySetupController extends Controller
             'cat'     => array_change_key_case(DB::table('categories')->pluck('id', 'name')->toArray(), CASE_LOWER),
             'item'    => array_change_key_case(DB::table('items')->pluck('id', 'name')->toArray(), CASE_LOWER),
             'mode'    => array_change_key_case(DB::table('procurement_modes')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'supplier'=> array_change_key_case(DB::table('suppliers')->pluck('id', 'name')->toArray(), CASE_LOWER),
         ];
 
         $conditionMap = [
@@ -226,6 +227,10 @@ class InventorySetupController extends Controller
                     continue;
                 }
 
+                // ── Resolve Supplier (lookup only) ───────────────────────────
+                $supplierName = trim($row['supplier'] ?? '');
+                $supplierId = $supplierName ? ($cache['supplier'][strtolower($supplierName)] ?? null) : null;
+
                 // ── Assets go to Warehouse (AMU) by default ──────────────────
                 $employeeId = null;
                 $employeeName = "Unassigned";
@@ -238,6 +243,7 @@ class InventorySetupController extends Controller
                 $assetSourceId = DB::table('asset_sources')->insertGetId([
                     'item_id'                => $itemId,
                     'acquisition_source_id'  => $acqSourceId,
+                    'supplier_id'            => $supplierId,
                     'procurement_mode_id'    => $modeId,
                     'description'            => $row['description']      ?? null,
                     'unit_of_measurement'    => $row['uom']               ?? 'Unit',

@@ -87,7 +87,7 @@
 
             <div class="flex items-center gap-3 shrink-0">
                 @if(auth()->check() && auth()->user()->isSuperAdmin())
-                <button onclick="openEditModal()" class="px-5 py-2.5 bg-red-700 text-white border border-red-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-800 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-md shadow-red-500/20 flex items-center gap-2 group">
+                <button onclick="document.getElementById('editSourceModal').classList.remove('hidden')" class="px-5 py-2.5 bg-red-700 text-white border border-red-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-800 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-md shadow-red-500/20 flex items-center gap-2 group">
                     <svg class="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.89 1.12l-2.828.941.941-2.828a4.5 4.5 0 011.12-1.89L16.862 4.487zM19.5 7.125L16.862 4.487"/></svg>
                     Edit Source
                 </button>
@@ -283,70 +283,76 @@
         </div>
     </div>
 
-    <!-- Hidden Form for Submit -->
-    <form id="editForm" method="POST" action="{{ route('admin.sources.update', $source->id) }}" style="display: none;">
-        @csrf
-        <input type="text" name="name" id="f_name">
-        <input type="text" name="source_type" id="f_source_type">
-        <input type="text" name="contact_person" id="f_contact_person">
-        <input type="text" name="contact_position" id="f_contact_position">
-    </form>
+    <!-- Edit Source Modal -->
+    <div id="editSourceModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="document.getElementById('editSourceModal').classList.add('hidden')"></div>
+        <form method="POST" action="{{ route('admin.sources.update', $source->id) }}" class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-xl mx-4 relative z-10 flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700">
+            @csrf
+            
+            {{-- Modal Header --}}
+            <div class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-700 px-6 py-5 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center shadow-inner">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-[0.1em]">Edit Source</h3>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Update source details</p>
+                    </div>
+                </div>
+                <button type="button" onclick="document.getElementById('editSourceModal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-200/50 dark:hover:bg-slate-700 p-2.5 rounded-full transition-colors active:scale-95">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
 
-    <script>
-        function openEditModal() {
-            Swal.fire({
-                title: '<h2 class="text-xl font-black text-slate-800 uppercase tracking-wider">Edit Source</h2>',
-                html: `
-                    <div class="text-left space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Source Name *</label>
-                            <input type="text" id="swal-name" value="{{ htmlspecialchars($source->name) }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-red-500">
+            {{-- Modal Body --}}
+            <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scroll bg-slate-50/50 dark:bg-slate-900/50">
+                
+                {{-- Always Editable --}}
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                    <h4 class="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Always Editable</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Source Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" required value="{{ $source->name }}" class="w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600">
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Source Type *</label>
-                            <select id="swal-type" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-red-500">
-                                <option value="Internal" {{ $source->source_type === 'Internal' ? 'selected' : '' }}>Internal (System)</option>
-                                <option value="External" {{ $source->source_type === 'External' ? 'selected' : '' }}>External (Distributor)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Contact Person (Optional)</label>
-                            <input type="text" id="swal-person" value="{{ htmlspecialchars($source->contact_person ?? '') }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-red-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Contact Position (Optional)</label>
-                            <input type="text" id="swal-position" value="{{ htmlspecialchars($source->contact_position ?? '') }}" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-red-500">
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Source Type <span class="text-red-500">*</span></label>
+                            <div class="relative group">
+                                <select name="source_type" required class="w-full appearance-none bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600 cursor-pointer">
+                                    <option value="Internal" {{ $source->source_type === 'Internal' ? 'selected' : '' }}>Internal (System)</option>
+                                    <option value="External" {{ $source->source_type === 'External' ? 'selected' : '' }}>External (Distributor)</option>
+                                </select>
+                                <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-red-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
                         </div>
                     </div>
-                `,
-                showCancelButton: true,
-                confirmButtonText: 'Save Changes',
-                cancelButtonText: 'Cancel',
-                customClass: {
-                    confirmButton: 'px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider text-white bg-red-600 hover:bg-red-700 mx-2',
-                    cancelButton: 'px-6 py-3 rounded-xl text-xs font-black uppercase tracking-wider text-slate-600 bg-slate-100 hover:bg-slate-200 mx-2',
-                    popup: 'rounded-[2rem] p-6'
-                },
-                buttonsStyling: false,
-                preConfirm: () => {
-                    const name = document.getElementById('swal-name').value;
-                    const type = document.getElementById('swal-type').value;
-                    if (!name) {
-                        Swal.showValidationMessage('Source name is required');
-                        return false;
-                    }
-                    return { name, type, person: document.getElementById('swal-person').value, position: document.getElementById('swal-position').value };
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById('f_name').value = result.value.name;
-                    document.getElementById('f_source_type').value = result.value.type;
-                    document.getElementById('f_contact_person').value = result.value.person;
-                    document.getElementById('f_contact_position').value = result.value.position;
-                    document.getElementById('editForm').submit();
-                }
-            });
-        }
-    </script>
+                </div>
+
+                {{-- Conditionally Editable --}}
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                    <h4 class="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Editable if Empty</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Contact Person</label>
+                            <input type="text" name="contact_person" value="{{ $source->contact_person }}" {{ $source->contact_person ? "readonly class='w-full bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700/50 text-slate-400 dark:text-slate-500 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner'" : "class='w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600'" }}>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Contact Position</label>
+                            <input type="text" name="contact_position" value="{{ $source->contact_position }}" {{ $source->contact_position ? "readonly class='w-full bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700/50 text-slate-400 dark:text-slate-500 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner'" : "class='w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600'" }}>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Modal Footer --}}
+            <div class="bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700 p-6 flex items-center justify-end gap-3">
+                <button type="button" onclick="document.getElementById('editSourceModal').classList.add('hidden')" class="px-6 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-colors shadow-sm active:scale-95">Cancel</button>
+                <button type="submit" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-600/30 transition-all active:scale-95 flex items-center justify-center gap-2">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
 </body>
 </html>
