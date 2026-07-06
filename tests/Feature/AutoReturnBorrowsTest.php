@@ -39,27 +39,27 @@ class AutoReturnBorrowsTest extends TestCase
 
         // 3. Create classifications, categories, items, asset_sources
         $classId = DB::table('classifications')->insertGetId([
-            'name' => 'TEST CLASS',
+            'name' => 'TEST CLASS ' . uniqid(),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
         $catId = DB::table('categories')->insertGetId([
-            'name' => 'TEST CAT',
+            'name' => 'TEST CAT ' . uniqid(),
             'classification_id' => $classId,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
         $itemId = DB::table('items')->insertGetId([
-            'name' => 'TEST ITEM',
+            'name' => 'TEST ITEM ' . uniqid(),
             'category_id' => $catId,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
         $acqId = DB::table('acquisition_sources')->insertGetId([
-            'name' => 'TEST SOURCE',
+            'name' => 'TEST SOURCE ' . uniqid(),
             'source_type' => 'Internal',
             'created_at' => now(),
             'updated_at' => now(),
@@ -80,7 +80,7 @@ class AutoReturnBorrowsTest extends TestCase
         $assetId = DB::table('asset_assignments')->insertGetId([
             'asset_source_id' => $sourceId,
             'employee_id' => $borrowerId,
-            'property_number' => 'PROP-AUTO-TEST-123',
+            'property_number' => 'PROP-AUTO-TEST-' . uniqid(),
             'acquisition_cost' => 50000.00,
             'acquisition_date' => now()->subDays(5)->toDateString(),
             'created_at' => now()->subDays(5),
@@ -152,24 +152,24 @@ class AutoReturnBorrowsTest extends TestCase
 
         // Create classifications, categories, items, asset_sources
         $classId = DB::table('classifications')->insertGetId([
-            'name' => 'TEST CLASS 2',
+            'name' => 'TEST CLASS 2 ' . uniqid(),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
         $catId = DB::table('categories')->insertGetId([
-            'name' => 'TEST CAT 2', 
+            'name' => 'TEST CAT 2 ' . uniqid(), 
             'classification_id' => $classId,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
         $itemId = DB::table('items')->insertGetId([
-            'name' => 'TEST ITEM 2', 
+            'name' => 'TEST ITEM 2 ' . uniqid(), 
             'category_id' => $catId,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
         $acqId = DB::table('acquisition_sources')->insertGetId([
-            'name' => 'TEST SOURCE 2', 
+            'name' => 'TEST SOURCE 2 ' . uniqid(), 
             'source_type' => 'Internal',
             'created_at' => now(),
             'updated_at' => now(),
@@ -188,7 +188,7 @@ class AutoReturnBorrowsTest extends TestCase
         $assetId = DB::table('asset_assignments')->insertGetId([
             'asset_source_id' => $sourceId,
             'employee_id' => $borrowerId,
-            'property_number' => 'PROP-AUTO-TEST-456',
+            'property_number' => 'PROP-AUTO-TEST-' . uniqid(),
             'acquisition_cost' => 50000.00,
             'acquisition_date' => now()->toDateString(),
             'created_at' => now(),
