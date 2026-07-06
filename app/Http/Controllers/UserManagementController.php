@@ -20,7 +20,7 @@ class UserManagementController extends Controller
     public function index()
     {
         $pending  = PendingRegistration::orderByDesc('created_at')->get();
-        $users    = User::orderBy('role')->orderBy('name')->get();
+        $users    = User::where('approved', true)->orderBy('role')->orderBy('name')->get();
         $blocked  = BlockedAccount::orderByDesc('blocked_at')->get();
 
         return view('admin.user-management', compact('pending', 'users', 'blocked'));
