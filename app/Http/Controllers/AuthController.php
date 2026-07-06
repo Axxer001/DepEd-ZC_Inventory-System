@@ -27,15 +27,6 @@ class AuthController extends Controller
         if (Auth::attempt(['email' => $email, 'password' => $request->password, 'approved' => true])) {
             $user = Auth::user();
             
-            \Illuminate\Support\Facades\DB::table('system_logs')->insert([
-                'user' => $user->name,
-                'activity' => 'User logged in',
-                'module' => 'Authentication',
-                'action_type' => 'Others',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
-            
             return redirect()->intended('/dashboard');
         }
 
@@ -64,18 +55,6 @@ class AuthController extends Controller
     // Handle logout
     public function logout(Request $request)
     {
-        $user = Auth::user();
-        if ($user) {
-            \Illuminate\Support\Facades\DB::table('system_logs')->insert([
-                'user' => $user->name,
-                'activity' => 'User logged out',
-                'module' => 'Authentication',
-                'action_type' => 'Others',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
-        }
-        
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -164,15 +143,6 @@ class AuthController extends Controller
         if ($user) {
             $user->password = \Illuminate\Support\Facades\Hash::make($request->password);
             $user->save();
-
-            \Illuminate\Support\Facades\DB::table('system_logs')->insert([
-                'user' => $user->name,
-                'activity' => 'User reset their password',
-                'module' => 'Authentication',
-                'action_type' => 'Update',
-                'created_at' => now(),
-                'updated_at' => now()
-            ]);
         }
 
         \Illuminate\Support\Facades\DB::table('password_reset_tokens')->where('email', $email)->delete();

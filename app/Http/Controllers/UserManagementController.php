@@ -59,16 +59,6 @@ class UserManagementController extends Controller
 
         $pending->delete();
 
-        $actor = auth()->user()->name;
-        DB::table('system_logs')->insert([
-            'user'        => $actor,
-            'activity'    => "Approved registration for: {$pending->email} as {$request->role}",
-            'module'      => 'User Management',
-            'action_type' => 'Create',
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
-
         try {
             Mail::to($pending->email)->send(new RegistrationApproved($pending->email));
         } catch (\Exception $e) {}
@@ -84,16 +74,6 @@ class UserManagementController extends Controller
         $pending = PendingRegistration::findOrFail($id);
         $email   = $pending->email;
         $pending->delete();
-
-        $actor = auth()->user()->name;
-        DB::table('system_logs')->insert([
-            'user'        => $actor,
-            'activity'    => "Rejected registration for: {$email}",
-            'module'      => 'User Management',
-            'action_type' => 'Others',
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
 
         try {
             Mail::to($email)->send(new RegistrationRejected($email));
@@ -118,18 +98,7 @@ class UserManagementController extends Controller
             return back()->with('error', 'You cannot change your own role.');
         }
 
-        $oldRole = $user->role;
         $user->update(['role' => $request->role]);
-
-        $actor = auth()->user()->name;
-        DB::table('system_logs')->insert([
-            'user'        => $actor,
-            'activity'    => "Changed role of {$user->email} from {$oldRole} to {$request->role}",
-            'module'      => 'User Management',
-            'action_type' => 'Update',
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
 
         return back()->with('success', "Role updated for {$user->email}.");
     }
@@ -152,16 +121,6 @@ class UserManagementController extends Controller
 
         $user->update(['approved' => false]);
 
-        $actor = auth()->user()->name;
-        DB::table('system_logs')->insert([
-            'user'        => $actor,
-            'activity'    => "Blocked user account: {$user->email}",
-            'module'      => 'User Management',
-            'action_type' => 'Update',
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
-
         return back()->with('success', "Account {$user->email} has been blocked.");
     }
 
@@ -176,16 +135,6 @@ class UserManagementController extends Controller
 
         // Re-enable user if they exist
         User::where('email', $email)->update(['approved' => true]);
-
-        $actor = auth()->user()->name;
-        DB::table('system_logs')->insert([
-            'user'        => $actor,
-            'activity'    => "Unblocked email: {$email}",
-            'module'      => 'User Management',
-            'action_type' => 'Update',
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
 
         return back()->with('success', "{$email} has been unblocked.");
     }
@@ -203,16 +152,6 @@ class UserManagementController extends Controller
 
         $email = $user->email;
         $user->delete();
-
-        $actor = auth()->user()->name;
-        DB::table('system_logs')->insert([
-            'user'        => $actor,
-            'activity'    => "Deleted user account: {$email}",
-            'module'      => 'User Management',
-            'action_type' => 'Delete',
-            'created_at'  => now(),
-            'updated_at'  => now(),
-        ]);
 
         return back()->with('success', "Account {$email} has been permanently deleted.");
     }

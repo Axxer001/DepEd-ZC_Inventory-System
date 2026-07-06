@@ -15,30 +15,6 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    protected static function booted()
-    {
-        static::created(function ($user) {
-            DB::table('system_logs')->insert([
-                'user'        => Auth::user()?->name ?? 'System',
-                'activity'    => "Created new account: {$user->email}",
-                'module'      => 'Accounts',
-                'action_type' => 'Create',
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ]);
-        });
-
-        static::deleted(function ($user) {
-            DB::table('system_logs')->insert([
-                'user'        => Auth::user()?->name ?? 'System',
-                'activity'    => "Deleted account: {$user->email}",
-                'module'      => 'Accounts',
-                'action_type' => 'Delete',
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ]);
-        });
-    }
 
     /**
      * The attributes that are mass assignable.

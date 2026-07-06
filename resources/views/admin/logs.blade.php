@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Logs | DepEd ZC</title>
+    <title>{{ auth()->user()->isSuperAdmin() ? 'System Logs' : 'History Logs' }} | DepEd ZC</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -82,7 +82,7 @@
         <main class="p-6 lg:p-10">
             <header class="flex flex-col md:flex-row md:justify-between md:items-start mb-8 gap-4">
                 <div>
-                    <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">System Logs</h2>
+                    <h2 class="text-3xl font-extrabold text-slate-900 tracking-tight">{{ auth()->user()->isSuperAdmin() ? 'System Logs' : 'History Logs' }}</h2>
                     <p class="text-slate-500 text-sm mt-1 font-medium italic">Track all administrative activities (Philippine Standard Time)</p>
                 </div>
             </header>
@@ -168,7 +168,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="4" class="px-8 py-16 text-center text-sm font-bold text-slate-400 italic">No system logs found.</td>
+                                <td colspan="4" class="px-8 py-16 text-center text-sm font-bold text-slate-400 italic">No {{ auth()->user()->isSuperAdmin() ? 'system' : 'history' }} logs found.</td>
                             </tr>
                             @endforelse
                         </tbody>
