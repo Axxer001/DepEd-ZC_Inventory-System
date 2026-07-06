@@ -79,35 +79,47 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
-        /* Filter Chips */
-        .filter-chip {
-            padding: 8px 16px;
-            font-size: 10px;
-            font-weight: 800;
+        /* Filter Dropdown */
+        .filter-select-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .filter-select-label {
+            font-size: 9px;
+            font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-radius: 12px;
-            border: 1px solid rgba(226, 232, 240, 0.5);
-            background: transparent;
-            color: inherit;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            white-space: nowrap;
-            display: inline-flex;
+            letter-spacing: 0.15em;
+            color: #94a3b8;
+            display: flex;
             align-items: center;
             gap: 6px;
         }
-        .filter-chip.active-red { background: #c00000; border-color: #c00000; color: white; box-shadow: 0 4px 12px rgba(192, 0, 0, 0.2); }
-        .filter-chip:hover:not(.active-red) { border-color: #c00000; color: #c00000; background: rgba(192, 0, 0, 0.05); }
-
-        .filter-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            padding: 4px;
+        .filter-select {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #334155;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.5' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 14px;
+            padding-right: 36px;
+            cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
         }
+        .filter-select:focus { border-color: #c00000; box-shadow: 0 0 0 3px rgba(192,0,0,0.08); }
+        .filter-select:hover { border-color: #cbd5e1; }
+
+        html.dark .filter-select { background-color: #1e293b; border-color: #334155; color: #e2e8f0; }
+        html.dark .filter-select:focus { border-color: #c00000; }
 
         /* Dark Mode Overrides */
         html.dark body { background-color: #0f172a; color: #f8fafc; }
@@ -169,23 +181,91 @@
             </div>
         </div>
 
-        <!-- Filter Configuration -->
         <div id="custodianFilterSection" class="hidden bg-white rounded-[2.5rem] shadow-xl border border-slate-100 p-8 mb-8 relative z-50 animate-fade transition-all duration-300 origin-top">
-            <div class="flex flex-col gap-8 relative z-10">
-                <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest italic flex items-center gap-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                            Status
-                        </label>
-                    </div>
-                    <div id="statusChipContainer" class="filter-container">
-                        {{-- Chips injected via JS --}}
-                    </div>
-                </div>
+            <div class="flex items-center gap-2 mb-6">
+                <span class="w-2 h-2 rounded-full bg-red-600"></span>
+                <span class="text-[10px] font-black text-slate-900 uppercase tracking-widest italic">Filter Configuration</span>
             </div>
-            
-            <div class="mt-8 flex justify-end items-center gap-8 relative z-10 pt-6 border-t border-slate-100/60">
+            <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5 relative z-10">
+
+                {{-- Status --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>
+                        Status
+                    </label>
+                    <select id="filterStatus" class="filter-select">
+                        <option value="">All Statuses</option>
+                    </select>
+                </div>
+
+                {{-- Clearance --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+                        Clearance
+                    </label>
+                    <select id="filterClearance" class="filter-select">
+                        <option value="">All</option>
+                        <option value="cleared">Cleared (No Assets)</option>
+                        <option value="has_assets">Has Assigned Assets</option>
+                    </select>
+                </div>
+
+                {{-- Position --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0"/></svg>
+                        Position
+                    </label>
+                    <select id="filterPosition" class="filter-select">
+                        <option value="">All Positions</option>
+                    </select>
+                </div>
+
+                {{-- Portfolio Value --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+                        Portfolio Value
+                    </label>
+                    <select id="filterPortfolioValue" class="filter-select">
+                        <option value="">Any Value</option>
+                        <option value="no_value">No Portfolio Value</option>
+                        <option value="low">₱1 – ₱50,000</option>
+                        <option value="mid">₱50,001 – ₱200,000</option>
+                        <option value="high">Above ₱200,000</option>
+                    </select>
+                </div>
+
+                {{-- Costing --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/></svg>
+                        Costing
+                    </label>
+                    <select id="filterCosting" class="filter-select">
+                        <option value="">Any Order</option>
+                        <option value="high_low">High to Low</option>
+                        <option value="low_high">Low to High</option>
+                    </select>
+                </div>
+
+                {{-- Sorting --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"/></svg>
+                        Sorting
+                    </label>
+                    <select id="filterSort" class="filter-select">
+                        <option value="az">A &rarr; Z</option>
+                        <option value="za">Z &rarr; A</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="mt-6 flex justify-end items-center gap-8 relative z-10 pt-6 border-t border-slate-100/60">
                 <button onclick="clearCustodianFilters()" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-[#c00000] hover:-translate-y-0.5 transition-all duration-300 italic">Clear All Filters</button>
                 <button onclick="custodianFetchData()" class="px-10 py-4 bg-gradient-to-r from-red-700 to-red-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:from-red-800 hover:to-red-600 transition-all duration-300 active:translate-y-0 shadow-lg shadow-red-500/30 italic transform hover:-translate-y-0.5 group flex items-center gap-2">
                     Apply Filter Configuration
@@ -262,26 +342,23 @@
             try {
                 const res = await fetch(`{{ route('api.employees.filters') }}`);
                 const data = await res.json();
-                
-                const renderChips = (containerId, list, themeClass) => {
-                    const container = document.getElementById(containerId);
-                    container.innerHTML = '';
-                    (list || []).forEach(item => {
-                        if (!item) return;
-                        const chip = document.createElement('div');
-                        chip.className = `filter-chip`;
-                        chip.textContent = item;
-                        chip.dataset.value = item;
-                        chip.onclick = () => {
-                            const isActive = chip.classList.contains(themeClass);
-                            document.querySelectorAll(`#${containerId} .filter-chip`).forEach(c => c.classList.remove(themeClass));
-                            if (!isActive) chip.classList.add(themeClass);
-                        };
-                        container.appendChild(chip);
+
+                const populateSelect = (id, items, valKey = null, labelKey = null) => {
+                    const sel = document.getElementById(id);
+                    if (!sel) return;
+                    const firstOpt = sel.options[0];
+                    sel.innerHTML = '';
+                    sel.appendChild(firstOpt);
+                    (items || []).forEach(item => {
+                        const opt = document.createElement('option');
+                        opt.value = valKey ? item[valKey] : item;
+                        opt.textContent = labelKey ? item[labelKey] : item;
+                        sel.appendChild(opt);
                     });
                 };
-                
-                renderChips('statusChipContainer', data.statuses, 'active-red');
+
+                populateSelect('filterStatus', data.statuses);
+                populateSelect('filterPosition', data.positions);
             } catch (e) { console.error('Failed to fetch custodian filters', e); }
         }
 
@@ -295,14 +372,16 @@
             const loading = document.getElementById('custodianLoading');
             loading.classList.remove('hidden');
 
-            const getSelected = (containerId, themeClass) => {
-                const active = document.querySelector(`#${containerId} .filter-chip.${themeClass}`);
-                return active ? active.dataset.value : null;
-            };
+            const val = id => document.getElementById(id)?.value || null;
 
             const filters = {
-                status: getSelected('statusChipContainer', 'active-red'),
-                search: document.getElementById('custodianFilterSearch').value
+                status:          val('filterStatus'),
+                clearance:       val('filterClearance'),
+                position:        val('filterPosition'),
+                portfolio_value: val('filterPortfolioValue'),
+                costing:         val('filterCosting'),
+                sort:            val('filterSort') || 'az',
+                search:          document.getElementById('custodianFilterSearch').value || null,
             };
             try {
                 const res = await fetch("{{ route('api.employees.preview') }}", {
@@ -322,7 +401,12 @@
         }
 
         function clearCustodianFilters() {
-            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active-red'));
+            ['filterStatus','filterClearance','filterPosition','filterPortfolioValue','filterCosting'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const sortEl = document.getElementById('filterSort');
+            if (sortEl) sortEl.value = 'az';
             document.getElementById('custodianFilterSearch').value = '';
             custodianCurrentPage = 1;
             custodianFetchData();

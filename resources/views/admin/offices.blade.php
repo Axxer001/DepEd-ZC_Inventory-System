@@ -119,35 +119,25 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
-        /* Filter Chips */
-        .filter-chip {
-            padding: 8px 16px;
-            font-size: 10px;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-radius: 12px;
-            border: 1px solid var(--border-primary);
-            background: transparent;
-            color: var(--text-muted);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            cursor: pointer;
-            white-space: nowrap;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+        /* Filter Dropdowns */
+        .filter-select-wrap { display: flex; flex-direction: column; gap: 6px; }
+        .filter-select-label {
+            font-size: 9px; font-weight: 900; text-transform: uppercase;
+            letter-spacing: 0.15em; color: #94a3b8;
+            display: flex; align-items: center; gap: 6px;
         }
-        .filter-chip.active-red { background: #c00000; border-color: #c00000; color: white; box-shadow: 0 4px 12px rgba(192, 0, 0, 0.2); }
-        .filter-chip:hover:not(.active-red) { border-color: #c00000; color: #c00000; background: rgba(192, 0, 0, 0.05); }
-
-        .filter-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            padding: 4px;
+        .filter-select {
+            width: 100%; padding: 10px 14px; font-size: 11px; font-weight: 700;
+            border: 1.5px solid var(--border-primary); border-radius: 12px;
+            background: var(--bg-secondary); color: var(--text-secondary);
+            appearance: none; -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.5' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 12px center;
+            background-size: 14px; padding-right: 36px; cursor: pointer;
+            transition: border-color 0.2s, box-shadow 0.2s; outline: none;
         }
+        .filter-select:focus { border-color: #c00000; box-shadow: 0 0 0 3px rgba(192,0,0,0.08); }
+        .filter-select:hover { border-color: var(--border-strong); }
 
         /* Filter panel background */
         #officeFilterSection {
@@ -201,26 +191,44 @@
 
         <!-- Filter Configuration -->
         <div id="officeFilterSection" class="hidden bg-white rounded-[2.5rem] shadow-xl border border-slate-100 p-8 mb-8 relative z-50 animate-fade transition-all duration-300 origin-top">
-            <div class="flex flex-col gap-8 relative z-10">
-                <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest italic flex items-center gap-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                            Office Types
-                        </label>
-                        <span id="typeCount" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 SELECTED</span>
-                    </div>
-                    <div id="typeChipContainer" class="filter-container">
-                        {{-- Chips injected via JS --}}
-                    </div>
-                </div>
+            <div class="flex items-center gap-2 mb-6">
+                <span class="w-2 h-2 rounded-full bg-red-600"></span>
+                <span class="text-[10px] font-black text-slate-900 uppercase tracking-widest italic">Filter Configuration</span>
             </div>
-            
-            <div class="mt-8 flex justify-end items-center gap-8 relative z-10 pt-6 border-t border-slate-100/60">
+            <div class="flex gap-5 relative z-10" style="max-width:480px;">
+
+                {{-- Costing --}}
+                <div class="filter-select-wrap flex-1">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"/></svg>
+                        Costing
+                    </label>
+                    <select id="filterCosting" class="filter-select">
+                        <option value="">Any Order</option>
+                        <option value="high_low">High to Low</option>
+                        <option value="low_high">Low to High</option>
+                    </select>
+                </div>
+
+                {{-- Sorting --}}
+                <div class="filter-select-wrap flex-1">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12"/></svg>
+                        Sorting
+                    </label>
+                    <select id="filterSort" class="filter-select">
+                        <option value="az">A &rarr; Z</option>
+                        <option value="za">Z &rarr; A</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="mt-6 flex justify-end items-center gap-8 relative z-10 pt-6 border-t border-slate-100/60">
                 <button onclick="clearOfficeFilters()" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-[#c00000] hover:-translate-y-0.5 transition-all duration-300 italic">Clear All Filters</button>
                 <button onclick="officeFetchData()" class="px-10 py-4 bg-gradient-to-r from-red-700 to-red-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:from-red-800 hover:to-red-600 transition-all duration-300 active:translate-y-0 shadow-lg shadow-red-500/30 italic transform hover:-translate-y-0.5 group flex items-center gap-2">
                     Apply Filter Configuration
-                    <svg class="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <svg class="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 </button>
             </div>
         </div>
@@ -289,34 +297,7 @@
         const officeRowsPerPage = 50;
 
         async function officeFetchFilters() {
-            try {
-                const res = await fetch(`{{ route('api.offices.filters') }}`);
-                const data = await res.json();
-                
-                const renderChips = (containerId, list, countId, themeClass) => {
-                    const container = document.getElementById(containerId);
-                    container.innerHTML = '';
-                    (list || []).forEach(item => {
-                        if (!item) return;
-                        const chip = document.createElement('div');
-                        chip.className = `filter-chip`;
-                        chip.textContent = item;
-                        chip.dataset.value = item;
-                        chip.onclick = () => {
-                            chip.classList.toggle(themeClass);
-                            updateChipCount(countId, containerId, themeClass);
-                        };
-                        container.appendChild(chip);
-                    });
-                };
-                
-                renderChips('typeChipContainer', data.types, 'typeCount', 'active-red');
-            } catch (e) { console.error('Failed to fetch office filters', e); }
-        }
-
-        function updateChipCount(countId, containerId, themeClass) {
-            const count = document.querySelectorAll(`#${containerId} .filter-chip.${themeClass}`).length;
-            document.getElementById(countId).textContent = `${count} SELECTED`;
+            // No dynamic selects to populate — dropdowns are static
         }
 
         let officeSearchTimer;
@@ -329,14 +310,12 @@
             const loading = document.getElementById('officeLoading');
             loading.classList.remove('hidden');
 
-            const getSelected = (containerId, themeClass) => {
-                return Array.from(document.querySelectorAll(`#${containerId} .filter-chip.${themeClass}`))
-                    .map(c => c.dataset.value);
-            };
+            const val = id => document.getElementById(id)?.value || null;
 
             const filters = {
-                type: getSelected('typeChipContainer', 'active-red'),
-                search: document.getElementById('officeFilterSearch').value
+                costing: val('filterCosting'),
+                sort:    val('filterSort') || 'az',
+                search:  document.getElementById('officeFilterSearch').value || null,
             };
             try {
                 const res = await fetch("{{ route('api.offices.preview') }}", {
@@ -356,9 +335,11 @@
         }
 
         function clearOfficeFilters() {
-            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active-red'));
+            const costEl = document.getElementById('filterCosting');
+            if (costEl) costEl.value = '';
+            const sortEl = document.getElementById('filterSort');
+            if (sortEl) sortEl.value = 'az';
             document.getElementById('officeFilterSearch').value = '';
-            document.getElementById('typeCount').textContent = '0 SELECTED';
             officeCurrentPage = 1;
             officeFetchData();
         }

@@ -708,6 +708,11 @@ class ReportDownloadController extends Controller
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
             ]);
 
+        if (!empty($filters['legislative_district'])) {
+            $ld = $filters['legislative_district'];
+            $query->join('legislative_districts', 'quadrants.legislative_district_id', '=', 'legislative_districts.id')
+                  ->where('legislative_districts.name', $ld);
+        }
         if (!empty($filters['quadrant'])) {
             $quads = is_array($filters['quadrant']) ? $filters['quadrant'] : [$filters['quadrant']];
             $query->whereIn('quadrants.name', $quads);
@@ -715,6 +720,9 @@ class ReportDownloadController extends Controller
         if (!empty($filters['district'])) {
             $districts = is_array($filters['district']) ? $filters['district'] : [$filters['district']];
             $query->whereIn('districts.name', $districts);
+        }
+        if (!empty($filters['type'])) {
+            $query->where('schools.type', $filters['type']);
         }
         if (!empty($filters['search'])) {
             $search = $filters['search'];
@@ -725,35 +733,20 @@ class ReportDownloadController extends Controller
             });
         }
 
-        // Sorting
-        $sort = $filters['sort'] ?? null;
-        if ($sort === 'name_asc') {
-            $query->orderBy('schools.name', 'asc');
-        } elseif ($sort === 'name_desc') {
-            $query->orderBy('schools.name', 'desc');
-        } elseif ($sort === 'id_asc') {
-            $query->orderBy('schools.school_id', 'asc');
-        } elseif ($sort === 'id_desc') {
-            $query->orderBy('schools.school_id', 'desc');
-        } elseif ($sort === 'cost_asc') {
-            $query->orderByRaw('(total_bldg_cost + total_ppe_cost + total_semi_ppe_cost) asc');
-        } elseif ($sort === 'cost_desc') {
-            $query->orderByRaw('(total_bldg_cost + total_ppe_cost + total_semi_ppe_cost) desc');
-        } elseif ($sort === 'bldg_asc') {
-            $query->orderBy('total_bldg_cost', 'asc');
-        } elseif ($sort === 'bldg_desc') {
-            $query->orderBy('total_bldg_cost', 'desc');
-        } elseif ($sort === 'ppe_asc') {
-            $query->orderBy('total_ppe_cost', 'asc');
-        } elseif ($sort === 'ppe_desc') {
-            $query->orderBy('total_ppe_cost', 'desc');
-        } elseif ($sort === 'semi_asc') {
-            $query->orderBy('total_semi_ppe_cost', 'asc');
-        } elseif ($sort === 'semi_desc') {
-            $query->orderBy('total_semi_ppe_cost', 'desc');
-        } else {
-            $query->orderBy('schools.name', 'asc');
+        // Costing sort (combined PPE + Semi-PPE + Building)
+        $costing = $filters['costing'] ?? null;
+        if ($costing === 'high_low') {
+            $query->orderByRaw('(total_bldg_cost + total_ppe_cost + total_semi_ppe_cost) DESC');
+        } elseif ($costing === 'low_high') {
+            $query->orderByRaw('(total_bldg_cost + total_ppe_cost + total_semi_ppe_cost) ASC');
         }
+
+        // Name sort
+        $sort = $filters['sort'] ?? 'az';
+        match ($sort) {
+            'za'    => $query->orderBy('schools.name', 'desc'),
+            default => $query->orderBy('schools.name', 'asc'),
+        };
 
         $rows = $query->get();
         return response()->json(['rows' => $rows]);
@@ -761,35 +754,34 @@ class ReportDownloadController extends Controller
 
     public function getSchoolsFilterOptions(Request $request)
     {
-        $quadrant = $request->input('quadrant');
-        
-        $districtQuery = DB::table('districts');
-        if ($quadrant) {
-            $districtQuery->join('quadrants', 'districts.quadrant_id', '=', 'quadrants.id')
-                         ->where('quadrants.name', $quadrant);
-        }
-        
-        $districts = $districtQuery->whereNotNull('districts.name')
-                                  ->where('districts.name', '!=', '')
-                                  ->pluck('districts.name')
-                                  ->map(function($name) { return trim($name); })
-                                  ->unique()
-                                  ->sort()
-                                  ->values();
-        $quadrants = DB::table('quadrants')->pluck('name')->unique()->sort()->values();
+        $legislativeDistricts = DB::table('legislative_districts')
+            ->pluck('name')->filter()->sort()->values();
+
+        $quadrants = DB::table('quadrants')
+            ->pluck('name')->unique()->sort()->values();
+
+        $districts = DB::table('districts')
+            ->whereNotNull('name')->where('name', '!=', '')
+            ->pluck('name')
+            ->map(fn($n) => trim($n))
+            ->unique()->sort()->values();
+
+        $types = DB::table('schools')
+            ->distinct()->whereNotNull('type')->where('type', '!=', '')
+            ->pluck('type')->sort()->values();
 
         // For search autocomplete
         $allSchools = DB::table('schools')
             ->select('school_id', 'name')
             ->get()
-            ->map(function($s) {
-                return "{$s->school_id} - {$s->name}";
-            });
+            ->map(fn($s) => "{$s->school_id} - {$s->name}");
 
         return response()->json([
-            'districts' => $districts,
-            'quadrants' => $quadrants,
-            'allSchools' => $allSchools
+            'legislative_districts' => $legislativeDistricts,
+            'quadrants'             => $quadrants,
+            'districts'             => $districts,
+            'types'                 => $types,
+            'allSchools'            => $allSchools,
         ]);
     }
 
@@ -825,11 +817,6 @@ class ReportDownloadController extends Controller
                     ->selectRaw('COUNT(*)'),
             ]);
 
-        if (!empty($filters['type'])) {
-            $types = is_array($filters['type']) ? $filters['type'] : [$filters['type']];
-            $query->whereIn('offices.type', $types);
-        }
-
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function($q) use ($search) {
@@ -839,9 +826,23 @@ class ReportDownloadController extends Controller
             });
         }
 
-        $rows = $query->orderBy('offices.name')->get();
-        return response()->json(['rows' => $rows]);
+        // Costing sort (combined PPE + Semi-PPE)
+        $costing = $filters['costing'] ?? null;
+        if ($costing === 'high_low') {
+            $query->orderByRaw('(total_ppe_cost + total_semi_ppe_cost) DESC');
+        } elseif ($costing === 'low_high') {
+            $query->orderByRaw('(total_ppe_cost + total_semi_ppe_cost) ASC');
+        }
 
+        // Name sort
+        $sort = $filters['sort'] ?? 'az';
+        match ($sort) {
+            'za'    => $query->orderBy('offices.name', 'desc'),
+            default => $query->orderBy('offices.name', 'asc'),
+        };
+
+        $rows = $query->get();
+        return response()->json(['rows' => $rows]);
     }
 
     public function getOfficesFilterOptions(Request $request)
@@ -886,6 +887,15 @@ class ReportDownloadController extends Controller
                 $query->having('total_assets', '>', 0);
             }
         }
+        if (!empty($filters['portfolio_value'])) {
+            match ($filters['portfolio_value']) {
+                'no_value'  => $query->having('total_value', '=', 0),
+                'low'       => $query->having('total_value', '>', 0)->having('total_value', '<=', 50000),
+                'mid'       => $query->having('total_value', '>', 50000)->having('total_value', '<=', 200000),
+                'high'      => $query->having('total_value', '>', 200000),
+                default     => null,
+            };
+        }
         if (!empty($filters['search'])) {
             $search = $filters['search'];
             $query->where(function($q) use ($search) {
@@ -898,18 +908,51 @@ class ReportDownloadController extends Controller
             });
         }
 
-        $rows = $query->orderBy('employees.last_name')->get();
+        // Costing sort (portfolio value) takes priority; name sort is secondary
+        $costing = $filters['costing'] ?? null;
+        $sort    = $filters['sort']    ?? 'az';
+
+        if ($costing === 'high_low') {
+            $query->orderByDesc('total_value');
+        } elseif ($costing === 'low_high') {
+            $query->orderBy('total_value');
+        }
+
+        match ($sort) {
+            'za'    => $query->orderBy('employees.last_name', 'desc'),
+            default => $query->orderBy('employees.last_name'),
+        };
+
+        $rows = $query->get();
         return response()->json(['rows' => $rows]);
     }
 
     public function getCustodiansFilterOptions(Request $request)
     {
-        $positions = DB::table('employees')->distinct()->pluck('position')->filter()->values();
+        $positions = DB::table('employees')->distinct()->pluck('position')->filter()->sort()->values();
         $statuses  = DB::table('employees')->distinct()->pluck('status')->filter()->values();
 
         return response()->json([
-            'positions' => $positions,
-            'statuses'  => $statuses
+            'positions'       => $positions,
+            'statuses'        => $statuses,
+            'clearance'       => [
+                ['value' => 'cleared',    'label' => 'Cleared (No Assets)'],
+                ['value' => 'has_assets', 'label' => 'Has Assigned Assets'],
+            ],
+            'portfolio_value' => [
+                ['value' => 'no_value', 'label' => 'No Portfolio Value'],
+                ['value' => 'low',      'label' => '₱1 – ₱50,000'],
+                ['value' => 'mid',      'label' => '₱50,001 – ₱200,000'],
+                ['value' => 'high',     'label' => 'Above ₱200,000'],
+            ],
+            'sort'    => [
+                ['value' => 'az', 'label' => 'A → Z'],
+                ['value' => 'za', 'label' => 'Z → A'],
+            ],
+            'costing' => [
+                ['value' => 'high_low', 'label' => 'High to Low'],
+                ['value' => 'low_high', 'label' => 'Low to High'],
+            ],
         ]);
     }
 }
