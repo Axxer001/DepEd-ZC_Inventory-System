@@ -55,6 +55,29 @@
                             class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="e.g. Public Bidding">
                         <div id="bulk-mode-dd" class="xls-custom-dd" style="display:none; width: 100%;"></div>
                     </div>
+
+                    {{-- Supplier Fields --}}
+                    <div class="relative col-identity p-1 rounded-2xl" style="position:relative;overflow:visible">
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Supplier</label>
+                        <div class="relative w-full h-full">
+                            <input type="text" id="bSupplier" readonly data-col="supplier" autocomplete="off" 
+                                onfocus="filterBulkSupplierDropdown('')"
+                                class="xls-input w-full pr-8 !border border-slate-100 rounded-xl bg-white cursor-pointer" placeholder="Select Supplier...">
+                            <button type="button" id="bSupplierClear" onclick="clearBulkSupplier()" style="display:none;" class="absolute right-2 top-1/2 -translate-y-1/2 p-[4.4px] text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all cursor-pointer">
+                                <svg class="w-[17.6px] h-[17.6px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        </div>
+                        <div id="bulk-supplier-dd" class="xls-custom-dd" style="display:none; width:100%;"></div>
+                    </div>
+                    <div class="relative col-personnel p-1 rounded-2xl">
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Supplier Personnel</label>
+                        <input type="text" id="bSupplierPersonnel" data-col="supplier_personnel" autocomplete="off" readonly class="xls-input !border border-slate-100 rounded-xl bg-slate-50 cursor-not-allowed text-slate-500" placeholder="Auto-filled">
+                    </div>
+                    <div class="relative col-context p-1 rounded-2xl">
+                        <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Service Center</label>
+                        <input type="text" id="bServiceCenter" data-col="service_center" autocomplete="off" readonly class="xls-input !border border-slate-100 rounded-xl bg-slate-50 cursor-not-allowed text-slate-500" placeholder="Auto-filled">
+                    </div>
+
                     <div class="relative col-status p-1 rounded-2xl" style="position:relative;overflow:visible">
                         <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Source</label>
                         <div class="relative w-full h-full">

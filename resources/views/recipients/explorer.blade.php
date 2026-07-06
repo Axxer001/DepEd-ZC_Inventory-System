@@ -113,7 +113,10 @@
                                         </div>
                                     </td>
                                     <td class="px-8 py-6 text-center">
-                                        <span :class="asset.status === 'Serviceable' ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 'text-red-600 bg-red-50 border-red-100'" 
+                                        <span :class="
+                                            (asset.status.includes('Good') || asset.status.includes('Serviceable')) ? 'text-emerald-600 bg-emerald-50 border-emerald-100' : 
+                                            (asset.status.includes('Repair') ? 'text-amber-600 bg-amber-50 border-amber-100' : 'text-red-600 bg-red-50 border-red-100')
+                                        " 
                                               class="px-3 py-1 border rounded-lg text-[9px] font-black uppercase tracking-widest" 
                                               x-text="asset.status"></span>
                                     </td>
@@ -139,15 +142,15 @@
                 schools: {
                     "Ayala National High School": {
                         rooms: [
-                            { name: "ICT Laboratory 1", assets: [{name: "Dell Latitude 3420", qty: 25, status: "Serviceable"}, {name: "Epson Projector", qty: 1, status: "Serviceable"}] },
-                            { name: "Science Lab", assets: [{name: "Microscope Kit", qty: 10, status: "Serviceable"}] },
-                            { name: "Admin Office", assets: [{name: "Desktop PC", qty: 2, status: "Unserviceable"}] }
+                            { name: "ICT Laboratory 1", assets: [{name: "Dell Latitude 3420", qty: 25, status: "Good Condition"}, {name: "Epson Projector", qty: 1, status: "Good Condition"}] },
+                            { name: "Science Lab", assets: [{name: "Microscope Kit", qty: 10, status: "Good Condition"}] },
+                            { name: "Admin Office", assets: [{name: "Desktop PC", qty: 2, status: "Unserviceable"}, {name: "Aircon", qty: 1, status: "Needs Repair"}] }
                         ]
                     },
                     "Zamboanga Central School": {
                         rooms: [
-                            { name: "Library", assets: [{name: "Reading Tables", qty: 10, status: "Serviceable"}] },
-                            { name: "Principal's Office", assets: [{name: "Executive Chair", qty: 1, status: "Serviceable"}] }
+                            { name: "Library", assets: [{name: "Reading Tables", qty: 10, status: "Good Condition"}] },
+                            { name: "Principal's Office", assets: [{name: "Executive Chair", qty: 1, status: "Good Condition"}] }
                         ]
                     }
                 },

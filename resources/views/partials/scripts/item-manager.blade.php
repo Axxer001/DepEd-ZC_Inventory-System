@@ -763,7 +763,52 @@
                 classInp.value = cat.classification_name;
             }
         }
+        // ==========================================
+        // BULK ADD SUPPLIER DROPDOWN
+        // ==========================================
+        window.filterBulkSupplierDropdown = function(query) {
+            const dd = document.getElementById('bulk-supplier-dd');
+            if (!dd) return;
+            const q = (query || '').trim().toLowerCase();
+            const matches = q.length === 0
+                ? globalSuppliers.slice(0, 50)
+                : globalSuppliers.filter(s => s.name.toLowerCase().includes(q)).slice(0, 50);
 
+            if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No suppliers found</div>`;
+            else dd.innerHTML = matches.map(s => `<div class="xls-dd-item" onmousedown="selectBulkSupplier(this.getAttribute('data-name'))" data-name="${s.name.replace(/"/g, '&quot;')}">${s.name}</div>`).join('');
+            dd.style.display = 'block';
+        }
+        window.selectBulkSupplier = function(supplierName) {
+            const src = globalSuppliers.find(s => s.name === supplierName);
+            if (!src) return;
+
+            const inp = document.getElementById('bSupplier');
+            if (inp) inp.value = supplierName;
+            const dd = document.getElementById('bulk-supplier-dd');
+            if (dd) dd.style.display = 'none';
+
+            const clearBtn = document.getElementById('bSupplierClear');
+            if (clearBtn) clearBtn.style.display = 'block';
+
+            // Auto-fill personnel and service center
+            const personInp = document.getElementById('bSupplierPersonnel');
+            const centerInp = document.getElementById('bServiceCenter');
+            if (personInp) personInp.value = src.supplier_personnel || '';
+            if (centerInp) centerInp.value = src.service_center || '';
+        }
+
+        window.clearBulkSupplier = function() {
+            const inp = document.getElementById('bSupplier');
+            if (inp) inp.value = '';
+            
+            const clearBtn = document.getElementById('bSupplierClear');
+            if (clearBtn) clearBtn.style.display = 'none';
+
+            const personInp = document.getElementById('bSupplierPersonnel');
+            const centerInp = document.getElementById('bServiceCenter');
+            if (personInp) personInp.value = '';
+            if (centerInp) centerInp.value = '';
+        }
         window.filterBulkSourceDropdown = function(query) {
             const dd = document.getElementById('bulk-source-dd');
             if (!dd) return;
@@ -1686,6 +1731,9 @@
                 item: document.getElementById('bItem').value,
                 description: document.getElementById('bDescription').value,
                 uom: document.getElementById('bUom').value,
+                supplier: document.getElementById('bSupplier') ? document.getElementById('bSupplier').value : '',
+                supplier_personnel: document.getElementById('bSupplierPersonnel') ? document.getElementById('bSupplierPersonnel').value : '',
+                service_center: document.getElementById('bServiceCenter') ? document.getElementById('bServiceCenter').value : '',
                 source: document.getElementById('bSource').value,
                 mode: document.getElementById('bMode').value,
                 personnel: document.getElementById('bPersonnel').value,
@@ -1720,7 +1768,10 @@
                     category: data.category || '',
                     item: data.item || '',
                     description: data.description || '',
-                    uom: data.uom || '', 
+                    uom: data.uom || '',
+                    supplier: data.supplier || '',
+                    supplier_personnel: data.supplier_personnel || '',
+                    service_center: data.service_center || '',
                     source: data.source || '',
                     mode: data.mode || '', 
                     personnel: data.personnel || '',

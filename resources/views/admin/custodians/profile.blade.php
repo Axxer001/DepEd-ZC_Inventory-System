@@ -369,8 +369,16 @@
                                     $statusBg    = 'bg-red-50 text-red-700 border-red-200';
                                 }
 
-                                $condGood  = in_array($asset->condition, ['Good', 'Serviceable']);
-                                $condBadge = $condGood ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200';
+                                $condRaw = strtolower($asset->condition ?? 'good');
+                                if (str_contains($condRaw, 'good') || str_contains($condRaw, 'serviceable') && !str_contains($condRaw, 'unserviceable')) {
+                                    $condBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                } elseif (str_contains($condRaw, 'repair')) {
+                                    $condBadge = 'bg-amber-50 text-amber-700 border-amber-200';
+                                } elseif (str_contains($condRaw, 'unserviceable')) {
+                                    $condBadge = 'bg-rose-50 text-rose-700 border-rose-200';
+                                } else {
+                                    $condBadge = 'bg-slate-50 text-slate-500 border-slate-200';
+                                }
                             @endphp
 
                             {{-- Each card has its own Alpine state --}}
