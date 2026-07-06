@@ -31,6 +31,11 @@
         .xls-row:active { transform: scale(0.995); transition: all 0.1s; }
         .xls-row:active .xls-td { background-color: #fbe3e3 !important; }
         .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
+        .filter-select-wrap { display: flex; flex-direction: column; gap: 6px; }
+        .filter-select-label { font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.15em; color: #94a3b8; display: flex; align-items: center; gap: 6px; }
+        .filter-select { width: 100%; padding: 10px 14px; font-size: 11px; font-weight: 700; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #f8fafc; color: #334155; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke-width='2.5' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 14px; padding-right: 36px; cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s; outline: none; }
+        .filter-select:focus { border-color: #c00000; box-shadow: 0 0 0 3px rgba(192,0,0,0.08); }
+        .filter-select:hover { border-color: #cbd5e1; }
         .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 350px); min-height: 400px; background: white; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
         .xls-scroll-wrap.expanded { height: calc(100vh - 250px); }
         .pg-btn { padding: 8px 18px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 9999px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid #e2e8f0; background: white; color: #475569; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05); }
@@ -52,6 +57,9 @@
         html.dark .xls-row:hover .xls-td { background-color: #27212b !important; }
         html.dark .sort-btn { background: #1e293b !important; border-color: #334155 !important; color: #94a3b8 !important; }
         html.dark .sort-btn.active { border-color: #c00000 !important; color: #f87171 !important; background: #2d1a1a !important; }
+        html.dark .filter-select { background-color: #1e293b; border-color: #334155; color: #e2e8f0; }
+        html.dark .filter-select:focus { border-color: #c00000; }
+        html.dark .filter-select-label { color: #64748b; }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen flex text-slate-900 overflow-x-hidden selection:bg-red-100 selection:text-red-900 relative">
@@ -81,14 +89,11 @@
             </div>
 
             <div class="flex items-center gap-4 shrink-0">
-                {{-- Sort Filters --}}
-                <div class="flex items-center gap-2 bg-white border border-slate-200 rounded-2xl px-4 py-2 shadow-sm">
-                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mr-1">Sort</span>
-                    <button id="sortAZ" class="sort-btn active" onclick="setSort('az')">A–Z</button>
-                    <button id="sortZA" class="sort-btn" onclick="setSort('za')">Z–A</button>
-                    <button id="sortHighLow" class="sort-btn" onclick="setSort('high')">Assets ↓</button>
-                    <button id="sortLowHigh" class="sort-btn" onclick="setSort('low')">Assets ↑</button>
-                </div>
+                {{-- Filters Toggle --}}
+                <button onclick="toggleFilters()" id="toggleFilterBtn" class="px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 bg-white border border-slate-200 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:rotate-12 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
+                    Filters
+                </button>
 
                 @if(auth()->check() && auth()->user()->isSuperAdmin())
                 <button onclick="openCreateModal()" class="px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white bg-red-700 hover:bg-red-800 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic shadow-md shadow-red-500/20">
@@ -117,7 +122,44 @@
         </div>
         @endif
 
-        <div class="rounded-[2rem] border border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col animate-fade relative ring-1 ring-black/5">
+        <!-- Filter Configuration -->
+        <div id="filterSection" class="bg-white rounded-[2.5rem] shadow-lg border border-slate-100 p-8 mb-8 relative z-50 animate-fade transition-all duration-300 origin-top hidden">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8 relative z-10">
+                {{-- Sort By --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5"/></svg>
+                        Sort Suppliers
+                    </label>
+                    <select id="sortSelect" class="filter-select">
+                        <option value="az">A–Z (Ascending)</option>
+                        <option value="za">Z–A (Descending)</option>
+                    </select>
+                </div>
+
+                {{-- Asset Count --}}
+                <div class="filter-select-wrap">
+                    <label class="filter-select-label">
+                        <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"/></svg>
+                        Asset Count
+                    </label>
+                    <select id="assetCountSelect" class="filter-select">
+                        <option value="">Default (No sorting)</option>
+                        <option value="high">Assets ↓ (High to Low)</option>
+                        <option value="low">Assets ↑ (Low to High)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-8 flex justify-end items-center gap-8 relative z-10 border-t border-slate-100/60 pt-6">
+                <button onclick="clearFilters()" class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-[#c00000] hover:-translate-y-0.5 transition-all duration-300 italic">Reset Default</button>
+                <button onclick="applyFilters()" class="px-8 py-2.5 bg-[#c00000] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-800 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-red-200 active:translate-y-0 transition-all duration-300 shadow-md shadow-red-200 italic group flex items-center gap-2">
+                    Apply Filters
+                    <svg class="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                </button>
+            </div>
+        </div>
+
+        <div class="rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden flex flex-col animate-fade relative ring-1 ring-black/5">
             <div class="xls-scroll-wrap expanded">
                 <table class="w-full border-collapse" style="min-width:1000px;">
                     <thead><tr>
@@ -201,11 +243,35 @@
             debounceTimer = setTimeout(fetchSuppliers, 300);
         }
 
-        function setSort(mode) {
-            currentSort = mode;
-            ['sortAZ','sortZA','sortHighLow','sortLowHigh'].forEach(id => document.getElementById(id).classList.remove('active'));
-            const map = { az: 'sortAZ', za: 'sortZA', high: 'sortHighLow', low: 'sortLowHigh' };
-            document.getElementById(map[mode]).classList.add('active');
+        function toggleFilters() {
+            const section = document.getElementById('filterSection');
+            const btn = document.getElementById('toggleFilterBtn');
+            if (section.classList.contains('hidden')) {
+                section.classList.remove('hidden');
+                btn.classList.add('bg-slate-100', 'border-slate-300');
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg> Hide Filters`;
+            } else {
+                section.classList.add('hidden');
+                btn.classList.remove('bg-slate-100', 'border-slate-300');
+                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:rotate-12 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg> Filters`;
+            }
+        }
+
+        function clearFilters() {
+            document.getElementById('sortSelect').value = 'az';
+            document.getElementById('assetCountSelect').value = '';
+            applyFilters();
+        }
+
+        function applyFilters() {
+            let countSort = document.getElementById('assetCountSelect').value;
+            let nameSort = document.getElementById('sortSelect').value;
+            currentSort = countSort ? countSort : nameSort;
+            
+            const section = document.getElementById('filterSection');
+            if (!section.classList.contains('hidden')) {
+                toggleFilters();
+            }
             applySortAndRender();
         }
 

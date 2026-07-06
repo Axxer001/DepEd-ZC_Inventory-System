@@ -177,10 +177,18 @@
                             <div class="space-y-3">
                                 @foreach($assets as $asset)
                                     @php
-                                        $condGood  = in_array($asset->condition, ['Good', 'Serviceable']);
-                                        $condBadge = $condGood ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200';
+                                        $condRaw = strtolower($asset->condition ?? 'good');
+                                        if (str_contains($condRaw, 'good') || str_contains($condRaw, 'serviceable') && !str_contains($condRaw, 'unserviceable')) {
+                                            $condBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+                                        } elseif (str_contains($condRaw, 'repair')) {
+                                            $condBadge = 'bg-amber-50 text-amber-700 border-amber-200';
+                                        } elseif (str_contains($condRaw, 'unserviceable')) {
+                                            $condBadge = 'bg-rose-50 text-rose-700 border-rose-200';
+                                        } else {
+                                            $condBadge = 'bg-slate-50 text-slate-500 border-slate-200';
+                                        }
                                     @endphp
-                                    <div class="asset-card">
+                                    <div class="asset-card cursor-pointer hover:border-deped transition-colors" onclick="window.location.href='{{ route('assets.profile', $asset->id) }}'">
                                         <div class="flex flex-col sm:flex-row sm:items-center gap-4 px-4 py-3.5">
                                             {{-- Icon + Name --}}
                                             <div class="flex items-center gap-3 flex-grow min-w-0">
