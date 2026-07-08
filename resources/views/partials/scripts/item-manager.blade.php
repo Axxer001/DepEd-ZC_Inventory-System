@@ -1762,6 +1762,28 @@
                 date2: document.getElementById('bDate2') ? document.getElementById('bDate2').value : ''
             };
 
+            // Validation of classification/category existence
+            if (data.classification) {
+                const matchCls = globalClassifications.some(c => c.name.toLowerCase() === data.classification.toLowerCase().trim());
+                if (!matchCls) {
+                    Swal.fire({ icon: 'error', title: 'Invalid Classification', text: `Classification "${data.classification}" does not exist.`, confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]' } });
+                    return;
+                }
+            }
+            if (data.category) {
+                const matchCat = globalCategories.some(c => c.name.toLowerCase() === data.category.toLowerCase().trim());
+                if (!matchCat) {
+                    Swal.fire({ icon: 'error', title: 'Invalid Category', text: `Category "${data.category}" does not exist.`, confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]' } });
+                    return;
+                } else {
+                    const catObj = globalCategories.find(c => c.name.toLowerCase() === data.category.toLowerCase().trim());
+                    if (data.classification && catObj && catObj.classification_name && catObj.classification_name.toLowerCase() !== data.classification.toLowerCase().trim()) {
+                        Swal.fire({ icon: 'error', title: 'Invalid Category-Classification Pair', text: `Category "${data.category}" belongs to Classification "${catObj.classification_name}", not "${data.classification}".`, confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]' } });
+                        return;
+                    }
+                }
+            }
+
             // Generate rows in data array first (fast)
             for (let i = 0; i < count; i++) {
                 const newRow = {
@@ -3149,10 +3171,47 @@
             }
             let isValid = true;
             let errorMessage = 'Please fill in all required fields across all pages.';
-            allRowsData.forEach(row => {
+            
+            let invalidRows = [];
+            allRowsData.forEach((row, idx) => {
+                const rowNum = idx + 1;
                 const required = ['classification', 'category', 'item', 'uom', 'source', 'cost', 'qty', 'useful-life', 'acceptance-date'];
                 required.forEach(field => { if (!row[field]) isValid = false; });
+
+                if (row.classification) {
+                    const matchCls = globalClassifications.some(c => c.name.toLowerCase() === row.classification.toLowerCase().trim());
+                    if (!matchCls) {
+                        isValid = false;
+                        invalidRows.push(`Row ${rowNum}: Classification "${row.classification}" does not exist.`);
+                    }
+                }
+                if (row.category) {
+                    const matchCat = globalCategories.some(c => c.name.toLowerCase() === row.category.toLowerCase().trim());
+                    if (!matchCat) {
+                        isValid = false;
+                        invalidRows.push(`Row ${rowNum}: Category "${row.category}" does not exist.`);
+                    } else {
+                        // Check classification mapping
+                        const catObj = globalCategories.find(c => c.name.toLowerCase() === row.category.toLowerCase().trim());
+                        if (row.classification && catObj && catObj.classification_name && catObj.classification_name.toLowerCase() !== row.classification.toLowerCase().trim()) {
+                            isValid = false;
+                            invalidRows.push(`Row ${rowNum}: Category "${row.category}" belongs to Classification "${catObj.classification_name}", not "${row.classification}".`);
+                        }
+                    }
+                }
             });
+
+            if (invalidRows.length > 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Classification/Category',
+                    html: `<div class="text-left text-xs space-y-1">${invalidRows.map(r => `<div>⚠️ ${r}</div>`).join('')}</div><div class="text-xs text-red-500 font-bold mt-3">Classifications and categories must be pre-created by the Superadmin.</div>`,
+                    confirmButtonColor: '#c00000',
+                    customClass: { popup: 'rounded-[2rem]' }
+                });
+                return;
+            }
+
             if (!isValid) {
                 Swal.fire({ icon: 'error', title: 'Incomplete Fields', text: errorMessage, confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]' } });
                 return;
@@ -3176,7 +3235,7 @@
                             Swal.fire({ icon: 'success', title: 'Success!', text: data.message, confirmButtonColor: '#10b981', customClass: { popup: 'rounded-[2rem]' } })
                             .then(() => { window.location.href = '/inventory-setup'; });
                         } else {
-                            Swal.fire({ icon: 'error', title: 'Failed', text: data.message, confirmButtonColor: '#c00000' });
+                            Swal.fire({ icon: 'error', title: 'Failed', html: data.message, confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]' } });
                         }
                     }).catch(err => { console.error(err); Swal.fire({ icon: 'error', title: 'Error', text: 'A network error occurred.' }); });
                 }

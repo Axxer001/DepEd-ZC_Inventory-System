@@ -173,13 +173,23 @@ class InventorySetupController extends Controller
         $user     = \Illuminate\Support\Facades\Auth::user();
         $userName = $user?->name ?? 'System';
 
+        $catCache = [];
+        foreach (DB::table('categories')->get() as $cat) {
+            $catCache[$cat->classification_id . '_' . strtolower(trim($cat->name))] = $cat->id;
+        }
+
+        $itemCache = [];
+        foreach (DB::table('items')->get() as $item) {
+            $itemCache[$item->category_id . '_' . strtolower(trim($item->name))] = $item->id;
+        }
+
         $cache = [
             'acq_source' => array_change_key_case(DB::table('acquisition_sources')->pluck('id', 'name')->toArray(), CASE_LOWER),
-            'class'   => array_change_key_case(DB::table('classifications')->pluck('id', 'name')->toArray(), CASE_LOWER),
-            'cat'     => array_change_key_case(DB::table('categories')->pluck('id', 'name')->toArray(), CASE_LOWER),
-            'item'    => array_change_key_case(DB::table('items')->pluck('id', 'name')->toArray(), CASE_LOWER),
-            'mode'    => array_change_key_case(DB::table('procurement_modes')->pluck('id', 'name')->toArray(), CASE_LOWER),
-            'supplier'=> array_change_key_case(DB::table('suppliers')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'class'      => array_change_key_case(DB::table('classifications')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'cat_composite'  => $catCache,
+            'item_composite' => $itemCache,
+            'mode'       => array_change_key_case(DB::table('procurement_modes')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'supplier'   => array_change_key_case(DB::table('suppliers')->pluck('id', 'name')->toArray(), CASE_LOWER),
         ];
 
         $conditionMap = [
@@ -207,17 +217,41 @@ class InventorySetupController extends Controller
                 $rowNum = $rowIndex + 1;
 
                 // ── Resolve Classification → Category → Item ─────────────────
-                $className = trim($row['classification'] ?? 'Unclassified');
-                $classId   = $cache['class'][strtolower($className)]
-                    ??= DB::table('classifications')->insertGetId(['name' => $className, 'created_at' => now(), 'updated_at' => now()]);
+                $className = trim($row['classification'] ?? '');
+                if (empty($className)) {
+                    $errors[] = "Row {$rowNum}: Classification is required.";
+                    continue;
+                }
+                $classId   = $cache['class'][strtolower($className)] ?? null;
+                if (!$classId) {
+                    $errors[] = "Row {$rowNum}: Classification '{$className}' does not exist. Please register it first.";
+                    continue;
+                }
 
-                $catName = trim($row['category'] ?? 'General');
-                $catId   = $cache['cat'][strtolower($catName)]
-                    ??= DB::table('categories')->insertGetId(['classification_id' => $classId, 'name' => $catName, 'created_at' => now(), 'updated_at' => now()]);
+                $catName = trim($row['category'] ?? '');
+                if (empty($catName)) {
+                    $errors[] = "Row {$rowNum}: Category is required.";
+                    continue;
+                }
+                $catKey  = $classId . '_' . strtolower($catName);
+                $catId   = $cache['cat_composite'][$catKey] ?? null;
+                if (!$catId) {
+                    $errors[] = "Row {$rowNum}: Category '{$catName}' does not exist under Classification '{$className}'. Please register it first.";
+                    continue;
+                }
 
                 $itemName = trim($row['item'] ?? 'Unknown Item');
-                $itemId   = $cache['item'][strtolower($itemName)]
-                    ??= DB::table('items')->insertGetId(['category_id' => $catId, 'name' => $itemName, 'created_at' => now(), 'updated_at' => now()]);
+                $itemKey  = $catId . '_' . strtolower($itemName);
+                $itemId   = $cache['item_composite'][$itemKey] ?? null;
+                if (!$itemId) {
+                    $itemId = DB::table('items')->insertGetId([
+                        'category_id' => $catId,
+                        'name'        => $itemName,
+                        'created_at'  => now(),
+                        'updated_at'  => now()
+                    ]);
+                    $cache['item_composite'][$itemKey] = $itemId;
+                }
 
                 // ── Resolve Procurement Mode (lookup only, cannot create) ───
                 $modeName = trim($row['mode'] ?? '');
@@ -287,9 +321,17 @@ class InventorySetupController extends Controller
                 $inserted++;
             }
 
+            if (count($errors) > 0) {
+                DB::rollBack();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Registration failed due to validation errors:<br><br>' . implode('<br>', $errors)
+                ], 422);
+            }
+
             DB::table('system_logs')->insert([
                 'user'        => $userName,
-                'activity'    => "Batch Registration: {$inserted} assets inserted, " . count($errors) . " rows skipped.",
+                'activity'    => "Batch Registration: {$inserted} assets inserted",
                 'module'      => 'Assets',
                 'action_type' => 'Create',
                 'created_at'  => now(),
@@ -322,8 +364,7 @@ class InventorySetupController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => "Successfully registered {$inserted} item(s)." . (count($errors) ? ' ' . count($errors) . ' row(s) skipped.' : ''),
-                'errors'  => $errors,
+                'message' => "Successfully registered {$inserted} item(s).",
             ]);
 
         } catch (\Exception $e) {

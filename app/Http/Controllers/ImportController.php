@@ -22,12 +22,35 @@ class ImportController extends Controller
      */
     private function buildLookupCache(): array
     {
+        $classifications = [];
+        foreach (Classification::get() as $class) {
+            $classifications[strtolower(trim($class->name))] = $class->id;
+        }
+
+        $categories = [];
+        foreach (Category::get() as $cat) {
+            $classId = $cat->classification_id;
+            if (!isset($categories[$classId])) {
+                $categories[$classId] = [];
+            }
+            $categories[$classId][strtolower(trim($cat->name))] = $cat;
+        }
+
+        $items = [];
+        foreach (Item::get() as $item) {
+            $catId = $item->category_id;
+            if (!isset($items[$catId])) {
+                $items[$catId] = [];
+            }
+            $items[$catId][strtolower(trim($item->name))] = $item;
+        }
+
         return [
-            'classifications'     => Classification::pluck('id', 'name')->toArray(),
-            'categories'          => Category::get()->groupBy('classification_id')->map(fn($items) => $items->keyBy('name')),
-            'items'               => Item::get()->groupBy('category_id')->map(fn($items) => $items->keyBy('name')),
-            'acquisition_sources' => AcquisitionSource::pluck('id', 'name')->toArray(),
-            'procurement_modes'   => ProcurementMode::pluck('id', 'name')->toArray(),
+            'classifications'     => $classifications,
+            'categories'          => $categories,
+            'items'               => $items,
+            'acquisition_sources' => array_change_key_case(AcquisitionSource::pluck('id', 'name')->toArray(), CASE_LOWER),
+            'procurement_modes'   => array_change_key_case(ProcurementMode::pluck('id', 'name')->toArray(), CASE_LOWER),
             'employees'           => Employee::get()->keyBy(function($e) {
                                         return strtolower(trim("{$e->first_name} {$e->last_name}"));
                                     }),
@@ -198,8 +221,8 @@ class ImportController extends Controller
                     continue;
                 }
 
-                $className = trim($data['classification'] ?? 'Unclassified');
-                $categoryName = trim($data['category'] ?? 'General');
+                $className = trim($data['classification'] ?? '');
+                $categoryName = trim($data['category'] ?? '');
                 $itemName = trim($data['item_name'] ?? 'Unknown Item');
                 $description = $data['sub_item_name'] ?? '';
                 $quantity = max(1, (int)($data['quantity'] ?? 1));
@@ -207,30 +230,40 @@ class ImportController extends Controller
                 $sourceType = $data['source_type'] ?? '';
                 $rawCondition = strtolower(trim($data['condition'] ?? ''));
 
-                // ── Resolve Hierarchy (Classification -> Category -> Item) ──
-                $classId = $cache['classifications'][$className] ?? null;
-                if (!$classId) {
-                    $classId = Classification::create(['name' => $className])->id;
-                    $cache['classifications'][$className] = $classId;
+                $classNameLower = strtolower($className);
+                $categoryNameLower = strtolower($categoryName);
+                $itemNameLower = strtolower($itemName);
+
+                if (empty($className)) {
+                    $errors[] = "Row " . ($rowIndex + 1) . ": Classification is required.";
+                    continue;
+                }
+                if (empty($categoryName)) {
+                    $errors[] = "Row " . ($rowIndex + 1) . ": Category is required.";
+                    continue;
                 }
 
-                $category = $cache['categories'][$classId][$categoryName] ?? null;
+                // ── Resolve Hierarchy (Classification -> Category -> Item) ──
+                $classId = $cache['classifications'][$classNameLower] ?? null;
+                if (!$classId) {
+                    $errors[] = "Row " . ($rowIndex + 1) . ": Classification '{$className}' does not exist. Please register it first.";
+                    continue;
+                }
+
+                $category = $cache['categories'][$classId][$categoryNameLower] ?? null;
                 if (!$category) {
-                    $category = Category::create([
-                        'classification_id' => $classId,
-                        'name' => $categoryName
-                    ]);
-                    $cache['categories'][$classId][$categoryName] = $category;
+                    $errors[] = "Row " . ($rowIndex + 1) . ": Category '{$categoryName}' does not exist under Classification '{$className}'. Please register it first.";
+                    continue;
                 }
                 $catId = $category->id;
 
-                $item = $cache['items'][$catId][$itemName] ?? null;
+                $item = $cache['items'][$catId][$itemNameLower] ?? null;
                 if (!$item) {
                     $item = Item::create([
                         'category_id' => $catId,
                         'name' => $itemName
                     ]);
-                    $cache['items'][$catId][$itemName] = $item;
+                    $cache['items'][$catId][$itemNameLower] = $item;
                 }
                 $itemId = $item->id;
 

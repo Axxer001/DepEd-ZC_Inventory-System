@@ -23,7 +23,21 @@ class AssetSource extends Model
         'warranty',
         'acceptance_date',
         'condition',           // renamed from remarks
+        'equipment',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($model) {
+            if ($model->asset_cost <= 49999) {
+                $model->equipment = 'SEE';
+            } else {
+                $model->equipment = 'PPE';
+            }
+        });
+    }
 
     protected $casts = [
         'acceptance_date' => 'date',

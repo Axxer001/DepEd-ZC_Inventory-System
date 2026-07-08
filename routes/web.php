@@ -74,6 +74,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/dashboard/growth-data', [DashboardController::class, 'getGrowthData'])->name('api.dashboard.growth_data');
     Route::post('/dashboard/quick-asset', [DashboardController::class, 'storeQuickAsset'])->name('inventory.dashboard.store')->middleware('role:super_admin,admin');
 
+    // --- Class & Category Feature ---
+    Route::get('/admin/class-category', [\App\Http\Controllers\ClassCategoryController::class, 'index'])->name('admin.class-category.index');
+    Route::get('/admin/classifications/{id}', [\App\Http\Controllers\ClassCategoryController::class, 'showClassification'])->name('admin.classifications.show');
+    Route::get('/admin/categories/{id}', [\App\Http\Controllers\ClassCategoryController::class, 'showCategory'])->name('admin.categories.show');
+    Route::post('/admin/classifications', [\App\Http\Controllers\ClassCategoryController::class, 'storeClassification'])->name('admin.classifications.store');
+    Route::post('/admin/categories', [\App\Http\Controllers\ClassCategoryController::class, 'storeCategory'])->name('admin.categories.store');
+    Route::post('/admin/classifications/{id}/update', [\App\Http\Controllers\ClassCategoryController::class, 'updateClassification'])->name('admin.classifications.update');
+    Route::post('/admin/categories/{id}/update', [\App\Http\Controllers\ClassCategoryController::class, 'updateCategory'])->name('admin.categories.update');
+
     // --- Dark Mode Preference ---
     Route::post('/user/dark-mode', function (Request $request) {
         $user = auth()->user();
