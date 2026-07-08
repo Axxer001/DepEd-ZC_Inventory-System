@@ -215,11 +215,12 @@
                     <div x-show="activeTab === 'assets'" class="tab-fade">
                         @if($assets->count() > 0)
                         <div class="overflow-x-auto w-full">
-                            <table class="w-full text-left border-collapse" style="min-width: 840px;">
+                            <table class="w-full text-left border-collapse" style="min-width: 920px;">
                                 <thead>
                                     <tr class="border-b border-slate-100">
                                         <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item / Category</th>
                                         <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Property No.</th>
+                                        <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Serial No.</th>
                                         <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Deployed To</th>
                                         <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Condition</th>
                                         <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Cost</th>
@@ -233,7 +234,10 @@
                                             <p class="text-[9px] font-bold text-slate-400 uppercase mt-1">{{ $asset->category_name }}</p>
                                         </td>
                                         <td class="py-4">
-                                            <span class="text-[10px] font-black text-slate-500 uppercase block">{{ $asset->property_number }}</span>
+                                            <span class="text-[10px] font-black text-slate-500 uppercase block">{{ $asset->property_number ?: '—' }}</span>
+                                        </td>
+                                        <td class="py-4">
+                                            <span class="text-[10px] font-black text-slate-500 uppercase block">{{ $asset->serial_number ?: '—' }}</span>
                                         </td>
                                         <td class="py-4">
                                             @if($asset->custodian_name)

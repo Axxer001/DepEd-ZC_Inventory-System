@@ -923,6 +923,8 @@ class InventorySetupController extends Controller
             ->whereNull('asset_assignments.office_id')
             ->select(
                 'asset_assignments.id as assignment_id',
+                'asset_assignments.property_number',
+                'asset_assignments.serial_number',
                 'classifications.name as classification',
                 'categories.name as category',
                 'items.name as item_name',
@@ -954,6 +956,7 @@ class InventorySetupController extends Controller
             'assignment_id'    => 'required|exists:asset_assignments,id',
             'employee_id'      => 'required|exists:employees,id',
             'property_number'  => 'nullable|string|max:255',
+            'serial_number'    => 'nullable|string|max:255',
             'acquisition_date' => 'nullable|date',
         ]);
 
@@ -968,7 +971,8 @@ class InventorySetupController extends Controller
 
             DB::table('asset_assignments')->where('id', $validated['assignment_id'])->update([
                 'employee_id'      => $validated['employee_id'],
-                'property_number'  => $validated['property_number'],
+                'property_number'  => $validated['property_number'] ?? null,
+                'serial_number'    => $validated['serial_number'] ?? null,
                 'acquisition_date' => $validated['acquisition_date'] ?? now()->toDateString(),
                 'updated_at'       => now(),
             ]);
@@ -1074,6 +1078,7 @@ class InventorySetupController extends Controller
             'assignments.*.assignment_id'    => 'required|exists:asset_assignments,id',
             'assignments.*.employee_id'      => 'nullable|exists:employees,id',
             'assignments.*.property_number'  => 'nullable|string|max:255',
+            'assignments.*.serial_number'    => 'nullable|string|max:255',
             'assignments.*.acquisition_date' => 'nullable|date',
             'assignments.*.school_name'      => 'nullable|string',
             'assignments.*.school_id'        => 'nullable|string',
@@ -1101,6 +1106,7 @@ class InventorySetupController extends Controller
                 if (!empty($data['employee_id']) || !empty($data['school_db_id'])) {
                     $updateData = [
                         'property_number'  => $data['property_number'] ?? null,
+                        'serial_number'    => $data['serial_number'] ?? null,
                         'acquisition_date' => $data['acquisition_date'] ?? now()->toDateString(),
                         'updated_at'       => now(),
                     ];

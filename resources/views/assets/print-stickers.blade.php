@@ -580,6 +580,7 @@ function buildWaybillPrintHTML(assets) {
 
 function buildStickerHTML(a) {
     const propNum = (a.property_number || 'N/A').toUpperCase();
+    const serialNum = (a.serial_number || 'N/A').toUpperCase();
     const itemBrand = [a.item_name, a.brand, a.model].filter(Boolean).map(s => s.toUpperCase()).join(' / ');
     const classification = (a.classification_name || 'N/A').toUpperCase();
 
@@ -599,6 +600,14 @@ function buildStickerHTML(a) {
         propNumFontSize = '11px';
     } else if (propNum.length > 18) {
         propNumFontSize = '12px';
+    }
+
+    // Auto-scale serial number font size
+    let serialNumFontSize = '13.5px';
+    if (serialNum.length > 25) {
+        serialNumFontSize = '11px';
+    } else if (serialNum.length > 18) {
+        serialNumFontSize = '12px';
     }
 
     // Auto-scale classification font size
@@ -641,7 +650,12 @@ function buildStickerHTML(a) {
                     <div style="font-size: 10.5px; font-weight: bold; color: #64748b; letter-spacing: 0.3px; text-transform: uppercase; line-height: 1;">PROPERTY NUMBER</div>
                     <div style="font-size: ${propNumFontSize}; font-weight: bold; color: #000; line-height: 1.2; word-break: break-all; margin-top: 2px;">${propNum}</div>
                 </div>
-                <!-- Row 3: Item Brand Model -->
+                <!-- Row 3: Serial Number -->
+                <div style="flex: 3; border-bottom: 1px solid #cbd5e1; padding: 4px 7px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: hidden;">
+                    <div style="font-size: 10.5px; font-weight: bold; color: #64748b; letter-spacing: 0.3px; text-transform: uppercase; line-height: 1;">SERIAL NUMBER</div>
+                    <div style="font-size: ${serialNumFontSize}; font-weight: bold; color: #000; line-height: 1.2; word-break: break-all; margin-top: 2px;">${serialNum}</div>
+                </div>
+                <!-- Row 4: Item Brand Model -->
                 <div style="flex: 5; padding: 4px 7px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: hidden;">
                     <div style="font-size: 10.5px; font-weight: bold; color: #64748b; letter-spacing: 0.3px; text-transform: uppercase; line-height: 1;">ITEM/BRAND/MODEL</div>
                     <div style="font-size: ${itemBrandFontSize}; font-weight: bold; color: #000; line-height: 1.2; word-break: break-word; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">${itemBrand}</div>

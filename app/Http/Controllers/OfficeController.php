@@ -53,6 +53,7 @@ class OfficeController extends Controller
             ->select(
                 'ad.id',
                 'ad.property_number',
+                'ad.serial_number',
                 'ad.acquisition_date',
                 'ad.acquisition_cost as asset_cost',
                 'items.name as item_name',

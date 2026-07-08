@@ -389,7 +389,11 @@
                                     <div class="hidden md:flex items-center gap-6 text-right shrink-0">
                                         <div>
                                             <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Property No.</p>
-                                            <p class="text-[10px] font-black text-slate-700 uppercase mt-0.5 font-mono">{{ $asset->property_number }}</p>
+                                            <p class="text-[10px] font-black text-slate-700 uppercase mt-0.5 font-mono">{{ $asset->property_number ?: '—' }}</p>
+                                        </div>
+                                        <div>
+                                            <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Serial No.</p>
+                                            <p class="text-[10px] font-black text-slate-700 uppercase mt-0.5 font-mono">{{ $asset->serial_number ?: '—' }}</p>
                                         </div>
                                         <div>
                                             <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Location</p>
@@ -641,6 +645,12 @@
                                                     <div class="flex items-start gap-2">
                                                         <span class="text-[8px] font-black text-slate-400 uppercase tracking-wider w-20 shrink-0 pt-0.5">Prop. No.</span>
                                                         <span class="text-[10px] font-mono font-bold text-slate-600">{{ $event->property_number }}</span>
+                                                    </div>
+                                                    @endif
+                                                    @if($event->serial_number)
+                                                    <div class="flex items-start gap-2">
+                                                        <span class="text-[8px] font-black text-slate-400 uppercase tracking-wider w-20 shrink-0 pt-0.5">Serial No.</span>
+                                                        <span class="text-[10px] font-mono font-bold text-slate-600">{{ $event->serial_number }}</span>
                                                     </div>
                                                     @endif
                                                     <div class="flex items-start gap-2">

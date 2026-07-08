@@ -47,6 +47,7 @@ class AcquisitionSourceController extends Controller
             ->select(
                 'ad.id',
                 'ad.property_number',
+                'ad.serial_number',
                 'ad.acquisition_date',
                 'asrc.asset_cost',
                 'asrc.acceptance_date',

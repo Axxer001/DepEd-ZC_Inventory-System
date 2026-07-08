@@ -33,6 +33,7 @@ class SupplierController extends Controller
             ->select(
                 'ad.id',
                 'ad.property_number',
+                'ad.serial_number',
                 'ad.acquisition_date',
                 'asrc.asset_cost',
                 'asrc.acceptance_date',
@@ -68,6 +69,7 @@ class SupplierController extends Controller
                 'at.return_date',
                 'at.remarks',
                 'ad.property_number',
+                'ad.serial_number',
                 'asrc.condition',
                 'i.name as item_name',
                 DB::raw("CONCAT(COALESCE(from_emp.first_name,''), ' ', COALESCE(from_emp.last_name,'')) as from_custodian"),

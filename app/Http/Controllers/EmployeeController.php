@@ -84,6 +84,7 @@ class EmployeeController extends Controller
             ->select(
                 'ad.id',
                 'ad.property_number',
+                'ad.serial_number',
                 'ad.acquisition_date',
                 'ad.acquisition_cost as asset_cost',
                 'ad.acquisition_date as assigned_at',
@@ -250,6 +251,7 @@ class EmployeeController extends Controller
             ->select(
                 'ad.id',
                 'ad.property_number',
+                'ad.serial_number',
                 'ad.acquisition_date',
                 'ad.acquisition_cost as asset_cost',
                 'ad.acquisition_date as assigned_at',
@@ -304,6 +306,7 @@ class EmployeeController extends Controller
                 'item_name'     => $asset->item_name,
                 'category_name' => $asset->category_name,
                 'property_number' => $asset->property_number,
+                'serial_number'   => $asset->serial_number,
                 'asset_cost'    => $asset->asset_cost,
                 'to_custodian'  => null,
                 'to_office'     => null,
@@ -316,6 +319,7 @@ class EmployeeController extends Controller
                         'item_name'     => $asset->item_name,
                         'category_name' => $asset->category_name,
                         'property_number' => $asset->property_number,
+                        'serial_number'   => $asset->serial_number,
                         'asset_cost'    => $asset->asset_cost,
                         'to_custodian'  => $t->to_custodian ?? null,
                         'to_office'     => $t->to_office ?? null,

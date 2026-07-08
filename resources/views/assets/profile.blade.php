@@ -473,6 +473,14 @@
                             </h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                                 <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Property Number</p>
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $asset->property_number ?: 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Serial Number</p>
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $asset->serial_number ?: 'N/A' }}</p>
+                                </div>
+                                <div>
                                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Acquisition Date</p>
                                     <p class="text-sm font-black text-slate-800 mt-1 uppercase">{{ $asset->acquisition_date ? \Carbon\Carbon::parse($asset->acquisition_date)->format('F d, Y') : 'N/A' }}</p>
                                 </div>

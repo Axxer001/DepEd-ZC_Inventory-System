@@ -93,7 +93,7 @@
             </div>
 
             <div class="xls-scroll-wrap" x-show="!loading">
-                <table class="w-full border-collapse" style="min-width:1970px;">
+                <table class="w-full border-collapse" style="min-width:2128px;">
                     <thead>
                         <tr>
                             <th class="xls-th w-10 text-center sticky left-0 z-20">#</th>
@@ -105,6 +105,7 @@
                             <th class="xls-th text-center" style="min-width:158px">Qty / UOM</th>
                             <th class="xls-th" style="min-width:158px">Condition</th>
                             <th class="xls-th col-temporal" style="min-width:158px">Property Number</th>
+                            <th class="xls-th col-temporal" style="min-width:158px">Serial Number</th>
                             <th class="xls-th col-personnel" style="min-width:158px">Employee Search</th>
                             <th class="xls-th col-personnel" x-show="!hideAutofill" style="min-width:158px">Employee ID</th>
                             <th class="xls-th col-personnel" x-show="!hideAutofill" style="min-width:158px">Employee Name</th>
@@ -136,6 +137,13 @@
                                         :disabled="Number(asset.quantity || 0) > 1"
                                         :class="Number(asset.quantity || 0) > 1 ? 'xls-input bg-slate-50 cursor-not-allowed text-slate-400' : 'xls-input font-bold text-green-700 bg-green-50 placeholder-green-300'"
                                         placeholder="Property No.">
+                                </td>
+                                
+                                <td class="xls-td col-temporal">
+                                    <input type="text" x-model="asset.serial_number" 
+                                        :disabled="Number(asset.quantity || 0) > 1"
+                                        :class="Number(asset.quantity || 0) > 1 ? 'xls-input bg-slate-50 cursor-not-allowed text-slate-400' : 'xls-input font-bold text-green-700 bg-green-50 placeholder-green-300'"
+                                        placeholder="Serial No.">
                                 </td>
                                 
                                 <td class="xls-td col-personnel relative" style="overflow:visible;">
@@ -263,6 +271,12 @@
                     <input type="text" x-model="bulkData.property_number" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Leave empty to keep current">
                 </div>
 
+                <!-- Serial No -->
+                <div class="relative p-1 rounded-2xl col-span-2">
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Serial Number</label>
+                    <input type="text" x-model="bulkData.serial_number" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Leave empty to keep current">
+                </div>
+
                 <!-- Employee Search -->
                 <div class="relative p-1 rounded-2xl" style="position:relative;overflow:visible;">
                     <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee Search</label>
@@ -344,6 +358,7 @@
                     selectFrom: '',
                     selectTo: '',
                     property_number: '',
+                    serial_number: '',
                     empSearch: '',
                     employee_id: null,
                     employee_id_str: '',
@@ -410,7 +425,8 @@
                             showLocDropdown: false,
                             locResults: [],
                             
-                            property_number: '',
+                            property_number: a.property_number || '',
+                            serial_number: a.serial_number || '',
                             acquisition_date: a.acceptance_date || new Date().toISOString().split('T')[0]
                         }));
                     } catch (err) {
@@ -441,7 +457,8 @@
                         const matchQ = (a.item_name || '').toLowerCase().includes(q) || 
                                        (a.sub_item_name || '').toLowerCase().includes(q) ||
                                        (a.classification || '').toLowerCase().includes(q) ||
-                                       (a.property_number || '').toLowerCase().includes(q);
+                                       (a.property_number || '').toLowerCase().includes(q) ||
+                                       (a.serial_number || '').toLowerCase().includes(q);
                         
                         const matchClass = !this.filterClassification || a.classification === this.filterClassification;
                         const matchCat   = !this.filterCategory || a.category === this.filterCategory;
@@ -571,6 +588,7 @@
                         selectFrom: '',
                         selectTo: '',
                         property_number: '',
+                        serial_number: '',
                         empSearch: '',
                         employee_id: null,
                         employee_id_str: '',
@@ -775,8 +793,8 @@
                         return;
                     }
 
-                    // Check if property number is being filled AND there is a selected asset with quantity > 1
-                    if (this.bulkData.property_number.trim() !== '') {
+                    // Check if property number or serial number is being filled AND there is a selected asset with quantity > 1
+                    if (this.bulkData.property_number.trim() !== '' || this.bulkData.serial_number.trim() !== '') {
                         const invalidAsset = selected.find(a => Number(a.quantity || 0) > 1);
                         if (invalidAsset) {
                             // Find the display index of this invalid asset in the list
@@ -784,7 +802,7 @@
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Bulk Assign Failed',
-                                text: 'Bulk assign could not be done due to Item No. (' + displayIndex + ') having their property no. field disabled.',
+                                text: 'Bulk assign could not be done due to Item No. (' + displayIndex + ') having their property no. or serial no. field disabled.',
                                 confirmButtonColor: '#c00000',
                                 customClass: { popup: 'rounded-2xl' }
                             });
@@ -796,6 +814,9 @@
                     selected.forEach(asset => {
                         if (this.bulkData.property_number.trim() !== '') {
                             asset.property_number = this.bulkData.property_number;
+                        }
+                        if (this.bulkData.serial_number.trim() !== '') {
+                            asset.serial_number = this.bulkData.serial_number;
                         }
                         if (this.bulkData.employee_name) {
                             asset.empSearch = this.bulkData.empSearch;
@@ -845,6 +866,7 @@
                             school_type: r.school_type,
                             location: r.location,
                             property_number: r.property_number,
+                            serial_number: r.serial_number,
                             acquisition_date: r.acquisition_date,
                             asset_cost: r.asset_cost,
                             quantity: r.quantity

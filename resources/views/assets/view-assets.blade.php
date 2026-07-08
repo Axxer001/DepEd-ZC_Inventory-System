@@ -655,6 +655,7 @@
                         <option value="article">Missing Article</option>
                         <option value="description">Missing Description</option>
                         <option value="property_number">Missing Property No.</option>
+                        <option value="serial_number">Missing Serial No.</option>
                         <option value="unit_of_measurement">Missing Unit of Measure</option>
                         <option value="acq_source">Missing Source</option>
                         <option value="mode_of_acquisition">Missing Mode</option>

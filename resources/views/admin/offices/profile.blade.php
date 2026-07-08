@@ -209,11 +209,12 @@
                     <div x-show="activeTab === 'assets'" class="animate-fade space-y-4">
                         @if($recentAssets->count() > 0)
                         <div class="overflow-x-auto w-full max-h-[600px] overflow-y-auto pr-2 custom-scroll">
-                            <table class="w-full text-left border-collapse" style="min-width: 600px;">
+                            <table class="w-full text-left border-collapse" style="min-width: 700px;">
                                 <thead>
                                     <tr class="border-b border-slate-100 dark:border-slate-800">
                                         <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item / Category</th>
                                         <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Property Number</th>
+                                        <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Serial Number</th>
                                         <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Acq. Date</th>
                                         <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Condition</th>
                                         <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Unit Cost</th>
@@ -229,7 +230,10 @@
                                             <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-1">{{ $asset->category_name }}</p>
                                         </td>
                                         <td class="py-4">
-                                            <span class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase">{{ $asset->property_number }}</span>
+                                            <span class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase">{{ $asset->property_number ?: '—' }}</span>
+                                        </td>
+                                        <td class="py-4">
+                                            <span class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase">{{ $asset->serial_number ?: '—' }}</span>
                                         </td>
                                         <td class="py-4">
                                             <p class="text-[10px] font-bold text-slate-700 dark:text-slate-300">{{ $asset->acquisition_date ? \Carbon\Carbon::parse($asset->acquisition_date)->format('M d, Y') : 'N/A' }}</p>

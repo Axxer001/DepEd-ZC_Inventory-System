@@ -210,6 +210,10 @@
                                                     <p class="text-[10px] font-black text-slate-700 uppercase mt-0.5 font-mono">{{ $asset->property_number ?: '—' }}</p>
                                                 </div>
                                                 <div>
+                                                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Serial No.</p>
+                                                    <p class="text-[10px] font-black text-slate-700 uppercase mt-0.5 font-mono">{{ $asset->serial_number ?: '—' }}</p>
+                                                </div>
+                                                <div>
                                                     <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Custodian</p>
                                                     <p class="text-[10px] font-bold text-slate-700 uppercase mt-0.5 max-w-[120px] truncate">{{ $asset->custodian_name ?: 'Unassigned' }}</p>
                                                 </div>
@@ -297,7 +301,13 @@
                                                     @if($event->property_number)
                                                     <span class="flex items-center gap-1 font-mono text-slate-700">
                                                         <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5-3.9 19.5m-2.1-19.5-3.9 19.5"/></svg>
-                                                        {{ $event->property_number }}
+                                                        Prop No: {{ $event->property_number }}
+                                                    </span>
+                                                    @endif
+                                                    @if($event->serial_number)
+                                                    <span class="flex items-center gap-1 font-mono text-slate-700">
+                                                        <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.25 8.25h15m-16.5 7.5h15m-1.8-13.5-3.9 19.5m-2.1-19.5-3.9 19.5"/></svg>
+                                                        Serial No: {{ $event->serial_number }}
                                                     </span>
                                                     @endif
                                                     @if(trim($event->from_custodian))

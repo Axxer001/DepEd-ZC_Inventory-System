@@ -202,6 +202,10 @@
                                                     <p class="text-[10px] font-black text-slate-700 uppercase mt-0.5 font-mono">{{ $asset->property_number ?: '—' }}</p>
                                                 </div>
                                                 <div>
+                                                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Serial No.</p>
+                                                    <p class="text-[10px] font-black text-slate-700 uppercase mt-0.5 font-mono">{{ $asset->serial_number ?: '—' }}</p>
+                                                </div>
+                                                <div>
                                                     <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Custodian</p>
                                                     <p class="text-[10px] font-bold text-slate-700 uppercase mt-0.5 max-w-[120px] truncate">{{ $asset->custodian_name ?: 'Unassigned' }}</p>
                                                 </div>

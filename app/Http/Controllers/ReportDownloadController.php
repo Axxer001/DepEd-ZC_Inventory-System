@@ -21,6 +21,7 @@ class ReportDownloadController extends Controller
 
         if ($tab === 'source') {
             $query = DB::table('asset_sources')
+                ->leftJoin('asset_assignments', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
                 ->leftJoin('items', 'asset_sources.item_id', '=', 'items.id')
                 ->leftJoin('categories', 'items.category_id', '=', 'categories.id')
                 ->leftJoin('classifications', 'categories.classification_id', '=', 'classifications.id')
@@ -28,6 +29,8 @@ class ReportDownloadController extends Controller
                 ->leftJoin('procurement_modes as pm', 'asset_sources.procurement_mode_id', '=', 'pm.id')
                 ->select(
                     'asset_sources.*',
+                    'asset_assignments.id as id',
+                    'asset_sources.id as asset_source_id',
                     'asset_sources.condition as remarks',
                     'items.name as article',
                     'categories.name as category',
@@ -256,6 +259,7 @@ class ReportDownloadController extends Controller
             // Distribution-specific columns
             if ($tab === 'distribution') {
                 if ($eCol === 'property_number') $dbCol = 'asset_assignments.property_number';
+                elseif ($eCol === 'serial_number') $dbCol = 'asset_assignments.serial_number';
                 elseif ($eCol === 'school_id') $dbCol = 'cus.school_id';
                 elseif ($eCol === 'school_name') $dbCol = 'schools.name';
                 elseif ($eCol === 'location') $dbCol = 'schools.location';

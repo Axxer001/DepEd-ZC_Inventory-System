@@ -273,6 +273,7 @@ class AssetController extends Controller
             ->select(
                 'ad.id',
                 'ad.property_number',
+                'ad.serial_number',
                 'ad.photo_path',
                 'e.office_id',
                 'asrc.condition',

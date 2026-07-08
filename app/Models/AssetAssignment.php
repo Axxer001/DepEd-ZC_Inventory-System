@@ -17,6 +17,7 @@ class AssetAssignment extends Model
         'school_id',
         'office_id',
         'property_number',
+        'serial_number',
         'photo_path',
         'acquisition_cost',
         'acquisition_date',
