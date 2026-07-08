@@ -1073,20 +1073,9 @@ class InventorySetupController extends Controller
 
             $docType = ($cost > 49999) ? 'PAR' : 'ICS';
 
-            session()->flash('download_docs', [
-                [
-                    'recipient_name' => $recipientName,
-                    'recipient_type' => 'employee',
-                    'school_type'    => null,
-                    'cost_threshold' => ($cost > 49999) ? 'high' : 'low',
-                    'doc_type'       => $docType,
-                    'asset_count'    => 1,
-                ]
-            ]);
-
             $historyRemarks = "Asset officially {$mode} and registered into the database from DEPED CENTRAL OFFICE, then Delivered from {$supplier} to Asset Management Unit. Now assigned at/to {$recipientName}";
 
-            DB::table('asset_transfers')->insert([
+            $transferId = DB::table('asset_transfers')->insertGetId([
                 'asset_assignment_id' => $validated['assignment_id'],
                 'from_office_id'      => null,
                 'to_office_id'        => $targetEmployee->office_id ?? null,
@@ -1099,6 +1088,19 @@ class InventorySetupController extends Controller
                 'authorized_by'       => Auth::id() ?? 1,
                 'created_at'          => now(),
                 'updated_at'          => now(),
+            ]);
+
+            session()->flash('download_docs', [
+                [
+                    'recipient_name' => $recipientName,
+                    'recipient_type' => 'employee',
+                    'school_type'    => null,
+                    'cost_threshold' => ($cost > 49999) ? 'high' : 'low',
+                    'doc_type'       => $docType,
+                    'asset_count'    => 1,
+                    'assignment_id'  => $validated['assignment_id'],
+                    'transfer_id'    => $transferId,
+                ]
             ]);
 
             $userName = Auth::user() ? Auth::user()->name : 'System';
@@ -1257,23 +1259,9 @@ class InventorySetupController extends Controller
                     $threshold = ($cost > 49999) ? 'high' : 'low';
                     $groupKey = $recipientType . '_' . ($data['employee_id'] ?? $data['school_db_id']) . '_' . $threshold;
 
-                    if ($recipientType !== 'warehouse') {
-                        if (!isset($docsToDownload[$groupKey])) {
-                            $docsToDownload[$groupKey] = [
-                                'recipient_name' => $recipientName,
-                                'recipient_type' => $recipientType,
-                                'school_type'    => $schoolType,
-                                'cost_threshold' => $threshold,
-                                'doc_type'       => $this->resolveDocType($recipientType, $schoolType, $cost),
-                                'asset_count'    => 0,
-                            ];
-                        }
-                        $docsToDownload[$groupKey]['asset_count']++;
-                    }
-
                     $historyRemarks = "Asset officially {$mode} and registered into the database from DEPED CENTRAL OFFICE, then Delivered from {$supplier} to Asset Management Unit. Now assigned at/to {$recipientName}";
 
-                    DB::table('asset_transfers')->insert([
+                    $transferId = DB::table('asset_transfers')->insertGetId([
                         'asset_assignment_id' => $data['assignment_id'],
                         'from_office_id'      => null,
                         'to_office_id'        => $toOfficeId,
@@ -1287,6 +1275,22 @@ class InventorySetupController extends Controller
                         'created_at'          => now(),
                         'updated_at'          => now(),
                     ]);
+
+                    if ($recipientType !== 'warehouse') {
+                        if (!isset($docsToDownload[$groupKey])) {
+                            $docsToDownload[$groupKey] = [
+                                'recipient_name' => $recipientName,
+                                'recipient_type' => $recipientType,
+                                'school_type'    => $schoolType,
+                                'cost_threshold' => $threshold,
+                                'doc_type'       => $this->resolveDocType($recipientType, $schoolType, $cost),
+                                'asset_count'    => 0,
+                                'assignment_id'  => $data['assignment_id'],
+                                'transfer_id'    => $transferId,
+                            ];
+                        }
+                        $docsToDownload[$groupKey]['asset_count']++;
+                    }
 
                     // Gather item metadata for notifications
                     $item = DB::table('asset_assignments')

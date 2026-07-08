@@ -3,8 +3,15 @@
     showModal: true, 
     docs: {{ json_encode(session('download_docs')) }},
     downloadSingle(doc) {
-        const url = '{{ route('admin.download_doc_template', ['type' => ':type']) }}'
+        let url = '{{ route('admin.download_doc_template', ['type' => ':type']) }}'
             .replace(':type', doc.doc_type) + '?recipient=' + encodeURIComponent(doc.recipient_name);
+        
+        if (doc.assignment_id) {
+            url += '&assignment_id=' + encodeURIComponent(doc.assignment_id);
+        }
+        if (doc.transfer_id) {
+            url += '&transfer_id=' + encodeURIComponent(doc.transfer_id);
+        }
         
         const link = document.createElement('a');
         link.href = url;

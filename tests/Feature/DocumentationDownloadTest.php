@@ -66,6 +66,33 @@ class DocumentationDownloadTest extends TestCase
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
+    public function template_download_endpoint_populates_fields_with_assignment_id(): void
+    {
+        $superAdmin = $this->getSuperAdmin();
+        $employee = Employee::create([
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'employee_id' => 'EMP-POP-TEST',
+            'status' => 'Active',
+        ]);
+        $assignmentId = $this->createAsset(25000);
+        DB::table('asset_assignments')->where('id', $assignmentId)->update([
+            'employee_id' => $employee->id,
+            'property_number' => 'PROP-POP-123',
+            'acquisition_date' => '2026-07-08'
+        ]);
+
+        $response = $this->actingAs($superAdmin)->get(route('admin.download_doc_template', [
+            'type' => 'ICS',
+            'recipient' => 'John Doe',
+            'assignment_id' => $assignmentId
+        ]));
+
+        $response->assertStatus(200);
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
     public function assign_item_flashes_documentation_to_session(): void
     {
         $superAdmin = $this->getSuperAdmin();
@@ -92,6 +119,8 @@ class DocumentationDownloadTest extends TestCase
         $this->assertCount(1, $downloadDocs);
         $this->assertEquals('John Doe', $downloadDocs[0]['recipient_name']);
         $this->assertEquals('ICS', $downloadDocs[0]['doc_type']);
+        $this->assertEquals($assignmentId, $downloadDocs[0]['assignment_id']);
+        $this->assertNotEmpty($downloadDocs[0]['transfer_id']);
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
@@ -132,6 +161,8 @@ class DocumentationDownloadTest extends TestCase
         $this->assertCount(1, $downloadDocs);
         $this->assertEquals('Target User', $downloadDocs[0]['recipient_name']);
         $this->assertEquals('PTR', $downloadDocs[0]['doc_type']);
+        $this->assertEquals($assignmentId, $downloadDocs[0]['assignment_id']);
+        $this->assertNotEmpty($downloadDocs[0]['transfer_id']);
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
@@ -164,5 +195,7 @@ class DocumentationDownloadTest extends TestCase
         $this->assertCount(1, $downloadDocs);
         $this->assertEquals('Jane Doe', $downloadDocs[0]['recipient_name']);
         $this->assertEquals('RRSP', $downloadDocs[0]['doc_type']);
+        $this->assertEquals($assignmentId, $downloadDocs[0]['assignment_id']);
+        $this->assertNotEmpty($downloadDocs[0]['transfer_id']);
     }
 }

@@ -1020,6 +1020,180 @@ class ReportDownloadController extends Controller
 
         $downloadName = $type . $safeRecipient . '.xlsx';
 
+        $assignmentId = $request->query('assignment_id');
+        $transferId = $request->query('transfer_id');
+
+        if ($assignmentId || $transferId) {
+            $transfer = null;
+            if ($transferId) {
+                $transfer = DB::table('asset_transfers')->where('id', $transferId)->first();
+                if ($transfer) {
+                    $assignmentId = $transfer->asset_assignment_id;
+                }
+            }
+
+            $assignment = null;
+            if ($assignmentId) {
+                $assignment = DB::table('asset_assignments as ad')
+                    ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+                    ->join('items as i', 'asrc.item_id', '=', 'i.id')
+                    ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
+                    ->select(
+                        'ad.id',
+                        'ad.property_number',
+                        'ad.serial_number',
+                        'ad.acquisition_cost',
+                        'ad.acquisition_date',
+                        'ad.employee_id',
+                        'asrc.quantity',
+                        'asrc.unit_of_measurement',
+                        'asrc.asset_cost',
+                        'asrc.description',
+                        'asrc.estimated_useful_life',
+                        'asrc.condition',
+                        'i.name as item_name'
+                    )
+                    ->where('ad.id', $assignmentId)
+                    ->first();
+            }
+
+            if (!$assignment) {
+                abort(404, 'Asset assignment or transfer not found.');
+            }
+
+            // Determine End User/Custodian Name
+            $empId = null;
+            if ($type === 'RRPPE' || $type === 'RRSP') {
+                // Return documents
+                if (!$transfer) {
+                    // Try to find latest Return transfer for this assignment
+                    $transfer = DB::table('asset_transfers')
+                        ->where('asset_assignment_id', $assignment->id)
+                        ->where('transfer_type', 'Return')
+                        ->orderBy('transfer_date', 'desc')
+                        ->first();
+                }
+                if ($transfer && $transfer->from_custodian_id) {
+                    $empId = $transfer->from_custodian_id;
+                } elseif ($assignment->employee_id) {
+                    $empId = $assignment->employee_id;
+                }
+            } else {
+                // Non-return documents
+                if ($transfer && $transfer->to_custodian_id) {
+                    $empId = $transfer->to_custodian_id;
+                } elseif ($assignment->employee_id) {
+                    $empId = $assignment->employee_id;
+                }
+            }
+
+            $custodianName = '';
+            if ($empId) {
+                $employee = DB::table('employees')->where('id', $empId)->first();
+                if ($employee) {
+                    $parts = [];
+                    if (!empty($employee->first_name)) {
+                        $parts[] = trim($employee->first_name);
+                    }
+                    if (!empty($employee->middle_name)) {
+                        $parts[] = trim($employee->middle_name);
+                    }
+                    if (!empty($employee->last_name)) {
+                        $parts[] = trim($employee->last_name);
+                    }
+                    $custodianName = implode(' ', $parts);
+                }
+            }
+
+            $spreadsheet = IOFactory::load($filePath);
+            $sheet = $spreadsheet->getActiveSheet();
+
+            if ($type === 'ICS') {
+                // D6:G6 merged — entity name (anchor D6)
+                $sheet->setCellValue('D6', 'DepEd, Division of Zamboanga City');
+                // Data row 12 — first fully writable row beneath merged header rows 9-11
+                $sheet->setCellValue('B12', $assignment->quantity ?? '');
+                $sheet->setCellValue('C12', $assignment->unit_of_measurement ?? '');
+                $sheet->setCellValue('D12', $assignment->asset_cost ?? '');
+                $totalCost = ($assignment->asset_cost && $assignment->quantity)
+                    ? ($assignment->asset_cost * $assignment->quantity) : '';
+                $sheet->setCellValue('E12', $totalCost);
+                $sheet->setCellValue('F12', $assignment->description ?? '');
+                $sheet->setCellValue('H12', $assignment->property_number ?? '');
+                $sheet->setCellValue('I12', $assignment->estimated_useful_life ?? '');
+
+            } elseif ($type === 'ITR') {
+                // E8:H8 merged — anchor E8 (From accountable officer)
+                $sheet->setCellValue('E8', 'DEPED, SDO ZAMBOANGA CITY');
+                // E9:H9 merged — anchor E9 (To accountable officer / custodian name)
+                $sheet->setCellValue('E9', $custodianName);
+                // J9 — date (not merged)
+                $sheet->setCellValue('J9', date('F d, Y'));
+                // Data row 18 — first fully writable row beneath merged header rows 16-17
+                $sheet->setCellValue('A18', $assignment->acquisition_date ?? '');
+                $sheet->setCellValue('B18', $assignment->property_number ?? '');
+                $sheet->setCellValue('D18', $assignment->property_number . ($assignment->acquisition_date ? ' / ' . $assignment->acquisition_date : ''));
+                $sheet->setCellValue('E18', $assignment->description ?? '');
+                $sheet->setCellValue('I18', $assignment->acquisition_cost ?? '');
+                $sheet->setCellValue('J18', $assignment->condition ?? '');
+
+            } elseif ($type === 'PAR') {
+                // D11 — entity name (not merged at row 11)
+                $sheet->setCellValue('D11', 'DEPED, ZAMBOANGA CITY DIVISION');
+                // Data row 16 — first fully writable row beneath merged header rows 14-15
+                $sheet->setCellValue('B16', $assignment->quantity ?? '');
+                $sheet->setCellValue('C16', $assignment->unit_of_measurement ?? '');
+                $sheet->setCellValue('D16', $assignment->description ?? '');
+                $sheet->setCellValue('E16', $assignment->property_number ?? '');
+                $sheet->setCellValue('F16', $assignment->acquisition_date ?? '');
+                $sheet->setCellValue('G16', $assignment->acquisition_cost ?? '');
+
+            } elseif ($type === 'PTR') {
+                // H9 — date (not merged)
+                $sheet->setCellValue('H9', date('F d, Y'));
+                // Data row 18 — first fully writable row beneath merged header rows 16-17
+                $sheet->setCellValue('A18', $assignment->acquisition_date ?? '');
+                $sheet->setCellValue('B18', $assignment->property_number ?? '');
+                $sheet->setCellValue('D18', $assignment->description ?? '');
+                $sheet->setCellValue('H18', $assignment->acquisition_cost ?? '');
+                $sheet->setCellValue('I18', $assignment->condition ?? '');
+
+
+            } elseif ($type === 'RRPPE' || $type === 'RRSP') {
+                $sheet->setCellValue('H4', date('F d, Y'));
+                $sheet->setCellValue('H35', date('F d, Y'));
+                
+                // Copy 1 (Row 8)
+                $sheet->setCellValue('B8', 1);
+                $sheet->setCellValue('C8', $assignment->item_name ?? '');
+                $sheet->setCellValue('D8', $assignment->description ?? '');
+                $sheet->setCellValue('E8', $assignment->quantity ?? '');
+                $sheet->setCellValue('F8', $assignment->property_number ?? '');
+                $sheet->setCellValue('G8', $custodianName);
+                $sheet->setCellValue('H8', $transfer->remarks ?? '');
+                $sheet->setCellValue('D18', $custodianName);
+
+                // Copy 2 (Row 39)
+                $sheet->setCellValue('B39', 1);
+                $sheet->setCellValue('C39', $assignment->item_name ?? '');
+                $sheet->setCellValue('D39', $assignment->description ?? '');
+                $sheet->setCellValue('E39', $assignment->quantity ?? '');
+                $sheet->setCellValue('F39', $assignment->property_number ?? '');
+                $sheet->setCellValue('G39', $custodianName);
+                $sheet->setCellValue('H39', $transfer->remarks ?? '');
+                $sheet->setCellValue('D51', $custodianName);
+            }
+
+            return response()->stream(function() use ($spreadsheet) {
+                $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+                $writer->save('php://output');
+            }, 200, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $downloadName . '"',
+                'Cache-Control' => 'max-age=0',
+            ]);
+        }
+
         return response()->download($filePath, $downloadName);
     }
 }

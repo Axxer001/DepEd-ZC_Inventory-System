@@ -610,7 +610,7 @@ class AssetController extends Controller
             return back()->with('error', 'Asset not found');
         }
 
-        DB::transaction(function () use ($id, $asset, $validated, $request) {
+        $transferId = DB::transaction(function () use ($id, $asset, $validated, $request) {
             // Resolve current office_id/school_id from the previous assignment/employee
             $currentOfficeId = $asset->office_id;
             $currentSchoolId = $asset->school_id;
@@ -673,7 +673,7 @@ class AssetController extends Controller
             }
 
             // Log Transfer
-            DB::table('asset_transfers')->insert([
+            $tid = DB::table('asset_transfers')->insertGetId([
                 'asset_assignment_id' => $id,
                 'from_office_id' => $currentOfficeId,
                 'to_office_id' => $toOfficeId,
@@ -706,6 +706,8 @@ class AssetController extends Controller
             foreach ($admins as $admin) {
                 $admin->notify(new \App\Notifications\AssetTransferNotification($dummyAsset));
             }
+
+            return $tid;
         });
 
         // Flash document download if transfer is employee to employee
@@ -723,6 +725,8 @@ class AssetController extends Controller
                     'cost_threshold' => ($cost > 49999) ? 'high' : 'low',
                     'doc_type'       => $docType,
                     'asset_count'    => 1,
+                    'assignment_id'  => $id,
+                    'transfer_id'    => $transferId,
                 ]
             ]);
         }
@@ -747,7 +751,7 @@ class AssetController extends Controller
             return back()->with('error', 'Asset not found');
         }
 
-        DB::transaction(function () use ($id, $asset, $validated) {
+        $transferId = DB::transaction(function () use ($id, $asset, $validated) {
             // Resolve current office_id/school_id from the previous assignment/employee
             $currentOfficeId = $asset->office_id;
             $currentSchoolId = $asset->school_id;
@@ -760,7 +764,7 @@ class AssetController extends Controller
             }
 
             // Log the return
-            DB::table('asset_transfers')->insert([
+            $tid = DB::table('asset_transfers')->insertGetId([
                 'asset_assignment_id' => $id,
                 'from_office_id' => $currentOfficeId,
                 'to_office_id' => null,
@@ -808,6 +812,8 @@ class AssetController extends Controller
             foreach ($admins as $admin) {
                 $admin->notify(new \App\Notifications\AssetReturnedNotification($dummyAsset));
             }
+
+            return $tid;
         });
 
         // Flash document download for return to AMU
@@ -836,6 +842,8 @@ class AssetController extends Controller
                 'cost_threshold' => ($cost > 49999) ? 'high' : 'low',
                 'doc_type'       => $docType,
                 'asset_count'    => 1,
+                'assignment_id'  => $id,
+                'transfer_id'    => $transferId,
             ]
         ]);
 
