@@ -22,7 +22,7 @@ class ClassCategoryController extends Controller
             ->leftJoin('asset_assignments as ad', 'asrc.id', '=', 'ad.asset_source_id')
             ->select('categories.*')
             ->selectRaw('COUNT(ad.id) as assets_count')
-            ->groupBy('categories.id', 'categories.name', 'categories.classification_id', 'categories.category_code', 'categories.short_category_code', 'categories.created_at', 'categories.updated_at')
+            ->groupBy('categories.id', 'categories.name', 'categories.classification_id', 'categories.see_category_code', 'categories.ppe_category_code', 'categories.created_at', 'categories.updated_at')
             ->orderBy('categories.name')
             ->get();
 
@@ -39,7 +39,7 @@ class ClassCategoryController extends Controller
             ->leftJoin('asset_assignments as ad', 'asrc.id', '=', 'ad.asset_source_id')
             ->select('categories.*')
             ->selectRaw('COUNT(ad.id) as assets_count')
-            ->groupBy('categories.id', 'categories.name', 'categories.classification_id', 'categories.category_code', 'categories.short_category_code', 'categories.created_at', 'categories.updated_at')
+            ->groupBy('categories.id', 'categories.name', 'categories.classification_id', 'categories.see_category_code', 'categories.ppe_category_code', 'categories.created_at', 'categories.updated_at')
             ->orderBy('categories.name')
             ->get();
 
@@ -96,10 +96,10 @@ class ClassCategoryController extends Controller
         }
 
         $validated = $request->validate([
-            'classification_id'   => 'required|exists:classifications,id',
-            'name'                => 'required|string|max:255|unique:categories,name',
-            'category_code'       => 'required|string|max:255',
-            'short_category_code' => 'required|string|max:255',
+            'classification_id'        => 'required|exists:classifications,id',
+            'name'                     => 'required|string|max:255|unique:categories,name',
+            'see_category_code'        => 'required|string|max:255',
+            'ppe_category_code'        => 'required|string|max:255',
         ]);
 
         Category::create($validated);
@@ -142,10 +142,10 @@ class ClassCategoryController extends Controller
         $category = Category::findOrFail($id);
 
         $validated = $request->validate([
-            'classification_id'   => 'required|exists:classifications,id',
-            'name'                => 'required|string|max:255|unique:categories,name,' . $id,
-            'category_code'       => 'required|string|max:255',
-            'short_category_code' => 'required|string|max:255',
+            'classification_id'        => 'required|exists:classifications,id',
+            'name'                     => 'required|string|max:255|unique:categories,name,' . $id,
+            'see_category_code'        => 'required|string|max:255',
+            'ppe_category_code'        => 'required|string|max:255',
         ]);
 
         $category->update($validated);

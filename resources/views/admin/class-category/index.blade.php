@@ -142,7 +142,7 @@
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen lg:overflow-hidden overflow-y-auto custom-scroll p-4 lg:p-8" x-data="{ activeView: 'classifications', showAddModal: false, addType: 'classification', showEditModal: false, editType: 'classification', editId: null, editName: '', editCode: '', editShortCode: '', editClassificationId: '' }">
+    <div class="flex-grow flex flex-col min-w-0 h-screen lg:overflow-hidden overflow-y-auto custom-scroll p-4 lg:p-8" x-data="{ activeView: 'classifications', showAddModal: false, addType: 'classification', showEditModal: false, editType: 'classification', editId: null, editName: '', editSeeCode: '', editPpeCode: '', editClassificationId: '' }">
         
         {{-- Global Header --}}
         <header class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sticky top-0 z-50 transition-colors">
@@ -234,8 +234,8 @@
                             <tr>
                                 <th class="xls-th pl-6">Category Name</th>
                                 <th class="xls-th">Classification</th>
-                                <th class="xls-th">Code</th>
-                                <th class="xls-th">Short Code</th>
+                                <th class="xls-th">SEE Code</th>
+                                <th class="xls-th">PPE Code</th>
                                 <th class="xls-th">Asset Count</th>
                                 <th class="xls-th text-right pr-6">Action</th>
                             </tr>
@@ -245,15 +245,15 @@
                             <tr onclick="window.location='{{ route('admin.categories.show', $cat->id) }}'" class="xls-row group">
                                 <td class="xls-td pl-6 font-bold text-slate-800 group-hover:text-deped dark:group-hover:text-red-400 transition-colors">{{ $cat->name }}</td>
                                 <td class="xls-td font-semibold text-slate-500">{{ $cat->classification->name ?? '—' }}</td>
-                                <td class="xls-td font-mono font-bold text-slate-600">{{ $cat->category_code ?? '—' }}</td>
-                                <td class="xls-td font-mono font-bold text-slate-600">{{ $cat->short_category_code ?? '—' }}</td>
+                                <td class="xls-td font-mono font-bold text-slate-600">{{ $cat->see_category_code ?? '—' }}</td>
+                                <td class="xls-td font-mono font-bold text-slate-600">{{ $cat->ppe_category_code ?? '—' }}</td>
                                 <td class="xls-td font-semibold text-slate-500">
                                     <span class="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">{{ $cat->assets_count }} Asset(s)</span>
                                 </td>
                                 <td class="xls-td text-right pr-6">
                                     <div class="flex items-center justify-end gap-3">
                                         @if(auth()->user()->isSuperAdmin())
-                                        <button @click.prevent.stop="showEditModal = true; editType = 'category'; editId = {{ $cat->id }}; editName = '{{ addslashes($cat->name) }}'; editCode = '{{ addslashes($cat->category_code) }}'; editShortCode = '{{ addslashes($cat->short_category_code) }}'; editClassificationId = '{{ $cat->classification_id }}'" class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-deped dark:hover:text-red-400 transition-all active:scale-95" title="Edit Category">
+                                        <button @click.prevent.stop="showEditModal = true; editType = 'category'; editId = {{ $cat->id }}; editName = '{{ addslashes($cat->name) }}'; editSeeCode = '{{ addslashes($cat->see_category_code) }}'; editPpeCode = '{{ addslashes($cat->ppe_category_code) }}'; editClassificationId = '{{ $cat->classification_id }}'" class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-deped dark:hover:text-red-400 transition-all active:scale-95" title="Edit Category">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                         </button>
                                         @endif
@@ -318,14 +318,18 @@
                         <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Category Name</label>
                         <input type="text" name="name" required placeholder="e.g. Laptop, Printer, Armchair" class="w-full text-xs font-semibold px-4 py-3 border rounded-xl focus:outline-none transition-all">
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Category Code</label>
-                        <input type="text" name="category_code" required placeholder="e.g. 5020321000" class="w-full text-xs font-semibold px-4 py-3 border rounded-xl focus:outline-none transition-all font-mono">
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">SEE Category Code</label>
+                            <input type="text" name="see_category_code" required placeholder="e.g. 5020" class="w-full text-xs font-semibold px-4 py-3 border rounded-xl focus:outline-none transition-all font-mono">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">PPE Category Code</label>
+                            <input type="text" name="ppe_category_code" required placeholder="e.g. 1060" class="w-full text-xs font-semibold px-4 py-3 border rounded-xl focus:outline-none transition-all font-mono">
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Short Category Code (Shortcut)</label>
-                        <input type="text" name="short_category_code" required placeholder="e.g. LAPTOP, PRNTR, CHAIR" class="w-full text-xs font-semibold px-4 py-3 border rounded-xl focus:outline-none transition-all font-mono">
-                    </div>
+
                     <div class="flex items-center justify-end gap-2 pt-2">
                         <button type="button" @click="showAddModal = false" class="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">Cancel</button>
                         <button type="submit" class="px-5 py-2.5 bg-deped text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-all shadow-sm active:scale-95">Save Category</button>
@@ -370,13 +374,16 @@
                             <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Category Name</label>
                             <input type="text" name="name" x-model="editName" required placeholder="e.g. Laptop, Printer, Armchair" class="w-full text-xs font-semibold px-4 py-3 border rounded-xl focus:outline-none transition-all">
                         </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Category Code</label>
-                            <input type="text" name="category_code" x-model="editCode" required placeholder="e.g. 5020321000" class="w-full text-xs font-semibold px-4 py-3 border rounded-xl focus:outline-none transition-all font-mono">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Short Category Code (Shortcut)</label>
-                            <input type="text" name="short_category_code" x-model="editShortCode" required placeholder="e.g. LAPTOP, PRNTR, CHAIR" class="w-full text-xs font-semibold px-4 py-3 border rounded-xl focus:outline-none transition-all font-mono">
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">SEE Category Code</label>
+                                <input type="text" name="see_category_code" x-model="editSeeCode" required placeholder="e.g. 5020" class="w-full text-xs font-semibold px-4 py-3 border rounded-xl focus:outline-none transition-all font-mono">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">PPE Category Code</label>
+                                <input type="text" name="ppe_category_code" x-model="editPpeCode" required placeholder="e.g. 1060" class="w-full text-xs font-semibold px-4 py-3 border rounded-xl focus:outline-none transition-all font-mono">
+                            </div>
                         </div>
                     </div>
 

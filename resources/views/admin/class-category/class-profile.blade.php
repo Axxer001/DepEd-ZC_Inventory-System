@@ -208,8 +208,8 @@
                         <thead>
                             <tr>
                                 <th class="xls-th pl-6">Category Name</th>
-                                <th class="xls-th">Code</th>
-                                <th class="xls-th">Short Code</th>
+                                <th class="xls-th">SEE Code</th>
+                                <th class="xls-th">PPE Code</th>
                                 <th class="xls-th">Asset Count</th>
                                 <th class="xls-th text-right pr-6">Action</th>
                             </tr>
@@ -218,8 +218,8 @@
                             @forelse($categories as $cat)
                             <tr onclick="window.location='{{ route('admin.categories.show', $cat->id) }}'" class="xls-row group">
                                 <td class="xls-td pl-6 font-bold text-slate-800 group-hover:text-deped dark:group-hover:text-red-400 transition-colors">{{ $cat->name }}</td>
-                                <td class="xls-td font-mono font-bold text-slate-600">{{ $cat->category_code ?? '—' }}</td>
-                                <td class="xls-td font-mono font-bold text-slate-600">{{ $cat->short_category_code ?? '—' }}</td>
+                                <td class="xls-td font-mono font-bold text-slate-600">{{ $cat->see_category_code ?? '—' }}</td>
+                                <td class="xls-td font-mono font-bold text-slate-600">{{ $cat->ppe_category_code ?? '—' }}</td>
                                 <td class="xls-td font-semibold text-slate-500">
                                     <span class="bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">{{ $cat->assets_count }} Asset(s)</span>
                                 </td>

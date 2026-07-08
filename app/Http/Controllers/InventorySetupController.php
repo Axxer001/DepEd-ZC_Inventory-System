@@ -301,6 +301,7 @@ class InventorySetupController extends Controller
                     'warranty'               => isset($row['warranty']) && $row['warranty'] !== '' ? (int)$row['warranty'] : null,
                     'acceptance_date'        => $row['acceptance-date']   ?? now()->toDateString(),
                     'condition'              => $condition,
+                    'equipment'              => ((float)($row['cost'] ?? 0) <= 49999 ? 'SEE' : 'PPE'),
                     'created_at'             => now(),
                     'updated_at'             => now(),
                 ]);
@@ -974,7 +975,12 @@ class InventorySetupController extends Controller
                 'asset_sources.unit_of_measurement as uom',
                 'asset_sources.asset_cost',
                 'asset_sources.condition',
-                'asset_sources.acceptance_date'
+                'asset_sources.acceptance_date',
+                'categories.id as category_id',
+                'categories.see_category_code',
+                'categories.ppe_category_code',
+                'asset_sources.equipment',
+                'asset_sources.id as asset_source_id'
             );
 
         if ($request->has('search')) {
@@ -985,7 +991,34 @@ class InventorySetupController extends Controller
             });
         }
 
-        return response()->json(['assets' => $query->get()]);
+        $assets = $query->get()->map(function($asset) {
+            if (empty($asset->property_number)) {
+                $order = DB::table('asset_sources')
+                    ->join('items', 'asset_sources.item_id', '=', 'items.id')
+                    ->where('items.category_id', $asset->category_id)
+                    ->where('asset_sources.id', '<=', $asset->asset_source_id)
+                    ->count();
+
+                $eq = $asset->equipment ?: ($asset->asset_cost <= 49999 ? 'SEE' : 'PPE');
+                $year = date('Y');
+                if ($eq === 'PPE') {
+                    $shCode = trim($asset->ppe_category_code ?? '0000');
+                } else {
+                    $shCode = trim($asset->see_category_code ?? '0000');
+                }
+                if (strlen($shCode) < 4) {
+                    $shCode = str_pad($shCode, 4, '0', STR_PAD_LEFT);
+                }
+                $shCodePart1 = substr($shCode, 0, 2);
+                $shCodePart2 = substr($shCode, 2, 2);
+                $orderStr = str_pad($order, 4, '0', STR_PAD_LEFT);
+
+                $asset->property_number = "{$eq} {$year}-{$shCodePart1}-{$shCodePart2}-{$orderStr}";
+            }
+            return $asset;
+        });
+
+        return response()->json(['assets' => $assets]);
     }
 
     /**

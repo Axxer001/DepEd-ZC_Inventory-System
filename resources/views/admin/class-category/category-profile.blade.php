@@ -154,7 +154,7 @@
                 </a>
                 <div>
                     <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase italic">{{ $category->name }}</h1>
-                    <p class="text-xs text-slate-500 font-medium mt-1">Category Profile &bull; Code: {{ $category->category_code ?? '—' }}</p>
+                    <p class="text-xs text-slate-500 font-medium mt-1">Category Profile &bull; Codes: SEE: {{ $category->see_category_code ?? '—' }} | PPE: {{ $category->ppe_category_code ?? '—' }}</p>
                 </div>
             </div>
             
@@ -196,14 +196,18 @@
                                 @endif
                             </p>
                         </div>
-                        <div>
-                            <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Category Code</span>
-                            <p class="text-xs font-mono font-bold text-slate-600 mt-0.5">{{ $category->category_code ?? '—' }}</p>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">SEE Category Code</span>
+                                <p class="text-xs font-mono font-bold text-slate-600 mt-0.5">{{ $category->see_category_code ?? '—' }}</p>
+                            </div>
+                            <div>
+                                <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">PPE Category Code</span>
+                                <p class="text-xs font-mono font-bold text-slate-600 mt-0.5">{{ $category->ppe_category_code ?? '—' }}</p>
+                            </div>
                         </div>
-                        <div>
-                            <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Short Code</span>
-                            <p class="text-xs font-mono font-bold text-slate-600 mt-0.5">{{ $category->short_category_code ?? '—' }}</p>
-                        </div>
+
                         <div>
                             <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Total Registered Assets</span>
                             <p class="text-sm font-bold text-slate-700 mt-0.5">{{ $assets->total() }}</p>
@@ -293,14 +297,18 @@
                         <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Category Name</label>
                         <input type="text" name="name" required value="{{ $category->name }}" placeholder="e.g. Laptop, Printer, Armchair" class="w-full text-xs font-semibold px-4 py-3 border rounded-xl focus:outline-none transition-all">
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Category Code</label>
-                        <input type="text" name="category_code" required value="{{ $category->category_code }}" placeholder="e.g. 5020321000" class="w-full text-xs font-semibold px-4 py-3 border rounded-xl focus:outline-none transition-all font-mono">
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">SEE Category Code</label>
+                            <input type="text" name="see_category_code" required value="{{ $category->see_category_code }}" placeholder="e.g. 5020" class="w-full text-xs font-semibold px-4 py-3 border rounded-xl focus:outline-none transition-all font-mono font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">PPE Category Code</label>
+                            <input type="text" name="ppe_category_code" required value="{{ $category->ppe_category_code }}" placeholder="e.g. 1060" class="w-full text-xs font-semibold px-4 py-3 border rounded-xl focus:outline-none transition-all font-mono font-bold">
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Short Category Code (Shortcut)</label>
-                        <input type="text" name="short_category_code" required value="{{ $category->short_category_code }}" placeholder="e.g. LAPTOP, PRNTR, CHAIR" class="w-full text-xs font-semibold px-4 py-3 border rounded-xl focus:outline-none transition-all font-mono">
-                    </div>
+
                     <div class="flex items-center justify-end gap-2 pt-2">
                         <button type="button" @click="showEditModal = false" class="px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">Cancel</button>
                         <button type="submit" class="px-5 py-2.5 bg-deped text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-all shadow-sm active:scale-95">Save Changes</button>

@@ -265,11 +265,6 @@
                     </p>
                 </div>
 
-                <!-- Property No -->
-                <div class="relative p-1 rounded-2xl col-span-2">
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Property Number</label>
-                    <input type="text" x-model="bulkData.property_number" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Leave empty to keep current">
-                </div>
 
                 <!-- Serial No -->
                 <div class="relative p-1 rounded-2xl col-span-2">
@@ -587,7 +582,6 @@
                     this.bulkData = {
                         selectFrom: '',
                         selectTo: '',
-                        property_number: '',
                         serial_number: '',
                         empSearch: '',
                         employee_id: null,
@@ -793,8 +787,8 @@
                         return;
                     }
 
-                    // Check if property number or serial number is being filled AND there is a selected asset with quantity > 1
-                    if (this.bulkData.property_number.trim() !== '' || this.bulkData.serial_number.trim() !== '') {
+                    // Check if serial number is being filled AND there is a selected asset with quantity > 1
+                    if (this.bulkData.serial_number.trim() !== '') {
                         const invalidAsset = selected.find(a => Number(a.quantity || 0) > 1);
                         if (invalidAsset) {
                             // Find the display index of this invalid asset in the list
@@ -802,7 +796,7 @@
                             Swal.fire({
                                 icon: 'error',
                                 title: 'Bulk Assign Failed',
-                                text: 'Bulk assign could not be done due to Item No. (' + displayIndex + ') having their property no. or serial no. field disabled.',
+                                text: 'Bulk assign could not be done due to Item No. (' + displayIndex + ') having their serial no. field disabled.',
                                 confirmButtonColor: '#c00000',
                                 customClass: { popup: 'rounded-2xl' }
                             });
@@ -812,9 +806,6 @@
 
                     // Apply the fields
                     selected.forEach(asset => {
-                        if (this.bulkData.property_number.trim() !== '') {
-                            asset.property_number = this.bulkData.property_number;
-                        }
                         if (this.bulkData.serial_number.trim() !== '') {
                             asset.serial_number = this.bulkData.serial_number;
                         }
