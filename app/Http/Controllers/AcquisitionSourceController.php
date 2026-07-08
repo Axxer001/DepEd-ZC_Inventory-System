@@ -64,15 +64,29 @@ class AcquisitionSourceController extends Controller
 
         $history = DB::table('asset_sources as asrc')
             ->join('items as i', 'asrc.item_id', '=', 'i.id')
+            ->join('acquisition_sources as aqs', 'asrc.acquisition_source_id', '=', 'aqs.id')
+            ->leftJoin('procurement_modes as pm', 'asrc.procurement_mode_id', '=', 'pm.id')
+            ->leftJoin('asset_assignments as ad', 'ad.asset_source_id', '=', 'asrc.id')
+            ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->leftJoin('schools as s', 'ad.school_id', '=', 's.id')
+            ->leftJoin('offices as o', 'ad.office_id', '=', 'o.id')
             ->where('asrc.acquisition_source_id', $id)
             ->select(
                 'asrc.id',
                 'i.name as item_name',
-                'asrc.description',
+                'aqs.name as source_name',
+                'aqs.contact_person as source_personnel',
+                'pm.name as mode_of_procurement',
+                'ad.property_number',
+                'ad.serial_number',
+                'ad.acquisition_date',
                 'asrc.quantity',
                 'asrc.asset_cost',
                 'asrc.acceptance_date',
-                'asrc.created_at'
+                'asrc.created_at',
+                DB::raw("CONCAT(COALESCE(e.first_name,''), ' ', COALESCE(e.last_name,'')) as employee_name"),
+                's.name as school_name',
+                'o.name as office_name'
             )
             ->orderByDesc('asrc.created_at')
             ->paginate(50, ['*'], 'history_page');

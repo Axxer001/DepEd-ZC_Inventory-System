@@ -102,7 +102,7 @@
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll p-4 lg:p-8" x-data="{ activeTab: 'assets' }">
+    <div class="flex-grow flex flex-col min-w-0 h-screen lg:overflow-hidden overflow-y-auto custom-scroll p-4 lg:p-8" x-data="{ activeTab: 'assets' }">
         
         {{-- Global Header --}}
         <header class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sticky top-0 z-50">
@@ -137,10 +137,10 @@
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow pb-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow lg:min-h-0 pb-10">
             
             {{-- Left Sidebar: Office Identity Details --}}
-            <aside class="lg:col-span-3 flex flex-col gap-6 z-40 relative">
+            <aside class="lg:col-span-3 flex flex-col gap-6 z-40 relative lg:h-full lg:overflow-y-auto custom-scroll pr-1">
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
                     <div>
                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Office Details</p>
@@ -191,16 +191,18 @@
             </aside>
 
             {{-- Main Content --}}
-            <div class="lg:col-span-9 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="lg:col-span-9 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden lg:h-full">
                 {{-- Office Custom Tabs --}}
                 <div class="flex border-b border-slate-200 tab-strip-bg px-2 pt-2">
                     <button @click="activeTab = 'assets'" :class="{'bg-white border-slate-200 border-b-white text-deped shadow-[0_-2px_4px_rgba(0,0,0,0.02)]': activeTab === 'assets', 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100': activeTab !== 'assets'}" class="px-6 py-3.5 text-xs font-black uppercase tracking-widest border border-b-0 rounded-t-xl transition-all relative top-[1px]">
                         Office Equipment
                     </button>
-                    <button @click="activeTab = 'custodians'" :class="{'bg-white border-slate-200 border-b-white text-deped shadow-[0_-2px_4px_rgba(0,0,0,0.02)]': activeTab === 'custodians', 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100': activeTab !== 'custodians'}" class="px-6 py-3.5 text-xs font-black uppercase tracking-widest border border-b-0 rounded-t-xl transition-all relative top-[1px]">
+                    <button @click="activeTab = 'custodians'" :class="{'bg-white border-slate-200 border-b-white text-deped shadow-[0_-2px_4px_rgba(0,0,0,0.02)]': activeTab === 'custodians', 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100': activeTab !== 'custodians'}" class="px-6 py-3.5 text-xs font-black uppercase tracking-widest border border-b-0 rounded-t-xl transition-all relative top-[1px] ml-1">
                         Office Custodians
                     </button>
-
+                    <button @click="activeTab = 'history'" :class="{'bg-white border-slate-200 border-b-white text-deped shadow-[0_-2px_4px_rgba(0,0,0,0.02)]': activeTab === 'history', 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100': activeTab !== 'history'}" class="px-6 py-3.5 text-xs font-black uppercase tracking-widest border border-b-0 rounded-t-xl transition-all relative top-[1px] ml-1">
+                        Lifecycle & History
+                    </button>
                 </div>
 
                 <div class="p-6 flex-grow overflow-y-auto custom-scroll">
@@ -297,9 +299,85 @@
                         </div>
                         @endif
                     </div>
-
-
-
+ 
+                    {{-- TAB: Lifecycle & History --}}
+                    <div x-show="activeTab === 'history'" class="animate-fade space-y-4" x-cloak>
+                        <div class="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scroll">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-2">
+                                <h3 class="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-[0.2em] flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-deped"></span> Office Asset Activity
+                                </h3>
+                                <span class="text-[9px] font-black text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full">{{ $assetEvents->count() }}</span>
+                            </div>
+ 
+                            @if($assetEvents->count() > 0)
+                            <div class="relative pl-5">
+                                <div class="space-y-5">
+                                    @foreach($assetEvents as $event)
+                                    @php
+                                        $isReceived = $event->type === 'received';
+                                        $dotColor = $isReceived ? 'bg-emerald-500' : 'bg-orange-500';
+                                        $badgeColor = $isReceived
+                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-800'
+                                            : 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-800';
+                                        $label = $isReceived ? 'Asset Sourced / Received' : 'Asset Transferred';
+                                        $eventDate = $event->event_date
+                                            ? \Carbon\Carbon::parse($event->event_date)->format('M d, Y · h:i A')
+                                            : '—';
+                                    @endphp
+                                    <div class="relative flex items-start gap-3">
+                                        <div class="w-[10px] h-[10px] rounded-full {{ $dotColor }} ring-2 ring-white absolute -left-5 top-1 shrink-0"></div>
+                                        <div class="pl-1 pb-1 min-w-0 flex-grow">
+                                            <div class="flex items-center gap-2 flex-wrap mb-1">
+                                                <span class="text-[9px] font-black uppercase tracking-wider border rounded-lg px-2 py-0.5 {{ $badgeColor }}">{{ $label }}</span>
+                                                <span class="text-[9px] font-semibold text-slate-400">{{ $eventDate }}</span>
+                                            </div>
+                                            <div class="bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 rounded-xl p-3 mt-1 space-y-1.5">
+                                                <div class="flex items-start gap-2">
+                                                    <span class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider w-20 shrink-0 pt-0.5">Item</span>
+                                                    <span class="text-[10px] font-bold text-slate-700 dark:text-slate-300">{{ $event->item_name ?? '—' }}</span>
+                                                </div>
+                                                <div class="flex items-start gap-2">
+                                                    <span class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider w-20 shrink-0 pt-0.5">Category</span>
+                                                    <span class="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{{ $event->category_name ?? '—' }}</span>
+                                                </div>
+                                                @if($event->property_number)
+                                                <div class="flex items-start gap-2">
+                                                    <span class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider w-20 shrink-0 pt-0.5">Prop. No.</span>
+                                                    <span class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400">{{ $event->property_number }}</span>
+                                                </div>
+                                                @endif
+                                                @if($event->serial_number)
+                                                <div class="flex items-start gap-2">
+                                                    <span class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider w-20 shrink-0 pt-0.5">Serial No.</span>
+                                                    <span class="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-400">{{ $event->serial_number }}</span>
+                                                </div>
+                                                @endif
+                                                <div class="flex items-start gap-2">
+                                                    <span class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider w-20 shrink-0 pt-0.5">Value</span>
+                                                    <span class="text-[10px] font-bold text-slate-700 dark:text-slate-300">₱{{ number_format($event->asset_cost ?? 0, 2) }}</span>
+                                                </div>
+                                                @if(!$isReceived)
+                                                <div class="border-t border-slate-200 dark:border-slate-800 pt-1.5 mt-1 flex items-start gap-2">
+                                                    <span class="text-[8px] font-black text-orange-400 dark:text-orange-500 uppercase tracking-wider w-20 shrink-0 pt-0.5">Transferred To</span>
+                                                    <span class="text-[10px] font-bold text-orange-600 dark:text-orange-400">
+                                                        {{ $event->to_custodian ?: ($event->to_school ?: ($event->to_office ?: '—')) }}
+                                                    </span>
+                                                </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @else
+                            <div class="bg-slate-50 dark:bg-slate-900/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 py-6 flex items-center justify-center">
+                                <p class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest italic">No asset activity recorded.</p>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             </div>
 

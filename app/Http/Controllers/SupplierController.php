@@ -57,10 +57,11 @@ class SupplierController extends Controller
             ->leftJoin('employees as to_emp', 'at.to_custodian_id', '=', 'to_emp.id')
             ->where('asrc.supplier_id', $id)
             ->where(function ($q) {
-                $q->where('at.transfer_type', 'Return to Source')
-                  ->orWhere('at.transfer_type', 'Return to Supplier')
-                  ->orWhere('at.transfer_type', 'Returned from Supplier')
-                  ->orWhere('at.transfer_type', 'Return');
+                $q->whereIn('at.transfer_type', ['Return to Source', 'Return to Supplier', 'Returned from Supplier', 'Return to Custodian'])
+                  ->orWhere(function ($sub) {
+                      $sub->where('at.transfer_type', 'Return')
+                          ->whereNotNull('at.repair_status');
+                  });
             })
             ->select(
                 'at.id',

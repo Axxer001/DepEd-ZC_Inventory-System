@@ -54,7 +54,7 @@
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll p-4 lg:p-8 gap-5" x-data="{ activeTab: 'assets' }">
+    <div class="flex-grow flex flex-col min-w-0 h-screen lg:overflow-hidden overflow-y-auto custom-scroll p-4 lg:p-8 gap-5" x-data="{ activeTab: 'assets' }">
 
         {{-- ===== STICKY HEADER ===== --}}
         <header class="bg-white rounded-2xl shadow-sm border border-slate-200 px-6 py-5 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sticky top-0 z-50 anim-0">
@@ -95,10 +95,10 @@
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-grow pb-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-grow lg:min-h-0 pb-10">
 
             {{-- ===== LEFT SIDEBAR ===== --}}
-            <aside class="lg:col-span-3 flex flex-col gap-5 anim-1">
+            <aside class="lg:col-span-3 flex flex-col gap-5 anim-1 lg:h-full lg:overflow-y-auto custom-scroll pr-1">
 
                 {{-- Info Card --}}
                 <div class="glass-card p-5 space-y-5">
@@ -153,7 +153,7 @@
             </aside>
 
             {{-- ===== MAIN CONTENT ===== --}}
-            <div class="lg:col-span-9 flex flex-col glass-card overflow-hidden anim-2">
+            <div class="lg:col-span-9 flex flex-col glass-card overflow-hidden anim-2 lg:h-full">
                 {{-- Tabs --}}
                 <div class="flex border-b border-slate-100 bg-slate-50/60 px-3 pt-3">
                     <button @click="activeTab = 'assets'"
@@ -254,13 +254,13 @@
                             <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scroll">
                                 @foreach($history as $event)
                                     @php
-                                        $isReturnedTo = in_array($event->transfer_type, ['Return to Source', 'Return to Supplier', 'Return']);
+                                        $isReturnedTo = in_array($event->transfer_type, ['Return to Source', 'Return to Supplier']);
                                         $badgeClass   = $isReturnedTo
                                             ? 'bg-orange-50 text-orange-700 border-orange-200'
                                             : 'bg-emerald-50 text-emerald-700 border-emerald-200';
                                         $iconBg    = $isReturnedTo ? 'bg-orange-50 border-orange-100' : 'bg-emerald-50 border-emerald-100';
                                         $iconColor = $isReturnedTo ? 'text-orange-400' : 'text-emerald-500';
-                                        $label     = $isReturnedTo ? 'Returned to Supplier' : 'Returned to Custodian';
+                                        $label     = $isReturnedTo ? 'Returned to Supplier' : 'Repaired & Returned';
                                     @endphp
                                     <div class="asset-card">
                                         <div class="flex flex-col sm:flex-row sm:items-start gap-4 px-4 py-4">
@@ -351,7 +351,7 @@
                             <div class="mt-4">
                                 {{ $history->appends(request()->except('history_page'))->links() }}
                             </div>
-                        @else         @else
+                        @else
                             <div class="py-12 flex flex-col items-center justify-center text-center">
                                 <div class="w-16 h-16 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mb-4">
                                     <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>

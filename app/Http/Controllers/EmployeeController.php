@@ -110,53 +110,135 @@ class EmployeeController extends Controller
             )
             ->get();
 
+        // Fetch all asset assignment IDs that have ever been assigned to this employee
+        $allAssignedIds = DB::table('asset_transfers')
+            ->where('to_custodian_id', $id)
+            ->orWhere('from_custodian_id', $id)
+            ->pluck('asset_assignment_id')
+            ->merge(
+                DB::table('asset_assignments')
+                    ->where('employee_id', $id)
+                    ->pluck('id')
+            )
+            ->unique()
+            ->values();
+
+        $historicalAssets = collect();
+        if ($allAssignedIds->isNotEmpty()) {
+            $historicalAssets = DB::table('asset_assignments as ad')
+                ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+                ->join('items as i', 'asrc.item_id', '=', 'i.id')
+                ->join('categories as cat', 'i.category_id', '=', 'cat.id')
+                ->leftJoin('schools as s', 'ad.school_id', '=', 's.id')
+                ->leftJoin('offices as o', 'ad.office_id', '=', 'o.id')
+                ->whereIn('ad.id', $allAssignedIds)
+                ->select(
+                    'ad.id',
+                    'ad.employee_id',
+                    'ad.property_number',
+                    'ad.serial_number',
+                    'ad.acquisition_date',
+                    'ad.acquisition_cost as asset_cost',
+                    'i.name as item_name',
+                    'cat.name as category_name',
+                    'asrc.condition',
+                    DB::raw('COALESCE(s.name, o.name) as school_name')
+                )
+                ->get();
+        }
+
         $transfers = collect();
-        if ($assets->count() > 0) {
+        if ($historicalAssets->isNotEmpty()) {
             $transfers = DB::table('asset_transfers as at')
                 ->leftJoin('offices as to_off', 'at.to_office_id', '=', 'to_off.id')
                 ->leftJoin('employees as to_emp', 'at.to_custodian_id', '=', 'to_emp.id')
-                ->whereIn('at.asset_assignment_id', $assets->getCollection()->pluck('id'))
+                ->whereIn('at.asset_assignment_id', $historicalAssets->pluck('id'))
                 ->select(
                     'at.*',
                     'to_off.name as to_office',
                     DB::raw("TRIM(CONCAT(COALESCE(to_emp.first_name, ''), ' ', COALESCE(to_emp.last_name, ''))) as to_custodian")
                 )
-                ->orderByDesc('at.transfer_date')
+                ->orderBy('at.transfer_date', 'asc')
+                ->orderBy('at.created_at', 'asc')
+                ->orderBy('at.id', 'asc')
                 ->get()
                 ->groupBy('asset_assignment_id');
         }
 
-        $histories = \App\Models\EmployeeHistory::where('employee_id', $id)->orderByDesc('created_at')->paginate(50, ['*'], 'history_page');
+        $histories = \App\Models\EmployeeHistory::where('employee_id', $id)->orderBy('created_at')->paginate(50, ['*'], 'history_page');
 
-        // Build asset events: receives (assigned_at) + transfers (transfer_date)
+        // Build asset events: receives + transfers
         $assetEvents = collect();
-        foreach ($assets as $asset) {
-            $assetEvents->push((object)[
-                'type'          => 'received',
-                'event_date'    => $asset->assigned_at,
-                'item_name'     => $asset->item_name,
-                'category_name' => $asset->category_name,
-                'property_number' => $asset->property_number,
-                'asset_cost'    => $asset->asset_cost,
-                'to_custodian'  => null,
-                'to_office'     => null,
-            ]);
-            if (isset($transfers[$asset->id])) {
-                foreach ($transfers[$asset->id] as $t) {
+        foreach ($historicalAssets as $asset) {
+            $assetTransfers = $transfers->get($asset->id, collect());
+            
+            // If there are no transfers at all, and it is currently assigned to this employee
+            if ($assetTransfers->isEmpty() && $asset->employee_id == $id) {
+                $assetEvents->push((object)[
+                    'type'          => 'received',
+                    'event_date'    => $asset->acquisition_date,
+                    'item_name'     => $asset->item_name,
+                    'category_name' => $asset->category_name,
+                    'property_number' => $asset->property_number,
+                    'serial_number'   => $asset->serial_number,
+                    'asset_cost'    => $asset->asset_cost,
+                    'to_custodian'  => null,
+                    'to_office'     => null,
+                ]);
+                continue;
+            }
+
+            $hasAnyEvent = false;
+            foreach ($assetTransfers as $t) {
+                // If they received the asset
+                if ($t->to_custodian_id == $id) {
+                    $assetEvents->push((object)[
+                        'type'          => 'received',
+                        'event_date'    => $t->transfer_date ?? $t->created_at,
+                        'item_name'     => $asset->item_name,
+                        'category_name' => $asset->category_name,
+                        'property_number' => $asset->property_number,
+                        'serial_number'   => $asset->serial_number,
+                        'asset_cost'    => $asset->asset_cost,
+                        'to_custodian'  => null,
+                        'to_office'     => null,
+                    ]);
+                    $hasAnyEvent = true;
+                }
+                // If they transferred/returned the asset away
+                elseif ($t->from_custodian_id == $id) {
                     $assetEvents->push((object)[
                         'type'          => 'transferred',
                         'event_date'    => $t->transfer_date ?? $t->created_at,
                         'item_name'     => $asset->item_name,
                         'category_name' => $asset->category_name,
                         'property_number' => $asset->property_number,
+                        'serial_number'   => $asset->serial_number,
                         'asset_cost'    => $asset->asset_cost,
                         'to_custodian'  => $t->to_custodian ?? null,
                         'to_office'     => $t->to_office ?? null,
                     ]);
+                    $hasAnyEvent = true;
                 }
             }
+
+            // Fallback: If they currently have custody but no matching transfers were recorded in this loop
+            // (e.g. it was assigned legacy style without transfer history), ensure a received event is logged.
+            if (!$hasAnyEvent && $asset->employee_id == $id) {
+                $assetEvents->push((object)[
+                    'type'          => 'received',
+                    'event_date'    => $asset->acquisition_date,
+                    'item_name'     => $asset->item_name,
+                    'category_name' => $asset->category_name,
+                    'property_number' => $asset->property_number,
+                    'serial_number'   => $asset->serial_number,
+                    'asset_cost'    => $asset->asset_cost,
+                    'to_custodian'  => null,
+                    'to_office'     => null,
+                ]);
+            }
         }
-        $assetEvents = $assetEvents->sortByDesc('event_date')->values();
+        $assetEvents = $assetEvents->sortBy('event_date')->values();
 
         return view('admin.employee-management-profile', compact('custodian', 'stats', 'schools', 'assets', 'transfers', 'histories', 'assetEvents'));
     }
@@ -279,40 +361,103 @@ class EmployeeController extends Controller
             )
             ->get();
 
+        // Fetch all asset assignment IDs that have ever been assigned to this custodian
+        $allAssignedIds = DB::table('asset_transfers')
+            ->where('to_custodian_id', $id)
+            ->orWhere('from_custodian_id', $id)
+            ->pluck('asset_assignment_id')
+            ->merge(
+                DB::table('asset_assignments')
+                    ->where('employee_id', $id)
+                    ->pluck('id')
+            )
+            ->unique()
+            ->values();
+
+        $historicalAssets = collect();
+        if ($allAssignedIds->isNotEmpty()) {
+            $historicalAssets = DB::table('asset_assignments as ad')
+                ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+                ->join('items as i', 'asrc.item_id', '=', 'i.id')
+                ->join('categories as cat', 'i.category_id', '=', 'cat.id')
+                ->leftJoin('schools as s', 'ad.school_id', '=', 's.id')
+                ->leftJoin('offices as o', 'ad.office_id', '=', 'o.id')
+                ->whereIn('ad.id', $allAssignedIds)
+                ->select(
+                    'ad.id',
+                    'ad.employee_id',
+                    'ad.property_number',
+                    'ad.serial_number',
+                    'ad.acquisition_date',
+                    'ad.acquisition_cost as asset_cost',
+                    'i.name as item_name',
+                    'cat.name as category_name',
+                    'asrc.condition',
+                    DB::raw('COALESCE(s.name, o.name) as school_name')
+                )
+                ->get();
+        }
+
         $transfers = collect();
-        if ($assets->isNotEmpty()) {
+        if ($historicalAssets->isNotEmpty()) {
             $transfers = DB::table('asset_transfers as at')
                 ->leftJoin('offices as to_off', 'at.to_office_id', '=', 'to_off.id')
                 ->leftJoin('employees as to_emp', 'at.to_custodian_id', '=', 'to_emp.id')
-                ->whereIn('at.asset_assignment_id', $assets->pluck('id'))
+                ->whereIn('at.asset_assignment_id', $historicalAssets->pluck('id'))
                 ->select(
                     'at.*',
                     'to_off.name as to_office',
                     DB::raw("TRIM(CONCAT(COALESCE(to_emp.first_name, ''), ' ', COALESCE(to_emp.last_name, ''))) as to_custodian")
                 )
-                ->orderByDesc('at.transfer_date')
+                ->orderBy('at.transfer_date', 'asc')
+                ->orderBy('at.created_at', 'asc')
+                ->orderBy('at.id', 'asc')
                 ->get()
                 ->groupBy('asset_assignment_id');
         }
 
-        $histories = \App\Models\EmployeeHistory::where('employee_id', $id)->orderByDesc('created_at')->get();
+        $histories = \App\Models\EmployeeHistory::where('employee_id', $id)->orderBy('created_at')->get();
 
-        // Build asset events: receives (assigned_at) + transfers (transfer_date)
+        // Build asset events: receives + transfers
         $assetEvents = collect();
-        foreach ($assets as $asset) {
-            $assetEvents->push((object)[
-                'type'          => 'received',
-                'event_date'    => $asset->assigned_at,
-                'item_name'     => $asset->item_name,
-                'category_name' => $asset->category_name,
-                'property_number' => $asset->property_number,
-                'serial_number'   => $asset->serial_number,
-                'asset_cost'    => $asset->asset_cost,
-                'to_custodian'  => null,
-                'to_office'     => null,
-            ]);
-            if (isset($transfers[$asset->id])) {
-                foreach ($transfers[$asset->id] as $t) {
+        foreach ($historicalAssets as $asset) {
+            $assetTransfers = $transfers->get($asset->id, collect());
+            
+            // If there are no transfers at all, and it is currently assigned to this employee
+            if ($assetTransfers->isEmpty() && $asset->employee_id == $id) {
+                $assetEvents->push((object)[
+                    'type'          => 'received',
+                    'event_date'    => $asset->acquisition_date,
+                    'item_name'     => $asset->item_name,
+                    'category_name' => $asset->category_name,
+                    'property_number' => $asset->property_number,
+                    'serial_number'   => $asset->serial_number,
+                    'asset_cost'    => $asset->asset_cost,
+                    'to_custodian'  => null,
+                    'to_office'     => null,
+                ]);
+                continue;
+            }
+
+            $hasAnyEvent = false;
+            foreach ($assetTransfers as $t) {
+                // If they received the asset
+                if ($t->to_custodian_id == $id) {
+                    $assetEvents->push((object)[
+                        'type'          => 'received',
+                        'event_date'    => $t->transfer_date ?? $t->created_at,
+                        'item_name'     => $asset->item_name,
+                        'category_name' => $asset->category_name,
+                        'property_number' => $asset->property_number,
+                        'serial_number'   => $asset->serial_number,
+                        'asset_cost'    => $asset->asset_cost,
+                        'to_custodian'  => null,
+                        'to_office'     => null,
+                    ]);
+                    $hasAnyEvent = true;
+                }
+                // If they transferred/returned the asset away
+                elseif ($t->from_custodian_id == $id) {
                     $assetEvents->push((object)[
                         'type'          => 'transferred',
                         'event_date'    => $t->transfer_date ?? $t->created_at,
@@ -324,10 +469,27 @@ class EmployeeController extends Controller
                         'to_custodian'  => $t->to_custodian ?? null,
                         'to_office'     => $t->to_office ?? null,
                     ]);
+                    $hasAnyEvent = true;
                 }
             }
+
+            // Fallback: If they currently have custody but no matching transfers were recorded in this loop
+            // (e.g. it was assigned legacy style without transfer history), ensure a received event is logged.
+            if (!$hasAnyEvent && $asset->employee_id == $id) {
+                $assetEvents->push((object)[
+                    'type'          => 'received',
+                    'event_date'    => $asset->acquisition_date,
+                    'item_name'     => $asset->item_name,
+                    'category_name' => $asset->category_name,
+                    'property_number' => $asset->property_number,
+                    'serial_number'   => $asset->serial_number,
+                    'asset_cost'    => $asset->asset_cost,
+                    'to_custodian'  => null,
+                    'to_office'     => null,
+                ]);
+            }
         }
-        $assetEvents = $assetEvents->sortByDesc('event_date')->values();
+        $assetEvents = $assetEvents->sortBy('event_date')->values();
 
         return view('admin.custodians.profile', compact('custodian', 'stats', 'schools', 'assets', 'transfers', 'histories', 'assetEvents'));
     }

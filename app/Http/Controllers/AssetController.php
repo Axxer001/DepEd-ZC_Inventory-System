@@ -364,6 +364,28 @@ class AssetController extends Controller
             ->orderBy('asset_transfers.transfer_date', 'desc')
             ->orderBy('asset_transfers.created_at', 'desc')
             ->get();
+
+        // Sort transfers so that 'Initial Distribution' is always ordered logically (as the start of its custody chain)
+        // even if it has a future or conflicting transfer_date.
+        $transfers = $transfers->sort(function ($a, $b) {
+            if ($a->transfer_type === 'Initial Distribution' && $b->transfer_type !== 'Initial Distribution') {
+                if ($a->id < $b->id) {
+                    return 1; // $a is older, so it goes after $b (descending)
+                }
+            }
+            if ($b->transfer_type === 'Initial Distribution' && $a->transfer_type !== 'Initial Distribution') {
+                if ($b->id < $a->id) {
+                    return -1; // $b is older, so it goes after $a (descending)
+                }
+            }
+            
+            $dateA = $a->transfer_date ?? '0000-00-00';
+            $dateB = $b->transfer_date ?? '0000-00-00';
+            if ($dateA !== $dateB) {
+                return strcmp($dateB, $dateA);
+            }
+            return $b->id <=> $a->id;
+        })->values();
  
         if ($transfers->isEmpty() && !empty($asset->office_school_name) && $asset->office_school_name !== 'Warehouse') {
             $timeline[] = [

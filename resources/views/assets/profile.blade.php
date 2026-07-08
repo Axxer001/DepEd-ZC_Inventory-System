@@ -80,7 +80,7 @@
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll p-4 lg:p-8" x-data="{ activeTab: 'specs', showEditModal: false, showTransferModal: false, showReturnAmuModal: false, showReturnSourceModal: false, showImageFullscreen: false, showRemoveConfirmModal: false, isSaving: false, historyLimit: 5 }">
+    <div class="flex-grow flex flex-col min-w-0 h-screen lg:overflow-hidden overflow-y-auto custom-scroll p-4 lg:p-8" x-data="{ activeTab: 'specs', showEditModal: false, showTransferModal: false, showReturnAmuModal: false, showReturnSourceModal: false, showImageFullscreen: false, showRemoveConfirmModal: false, isSaving: false, historyLimit: 5 }">
         
         {{-- Global Header (Fixed/Sticky) --}}
         <header class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sticky top-0 z-50">
@@ -146,10 +146,10 @@
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow pb-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow lg:min-h-0 pb-10">
             
             {{-- Left Sidebar: Asset Identity Card --}}
-            <aside class="lg:col-span-3 flex flex-col gap-6 z-40 relative">
+            <aside class="lg:col-span-3 flex flex-col gap-6 z-40 relative lg:h-full lg:overflow-y-auto custom-scroll pr-1">
                 <form action="{{ route('assets.photo.upload', $asset->id) }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible flex flex-col relative" x-data="{ photoPreview: null, showPhotoConfirmModal: false, isHoveringImage: false }">
                     @csrf
                     <div class="aspect-square bg-slate-50 border-b border-slate-100 flex items-center justify-center p-6 relative group rounded-t-2xl overflow-hidden" @mouseenter="isHoveringImage = true" @mouseleave="isHoveringImage = false">
@@ -367,7 +367,7 @@
             </aside>
 
             {{-- Main Content Area --}}
-            <div class="lg:col-span-9 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div class="lg:col-span-9 flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden lg:h-full">
                 
                 {{-- Tabs Header --}}
                 <div class="flex border-b border-slate-200 bg-slate-50/50 px-2 pt-2">
@@ -514,7 +514,6 @@
                         </div>
 
                         <div class="relative pl-3 max-w-3xl flex-1 min-h-0 overflow-y-auto custom-scroll pr-4">
-                            <div class="timeline-line"></div>
                             
                             <div class="space-y-6">
                                 @foreach($timeline as $event)
@@ -548,11 +547,6 @@
                                     </div>
                                 </div>
                                 @endforeach
-
-                                {{-- Load More Button --}}
-                                <div class="relative pl-8 pt-4 pb-2">
-                                    <button class="text-[10px] font-black text-deped uppercase tracking-[0.2em] hover:underline bg-deped_light px-4 py-2 rounded-lg">Load More History</button>
-                                </div>
                             </div>
                         </div>
                     </div>

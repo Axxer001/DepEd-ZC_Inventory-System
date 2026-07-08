@@ -63,7 +63,7 @@
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll p-4 lg:p-8 gap-5" x-data="{ activeTab: 'assets' }">
+    <div class="flex-grow flex flex-col min-w-0 h-screen lg:overflow-hidden overflow-y-auto custom-scroll p-4 lg:p-8 gap-5" x-data="{ activeTab: 'assets' }">
 
         {{-- ===== STICKY HEADER ===== --}}
         <header class="bg-white rounded-2xl shadow-sm border border-slate-200 px-6 py-5 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sticky top-0 z-50 anim-0">
@@ -99,10 +99,10 @@
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-grow pb-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-grow lg:min-h-0 pb-10">
 
             {{-- ===== LEFT SIDEBAR ===== --}}
-            <aside class="lg:col-span-3 flex flex-col gap-5 anim-1">
+            <aside class="lg:col-span-3 flex flex-col gap-5 anim-1 lg:h-full lg:overflow-y-auto custom-scroll pr-1">
 
                 {{-- Info Card --}}
                 <div class="glass-card p-5 space-y-5">
@@ -148,7 +148,7 @@
             </aside>
 
             {{-- ===== MAIN CONTENT ===== --}}
-            <div class="lg:col-span-9 flex flex-col glass-card overflow-hidden anim-2">
+            <div class="lg:col-span-9 flex flex-col glass-card overflow-hidden anim-2 lg:h-full">
                 {{-- Tabs --}}
                 <div class="flex border-b border-slate-100 bg-slate-50/60 px-3 pt-3">
                     <button @click="activeTab = 'assets'"
@@ -252,10 +252,23 @@
                                                 <div class="w-9 h-9 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center shrink-0">
                                                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
                                                 </div>
-                                                <div class="min-w-0">
+                                                <div class="min-w-0 flex-grow pr-4">
                                                     <h4 class="text-xs font-black text-slate-800 uppercase leading-none">{{ $h->item_name }}</h4>
-                                                    <p class="text-[9px] font-bold text-slate-400 uppercase mt-1 truncate max-w-[200px]">
-                                                        {{ $h->description ?: 'No Description' }}
+                                                    @php
+                                                        $targetName = 'Unassigned';
+                                                        if ($h->employee_name && trim($h->employee_name)) {
+                                                            $targetName = $h->employee_name;
+                                                        } elseif ($h->school_name) {
+                                                            $targetName = $h->school_name;
+                                                        } elseif ($h->office_name) {
+                                                            $targetName = $h->office_name;
+                                                        }
+                                                        
+                                                        $procName = $h->mode_of_procurement ?: 'N/A';
+                                                        $personnel = $h->source_personnel ?: 'N/A';
+                                                    @endphp
+                                                    <p class="text-[10px] font-bold text-slate-500 uppercase mt-1.5 leading-normal">
+                                                        {{ $h->source_name }} ({{ $personnel }}) procured via {{ $procName }} to {{ $targetName }}.
                                                     </p>
                                                 </div>
                                             </div>

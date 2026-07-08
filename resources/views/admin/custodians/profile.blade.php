@@ -96,7 +96,7 @@
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll p-4 lg:p-8 gap-5" x-data="{ activeTab: 'assets' }">
+    <div class="flex-grow flex flex-col min-w-0 h-screen lg:overflow-hidden overflow-y-auto custom-scroll p-4 lg:p-8 gap-5" x-data="{ activeTab: 'assets' }">
 
         {{-- ===== STICKY HEADER ===== --}}
         <header class="bg-white rounded-2xl shadow-sm border border-slate-200 px-6 py-5 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sticky top-0 z-50 anim-0">
@@ -136,10 +136,10 @@
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-grow pb-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-grow lg:min-h-0 pb-10">
 
             {{-- ===== LEFT SIDEBAR ===== --}}
-            <aside class="lg:col-span-3 flex flex-col gap-5 anim-1 z-40 relative">
+            <aside class="lg:col-span-3 flex flex-col gap-5 anim-1 z-40 relative lg:h-full lg:overflow-y-auto custom-scroll pr-1">
                 <form action="{{ route('admin.employees.photo.upload', $custodian->id) }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible flex flex-col relative" x-data="{ photoPreview: null, showPhotoConfirmModal: false, isHoveringImage: false }">
                     @csrf
                     <div class="aspect-square bg-slate-50 border-b border-slate-100 flex items-center justify-center p-6 relative group rounded-t-2xl overflow-hidden" @mouseenter="isHoveringImage = true" @mouseleave="isHoveringImage = false">
@@ -197,7 +197,7 @@
             </aside>
 
             {{-- ===== MAIN CONTENT ===== --}}
-            <div x-data="{ activeTab: 'details' }" class="lg:col-span-9 flex flex-col glass-card overflow-hidden anim-2">
+            <div x-data="{ activeTab: 'details' }" class="lg:col-span-9 flex flex-col glass-card overflow-hidden anim-2 lg:h-full">
                 {{-- Tabs --}}
                 <div class="flex border-b border-slate-100 bg-slate-50/60 px-3 pt-3 overflow-x-auto custom-scroll">
                     <button @click="activeTab = 'details'"

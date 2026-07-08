@@ -97,7 +97,7 @@
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll p-4 lg:p-8 gap-5" x-data="{ activeTab: 'assets' }">
+    <div class="flex-grow flex flex-col min-w-0 h-screen lg:overflow-hidden overflow-y-auto custom-scroll p-4 lg:p-8 gap-5" x-data="{ activeTab: 'assets' }">
 
         {{-- ===== STICKY HEADER ===== --}}
         <header class="bg-white rounded-2xl shadow-sm border border-slate-200 px-6 py-5 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sticky top-0 z-50 anim-0">
@@ -136,10 +136,10 @@
             </div>
         </header>
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-grow pb-10">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-grow lg:min-h-0 pb-10">
 
             {{-- ===== LEFT SIDEBAR ===== --}}
-            <aside class="lg:col-span-3 flex flex-col gap-5 anim-1">
+            <aside class="lg:col-span-3 flex flex-col gap-5 anim-1 lg:h-full lg:overflow-y-auto custom-scroll pr-1">
 
                 {{-- Info Card --}}
                 <div class="glass-card p-5 space-y-5">
@@ -216,7 +216,7 @@
             </aside>
 
             {{-- ===== MAIN CONTENT ===== --}}
-            <div class="lg:col-span-9 flex flex-col glass-card overflow-hidden anim-2">
+            <div class="lg:col-span-9 flex flex-col glass-card overflow-hidden anim-2 lg:h-full">
                 {{-- Tabs --}}
                 <div class="flex border-b border-slate-100 bg-slate-50/60 px-3 pt-3">
                     <button @click="activeTab = 'assets'"
