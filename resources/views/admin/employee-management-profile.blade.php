@@ -302,7 +302,7 @@
                             </div>
                         </div>
 
-                        <div class="space-y-3" id="custodian-asset-list">
+                        <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scroll" id="custodian-asset-list">
                             @foreach($assets as $asset)
                             @php
                                 $assetTransfers = $transfers->get($asset->id, collect());
@@ -517,6 +517,9 @@
                             </div>
                             @endforeach
                         </div>
+                        <div class="mt-4">
+                            {{ $assets->appends(request()->except('assets_page'))->links() }}
+                        </div>
                         {{-- Empty message when filter matches nothing --}}
                         <div id="custodian-filter-empty" style="display:none;" class="flex flex-col items-center justify-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200 mt-4">
                             <p class="text-xs font-black text-slate-400 uppercase tracking-widest italic">No assets match the selected filter.</p>
@@ -545,7 +548,7 @@
                                 </div>
 
                                 @if($histories->count() > 0)
-                                <div class="relative pl-5">
+                                <div class="relative pl-5 max-h-[300px] overflow-y-auto pr-2 custom-scroll">
                                     <div class="absolute left-[9px] top-1 w-px bg-gradient-to-b from-slate-300 to-transparent h-full"></div>
                                     <div class="space-y-5">
                                         @foreach($histories as $history)
@@ -578,6 +581,9 @@
                                         </div>
                                         @endforeach
                                     </div>
+                                    <div class="mt-4">
+                                        {{ $histories->appends(request()->except('history_page'))->links() }}
+                                    </div>
                                 </div>
                                 @else
                                 <div class="bg-slate-50 rounded-2xl border border-dashed border-slate-200 py-6 flex items-center justify-center">
@@ -600,7 +606,7 @@
                                 </div>
 
                                 @if($assetEvents->count() > 0)
-                                <div class="relative pl-5">
+                                <div class="relative pl-5 max-h-[400px] overflow-y-auto pr-2 custom-scroll">
                                     <div class="absolute left-[9px] top-1 w-px bg-gradient-to-b from-amber-300 to-transparent h-full"></div>
                                     <div class="space-y-5">
                                         @foreach($assetEvents as $event)

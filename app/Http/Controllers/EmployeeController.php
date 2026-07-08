@@ -93,7 +93,7 @@ class EmployeeController extends Controller
                 DB::raw('COALESCE(s.name, o.name) as school_name')
             )
             ->orderByDesc('ad.acquisition_date')
-            ->get();
+            ->paginate(50, ['*'], 'assets_page');
 
         $schools = DB::table('employees as e')
             ->leftJoin('schools as s', 'e.school_id', '=', 's.id')
@@ -110,11 +110,11 @@ class EmployeeController extends Controller
             ->get();
 
         $transfers = collect();
-        if ($assets->isNotEmpty()) {
+        if ($assets->count() > 0) {
             $transfers = DB::table('asset_transfers as at')
                 ->leftJoin('offices as to_off', 'at.to_office_id', '=', 'to_off.id')
                 ->leftJoin('employees as to_emp', 'at.to_custodian_id', '=', 'to_emp.id')
-                ->whereIn('at.asset_assignment_id', $assets->pluck('id'))
+                ->whereIn('at.asset_assignment_id', $assets->getCollection()->pluck('id'))
                 ->select(
                     'at.*',
                     'to_off.name as to_office',
@@ -125,7 +125,7 @@ class EmployeeController extends Controller
                 ->groupBy('asset_assignment_id');
         }
 
-        $histories = \App\Models\EmployeeHistory::where('employee_id', $id)->orderByDesc('created_at')->get();
+        $histories = \App\Models\EmployeeHistory::where('employee_id', $id)->orderByDesc('created_at')->paginate(50, ['*'], 'history_page');
 
         // Build asset events: receives (assigned_at) + transfers (transfer_date)
         $assetEvents = collect();

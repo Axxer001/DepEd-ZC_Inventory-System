@@ -77,9 +77,10 @@ class SampleDataSeeder extends Seeder
         }
 
         $modeIds = [];
-        for ($i = 0; $i < 3; $i++) {
+        $modes = ['PROCUREMENT', 'TRANSFER', 'DONATION'];
+        foreach ($modes as $mode) {
             $modeIds[] = DB::table('procurement_modes')->insertGetId([
-                'name' => $faker->unique()->word . ' Procurement',
+                'name' => $mode,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

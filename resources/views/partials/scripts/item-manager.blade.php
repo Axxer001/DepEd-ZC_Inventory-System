@@ -1471,19 +1471,7 @@
                     <input type="text" oninput="syncState(${data.id}, 'mode', this.value); filterModeDropdown(${data.id}, this.value)" onfocus="filterModeDropdown(${data.id}, this.value)" data-col="mode" value="${data.mode || ''}" autocomplete="off" class="xls-input" placeholder="Mode">
                     <div id="mode-dd-${data.id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
                 </td>
-                <td class="xls-td col-identity" style="position:relative;overflow:visible">
-                    <div class="relative w-full h-full">
-                        <input type="text" id="add-supplier-${data.id}" readonly onfocus="filterSupplierDropdown(${data.id}, '')" data-col="supplier" value="${data.supplier || ''}" autocomplete="off" class="xls-input w-full h-full pr-6 cursor-pointer bg-white" placeholder="Select Supplier...">
-                        <button type="button" id="add-supplier-clear-${data.id}" onclick="clearSupplier(${data.id})" style="display:${data.supplier ? 'block' : 'none'};" class="absolute right-1 top-1/2 -translate-y-1/2 p-[2.3px] text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"><svg class="w-[13.2px] h-[13.2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-                    </div>
-                    <div id="supplier-dd-${data.id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
-                </td>
-                <td class="xls-td col-personnel">
-                    <input type="text" data-col="supplier_personnel" value="${data.supplier_personnel || ''}" readonly class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" placeholder="Auto-filled">
-                </td>
-                <td class="xls-td col-context">
-                    <input type="text" data-col="service_center" value="${data.service_center || ''}" readonly class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" placeholder="Auto-filled">
-                </td>
+                <!-- Acquisition Source Columns (Color: Blue / col-identity) -->
                 <td class="xls-td col-identity" style="position:relative;overflow:visible">
                     <div class="relative w-full h-full">
                         <input type="text" id="add-source-${data.id}" readonly onfocus="filterSourceDropdown(${data.id}, '')" data-col="source" value="${data.source || ''}" autocomplete="off" class="xls-input w-full h-full pr-6 cursor-pointer bg-white" placeholder="Select Source...">
@@ -1491,11 +1479,25 @@
                     </div>
                     <div id="source-dd-${data.id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
                 </td>
-                <td class="xls-td col-personnel">
+                <td class="xls-td col-identity autofill-col">
                     <input type="text" data-col="personnel" value="${data.personnel || ''}" readonly class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" placeholder="Auto-filled">
                 </td>
-                <td class="xls-td col-personnel">
+                <td class="xls-td col-identity autofill-col">
                     <input type="text" data-col="position" value="${data.position || ''}" readonly class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" placeholder="Auto-filled">
+                </td>
+                <!-- Supplier Columns (Color: Purple / col-status) -->
+                <td class="xls-td col-status" style="position:relative;overflow:visible">
+                    <div class="relative w-full h-full">
+                        <input type="text" id="add-supplier-${data.id}" readonly onfocus="filterSupplierDropdown(${data.id}, '')" data-col="supplier" value="${data.supplier || ''}" autocomplete="off" class="xls-input w-full h-full pr-6 cursor-pointer bg-white" placeholder="Select Supplier...">
+                        <button type="button" id="add-supplier-clear-${data.id}" onclick="clearSupplier(${data.id})" style="display:${data.supplier ? 'block' : 'none'};" class="absolute right-1 top-1/2 -translate-y-1/2 p-[2.3px] text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"><svg class="w-[13.2px] h-[13.2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                    </div>
+                    <div id="supplier-dd-${data.id}" class="xls-custom-dd" style="display:none; width: 100%;"></div>
+                </td>
+                <td class="xls-td col-status autofill-col">
+                    <input type="text" data-col="supplier_personnel" value="${data.supplier_personnel || ''}" readonly class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" placeholder="Auto-filled">
+                </td>
+                <td class="xls-td col-status autofill-col">
+                    <input type="text" data-col="service_center" value="${data.service_center || ''}" readonly class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" placeholder="Auto-filled">
                 </td>
                 <td class="xls-td col-financial"><input type="number" oninput="syncState(${data.id}, 'cost', this.value)" data-col="cost" value="${data.cost}" class="xls-input text-right font-mono" placeholder="0.00" min="0" step="0.01"></td>
                 <td class="xls-td col-financial"><input type="number" oninput="syncState(${data.id}, 'qty', this.value)"  data-col="qty"  value="${data.qty}"  class="xls-input text-right font-mono ${data['property-no'] ? 'bg-slate-50 cursor-not-allowed' : ''}" placeholder="0" min="0" step="1" ${data['property-no'] ? 'readonly' : ''}></td>
@@ -3161,11 +3163,12 @@
                 customClass: { popup: 'rounded-[2rem]' }
             }).then((result) => {
                 if (result.isConfirmed) {
+                    const skipAi = document.getElementById('skipAiToggle')?.checked ? 1 : 0;
                     Swal.fire({ title: 'Registering...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
                     fetch('/inventory-setup/batch', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content') },
-                        body: JSON.stringify({ rows: allRowsData })
+                        body: JSON.stringify({ rows: allRowsData, skip_ai: skipAi })
                     })
                     .then(response => response.json())
                     .then(data => {

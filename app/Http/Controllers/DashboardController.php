@@ -22,7 +22,11 @@ class DashboardController extends Controller
         // 2. Distributed Assets (What is currently in schools/offices)
         $distributedCount = DB::table('asset_assignments')
             ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
-            ->whereNotNull('asset_assignments.employee_id')
+            ->where(function($q) {
+                $q->whereNotNull('asset_assignments.employee_id')
+                  ->orWhereNotNull('asset_assignments.school_id')
+                  ->orWhereNotNull('asset_assignments.office_id');
+            })
             ->sum('asset_sources.quantity');
 
         // 3. Total Asset Value
@@ -62,9 +66,11 @@ class DashboardController extends Controller
                 
                 $itemData = DB::table('asset_assignments as ad')
                     ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
-                    ->join('employees as c', 'ad.employee_id', '=', 'c.id')
-                    ->leftJoin('offices as o', 'c.office_id', '=', 'o.id')
-                    ->leftJoin('schools as s', 's.id', '=', 'c.school_id')
+                    ->leftJoin('employees as c', 'ad.employee_id', '=', 'c.id')
+                    ->leftJoin('schools as s', function($join) {
+                        $join->on('ad.school_id', '=', 's.id')
+                             ->orOn('c.school_id', '=', 's.id');
+                    })
                     ->join('districts as d', 's.district_id', '=', 'd.id')
                     ->where('d.quadrant_id', $itemId)
                     ->select(
@@ -83,9 +89,16 @@ class DashboardController extends Controller
         // 6. Recent Transaction Logs
         $recentLogs = DB::table('asset_assignments as ad')
             ->leftJoin('employees as c', 'ad.employee_id', '=', 'c.id')
-            ->leftJoin('offices as o', 'c.office_id', '=', 'o.id')
-            ->leftJoin('schools as s', 's.id', '=', 'c.school_id')
-            ->select('ad.id', DB::raw('COALESCE(s.name, o.name) as school'), 'ad.acquisition_cost as value', 'ad.created_at as timestamp')
+            ->leftJoin('offices as o_cus', 'c.office_id', '=', 'o_cus.id')
+            ->leftJoin('schools as s_cus', 'c.school_id', '=', 's_cus.id')
+            ->leftJoin('offices as o_dir', 'ad.office_id', '=', 'o_dir.id')
+            ->leftJoin('schools as s_dir', 'ad.school_id', '=', 's_dir.id')
+            ->select(
+                'ad.id',
+                DB::raw('COALESCE(s_dir.name, o_dir.name, s_cus.name, o_cus.name, "Warehouse") as school'),
+                'ad.acquisition_cost as value',
+                'ad.created_at as timestamp'
+            )
             ->orderByDesc('ad.created_at')
             ->limit(10)
             ->get()

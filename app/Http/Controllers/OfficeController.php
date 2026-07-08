@@ -29,21 +29,27 @@ class OfficeController extends Controller
         $buildingStats = (object)['total_buildings' => 0, 'total_bldg_cost' => 0];
         $buildings     = collect();
 
-        // Asset assignments for employees based in this office
+        // Asset assignments for employees based in this office or direct office_id
         $assetStats = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
-            ->join('employees as e', 'ad.employee_id', '=', 'e.id')
-            ->where('e.office_id', $id)
+            ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->where(function ($query) use ($id) {
+                $query->where('e.office_id', $id)
+                      ->orWhere('ad.office_id', $id);
+            })
             ->selectRaw('COUNT(ad.id) as total_assets, COALESCE(SUM(ad.acquisition_cost), 0) as total_asset_value')
             ->first();
 
-        // Recent assets for employees based in this office
+        // Recent assets for employees based in this office or direct office_id
         $recentAssets = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->join('employees as e', 'ad.employee_id', '=', 'e.id')
-            ->where('e.office_id', $id)
+            ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->where(function ($query) use ($id) {
+                $query->where('e.office_id', $id)
+                      ->orWhere('ad.office_id', $id);
+            })
             ->select(
                 'ad.id',
                 'ad.property_number',
@@ -54,7 +60,7 @@ class OfficeController extends Controller
                 'asrc.condition'
             )
             ->orderByDesc('ad.acquisition_date')
-            ->get();
+            ->paginate(50, ['*'], 'assets_page');
 
         // Employees based in this office with their asset counts
         $custodians = DB::table('employees as c')

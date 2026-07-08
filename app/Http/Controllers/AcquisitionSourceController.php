@@ -59,7 +59,7 @@ class AcquisitionSourceController extends Controller
                 DB::raw("CONCAT(COALESCE(e.first_name,''), ' ', COALESCE(e.last_name,'')) as custodian_name")
             )
             ->orderByDesc('asrc.acceptance_date')
-            ->get();
+            ->paginate(50, ['*'], 'assets_page');
 
         $history = DB::table('asset_sources as asrc')
             ->join('items as i', 'asrc.item_id', '=', 'i.id')
@@ -74,7 +74,7 @@ class AcquisitionSourceController extends Controller
                 'asrc.created_at'
             )
             ->orderByDesc('asrc.created_at')
-            ->get();
+            ->paginate(50, ['*'], 'history_page');
 
         return view('admin.source-management-profile', compact('source', 'stats', 'assets', 'history'));
     }

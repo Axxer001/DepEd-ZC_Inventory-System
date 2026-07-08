@@ -1,0 +1,31 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Illuminate\Support\Facades\Schema::disableForeignKeyConstraints();
+
+        Illuminate\Support\Facades\DB::table('asset_transfers')->truncate();
+        Illuminate\Support\Facades\DB::table('asset_services')->truncate();
+        Illuminate\Support\Facades\DB::table('asset_assignments')->truncate();
+        Illuminate\Support\Facades\DB::table('asset_sources')->truncate();
+
+        Illuminate\Support\Facades\Schema::enableForeignKeyConstraints();
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        // Truncate is a destructive action and cannot be undone automatically.
+    }
+};

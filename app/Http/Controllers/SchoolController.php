@@ -52,11 +52,14 @@ class SchoolController extends Controller
             ->where('br.school_id', $id)
             ->get();
 
-        // Asset assignments for this school (match via employees FK)
+        // Asset assignments for this school (match via employees FK or direct school_id)
         $assetStats = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
-            ->join('employees as e', 'ad.employee_id', '=', 'e.id')
-            ->where('e.school_id', $id)
+            ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->where(function ($query) use ($id) {
+                $query->where('e.school_id', $id)
+                      ->orWhere('ad.school_id', $id);
+            })
             ->selectRaw('COUNT(ad.id) as total_assets, COALESCE(SUM(asrc.asset_cost), 0) as total_asset_value')
             ->first();
 
@@ -65,19 +68,23 @@ class SchoolController extends Controller
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->join('employees as e', 'ad.employee_id', '=', 'e.id')
-            ->where('e.school_id', $id)
+            ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
+            ->where(function ($query) use ($id) {
+                $query->where('e.school_id', $id)
+                      ->orWhere('ad.school_id', $id);
+            })
             ->select(
                 'ad.id',
                 'ad.property_number',
                 'ad.acquisition_date',
                 'asrc.asset_cost',
+                'asrc.condition',
                 'items.name as item_name',
-                'categories.name as category_name'
+                'categories.name as category_name',
+                DB::raw("CONCAT(e.first_name, ' ', e.last_name) as custodian_name")
             )
             ->orderByDesc('ad.acquisition_date')
-            ->limit(10)
-            ->get();
+            ->paginate(50, ['*'], 'assets_page');
 
         return view('schools.profile', compact(
             'school', 'buildingStats', 'buildings', 'assetStats', 'recentAssets'

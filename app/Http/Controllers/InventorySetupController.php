@@ -157,12 +157,17 @@ class InventorySetupController extends Controller
     public function storeBatch(Request $request)
     {
         $payload = $request->validate([
-            'rows'                  => 'required|array|min:1',
+            'rows'    => 'required|array|min:1',
+            'skip_ai' => 'nullable|boolean',
         ]);
 
         // ── Step 1: Gemini sanitation (before transaction) ─────────────────────
-        $gemini = new \App\Services\GeminiService();
-        $rows   = $gemini->sanitizeRows($payload['rows'], 'manual_batch');
+        if (!empty($payload['skip_ai'])) {
+            $rows = $payload['rows'];
+        } else {
+            $gemini = new \App\Services\GeminiService();
+            $rows   = $gemini->sanitizeRows($payload['rows'], 'manual_batch');
+        }
 
         /** @var \App\Models\User|null $user */
         $user     = \Illuminate\Support\Facades\Auth::user();
@@ -214,10 +219,19 @@ class InventorySetupController extends Controller
                 $itemId   = $cache['item'][strtolower($itemName)]
                     ??= DB::table('items')->insertGetId(['category_id' => $catId, 'name' => $itemName, 'created_at' => now(), 'updated_at' => now()]);
 
-                // ── Resolve Procurement Mode ─────────────────────────────────
-                $modeName = trim($row['mode'] ?? 'Direct Purchase');
-                $modeId   = $cache['mode'][strtolower($modeName)]
-                    ??= DB::table('procurement_modes')->insertGetId(['name' => $modeName, 'created_at' => now(), 'updated_at' => now()]);
+                // ── Resolve Procurement Mode (lookup only, cannot create) ───
+                $modeName = trim($row['mode'] ?? '');
+                $modeId = null;
+                if ($modeName) {
+                    $modeId = $cache['mode'][strtolower($modeName)] ?? null;
+                    if (!$modeId) {
+                        $errors[] = "Row {$rowNum}: Mode of Acquisition '{$modeName}' does not exist. Only 'PROCUREMENT', 'TRANSFER', and 'DONATION' are allowed.";
+                        continue;
+                    }
+                } else {
+                    $errors[] = "Row {$rowNum}: Mode of Acquisition is required.";
+                    continue;
+                }
 
                 // ── Resolve Acquisition Source (lookup only) ─────────────────
                 $acqSourceName = trim($row['source'] ?? '');
@@ -283,11 +297,21 @@ class InventorySetupController extends Controller
             ]);
 
             if ($inserted > 0) {
+                $detailedMsg = '';
+                if (count($addedDetails) > 10) {
+                    $sliced = array_slice($addedDetails, 0, 10);
+                    $more = count($addedDetails) - 10;
+                    $sliced[] = "... and {$more} more item(s).";
+                    $detailedMsg = implode('<br><br>', $sliced);
+                } else {
+                    $detailedMsg = implode('<br><br>', $addedDetails);
+                }
+
                 $admins = \App\Models\User::where('approved', true)->get();
                 $dummyAsset = (object)[
                     'title' => 'Assets Registered',
                     'message' => "Successfully registered {$inserted} item(s).",
-                    'detailed_message' => implode('<br><br>', $addedDetails)
+                    'detailed_message' => $detailedMsg
                 ];
                 foreach ($admins as $admin) {
                     $admin->notify(new \App\Notifications\AssetAddedNotification($dummyAsset));
@@ -895,6 +919,8 @@ class InventorySetupController extends Controller
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->join('classifications', 'categories.classification_id', '=', 'classifications.id')
             ->whereNull('asset_assignments.employee_id')
+            ->whereNull('asset_assignments.school_id')
+            ->whereNull('asset_assignments.office_id')
             ->select(
                 'asset_assignments.id as assignment_id',
                 'classifications.name as classification',
@@ -949,15 +975,49 @@ class InventorySetupController extends Controller
 
             $targetEmployee = DB::table('employees')->where('id', $validated['employee_id'])->first();
 
+            // Fetch acquisition details for the custom history message
+            $assetDetails = DB::table('asset_assignments as ad')
+                ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+                ->leftJoin('suppliers as sup', 'asrc.supplier_id', '=', 'sup.id')
+                ->leftJoin('procurement_modes as pm', 'asrc.procurement_mode_id', '=', 'pm.id')
+                ->where('ad.id', $validated['assignment_id'])
+                ->select('pm.name as mode_of_acquisition', 'sup.name as supplier_name')
+                ->first();
+
+            $mode = $assetDetails->mode_of_acquisition ?? 'procured';
+            $supplier = $assetDetails->supplier_name ?? 'Supplier';
+            $recipientName = trim($targetEmployee->first_name . ' ' . $targetEmployee->last_name);
+
+            $cost = DB::table('asset_assignments as ad')
+                ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+                ->where('ad.id', $validated['assignment_id'])
+                ->value('asrc.asset_cost') ?? 0;
+
+            $docType = ($cost > 49999) ? 'PAR' : 'ICS';
+
+            session()->flash('download_docs', [
+                [
+                    'recipient_name' => $recipientName,
+                    'recipient_type' => 'employee',
+                    'school_type'    => null,
+                    'cost_threshold' => ($cost > 49999) ? 'high' : 'low',
+                    'doc_type'       => $docType,
+                    'asset_count'    => 1,
+                ]
+            ]);
+
+            $historyRemarks = "Asset officially {$mode} and registered into the database from DEPED CENTRAL OFFICE, then Delivered from {$supplier} to Asset Management Unit. Now assigned at/to {$recipientName}";
+
             DB::table('asset_transfers')->insert([
                 'asset_assignment_id' => $validated['assignment_id'],
                 'from_office_id'      => null,
                 'to_office_id'        => $targetEmployee->office_id ?? null,
+                'to_school_id'        => $targetEmployee->school_id ?? null,
                 'from_custodian_id'   => null,
                 'to_custodian_id'     => $validated['employee_id'],
                 'transfer_date'       => $validated['acquisition_date'] ?? now()->toDateString(),
                 'transfer_type'       => 'Initial Distribution',
-                'remarks'             => 'Assigned to custodian from warehouse.',
+                'remarks'             => $historyRemarks,
                 'authorized_by'       => Auth::id() ?? 1,
                 'created_at'          => now(),
                 'updated_at'          => now(),
@@ -974,6 +1034,28 @@ class InventorySetupController extends Controller
             ]);
 
             DB::commit();
+
+            // Dispatch notification
+            $item = DB::table('asset_assignments')
+                ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+                ->join('items', 'asset_sources.item_id', '=', 'items.id')
+                ->where('asset_assignments.id', $validated['assignment_id'])
+                ->select('items.name as item_name')
+                ->first();
+            $itemTitle = $item ? $item->item_name : 'Asset';
+            $propNum = $validated['property_number'] ?? 'No Property Number';
+
+            $notificationData = [
+                'title' => 'Asset Assigned',
+                'message' => "Asset {$itemTitle} ({$propNum}) assigned to {$recipientName}.",
+                'detailed_message' => "Asset: {$itemTitle}\nProperty Number: {$propNum}\nRecipient: {$recipientName}\nHistory:\n{$historyRemarks}",
+                'type' => 'asset_assigned'
+            ];
+
+            $usersToNotify = \App\Models\User::where('approved', true)->get();
+            foreach ($usersToNotify as $user) {
+                $user->notify(new \App\Notifications\AssetAssignedNotification($notificationData));
+            }
 
             return response()->json(['success' => true, 'message' => 'Asset assigned successfully.']);
         } catch (\Exception $e) {
@@ -1007,39 +1089,146 @@ class InventorySetupController extends Controller
             DB::beginTransaction();
 
             $count = 0;
+            $groupedNotification = [];
+            $docsToDownload = [];
+
             foreach ($validated['assignments'] as $data) {
                 $assignment = DB::table('asset_assignments')->where('id', $data['assignment_id'])->first();
-                if ($assignment->employee_id !== null) continue; // Skip if already assigned
+                if ($assignment->employee_id !== null || $assignment->school_id !== null || $assignment->office_id !== null) {
+                    continue; // Skip if already assigned
+                }
 
-                // Determine employee_id. If no employee_id is given but location is, 
-                // we technically can't assign it without an employee in the current schema.
-                // We'll proceed with what's given.
-                if (isset($data['employee_id'])) {
-                    DB::table('asset_assignments')->where('id', $data['assignment_id'])->update([
-                        'employee_id'      => $data['employee_id'],
+                if (!empty($data['employee_id']) || !empty($data['school_db_id'])) {
+                    $updateData = [
                         'property_number'  => $data['property_number'] ?? null,
                         'acquisition_date' => $data['acquisition_date'] ?? now()->toDateString(),
                         'updated_at'       => now(),
-                    ]);
+                    ];
 
-                    $targetEmployee = DB::table('employees')->where('id', $data['employee_id'])->first();
+                    if (!empty($data['employee_id'])) {
+                        $updateData['employee_id'] = $data['employee_id'];
+                    } else {
+                        if (isset($data['is_office']) && $data['is_office']) {
+                            $updateData['office_id'] = $data['school_db_id'];
+                        } else {
+                            $updateData['school_id'] = $data['school_db_id'];
+                        }
+                    }
+
+                    DB::table('asset_assignments')->where('id', $data['assignment_id'])->update($updateData);
+
+                    $toOfficeId = null;
+                    $toSchoolId = null;
+                    if (!empty($data['school_db_id'])) {
+                        if (isset($data['is_office']) && $data['is_office']) {
+                            $toOfficeId = $data['school_db_id'];
+                        } else {
+                            $toSchoolId = $data['school_db_id'];
+                        }
+                    } elseif (!empty($data['employee_id'])) {
+                        $targetEmployee = DB::table('employees')->where('id', $data['employee_id'])->first();
+                        if ($targetEmployee) {
+                            $toOfficeId = $targetEmployee->office_id;
+                            $toSchoolId = $targetEmployee->school_id;
+                        }
+                    }
+
+                    // Fetch acquisition details for the custom history message
+                    $assetDetails = DB::table('asset_assignments as ad')
+                        ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+                        ->leftJoin('suppliers as sup', 'asrc.supplier_id', '=', 'sup.id')
+                        ->leftJoin('procurement_modes as pm', 'asrc.procurement_mode_id', '=', 'pm.id')
+                        ->where('ad.id', $data['assignment_id'])
+                        ->select('pm.name as mode_of_acquisition', 'sup.name as supplier_name')
+                        ->first();
+
+                    $mode = $assetDetails->mode_of_acquisition ?? 'procured';
+                    $supplier = $assetDetails->supplier_name ?? 'Supplier';
+
+                    $recipientName = 'Warehouse';
+                    $recipientKey = '';
+                    $recipientType = 'warehouse';
+                    $schoolType = null;
+                    
+                    if (!empty($data['employee_id'])) {
+                        $recipientKey = 'emp_' . $data['employee_id'];
+                        $emp = DB::table('employees')->where('id', $data['employee_id'])->first();
+                        $recipientName = $emp ? trim($emp->first_name . ' ' . $emp->last_name) : 'Custodian';
+                        $recipientType = 'employee';
+                    } elseif (!empty($data['school_db_id'])) {
+                        if (isset($data['is_office']) && $data['is_office']) {
+                            $recipientKey = 'off_' . $data['school_db_id'];
+                            $recipientName = DB::table('offices')->where('id', $data['school_db_id'])->value('name') ?? 'Office';
+                            $recipientType = 'office';
+                        } else {
+                            $recipientKey = 'sch_' . $data['school_db_id'];
+                            $sch = DB::table('schools')->where('id', $data['school_db_id'])->first();
+                            $recipientName = $sch ? $sch->name : 'School';
+                            $schoolType = $sch ? $sch->type : null;
+                            $recipientType = 'school';
+                        }
+                    }
+
+                    $cost = DB::table('asset_assignments as ad')
+                        ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+                        ->where('ad.id', $data['assignment_id'])
+                        ->value('asrc.asset_cost') ?? 0;
+
+                    $threshold = ($cost > 49999) ? 'high' : 'low';
+                    $groupKey = $recipientType . '_' . ($data['employee_id'] ?? $data['school_db_id']) . '_' . $threshold;
+
+                    if ($recipientType !== 'warehouse') {
+                        if (!isset($docsToDownload[$groupKey])) {
+                            $docsToDownload[$groupKey] = [
+                                'recipient_name' => $recipientName,
+                                'recipient_type' => $recipientType,
+                                'school_type'    => $schoolType,
+                                'cost_threshold' => $threshold,
+                                'doc_type'       => $this->resolveDocType($recipientType, $schoolType, $cost),
+                                'asset_count'    => 0,
+                            ];
+                        }
+                        $docsToDownload[$groupKey]['asset_count']++;
+                    }
+
+                    $historyRemarks = "Asset officially {$mode} and registered into the database from DEPED CENTRAL OFFICE, then Delivered from {$supplier} to Asset Management Unit. Now assigned at/to {$recipientName}";
 
                     DB::table('asset_transfers')->insert([
                         'asset_assignment_id' => $data['assignment_id'],
                         'from_office_id'      => null,
-                        'to_office_id'        => $targetEmployee->office_id ?? null,
+                        'to_office_id'        => $toOfficeId,
+                        'to_school_id'        => $toSchoolId,
                         'from_custodian_id'   => null,
-                        'to_custodian_id'     => $data['employee_id'],
+                        'to_custodian_id'     => $data['employee_id'] ?? null,
                         'transfer_date'       => $data['acquisition_date'] ?? now()->toDateString(),
                         'transfer_type'       => 'Initial Distribution',
-                        'remarks'             => 'Assigned to custodian via batch distribution.',
+                        'remarks'             => $historyRemarks,
                         'authorized_by'       => Auth::id() ?? 1,
                         'created_at'          => now(),
                         'updated_at'          => now(),
                     ]);
 
+                    // Gather item metadata for notifications
+                    $item = DB::table('asset_assignments')
+                        ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+                        ->join('items', 'asset_sources.item_id', '=', 'items.id')
+                        ->where('asset_assignments.id', $data['assignment_id'])
+                        ->select('items.name as item_name')
+                        ->first();
+                    $itemName = $item ? $item->item_name : 'Asset';
+                    $propNum = $data['property_number'] ?? 'No Property Number';
+
+                    if ($recipientKey) {
+                        $groupedNotification[$recipientKey]['name'] = $recipientName;
+                        $groupedNotification[$recipientKey]['items'][] = [
+                            'name' => $itemName,
+                            'prop' => $propNum,
+                            'history' => $historyRemarks
+                        ];
+                    }
+
                     // Update employee's location if provided
-                    if (!empty($data['school_db_id'])) {
+                    if (!empty($data['employee_id']) && !empty($data['school_db_id'])) {
                         if (isset($data['is_office']) && $data['is_office']) {
                             DB::table('employees')->where('id', $data['employee_id'])->update([
                                 'office_id'  => $data['school_db_id'],
@@ -1069,6 +1258,49 @@ class InventorySetupController extends Controller
             ]);
 
             DB::commit();
+
+            // Dispatch aggregated or individual notifications
+            $usersToNotify = \App\Models\User::where('approved', true)->get();
+            foreach ($groupedNotification as $key => $group) {
+                $recipientName = $group['name'];
+                $itemCount = count($group['items']);
+
+                if ($itemCount > 10) {
+                    $detailedList = [];
+                    foreach ($group['items'] as $it) {
+                        $detailedList[] = "- {$it['name']} (Property No. {$it['prop']})";
+                    }
+                    $detailedMessage = "Batch Assignment details for {$recipientName}:\n\n" . implode("\n", $detailedList);
+
+                    $notificationData = [
+                        'title' => 'Batch Assets Deployed',
+                        'message' => "Successfully deployed a batch of {$itemCount} assets to {$recipientName}.",
+                        'detailed_message' => $detailedMessage,
+                        'type' => 'asset_assigned'
+                    ];
+
+                    foreach ($usersToNotify as $user) {
+                        $user->notify(new \App\Notifications\AssetAssignedNotification($notificationData));
+                    }
+                } else {
+                    foreach ($group['items'] as $it) {
+                        $notificationData = [
+                            'title' => 'Asset Deployed',
+                            'message' => "Asset {$it['name']} (Property No. {$it['prop']}) assigned to {$recipientName}.",
+                            'detailed_message' => "Asset: {$it['name']}\nProperty Number: {$it['prop']}\nRecipient: {$recipientName}\nHistory:\n{$it['history']}",
+                            'type' => 'asset_assigned'
+                        ];
+
+                        foreach ($usersToNotify as $user) {
+                            $user->notify(new \App\Notifications\AssetAssignedNotification($notificationData));
+                        }
+                    }
+                }
+            }
+
+            if (!empty($docsToDownload)) {
+                session()->flash('download_docs', array_values($docsToDownload));
+            }
 
             return response()->json(['success' => true, 'message' => "Successfully assigned {$count} asset(s)."]);
         } catch (\Exception $e) {
@@ -1159,4 +1391,20 @@ class InventorySetupController extends Controller
         }
     }
 
+    private function resolveDocType($recipientType, $schoolType, $cost)
+    {
+        $isImplementingUnit = ($recipientType === 'school' && $schoolType && (stripos($schoolType, 'IMPLEMENTING UNIT') !== false));
+        $isGreaterThan49k = ($cost > 49999);
+
+        if ($recipientType === 'school') {
+            if ($isImplementingUnit) {
+                return $isGreaterThan49k ? 'PTR' : 'ITR';
+            } else {
+                return $isGreaterThan49k ? 'PAR' : 'ICS';
+            }
+        } else {
+            // Employee or Office
+            return $isGreaterThan49k ? 'PAR' : 'ICS';
+        }
+    }
 }

@@ -25,6 +25,14 @@
                 <span id="assetTabLabel" class="text-[10px] font-bold text-slate-900 uppercase tracking-widest italic">Asset Details</span>
             </div>
             <div class="flex items-center gap-2">
+                <label class="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-all select-none" title="Checking this hides auto-filled columns to make the table compact.">
+                    <input type="checkbox" id="hideAutofillToggle" onchange="toggleAutofillColumns(this.checked)" class="w-3.5 h-3.5 accent-[#c00000] rounded">
+                    Hide Auto-Fill
+                </label>
+                <label class="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-wider cursor-pointer hover:bg-slate-100 transition-all select-none" title="Checking this bypasses Gemini AI cleaning for instantaneous saving.">
+                    <input type="checkbox" id="skipAiToggle" checked class="w-3.5 h-3.5 accent-red-600 rounded">
+                    Fast Save
+                </label>
                 <button onclick="openBulkAddModal()"
                     class="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-slate-100 transition-all active:scale-95">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
@@ -56,12 +64,14 @@
                         <th class="xls-th col-context" style="min-width:189px">Description</th>
                         <th class="xls-th col-context" style="min-width:126px">Unit</th>
                         <th class="xls-th col-status" style="min-width:158px">Mode of Acquisition</th>
-                        <th class="xls-th col-identity" style="min-width:189px">Supplier</th>
-                        <th class="xls-th col-personnel" style="min-width:168px">Supplier Personnel</th>
-                        <th class="xls-th col-context" style="min-width:168px">Service Center</th>
+                        <!-- Acquisition Source Columns -->
                         <th class="xls-th col-identity" style="min-width:189px">Acquisition Source</th>
-                        <th class="xls-th col-personnel" style="min-width:168px">Source Personnel</th>
-                        <th class="xls-th col-personnel" style="min-width:168px">Personnel Position</th>
+                        <th class="xls-th col-identity autofill-col" style="min-width:168px">Source Personnel</th>
+                        <th class="xls-th col-identity autofill-col" style="min-width:168px">Personnel Position</th>
+                        <!-- Supplier Columns -->
+                        <th class="xls-th col-status" style="min-width:189px">Supplier</th>
+                        <th class="xls-th col-status autofill-col" style="min-width:168px">Supplier Personnel</th>
+                        <th class="xls-th col-status autofill-col" style="min-width:168px">Service Center</th>
                         <th class="xls-th col-financial text-right" style="min-width:115px">Cost/Unit (₱)</th>
                         <th class="xls-th col-financial text-right" style="min-width:75px">Quantity</th>
                         <th class="xls-th col-temporal text-right" style="min-width:100px">Warranty (Mos)</th>
@@ -110,3 +120,21 @@
         </div>
     </div>
 </div> <!-- end stepAddNew -->
+
+<style>
+    .hide-autofill .autofill-col {
+        display: none !important;
+    }
+</style>
+<script>
+    function toggleAutofillColumns(hide) {
+        const table = document.getElementById('assetSourceTable');
+        if (table) {
+            if (hide) {
+                table.classList.add('hide-autofill');
+            } else {
+                table.classList.remove('hide-autofill');
+            }
+        }
+    }
+</script>

@@ -69,6 +69,10 @@
                             </div>
                         </div>
                     </div>
+                    <label class="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest cursor-pointer transition-all select-none">
+                        <input type="checkbox" x-model="hideAutofill" class="w-3.5 h-3.5 accent-[#c00000] rounded">
+                        Hide Auto-Fill
+                    </label>
                     <button type="button" @click="openBulkAssignModal"
                         class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-sm active:scale-95">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -97,30 +101,29 @@
                             <th class="xls-th" style="min-width:158px">Category</th>
                             <th class="xls-th" style="min-width:158px">Item Name</th>
                             <th class="xls-th" style="min-width:158px">Sub Item / Details</th>
-                            <th class="xls-th text-right" style="min-width:158px">Asset Cost (?)</th>
+                            <th class="xls-th text-right" style="min-width:158px">Asset Cost (₱)</th>
                             <th class="xls-th text-center" style="min-width:158px">Qty / UOM</th>
                             <th class="xls-th" style="min-width:158px">Condition</th>
                             <th class="xls-th col-temporal" style="min-width:158px">Property Number</th>
                             <th class="xls-th col-personnel" style="min-width:158px">Employee Search</th>
-                            <th class="xls-th col-personnel" style="min-width:158px">Employee ID</th>
-                            <th class="xls-th col-personnel" style="min-width:158px">Employee Name</th>
-                            <th class="xls-th col-personnel" style="min-width:158px">Employee Position</th>
-                            <th class="xls-th col-personnel" style="min-width:158px">Employee Status</th>
+                            <th class="xls-th col-personnel" x-show="!hideAutofill" style="min-width:158px">Employee ID</th>
+                            <th class="xls-th col-personnel" x-show="!hideAutofill" style="min-width:158px">Employee Name</th>
+                            <th class="xls-th col-personnel" x-show="!hideAutofill" style="min-width:158px">Employee Position</th>
+                            <th class="xls-th col-personnel" x-show="!hideAutofill" style="min-width:158px">Employee Status</th>
                             <th class="xls-th col-identity" style="min-width:158px">School/Office Search</th>
-                            <th class="xls-th col-identity" style="min-width:158px">Office/School ID</th>
-                            <th class="xls-th col-identity" style="min-width:158px">Office/School Type</th>
-                            <th class="xls-th col-identity" style="min-width:158px">Office/School Name</th>
-                            <th class="xls-th col-identity" style="min-width:158px">Location</th>
+                            <th class="xls-th col-identity" x-show="!hideAutofill" style="min-width:158px">Office/School ID</th>
+                            <th class="xls-th col-identity" x-show="!hideAutofill" style="min-width:158px">Office/School Type</th>
+                            <th class="xls-th col-identity" x-show="!hideAutofill" style="min-width:158px">Office/School Name</th>
+                            <th class="xls-th col-identity" x-show="!hideAutofill" style="min-width:158px">Location</th>
                             <th class="xls-th col-temporal" style="min-width:158px">Acquisition Date</th>
                             <th class="xls-th text-center" style="min-width:80px">Select</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <template x-for="(asset, index) in filteredAssets" :key="asset.assignment_id">
+                        <template x-for="(asset, index) in paginatedAssets" :key="asset.assignment_id">
                             <tr class="xls-row">
-                                <td class="xls-td xls-sticky-col text-center font-bold text-slate-400 sticky left-0 z-10" x-text="index + 1"></td>
-                                
-                                <td class="xls-td"><input type="text" class="xls-input bg-transparent font-bold text-slate-500 cursor-default" readonly :value="asset.classification || '-'"></td>
+                                <td class="xls-td xls-sticky-col text-center font-bold text-slate-400 sticky left-0 z-10" x-text="((currentPage - 1) * perPage) + index + 1"></td>
+                                                                <td class="xls-td"><input type="text" class="xls-input bg-transparent font-bold text-slate-500 cursor-default" readonly :value="asset.classification || '-'"></td>
                                 <td class="xls-td"><input type="text" class="xls-input bg-transparent font-bold text-slate-500 cursor-default" readonly :value="asset.category || '-'"></td>
                                 <td class="xls-td"><input type="text" class="xls-input bg-transparent font-bold cursor-default" readonly :value="asset.item_name || '-'"></td>
                                 <td class="xls-td"><input type="text" class="xls-input bg-transparent cursor-default" readonly :value="asset.sub_item_name || 'General'"></td>
@@ -149,11 +152,11 @@
                                     </div>
                                 </td>
                                 
-                                <td class="xls-td col-personnel"><input type="text" readonly x-model="asset.employee_id_str" class="xls-input bg-slate-50 cursor-not-allowed"></td>
-                                <td class="xls-td col-personnel"><input type="text" readonly x-model="asset.employee_name" class="xls-input font-black text-slate-700 bg-slate-50 cursor-not-allowed" placeholder="Not Assigned"></td>
-                                <td class="xls-td col-personnel"><input type="text" readonly x-model="asset.employee_pos" class="xls-input bg-slate-50 cursor-not-allowed"></td>
-                                <td class="xls-td col-personnel"><input type="text" readonly x-model="asset.employee_status" class="xls-input bg-slate-50 cursor-not-allowed"></td>
-
+                                <td class="xls-td col-personnel" x-show="!hideAutofill"><input type="text" readonly x-model="asset.employee_id_str" class="xls-input bg-slate-50 cursor-not-allowed"></td>
+                                <td class="xls-td col-personnel" x-show="!hideAutofill"><input type="text" readonly x-model="asset.employee_name" class="xls-input font-black text-slate-700 bg-slate-50 cursor-not-allowed" placeholder="Not Assigned"></td>
+                                <td class="xls-td col-personnel" x-show="!hideAutofill"><input type="text" readonly x-model="asset.employee_pos" class="xls-input bg-slate-50 cursor-not-allowed"></td>
+                                <td class="xls-td col-personnel" x-show="!hideAutofill"><input type="text" readonly x-model="asset.employee_status" class="xls-input bg-slate-50 cursor-not-allowed"></td>
+ 
                                 <td class="xls-td col-identity relative" style="overflow:visible;">
                                     <input type="text" x-model="asset.locSearch" @input="searchLocation(asset)" @focus="asset.showLocDropdown = true; searchLocation(asset)" @click.away="asset.showLocDropdown = false" class="xls-input font-bold text-[#c00000]" placeholder="Search School/Office...">
                                     <button type="button" @click="clearLocation(asset)" x-show="asset.locSearch" class="absolute right-2 top-1/2 -translate-y-1/2 -mt-1 p-[2.3px] text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"><svg class="w-[13.2px] h-[13.2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -168,10 +171,10 @@
                                     </div>
                                 </td>
                                 
-                                <td class="xls-td col-identity"><input type="text" readonly x-model="asset.school_id" class="xls-input bg-slate-50 cursor-not-allowed"></td>
-                                <td class="xls-td col-identity"><input type="text" readonly x-model="asset.school_type" class="xls-input bg-slate-50 cursor-not-allowed"></td>
-                                <td class="xls-td col-identity"><input type="text" readonly x-model="asset.school_name" class="xls-input bg-slate-50 cursor-not-allowed"></td>
-                                <td class="xls-td col-identity"><input type="text" readonly x-model="asset.location" class="xls-input bg-slate-50 cursor-not-allowed"></td>
+                                <td class="xls-td col-identity" x-show="!hideAutofill"><input type="text" readonly x-model="asset.school_id" class="xls-input bg-slate-50 cursor-not-allowed"></td>
+                                <td class="xls-td col-identity" x-show="!hideAutofill"><input type="text" readonly x-model="asset.school_type" class="xls-input bg-slate-50 cursor-not-allowed"></td>
+                                <td class="xls-td col-identity" x-show="!hideAutofill"><input type="text" readonly x-model="asset.school_name" class="xls-input bg-slate-50 cursor-not-allowed"></td>
+                                <td class="xls-td col-identity" x-show="!hideAutofill"><input type="text" readonly x-model="asset.location" class="xls-input bg-slate-50 cursor-not-allowed"></td>
                                 
                                 <td class="xls-td col-temporal">
                                     <input type="date" x-model="asset.acquisition_date" class="xls-input uppercase font-bold text-slate-600">
@@ -198,16 +201,16 @@
                 <div class="flex items-center gap-6">
                     <p class="text-[9px] font-black text-slate-900 uppercase tracking-widest"><span x-text="filteredAssets.length"></span> Rows</p>
                     <div class="flex items-center gap-2 border-l border-slate-200 pl-6">
-                        <button disabled class="pg-btn text-slate-900">
+                        <button type="button" @click="prevPage()" :disabled="currentPage === 1" class="pg-btn text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
                             Prev
                         </button>
                         <div class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 rounded-lg">
-                            <span class="text-[10px] font-black text-slate-800">1</span>
+                            <span class="text-[10px] font-black text-slate-800" x-text="currentPage">1</span>
                             <span class="text-[10px] font-bold text-slate-900">/</span>
-                            <span class="text-[10px] font-black text-slate-900">1</span>
+                            <span class="text-[10px] font-black text-slate-900" x-text="totalPages">1</span>
                         </div>
-                        <button disabled class="pg-btn text-slate-900">
+                        <button type="button" @click="nextPage()" :disabled="currentPage === totalPages" class="pg-btn text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed">
                             Next
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
                         </button>
@@ -232,6 +235,28 @@
             </div>
             
             <div class="grid grid-cols-2 gap-4 mb-6">
+                <!-- Bulk Select Range Helper -->
+                <div class="relative p-4 bg-slate-50 border border-slate-100 rounded-2xl col-span-2 mb-2">
+                    <label class="text-[9px] font-black text-slate-800 uppercase tracking-widest block mb-2">
+                        Quick Row Selection Range
+                    </label>
+                    <div class="flex items-center gap-3">
+                        <span class="text-xs font-bold text-slate-500">Select from #</span>
+                        <input type="number" x-model="bulkData.selectFrom" class="w-20 px-3 py-2 text-xs font-black text-slate-700 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-400 bg-white" placeholder="1">
+                        <span class="text-xs font-bold text-slate-500">to #</span>
+                        <input type="number" x-model="bulkData.selectTo" class="w-20 px-3 py-2 text-xs font-black text-slate-700 border border-slate-200 rounded-xl focus:outline-none focus:border-slate-400 bg-white" placeholder="50">
+                        <button type="button" @click="selectRangeOnly()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95">
+                            Check Rows
+                        </button>
+                        <button type="button" @click="clearRangeSelection()" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all active:scale-95">
+                            Clear
+                        </button>
+                    </div>
+                    <p class="text-[9px] font-bold text-slate-400 mt-1.5 uppercase">
+                        Selects rows in the currently filtered table (Total: <span x-text="filteredAssets.length"></span> assets available)
+                    </p>
+                </div>
+
                 <!-- Property No -->
                 <div class="relative p-1 rounded-2xl col-span-2">
                     <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Property Number</label>
@@ -312,7 +337,12 @@
                 filterCategory: '',
                 filterCondition: '',
                 bulkAssignOpen: false,
+                currentPage: 1,
+                perPage: 50,
+                hideAutofill: false,
                 bulkData: {
+                    selectFrom: '',
+                    selectTo: '',
                     property_number: '',
                     empSearch: '',
                     employee_id: null,
@@ -335,7 +365,11 @@
                 },
 
                 async init() {
+                    this.$watch('searchQuery', () => this.currentPage = 1);
+                    this.$watch('filterClassification', () => this.currentPage = 1);
+                    this.$watch('filterCondition', () => this.currentPage = 1);
                     this.$watch('filterCategory', (val) => {
+                        this.currentPage = 1;
                         if (val) {
                             const asset = this.assets.find(a => a.category === val);
                             if (asset && asset.classification) {
@@ -401,7 +435,7 @@
                     return [...new Set(this.assets.map(a => a.condition).filter(Boolean))].sort();
                 },
 
-                get filteredAssets() {
+                 get filteredAssets() {
                     const q = this.searchQuery.toLowerCase();
                     return this.assets.filter(a => {
                         const matchQ = (a.item_name || '').toLowerCase().includes(q) || 
@@ -417,8 +451,38 @@
                     });
                 },
 
+                get totalPages() {
+                    return Math.ceil(this.filteredAssets.length / this.perPage) || 1;
+                },
+
+                get paginatedAssets() {
+                    const start = (this.currentPage - 1) * this.perPage;
+                    return this.filteredAssets.slice(start, start + this.perPage);
+                },
+
+                prevPage() {
+                    if (this.currentPage > 1) {
+                        this.currentPage--;
+                        this.scrollToTop();
+                    }
+                },
+
+                nextPage() {
+                    if (this.currentPage < this.totalPages) {
+                        this.currentPage++;
+                        this.scrollToTop();
+                    }
+                },
+
+                scrollToTop() {
+                    const tableContainer = document.querySelector('.xls-scroll-wrap');
+                    if (tableContainer) {
+                        tableContainer.scrollTop = 0;
+                    }
+                },
+
                 get pendingCount() {
-                    return this.assets.filter(a => a.employee_id).length;
+                    return this.assets.filter(a => a.employee_id || a.school_db_id).length;
                 },
 
                 searchEmployee(row) {
@@ -504,6 +568,8 @@
 
                 openBulkAssignModal() {
                     this.bulkData = {
+                        selectFrom: '',
+                        selectTo: '',
                         property_number: '',
                         empSearch: '',
                         employee_id: null,
@@ -612,13 +678,97 @@
                     this.bulkData.showLocDropdown = false;
                 },
 
+                selectRangeOnly() {
+                    const fromNum = parseInt(this.bulkData.selectFrom);
+                    const toNum = parseInt(this.bulkData.selectTo);
+                    
+                    if (isNaN(fromNum) || isNaN(toNum)) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Range',
+                            text: 'Please specify both start and end row numbers.',
+                            confirmButtonColor: '#c00000',
+                            customClass: { popup: 'rounded-2xl' }
+                        });
+                        return;
+                    }
+
+                    if (fromNum <= 0 || toNum < fromNum || toNum > this.filteredAssets.length) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Range',
+                            text: `Please enter a valid range between 1 and ${this.filteredAssets.length}.`,
+                            confirmButtonColor: '#c00000',
+                            customClass: { popup: 'rounded-2xl' }
+                        });
+                        return;
+                    }
+
+                    // Check them
+                    this.filteredAssets.forEach((asset, idx) => {
+                        const displayNum = idx + 1;
+                        if (displayNum >= fromNum && displayNum <= toNum) {
+                            asset.selected = true;
+                        }
+                    });
+
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Selection Updated',
+                        text: `Selected row #${fromNum} to #${toNum} successfully.`,
+                        timer: 1500,
+                        showConfirmButton: false,
+                        customClass: { popup: 'rounded-2xl' }
+                    });
+                },
+
+                clearRangeSelection() {
+                    const fromNum = parseInt(this.bulkData.selectFrom);
+                    const toNum = parseInt(this.bulkData.selectTo);
+
+                    if (!isNaN(fromNum) && !isNaN(toNum)) {
+                        this.filteredAssets.forEach((asset, idx) => {
+                            const displayNum = idx + 1;
+                            if (displayNum >= fromNum && displayNum <= toNum) {
+                                asset.selected = false;
+                            }
+                        });
+                    } else {
+                        // Clear all selected assets in currently filtered view
+                        this.filteredAssets.forEach(asset => asset.selected = false);
+                    }
+                },
+
                 applyBulkAssign() {
+                    // Auto-select range if specified
+                    const fromNum = parseInt(this.bulkData.selectFrom);
+                    const toNum = parseInt(this.bulkData.selectTo);
+                    if (!isNaN(fromNum) && !isNaN(toNum)) {
+                        if (fromNum > 0 && toNum >= fromNum && toNum <= this.filteredAssets.length) {
+                            this.filteredAssets.forEach((asset, idx) => {
+                                const displayNum = idx + 1;
+                                if (displayNum >= fromNum && displayNum <= toNum) {
+                                    asset.selected = true;
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Invalid Range',
+                                text: `Please enter a valid range between 1 and ${this.filteredAssets.length}.`,
+                                confirmButtonColor: '#c00000',
+                                customClass: { popup: 'rounded-2xl' }
+                            });
+                            return;
+                        }
+                    }
+
                     const selected = this.assets.filter(a => a.selected);
                     if (selected.length === 0) {
                         Swal.fire({
                             icon: 'warning',
                             title: 'No Assets Selected',
-                            text: 'Please select at least one asset using the checkbox on the right.',
+                            text: 'Please select at least one asset using the checkbox on the right or enter a valid range.',
                             confirmButtonColor: '#c00000',
                             customClass: { popup: 'rounded-2xl' }
                         });
@@ -681,7 +831,7 @@
                 },
 
                 submitBatch() {
-                    const toAssign = this.assets.filter(a => a.employee_id);
+                    const toAssign = this.assets.filter(a => a.employee_id || a.school_db_id);
                     if (toAssign.length === 0) return;
 
                     const payload = {

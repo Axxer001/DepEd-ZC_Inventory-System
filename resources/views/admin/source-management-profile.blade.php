@@ -166,7 +166,7 @@
                 <div class="p-5 flex-grow overflow-y-auto custom-scroll">
                     <div x-show="activeTab === 'assets'" class="tab-fade">
                         @if($assets->count() > 0)
-                            <div class="space-y-3">
+                            <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scroll">
                                 @foreach($assets as $asset)
                                     @php
                                         $condRaw = strtolower($asset->condition ?? 'good');
@@ -223,6 +223,9 @@
                                     </div>
                                 @endforeach
                             </div>
+                            <div class="mt-4">
+                                {{ $assets->appends(request()->except('assets_page'))->links() }}
+                            </div>
                         @else
                             <div class="py-12 flex flex-col items-center justify-center text-center">
                                 <div class="w-16 h-16 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mb-4">
@@ -236,7 +239,7 @@
 
                     <div x-show="activeTab === 'history'" class="tab-fade" x-cloak>
                         @if($history->count() > 0)
-                            <div class="space-y-3">
+                            <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scroll">
                                 @foreach($history as $h)
                                     <div class="asset-card">
                                         <div class="flex flex-col sm:flex-row sm:items-center gap-4 px-4 py-3.5">
@@ -275,6 +278,9 @@
                                         </div>
                                     </div>
                                 @endforeach
+                            </div>
+                            <div class="mt-4">
+                                {{ $history->appends(request()->except('history_page'))->links() }}
                             </div>
                         @else
                             <div class="py-12 flex flex-col items-center justify-center text-center">

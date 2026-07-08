@@ -208,7 +208,7 @@
                     {{-- TAB: Assets --}}
                     <div x-show="activeTab === 'assets'" class="animate-fade space-y-4">
                         @if($recentAssets->count() > 0)
-                        <div class="overflow-x-auto w-full">
+                        <div class="overflow-x-auto w-full max-h-[600px] overflow-y-auto pr-2 custom-scroll">
                             <table class="w-full text-left border-collapse" style="min-width: 600px;">
                                 <thead>
                                     <tr class="border-b border-slate-100 dark:border-slate-800">
@@ -248,6 +248,9 @@
                                     @endforeach
                                 </tbody>
                             </table>
+                        </div>
+                        <div class="mt-4">
+                            {{ $recentAssets->appends(request()->except('assets_page'))->links() }}
                         </div>
                         @else
                         <div class="flex flex-col items-center justify-center py-12 bg-slate-50 dark:bg-slate-900/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800">

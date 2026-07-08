@@ -9,11 +9,11 @@ class AssetAssignedNotification extends Notification
 {
     use Queueable;
 
-    protected $asset;
+    public $data;
 
-    public function __construct($asset)
+    public function __construct($data)
     {
-        $this->asset = $asset;
+        $this->data = is_array($data) ? (object)$data : $data;
     }
 
     public function via(object $notifiable): array
@@ -24,10 +24,10 @@ class AssetAssignedNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'New Asset Assigned',
-            'message' => 'You have been assigned a new asset: ' . ($this->asset->article ?? 'Unknown Item'),
-            'action_url' => route('assets.profile', ['id' => $this->asset->id]),
-            'icon' => 'fas fa-box-open text-success',
+            'title' => $this->data->title ?? 'Asset Assigned',
+            'message' => $this->data->message ?? 'An asset has been assigned.',
+            'detailed_message' => $this->data->detailed_message ?? ($this->data->description ?? 'No details available.'),
+            'action_url' => null,
             'type' => 'asset_assigned',
         ];
     }

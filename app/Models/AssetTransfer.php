@@ -13,6 +13,8 @@ class AssetTransfer extends Model
         'asset_assignment_id',
         'from_office_id',
         'to_office_id',
+        'from_school_id',
+        'to_school_id',
         'from_custodian_id',
         'to_custodian_id',
         'transfer_date',
@@ -48,6 +50,16 @@ class AssetTransfer extends Model
     public function toOffice(): BelongsTo
     {
         return $this->belongsTo(Office::class, 'to_office_id');
+    }
+
+    public function fromSchool(): BelongsTo
+    {
+        return $this->belongsTo(School::class, 'from_school_id');
+    }
+
+    public function toSchool(): BelongsTo
+    {
+        return $this->belongsTo(School::class, 'to_school_id');
     }
 
     public function authorizer(): BelongsTo

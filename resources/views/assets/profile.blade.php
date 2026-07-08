@@ -661,9 +661,18 @@
                     @csrf
                     <div class="p-6 space-y-5 overflow-y-auto custom-scroll" x-data="{
                         employees: @js($employees),
+                        schools: @js($schools),
+                        offices: @js($offices),
+                        recipientType: 'employee',
                         searchQuery: '',
+                        schoolSearchQuery: '',
+                        officeSearchQuery: '',
                         showDropdown: false,
+                        showSchoolDropdown: false,
+                        showOfficeDropdown: false,
                         selectedEmployee: null,
+                        selectedSchool: null,
+                        selectedOffice: null,
                         transferType: 'Permanent Reassignment',
 
                         get filteredEmployees() {
@@ -675,15 +684,45 @@
                             ).slice(0, 50);
                         },
 
+                        get filteredSchools() {
+                            let q = this.schoolSearchQuery.trim().toLowerCase();
+                            if (q === '') return this.schools.slice(0, 50);
+                            return this.schools.filter(s => 
+                                (s.name && s.name.toLowerCase().includes(q)) || 
+                                (s.school_id && String(s.school_id).toLowerCase().includes(q))
+                            ).slice(0, 50);
+                        },
+
+                        get filteredOffices() {
+                            let q = this.officeSearchQuery.trim().toLowerCase();
+                            if (q === '') return this.offices.slice(0, 50);
+                            return this.offices.filter(o => 
+                                (o.name && o.name.toLowerCase().includes(q)) || 
+                                (o.office_id && String(o.office_id).toLowerCase().includes(q))
+                            ).slice(0, 50);
+                        },
+
                         selectEmployee(emp) {
                             this.selectedEmployee = emp;
                             this.searchQuery = emp.full_name;
                             this.showDropdown = false;
+                        },
+
+                        selectSchool(sch) {
+                            this.selectedSchool = sch;
+                            this.schoolSearchQuery = sch.name;
+                            this.showSchoolDropdown = false;
+                        },
+
+                        selectOffice(off) {
+                            this.selectedOffice = off;
+                            this.officeSearchQuery = off.name;
+                            this.showOfficeDropdown = false;
                         }
                     }">
                         
                         {{-- Current Info Header remains for context --}}
-                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center relative overflow-hidden group mb-6">
+                        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center relative overflow-hidden group mb-4">
                             <div class="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
                             <div class="pl-2">
                                 <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Current Location</p>
@@ -694,52 +733,157 @@
                             </div>
                         </div>
 
-                        {{-- Employee Search Field --}}
-                        <div class="relative z-50">
-                            <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Search Employee <span class="text-deped">*</span></label>
-                            <div class="relative group" @click.away="showDropdown = false">
-                                <input type="text" x-model="searchQuery" @focus="showDropdown = true" @input="showDropdown = true" required autocomplete="off"
-                                    class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="Type name or ID to search...">
-                                <svg x-show="!selectedEmployee" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
-                                <button type="button" x-show="selectedEmployee" @click="selectedEmployee = null; searchQuery = ''; showDropdown = true" class="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all cursor-pointer" x-cloak>
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        {{-- Recipient Type Selection --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Transfer Recipient Type</label>
+                            <div class="grid grid-cols-3 gap-2 bg-slate-100 p-1 rounded-xl">
+                                <button type="button" @click="recipientType = 'employee'"
+                                    :class="recipientType === 'employee' ? 'bg-[#c00000] text-white shadow-sm font-black' : 'text-slate-600 hover:text-slate-900 font-bold'"
+                                    class="py-2 text-[10px] uppercase tracking-wider rounded-lg transition-all text-center">
+                                    Employee
                                 </button>
-                                
-                                <div x-show="showDropdown && filteredEmployees.length > 0" x-cloak 
-                                    class="absolute left-0 right-0 mt-2 bg-white border-2 border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scroll p-1 z-50">
-                                    <template x-for="e in filteredEmployees" :key="e.id">
-                                        <div @click="selectEmployee(e)" 
-                                            class="px-4 py-2.5 text-[10px] font-black text-slate-600 uppercase hover:bg-slate-100 hover:text-blue-600 rounded-lg cursor-pointer transition-colors flex justify-between items-center">
-                                            <span x-text="e.full_name"></span>
-                                            <span class="text-slate-400 font-bold ml-2" x-text="e.employee_id ? '[' + e.employee_id + ']' : ''"></span>
-                                        </div>
-                                    </template>
+                                <button type="button" @click="recipientType = 'school'"
+                                    :class="recipientType === 'school' ? 'bg-[#c00000] text-white shadow-sm font-black' : 'text-slate-600 hover:text-slate-900 font-bold'"
+                                    class="py-2 text-[10px] uppercase tracking-wider rounded-lg transition-all text-center">
+                                    School Direct
+                                </button>
+                                <button type="button" @click="recipientType = 'office'"
+                                    :class="recipientType === 'office' ? 'bg-[#c00000] text-white shadow-sm font-black' : 'text-slate-600 hover:text-slate-900 font-bold'"
+                                    class="py-2 text-[10px] uppercase tracking-wider rounded-lg transition-all text-center">
+                                    Office Direct
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Employee Recipient Form --}}
+                        <div x-show="recipientType === 'employee'" class="space-y-5">
+                            {{-- Employee Search Field --}}
+                            <div class="relative z-50">
+                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Search Employee <span class="text-deped">*</span></label>
+                                <div class="relative group" @click.away="showDropdown = false">
+                                    <input type="text" x-model="searchQuery" @focus="showDropdown = true" @input="showDropdown = true" :required="recipientType === 'employee'" autocomplete="off"
+                                        class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="Type name or ID to search...">
+                                    <svg x-show="!selectedEmployee" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                    <button type="button" x-show="selectedEmployee" @click="selectedEmployee = null; searchQuery = ''; showDropdown = true" class="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all cursor-pointer" x-cloak>
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                    
+                                    <div x-show="showDropdown && filteredEmployees.length > 0" x-cloak 
+                                        class="absolute left-0 right-0 mt-2 bg-white border-2 border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scroll p-1 z-50">
+                                        <template x-for="e in filteredEmployees" :key="e.id">
+                                            <div @click="selectEmployee(e)" 
+                                                class="px-4 py-2.5 text-[10px] font-black text-slate-600 uppercase hover:bg-slate-100 hover:text-blue-600 rounded-lg cursor-pointer transition-colors flex justify-between items-center">
+                                                <span x-text="e.full_name"></span>
+                                                <span class="text-slate-400 font-bold ml-2" x-text="e.employee_id ? '[' + e.employee_id + ']' : ''"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Employee Autofilled details --}}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Employee ID</label>
+                                    <input type="text" readonly :value="selectedEmployee ? selectedEmployee.employee_id : ''"
+                                        class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-400 uppercase outline-none shadow-sm cursor-not-allowed" placeholder="AUTO-FILLED">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Position</label>
+                                    <input type="text" readonly :value="selectedEmployee ? (selectedEmployee.position || 'N/A') : ''"
+                                        class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-400 uppercase outline-none shadow-sm cursor-not-allowed" placeholder="AUTO-FILLED">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Office / School Location</label>
+                                <input type="text" readonly :value="selectedEmployee ? (selectedEmployee.location_name || 'N/A') : ''"
+                                    class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-400 uppercase outline-none shadow-sm cursor-not-allowed" placeholder="AUTO-FILLED">
+                            </div>
+                        </div>
+
+                        {{-- School Recipient Form --}}
+                        <div x-show="recipientType === 'school'" class="space-y-5" x-cloak>
+                            <div class="relative z-50">
+                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Search School <span class="text-deped">*</span></label>
+                                <div class="relative group" @click.away="showSchoolDropdown = false">
+                                    <input type="text" x-model="schoolSearchQuery" @focus="showSchoolDropdown = true" @input="showSchoolDropdown = true" :required="recipientType === 'school'" autocomplete="off"
+                                        class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="Type school name to search...">
+                                    <svg x-show="!selectedSchool" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                    <button type="button" x-show="selectedSchool" @click="selectedSchool = null; schoolSearchQuery = ''; showSchoolDropdown = true" class="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all cursor-pointer">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                    
+                                    <div x-show="showSchoolDropdown && filteredSchools.length > 0" x-cloak 
+                                        class="absolute left-0 right-0 mt-2 bg-white border-2 border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scroll p-1 z-50">
+                                        <template x-for="s in filteredSchools" :key="s.id">
+                                            <div @click="selectSchool(s)" 
+                                                class="px-4 py-2.5 text-[10px] font-black text-slate-600 uppercase hover:bg-slate-100 hover:text-blue-600 rounded-lg cursor-pointer transition-colors flex justify-between items-center">
+                                                <span x-text="s.name"></span>
+                                                <span class="text-slate-400 font-bold ml-2" x-text="s.school_id ? '[' + s.school_id + ']' : ''"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">School ID</label>
+                                    <input type="text" readonly :value="selectedSchool ? selectedSchool.school_id : ''"
+                                        class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-400 uppercase outline-none shadow-sm cursor-not-allowed" placeholder="AUTO-FILLED">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Type</label>
+                                    <input type="text" readonly :value="selectedSchool ? (selectedSchool.type || 'N/A') : ''"
+                                        class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-400 uppercase outline-none shadow-sm cursor-not-allowed" placeholder="AUTO-FILLED">
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Hidden employee_id field --}}
-                        <input type="hidden" name="employee_id" :value="selectedEmployee ? selectedEmployee.id : ''" required>
-
-                        {{-- Employee Autofilled details --}}
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Employee ID</label>
-                                <input type="text" readonly :value="selectedEmployee ? selectedEmployee.employee_id : ''"
-                                    class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-400 uppercase outline-none shadow-sm cursor-not-allowed" placeholder="AUTO-FILLED">
+                        {{-- Office Recipient Form --}}
+                        <div x-show="recipientType === 'office'" class="space-y-5" x-cloak>
+                            <div class="relative z-50">
+                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Search Office <span class="text-deped">*</span></label>
+                                <div class="relative group" @click.away="showOfficeDropdown = false">
+                                    <input type="text" x-model="officeSearchQuery" @focus="showOfficeDropdown = true" @input="showOfficeDropdown = true" :required="recipientType === 'office'" autocomplete="off"
+                                        class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all shadow-sm hover:border-slate-300" placeholder="Type office name to search...">
+                                    <svg x-show="!selectedOffice" class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-blue-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                    <button type="button" x-show="selectedOffice" @click="selectedOffice = null; officeSearchQuery = ''; showOfficeDropdown = true" class="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all cursor-pointer">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    </button>
+                                    
+                                    <div x-show="showOfficeDropdown && filteredOffices.length > 0" x-cloak 
+                                        class="absolute left-0 right-0 mt-2 bg-white border-2 border-slate-200 rounded-xl shadow-xl max-h-48 overflow-y-auto custom-scroll p-1 z-50">
+                                        <template x-for="o in filteredOffices" :key="o.id">
+                                            <div @click="selectOffice(o)" 
+                                                class="px-4 py-2.5 text-[10px] font-black text-slate-600 uppercase hover:bg-slate-100 hover:text-blue-600 rounded-lg cursor-pointer transition-colors flex justify-between items-center">
+                                                <span x-text="o.name"></span>
+                                                <span class="text-slate-400 font-bold ml-2" x-text="o.office_id ? '[' + o.office_id + ']' : ''"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Position</label>
-                                <input type="text" readonly :value="selectedEmployee ? (selectedEmployee.position || 'N/A') : ''"
-                                    class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-400 uppercase outline-none shadow-sm cursor-not-allowed" placeholder="AUTO-FILLED">
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Office ID</label>
+                                    <input type="text" readonly :value="selectedOffice ? selectedOffice.office_id : ''"
+                                        class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-400 uppercase outline-none shadow-sm cursor-not-allowed" placeholder="AUTO-FILLED">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Type</label>
+                                    <input type="text" readonly :value="selectedOffice ? (selectedOffice.type || 'N/A') : ''"
+                                        class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-400 uppercase outline-none shadow-sm cursor-not-allowed" placeholder="AUTO-FILLED">
+                                </div>
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Office / School Location</label>
-                            <input type="text" readonly :value="selectedEmployee ? (selectedEmployee.location_name || 'N/A') : ''"
-                                class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-400 uppercase outline-none shadow-sm cursor-not-allowed" placeholder="AUTO-FILLED">
-                        </div>
+                        {{-- Hidden inputs --}}
+                        <input type="hidden" name="employee_id" :value="recipientType === 'employee' && selectedEmployee ? selectedEmployee.id : ''">
+                        <input type="hidden" name="school_db_id" :value="recipientType === 'school' && selectedSchool ? selectedSchool.id : (recipientType === 'office' && selectedOffice ? selectedOffice.id : '')">
+                        <input type="hidden" name="is_office" :value="recipientType === 'office' ? '1' : ''">
 
                         <div class="grid grid-cols-2 gap-5">
                             <div>
@@ -873,7 +1017,16 @@
         {{-- Return to Supplier Modal --}}
         <div x-show="showReturnSourceModal" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center">
             <div x-show="showReturnSourceModal" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showReturnSourceModal = false"></div>
-            <form action="{{ route('assets.return_source', $asset->id) }}" method="POST" x-show="showReturnSourceModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 translate-y-8 scale-95" class="bg-white rounded-3xl shadow-2xl w-full max-w-xl mx-4 relative z-10 flex flex-col overflow-hidden border border-slate-100">
+            <form action="{{ route('assets.return_source', $asset->id) }}" method="POST"
+                  x-data="{ returnCondition: '', supplierHasServiceCenter: {{ $supplierHasServiceCenter ? 'true' : 'false' }} }"
+                  x-show="showReturnSourceModal"
+                  x-transition:enter="transition ease-out duration-300"
+                  x-transition:enter-start="opacity-0 translate-y-8 scale-95"
+                  x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                  x-transition:leave="transition ease-in duration-200"
+                  x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                  x-transition:leave-end="opacity-0 translate-y-8 scale-95"
+                  class="bg-white rounded-3xl shadow-2xl w-full max-w-xl mx-4 relative z-10 flex flex-col overflow-hidden border border-slate-100">
                 @csrf
                 {{-- Modal Header --}}
                 <div class="bg-slate-50 border-b border-slate-100 px-6 py-5 flex items-center justify-between">
@@ -892,10 +1045,10 @@
                 </div>
 
                 {{-- Modal Body --}}
-                <div class="p-6 space-y-6">
-                    
+                <div class="p-6 space-y-5">
+
                     {{-- Current Info --}}
-                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center relative overflow-hidden group">
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center relative overflow-hidden">
                         <div class="absolute left-0 top-0 bottom-0 w-1 bg-orange-500"></div>
                         <div class="pl-2">
                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Returning From</p>
@@ -916,7 +1069,7 @@
                         <div>
                             <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Asset Condition <span class="text-deped">*</span></label>
                             <div class="relative group">
-                                <select name="condition" required class="w-full appearance-none bg-white border-2 border-slate-200 rounded-xl pl-4 pr-10 py-3 text-xs font-black text-slate-700 uppercase focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
+                                <select name="condition" required x-model="returnCondition" class="w-full appearance-none bg-white border-2 border-slate-200 rounded-xl pl-4 pr-10 py-3 text-xs font-black text-slate-700 uppercase focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
                                     <option value="" disabled selected>Select condition...</option>
                                     <option value="Good Condition">Good Condition</option>
                                     <option value="Needs Repair">Needs Repair</option>
@@ -924,6 +1077,26 @@
                                 </select>
                                 <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-orange-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                             </div>
+                        </div>
+                    </div>
+
+                    {{-- Expected Return Date (shown only when condition = Needs Repair AND supplier has service center) --}}
+                    <div x-show="returnCondition === 'Needs Repair' && supplierHasServiceCenter"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-cloak>
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                            <label class="block text-[10px] font-black text-amber-700 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                Expected Return Date <span class="text-red-500">*</span>
+                            </label>
+                            <input type="date" name="expected_return_date"
+                                   :required="returnCondition === 'Needs Repair' && supplierHasServiceCenter"
+                                   class="w-full bg-white border-2 border-amber-300 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all shadow-sm cursor-pointer">
+                            <p class="text-[10px] font-bold text-amber-600 mt-2">
+                                This asset will be tracked under <strong>Asset Service</strong> for repair monitoring.
+                            </p>
                         </div>
                     </div>
 
@@ -1108,6 +1281,8 @@
             </button>
             <img src="{{ $asset->photo_path ? asset('storage/' . $asset->photo_path) : '' }}" class="max-w-[90vw] max-h-[90vh] object-contain rounded-xl shadow-2xl" @click.away="showImageFullscreen = false" x-show="showImageFullscreen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
         </div>
+
+        @include('partials.documentation-modal')
 
     </div>
 

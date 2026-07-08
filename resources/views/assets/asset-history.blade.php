@@ -123,7 +123,7 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
-                            <template x-for="item in filteredItems()" :key="item.id">
+                            <template x-for="item in paginatedItems()" :key="item.id">
                                 <tr class="group hover:bg-slate-50/80 transition-all table-row-transition">
                                     <td class="px-8 py-6">
                                         <div class="flex flex-col">
@@ -166,12 +166,13 @@
                     <div class="flex flex-col">
                         <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 italic">Division Registry Index</span>
                         <p class="text-sm font-bold text-slate-700 italic">
-                            Showing <span class="text-[#c00000]" x-text="filteredItems().length"></span> active records
+                            Showing <span class="text-[#c00000]" x-text="paginatedItems().length"></span> of <span class="text-[#c00000]" x-text="filteredItems().length"></span> active records
                         </p>
                     </div>
-                    <div class="flex gap-2">
-                         <button class="px-6 py-3 bg-white border border-slate-200 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest cursor-not-allowed shadow-sm">Previous</button>
-                         <button class="px-6 py-3 bg-white border border-slate-200 text-slate-400 rounded-2xl text-[10px] font-black uppercase tracking-widest cursor-not-allowed shadow-sm">Next Page</button>
+                    <div class="flex gap-2 items-center">
+                         <button @click="if (currentPage > 1) { currentPage--; $el.scrollIntoView({behavior: 'smooth'}); }" :disabled="currentPage === 1" class="px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors">Previous</button>
+                         <span class="text-xs font-black text-slate-500 uppercase tracking-widest px-2" x-text="'Page ' + currentPage + ' of ' + Math.max(1, Math.ceil(filteredItems().length / itemsPerPage))"></span>
+                         <button @click="if (currentPage < Math.ceil(filteredItems().length / itemsPerPage)) { currentPage++; $el.scrollIntoView({behavior: 'smooth'}); }" :disabled="currentPage >= Math.ceil(filteredItems().length / itemsPerPage)" class="px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors">Next</button>
                     </div>
                 </div>
             </section>
@@ -185,7 +186,15 @@
                 searchQuery: '',
                 selectedYear: 'all',
                 selectedMonth: 'all',
+                currentPage: 1,
+                itemsPerPage: 50,
                 items: {!! $recordsJson !!},
+
+                init() {
+                    this.$watch('searchQuery', () => this.currentPage = 1);
+                    this.$watch('selectedYear', () => this.currentPage = 1);
+                    this.$watch('selectedMonth', () => this.currentPage = 1);
+                },
 
                 getUniqueYears() {
                     const years = this.items.map(i => new Date(i.distributed_at).getFullYear());
@@ -218,6 +227,12 @@
                                            item.category.toLowerCase().includes(search);
                         return yearMatch && monthMatch && keywordMatch;
                     }).sort((a, b) => new Date(b.distributed_at) - new Date(a.distributed_at));
+                },
+
+                paginatedItems() {
+                    const filtered = this.filteredItems();
+                    const start = (this.currentPage - 1) * this.itemsPerPage;
+                    return filtered.slice(start, start + this.itemsPerPage);
                 },
 
                 formatDate(dateStr, format) {

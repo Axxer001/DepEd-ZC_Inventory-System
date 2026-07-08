@@ -174,7 +174,7 @@
                 <div class="p-5 flex-grow overflow-y-auto custom-scroll">
                     <div x-show="activeTab === 'assets'" class="tab-fade">
                         @if($assets->count() > 0)
-                            <div class="space-y-3">
+                            <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scroll">
                                 @foreach($assets as $asset)
                                     @php
                                         $condRaw = strtolower($asset->condition ?? 'good');
@@ -231,6 +231,9 @@
                                     </div>
                                 @endforeach
                             </div>
+                            <div class="mt-4">
+                                {{ $assets->appends(request()->except('assets_page'))->links() }}
+                            </div>
                         @else
                             <div class="py-12 flex flex-col items-center justify-center text-center">
                                 <div class="w-16 h-16 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mb-4">
@@ -242,10 +245,9 @@
                         @endif
                     </div>
 
-                    {{-- SERVICE HISTORY TAB --}}
                     <div x-show="activeTab === 'history'" class="tab-fade" x-cloak>
                         @if($history->count() > 0)
-                            <div class="space-y-3">
+                            <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scroll">
                                 @foreach($history as $event)
                                     @php
                                         $isReturnedTo = in_array($event->transfer_type, ['Return to Source', 'Return to Supplier', 'Return']);
@@ -312,7 +314,7 @@
                                                     @endif
                                                     @if($event->condition)
                                                     <span class="flex items-center gap-1">
-                                                        <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                                        <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0118 0z"/></svg>
                                                         {{ $event->condition }}
                                                     </span>
                                                     @endif
@@ -336,7 +338,10 @@
                                     </div>
                                 @endforeach
                             </div>
-                        @else
+                            <div class="mt-4">
+                                {{ $history->appends(request()->except('history_page'))->links() }}
+                            </div>
+                        @else         @else
                             <div class="py-12 flex flex-col items-center justify-center text-center">
                                 <div class="w-16 h-16 bg-slate-50 border border-slate-100 rounded-full flex items-center justify-center mb-4">
                                     <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/></svg>

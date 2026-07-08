@@ -323,6 +323,7 @@
     </script>
 
     @include('partials.inventory-modals')
+    @include('partials.documentation-modal')
 
 </body>
 </html>

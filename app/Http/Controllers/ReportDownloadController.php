@@ -56,16 +56,18 @@ class ReportDownloadController extends Controller
                 ->leftJoin('acquisition_sources', 'asset_sources.acquisition_source_id', '=', 'acquisition_sources.id')
                 ->leftJoin('procurement_modes as pm', 'asset_sources.procurement_mode_id', '=', 'pm.id')
                 ->leftJoin('employees as cus', 'asset_assignments.employee_id', '=', 'cus.id')
-                ->leftJoin('offices', 'cus.office_id', '=', 'offices.id')
-                ->leftJoin('schools', 'cus.school_id', '=', 'schools.id')
+                ->leftJoin('offices as cus_off', 'cus.office_id', '=', 'cus_off.id')
+                ->leftJoin('schools as cus_sch', 'cus.school_id', '=', 'cus_sch.id')
+                ->leftJoin('offices as direct_off', 'asset_assignments.office_id', '=', 'direct_off.id')
+                ->leftJoin('schools as direct_sch', 'asset_assignments.school_id', '=', 'direct_sch.id')
                 ->select(
                     'asset_assignments.*',
                     DB::raw("'Region IX' as region"),
                     DB::raw("'Division of Zamboanga City' as division"),
-                    DB::raw('COALESCE(schools.school_id, offices.office_id) as school_id'),
-                    DB::raw('COALESCE(schools.type, offices.type) as school_type'),
-                    DB::raw('COALESCE(schools.name, offices.name) as office_school_name'),
-                    DB::raw('COALESCE(schools.location, offices.location) as location'),
+                    DB::raw('COALESCE(direct_sch.school_id, direct_off.office_id, cus_sch.school_id, cus_off.office_id) as school_id'),
+                    DB::raw('COALESCE(direct_sch.type, direct_off.type, cus_sch.type, cus_off.type) as school_type'),
+                    DB::raw('COALESCE(direct_sch.name, direct_off.name, cus_sch.name, cus_off.name) as office_school_name'),
+                    DB::raw('COALESCE(direct_sch.location, direct_off.location, cus_sch.location, cus_off.location) as location'),
                     DB::raw("NULL as nature_of_occupancy"),
                     'asset_sources.description',
                     'asset_sources.unit_of_measurement',
@@ -107,22 +109,38 @@ class ReportDownloadController extends Controller
             $query->where('items.name', $filters['article']);
         }
         if (!empty($filters['schoolName']) && $tab === 'distribution') {
-            $query->where('schools.name', 'LIKE', '%' . $filters['schoolName'] . '%');
+            $query->where(function($q) use ($filters) {
+                $q->where('cus_sch.name', 'LIKE', '%' . $filters['schoolName'] . '%')
+                  ->orWhere('direct_sch.name', 'LIKE', '%' . $filters['schoolName'] . '%');
+            });
         }
         if (!empty($filters['district']) && $tab === 'distribution') {
-            $query->whereIn('schools.district_id', function($q) use ($filters) {
-                $q->select('id')->from('districts')->where('name', $filters['district']);
+            $query->where(function($q) use ($filters) {
+                $q->whereIn('cus_sch.district_id', function($sub) use ($filters) {
+                    $sub->select('id')->from('districts')->where('name', $filters['district']);
+                })->orWhereIn('direct_sch.district_id', function($sub) use ($filters) {
+                    $sub->select('id')->from('districts')->where('name', $filters['district']);
+                });
             });
         }
         if (!empty($filters['quadrant']) && $tab === 'distribution') {
-            $query->whereIn('schools.district_id', function($q) use ($filters) {
-                $q->select('id')->from('districts')->whereIn('quadrant_id', function($q2) use ($filters) {
-                    $q2->select('id')->from('quadrants')->where('name', $filters['quadrant']);
+            $query->where(function($q) use ($filters) {
+                $q->whereIn('cus_sch.district_id', function($sub) use ($filters) {
+                    $sub->select('id')->from('districts')->whereIn('quadrant_id', function($q2) use ($filters) {
+                        $q2->select('id')->from('quadrants')->where('name', $filters['quadrant']);
+                    });
+                })->orWhereIn('direct_sch.district_id', function($sub) use ($filters) {
+                    $sub->select('id')->from('districts')->whereIn('quadrant_id', function($q2) use ($filters) {
+                        $q2->select('id')->from('quadrants')->where('name', $filters['quadrant']);
+                    });
                 });
             });
         }
         if (!empty($filters['officeName']) && $tab === 'distribution') {
-            $query->where('offices.name', 'LIKE', '%' . $filters['officeName'] . '%');
+            $query->where(function($q) use ($filters) {
+                $q->where('cus_off.name', 'LIKE', '%' . $filters['officeName'] . '%')
+                  ->orWhere('direct_off.name', 'LIKE', '%' . $filters['officeName'] . '%');
+            });
         }
         if (!empty($filters['source'])) {
             $query->where('acquisition_sources.name', $filters['source']);
@@ -142,10 +160,18 @@ class ReportDownloadController extends Controller
                         $q->select(DB::raw(1))
                           ->from('asset_assignments')
                           ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id')
-                          ->whereNotNull('asset_assignments.employee_id');
+                          ->where(function($sq) {
+                              $sq->whereNotNull('asset_assignments.employee_id')
+                                 ->orWhereNotNull('asset_assignments.school_id')
+                                 ->orWhereNotNull('asset_assignments.office_id');
+                          });
                     });
                 } else {
-                    $query->whereNotNull('asset_assignments.employee_id');
+                    $query->where(function($q) {
+                        $q->whereNotNull('asset_assignments.employee_id')
+                          ->orWhereNotNull('asset_assignments.school_id')
+                          ->orWhereNotNull('asset_assignments.office_id');
+                    });
                 }
             } elseif ($status === 'not_distributed') {
                 if ($tab === 'source') {
@@ -153,10 +179,16 @@ class ReportDownloadController extends Controller
                         $q->select(DB::raw(1))
                           ->from('asset_assignments')
                           ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id')
-                          ->whereNotNull('asset_assignments.employee_id');
+                          ->where(function($sq) {
+                              $sq->whereNotNull('asset_assignments.employee_id')
+                                 ->orWhereNotNull('asset_assignments.school_id')
+                                 ->orWhereNotNull('asset_assignments.office_id');
+                          });
                     });
                 } else {
-                    $query->whereNull('asset_assignments.employee_id');
+                    $query->whereNull('asset_assignments.employee_id')
+                          ->whereNull('asset_assignments.school_id')
+                          ->whereNull('asset_assignments.office_id');
                 }
             } else {
                 $conditionMap = [
@@ -697,13 +729,19 @@ class ReportDownloadController extends Controller
                     ->whereColumn('school_id', 'schools.id')
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
                 'total_ppe_cost' => DB::table('asset_assignments')
-                    ->join('employees', 'asset_assignments.employee_id', '=', 'employees.id')
-                    ->whereColumn('employees.school_id', 'schools.id')
+                    ->leftJoin('employees', 'asset_assignments.employee_id', '=', 'employees.id')
+                    ->where(function($q) {
+                        $q->whereColumn('employees.school_id', 'schools.id')
+                          ->orWhereColumn('asset_assignments.school_id', 'schools.id');
+                    })
                     ->where('acquisition_cost', '>=', 50000)
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
                 'total_semi_ppe_cost' => DB::table('asset_assignments')
-                    ->join('employees', 'asset_assignments.employee_id', '=', 'employees.id')
-                    ->whereColumn('employees.school_id', 'schools.id')
+                    ->leftJoin('employees', 'asset_assignments.employee_id', '=', 'employees.id')
+                    ->where(function($q) {
+                        $q->whereColumn('employees.school_id', 'schools.id')
+                          ->orWhereColumn('asset_assignments.school_id', 'schools.id');
+                    })
                     ->where('acquisition_cost', '<', 50000)
                     ->selectRaw('COALESCE(SUM(acquisition_cost), 0)'),
             ]);
@@ -954,6 +992,31 @@ class ReportDownloadController extends Controller
                 ['value' => 'low_high', 'label' => 'Low to High'],
             ],
         ]);
+    }
+
+    public function downloadDocTemplate(Request $request, $type)
+    {
+        $recipient = $request->input('recipient', 'Document');
+        
+        $allowed = ['ITR', 'PTR', 'ICS', 'PAR', 'RRSP', 'RRPPE'];
+        if (!in_array($type, $allowed)) {
+            abort(404, 'Invalid template type');
+        }
+
+        $filePath = base_path('../' . $type . '.xlsx');
+        if (!file_exists($filePath)) {
+            abort(404, 'Template file not found.');
+        }
+
+        // Clean recipient name for filename, preserving spaces and alphanumeric chars
+        $safeRecipient = preg_replace('/[\\\\\/:\*\?"<>\|]/', '', $recipient);
+        if (empty($safeRecipient)) {
+            $safeRecipient = 'Recipient';
+        }
+
+        $downloadName = $type . $safeRecipient . '.xlsx';
+
+        return response()->download($filePath, $downloadName);
     }
 }
 

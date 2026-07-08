@@ -26,13 +26,18 @@
         [x-cloak] { display: none !important; }
         .animate-fade { animation: fadeIn 0.4s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .asset-card { background: #fff; border: 1px solid #eaecf0; border-radius: 1.25rem; overflow: hidden; transition: box-shadow 0.2s, border-color 0.2s; }
+        .asset-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.07); border-color: #d1d5db; }
+        html.dark .asset-card { background: #1e293b; border-color: #334155; }
+        html.dark .asset-card:hover { border-color: #475569; }
     </style>
 </head>
 <body class="flex min-h-screen text-slate-800 overflow-hidden">
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll p-4 lg:p-8" x-data="{ activeTab: 'buildings' }">
+    <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll p-4 lg:p-8" x-data="{ activeTab: new URLSearchParams(window.location.search).has('assets_page') ? 'assets' : 'buildings' }">
         
         {{-- Global Header --}}
         <header class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sticky top-0 z-50">
@@ -146,43 +151,72 @@
                     </div>
 
                     {{-- TAB: Assets --}}
-                    <div x-show="activeTab === 'assets'" class="animate-fade space-y-4" x-cloak>
+                    <div x-show="activeTab === 'assets'" class="animate-fade space-y-3" x-cloak>
                         @if($recentAssets->count() > 0)
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left">
-                                <thead>
-                                    <tr class="border-b border-slate-100">
-                                        <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Item / Category</th>
-                                        <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Property Number</th>
-                                        <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest">Acq. Date</th>
-                                        <th class="pb-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Unit Cost</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-50">
-                                    @foreach($recentAssets as $asset)
-                                    <tr class="group hover:bg-slate-50 transition-colors">
-                                        <td class="py-4 pr-4">
-                                            <p class="text-xs font-bold text-slate-800 uppercase">{{ $asset->item_name }}</p>
-                                            <p class="text-[9px] font-bold text-slate-400 uppercase">{{ $asset->category_name }}</p>
-                                        </td>
-                                        <td class="py-4">
-                                            <span class="text-[10px] font-black text-slate-500 uppercase">{{ $asset->property_number }}</span>
-                                        </td>
-                                        <td class="py-4">
-                                            <p class="text-[10px] font-bold text-slate-700">{{ $asset->acquisition_date ? \Carbon\Carbon::parse($asset->acquisition_date)->format('M d, Y') : 'N/A' }}</p>
-                                        </td>
-                                        <td class="py-4 text-right">
-                                            <p class="text-xs font-black text-emerald-600">₱ {{ number_format($asset->asset_cost, 2) }}</p>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                            <div class="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scroll">
+                                @foreach($recentAssets as $asset)
+                                    @php
+                                        $condRaw = strtolower($asset->condition ?? 'good');
+                                        if (str_contains($condRaw, 'good') || str_contains($condRaw, 'serviceable') && !str_contains($condRaw, 'unserviceable')) {
+                                            $condBadge = 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-800';
+                                        } elseif (str_contains($condRaw, 'repair')) {
+                                            $condBadge = 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-800';
+                                        } elseif (str_contains($condRaw, 'unserviceable')) {
+                                            $condBadge = 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/20 dark:text-rose-400 dark:border-rose-800';
+                                        } else {
+                                            $condBadge = 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-900/50 dark:text-slate-400 dark:border-slate-800';
+                                        }
+                                    @endphp
+                                    <div class="asset-card cursor-pointer hover:border-deped dark:hover:border-deped transition-colors" onclick="window.location.href='{{ route('assets.profile', $asset->id) }}'">
+                                        <div class="flex flex-col sm:flex-row sm:items-center gap-4 px-4 py-3.5">
+                                            {{-- Icon + Name --}}
+                                            <div class="flex items-center gap-3 flex-grow min-w-0">
+                                                <div class="w-9 h-9 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl flex items-center justify-center shrink-0">
+                                                    <svg class="w-4 h-4 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z"/></svg>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <h4 class="text-xs font-black text-slate-800 dark:text-white uppercase leading-none">{{ $asset->item_name }}</h4>
+                                                    <p class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-1">
+                                                        {{ $asset->category_name }}
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            {{-- Meta columns --}}
+                                            <div class="hidden md:flex items-center gap-6 text-right shrink-0">
+                                                <div>
+                                                    <p class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Property No.</p>
+                                                    <p class="text-[10px] font-black text-slate-700 dark:text-slate-300 uppercase mt-0.5 font-mono">{{ $asset->property_number ?: '—' }}</p>
+                                                </div>
+                                                <div>
+                                                    <p class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Custodian</p>
+                                                    <p class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase mt-0.5 max-w-[120px] truncate">{{ $asset->custodian_name ?: 'School Direct' }}</p>
+                                                </div>
+                                                <div>
+                                                    <p class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Acq. Date</p>
+                                                    <p class="text-[10px] font-bold text-slate-700 dark:text-slate-300 uppercase mt-0.5">{{ $asset->acquisition_date ? \Carbon\Carbon::parse($asset->acquisition_date)->format('M d, Y') : '—' }}</p>
+                                                </div>
+                                                <div>
+                                                    <p class="text-[8px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Cost</p>
+                                                    <p class="text-[11px] font-black text-deped dark:text-red-400 italic mt-0.5">₱ {{ number_format($asset->asset_cost, 2) }}</p>
+                                                </div>
+                                            </div>
+
+                                            {{-- Badges --}}
+                                            <div class="flex items-center gap-2 flex-wrap shrink-0">
+                                                <span class="text-[8px] font-black uppercase tracking-wide px-2 py-1 rounded-lg border {{ $condBadge }}">{{ $asset->condition ?: 'Good' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <div class="mt-6">
+                                {{ $recentAssets->appends(request()->except('assets_page'))->links() }}
+                            </div>
                         @else
-                        <div class="flex flex-col items-center justify-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                            <p class="text-xs font-black text-slate-400 uppercase tracking-widest italic">No distributed assets found for this school</p>
-                        </div>
+                            <div class="flex flex-col items-center justify-center py-12 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                                <p class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest italic">No distributed assets found for this school</p>
+                            </div>
                         @endif
                     </div>
 

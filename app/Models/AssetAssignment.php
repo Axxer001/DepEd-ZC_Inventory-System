@@ -14,6 +14,8 @@ class AssetAssignment extends Model
     protected $fillable = [
         'asset_source_id',
         'employee_id',
+        'school_id',
+        'office_id',
         'property_number',
         'photo_path',
         'acquisition_cost',
@@ -29,6 +31,16 @@ class AssetAssignment extends Model
     public function employee(): BelongsTo
     {
         return $this->belongsTo(Employee::class);
+    }
+
+    public function school(): BelongsTo
+    {
+        return $this->belongsTo(School::class);
+    }
+
+    public function office(): BelongsTo
+    {
+        return $this->belongsTo(Office::class);
     }
 
     public function assetSource(): BelongsTo

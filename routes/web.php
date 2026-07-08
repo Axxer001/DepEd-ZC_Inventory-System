@@ -14,6 +14,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\AcquisitionSourceController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\AssetServiceController;
 
 // --- Public Routes ---
 Route::middleware('guest')->group(function () {
@@ -296,6 +297,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/assets/{id}/return', [AssetController::class, 'returnAmu'])->name('assets.return')->middleware('role:super_admin,admin');
     Route::post('/assets/{id}/return-source', [AssetController::class, 'returnSource'])->name('assets.return_source')->middleware('role:super_admin,admin');
     Route::post('/assets/{id}/photo', [AssetController::class, 'uploadPhoto'])->name('assets.photo.upload')->middleware('role:super_admin,admin');
+
+    // --- Asset Service (Repair Tracking) ---
+    Route::get('/asset-service', [AssetServiceController::class, 'index'])->name('asset.service.index');
+    Route::get('/asset-service/{id}', [AssetServiceController::class, 'show'])->name('asset.service.show');
+    Route::post('/asset-service/{id}/return-custodian', [AssetServiceController::class, 'returnToCustodian'])->name('asset.service.return-custodian')->middleware('role:super_admin,admin');
+    Route::post('/asset-service/{id}/return-amu', [AssetServiceController::class, 'returnToAmu'])->name('asset.service.return-amu')->middleware('role:super_admin,admin');
     Route::delete('/assets/{id}/photo', [AssetController::class, 'removePhoto'])->name('assets.photo.remove')->middleware('role:super_admin,admin');
     Route::post('/assets/{id}/document', [AssetController::class, 'uploadDocument'])->name('assets.document.upload')->middleware('role:super_admin,admin');
     Route::delete('/assets/document/{docId}', [AssetController::class, 'removeDocument'])->name('assets.document.remove')->middleware('role:super_admin,admin');
@@ -383,6 +390,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/reports/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getFilterOptions'])->name('api.reports.filters');
     Route::get('/api/assets/suggestions', [\App\Http\Controllers\ReportDownloadController::class, 'getAssetSuggestions'])->name('api.assets.suggestions');
     Route::post('/reports/download-rpc', [\App\Http\Controllers\ReportDownloadController::class, 'download'])->name('assets.reports.download_rpc');
+    Route::get('/download-documentation-template/{type}', [\App\Http\Controllers\ReportDownloadController::class, 'downloadDocTemplate'])->name('admin.download_doc_template');
 
     // --- Inventory Management (Edit) ---
     Route::get('/api/inventory/dropdown-data', [InventorySetupController::class, 'getDropdownData'])->name('api.inventory.dropdown_data');

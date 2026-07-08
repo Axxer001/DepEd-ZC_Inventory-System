@@ -308,6 +308,26 @@
             <p class="px-3 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Activity</p>
         </div>
 
+        {{-- Asset Service (Repair Tracking) --}}
+        <div class="relative group/navitem">
+            @if(request()->routeIs('asset.service*'))
+                <a href="{{ route('asset.service.index') }}" class="flex items-center gap-4 px-4 py-3 bg-amber-50 text-amber-700 rounded-xl font-bold border border-amber-200 transition-all" title="Asset Service">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:scale-110">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+                    </svg>
+                    <span class="sidebar-label hidden whitespace-nowrap text-sm">Asset Service</span>
+                </a>
+                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-amber-500 rounded-r-full"></div>
+            @else
+                <a href="{{ route('asset.service.index') }}" class="flex items-center gap-4 px-4 py-3 text-slate-500 hover:bg-amber-50 hover:text-amber-700 rounded-xl font-semibold transition-all group" title="Asset Service">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6 shrink-0 transition-transform duration-300 group-hover/navitem:scale-110">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 4a2 2 0 114 0v1a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-1a2 2 0 100 4h1a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-1a2 2 0 10-4 0v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-3a1 1 0 00-1-1H4a2 2 0 110-4h1a1 1 0 001-1V7a1 1 0 011-1h3a1 1 0 001-1V4z" />
+                    </svg>
+                    <span class="sidebar-label hidden whitespace-nowrap text-sm">Asset Service</span>
+                </a>
+            @endif
+        </div>
+
         {{-- System / History Logs (All Roles) --}}
         @if(auth()->check())
         <div class="relative group/navitem">

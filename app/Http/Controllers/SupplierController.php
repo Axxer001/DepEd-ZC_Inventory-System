@@ -45,7 +45,7 @@ class SupplierController extends Controller
                 DB::raw("CONCAT(COALESCE(e.first_name,''), ' ', COALESCE(e.last_name,'')) as custodian_name")
             )
             ->orderByDesc('asrc.acceptance_date')
-            ->get();
+            ->paginate(50, ['*'], 'assets_page');
 
         // Service history: transfers related to assets from this supplier
         $history = DB::table('asset_transfers as at')
@@ -76,7 +76,7 @@ class SupplierController extends Controller
             )
             ->orderByDesc('at.transfer_date')
             ->orderByDesc('at.created_at')
-            ->get();
+            ->paginate(50, ['*'], 'history_page');
 
         return view('admin.supplier-management-profile', compact('supplier', 'stats', 'assets', 'history'));
     }
