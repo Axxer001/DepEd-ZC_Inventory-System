@@ -1,0 +1,131 @@
+services:
+  # MySQL database service
+  db:
+    image: mysql:8.0
+    container_name: amu_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-laravel}
+      MYSQL_USER: ${DB_USERNAME:-laravel_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-laravel_pass}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_pass}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - amu_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis cache / queue connection service
+  redis:
+    image: redis:alpine
+    container_name: amu_redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - amu_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PHP-FPM Application container (Builds the primary PHP image)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+      args:
+        - VITE_REVERB_APP_KEY=${REVERB_APP_KEY:-}
+        - VITE_REVERB_HOST=${REVERB_HOST:-}
+        - VITE_REVERB_PORT=${REVERB_PORT:-}
+        - VITE_REVERB_SCHEME=${REVERB_SCHEME:-}
+    image: amu_app:latest
+    container_name: amu_app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      RUN_MIGRATIONS: "true" # Triggers auto-migration on start
+    volumes:
+      - app_storage:/var/www/html/storage
+    networks:
+      - amu_network
+
+  # WebSocket server running Laravel Reverb (Reuses the built PHP image)
+  reverb:
+    image: amu_app:latest
+    container_name: amu_reverb
+    restart: unless-stopped
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    depends_on:
+      - app
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    volumes:
+      - app_storage:/var/www/html/storage
+    networks:
+      - amu_network
+
+  # Queue worker service (Reuses the built PHP image)
+  queue:
+    image: amu_app:latest
+    container_name: amu_queue
+    restart: unless-stopped
+    command: php artisan queue:work --tries=3 --timeout=90
+    depends_on:
+      - app
+    env_file:
+      - .env
+    volumes:
+      - app_storage:/var/www/html/storage
+    networks:
+      - amu_network
+
+  # Nginx web server service (Builds the Nginx image with static assets)
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: webserver
+      args:
+        - VITE_REVERB_APP_KEY=${REVERB_APP_KEY:-}
+        - VITE_REVERB_HOST=${REVERB_HOST:-}
+        - VITE_REVERB_PORT=${REVERB_PORT:-}
+        - VITE_REVERB_SCHEME=${REVERB_SCHEME:-}
+    image: amu_nginx:latest
+    container_name: amu_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+      - reverb
+    volumes:
+      - app_storage:/var/www/html/storage
+    networks:
+      - amu_network
+
+volumes:
+  db_data:
+    driver: local
+  redis_data:
+    driver: local
+  app_storage:
+    driver: local
+
+networks:
+  amu_network:
+    driver: bridge

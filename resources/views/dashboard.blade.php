@@ -415,6 +415,55 @@
                     </div>
                 </div>
 
+                {{-- 1B. Organizational Footprint (new) --}}
+                <div class="space-y-6">
+                    <div class="flex items-center gap-3 px-2 text-slate-900">
+                        <div class="w-1.5 h-4 bg-slate-400 rounded-full"></div>
+                        <h3 class="text-xs font-black uppercase tracking-[0.3em]">Organizational Footprint</h3>
+                    </div>
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div onclick="window.location.href='{{ url('/schools') }}'" class="bg-white p-6 rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-slate-50 hover:border-[#c00000]/20 hover:shadow-xl transition-all duration-500 cursor-pointer group">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-11 h-11 bg-red-50 text-[#c00000] rounded-2xl flex items-center justify-center group-hover:bg-[#c00000] group-hover:text-white transition-all duration-500">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg>
+                                </div>
+                            </div>
+                            <p class="text-[9px] font-black text-slate-900 uppercase tracking-widest italic mb-1">Schools</p>
+                            <p class="text-3xl font-black tracking-tighter text-slate-900">{{ number_format($schoolsCount ?? 0) }}</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-slate-50 hover:border-[#c00000]/20 hover:shadow-xl transition-all duration-500 group">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-11 h-11 bg-red-50 text-[#c00000] rounded-2xl flex items-center justify-center group-hover:bg-[#c00000] group-hover:text-white transition-all duration-500">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21" /></svg>
+                                </div>
+                            </div>
+                            <p class="text-[9px] font-black text-slate-900 uppercase tracking-widest italic mb-1">Offices</p>
+                            <p class="text-3xl font-black tracking-tighter text-slate-900">{{ number_format($officesCount ?? 0) }}</p>
+                        </div>
+                        <div class="bg-white p-6 rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-slate-50 hover:border-[#c00000]/20 hover:shadow-xl transition-all duration-500 group">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-11 h-11 bg-red-50 text-[#c00000] rounded-2xl flex items-center justify-center group-hover:bg-[#c00000] group-hover:text-white transition-all duration-500">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+                                </div>
+                            </div>
+                            <p class="text-[9px] font-black text-slate-900 uppercase tracking-widest italic mb-1">Employees / Custodians</p>
+                            <p class="text-3xl font-black tracking-tighter text-slate-900">{{ number_format($employeesCount ?? 0) }}</p>
+                        </div>
+                        <div onclick="window.location.href='{{ url('/inventory-setup') }}'" class="bg-white p-6 rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-slate-50 hover:border-[#c00000]/20 hover:shadow-xl transition-all duration-500 cursor-pointer group">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-11 h-11 bg-red-50 text-[#c00000] rounded-2xl flex items-center justify-center group-hover:bg-[#c00000] group-hover:text-white transition-all duration-500">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" /></svg>
+                                </div>
+                            </div>
+                            <p class="text-[9px] font-black text-slate-900 uppercase tracking-widest italic mb-1">Buildings</p>
+                            <div class="flex items-baseline gap-2">
+                                <p class="text-3xl font-black tracking-tighter text-slate-900">{{ number_format($buildingsCount ?? 0) }}</p>
+                                <p class="text-[9px] font-black text-slate-400 uppercase">₱{{ number_format($buildingsValue ?? 0, 0) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- Row 2: Inventory Growth & Portfolio Analysis --}}
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 mt-8 items-stretch">
                     {{-- Total Inventory Growth - Gradient Area Chart --}}
@@ -623,6 +672,96 @@
                         </div>
                         @endforeach
                     </div>
+                </div>
+
+                {{-- 4A. Classification Breakdown (new) --}}
+                <div class="bg-white rounded-[3rem] p-8 shadow-[0_10px_30px_rgba(0,0,0,0.03)] border border-slate-50">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="w-1.5 h-4 bg-[#c00000] rounded-full shadow-[0_0_8px_rgba(192,0,0,0.4)]"></div>
+                        <h3 class="text-xs font-black text-slate-900 uppercase tracking-[0.3em]">Classification Breakdown</h3>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic ml-1">By value, all asset classifications</span>
+                    </div>
+                    @php $maxClassValue = collect($classificationBreakdown ?? [])->max('value') ?: 1; @endphp
+                    <div class="space-y-5">
+                        @forelse($classificationBreakdown ?? [] as $class)
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[10px] font-black text-slate-900 uppercase tracking-widest">{{ $class->name }}</span>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase">{{ number_format($class->qty) }} units</span>
+                                    <span class="text-xs font-black text-[#c00000]">₱{{ number_format($class->value, 2) }}</span>
+                                </div>
+                            </div>
+                            <div class="w-full bg-slate-50 h-2.5 rounded-full overflow-hidden shadow-inner">
+                                <div class="bg-[#c00000] h-full rounded-full transition-all duration-1000" style="width: {{ round(($class->value / $maxClassValue) * 100) }}%"></div>
+                            </div>
+                        </div>
+                        @empty
+                        <p class="text-[10px] font-bold text-slate-400 italic text-center py-8">No classification data available yet.</p>
+                        @endforelse
+                    </div>
+                </div>
+
+                {{-- 4B. Top Performing Schools & System Oversight (new) --}}
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {{-- Top 5 Schools by Asset Value --}}
+                    <div class="lg:col-span-2 bg-white rounded-[3rem] p-8 shadow-[0_10px_30px_rgba(0,0,0,0.03)] border border-slate-50">
+                        <div class="flex items-center gap-3 mb-8">
+                            <div class="w-1.5 h-4 bg-[#c00000] rounded-full shadow-[0_0_8px_rgba(192,0,0,0.4)]"></div>
+                            <h3 class="text-xs font-black text-slate-900 uppercase tracking-[0.3em]">Top Schools by Asset Value</h3>
+                        </div>
+                        <div class="space-y-3">
+                            @forelse($topSchools ?? [] as $index => $school)
+                            <div class="flex items-center justify-between p-4 rounded-2xl hover:bg-slate-50 transition-all border border-transparent hover:border-slate-100">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black italic {{ $index === 0 ? 'bg-[#c00000] text-white' : 'bg-slate-50 text-slate-500' }}">
+                                        {{ $index + 1 }}
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-black text-slate-900 uppercase leading-tight">{{ $school->name }}</p>
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{{ number_format($school->total_units) }} units assigned</p>
+                                    </div>
+                                </div>
+                                <p class="text-lg font-black text-[#c00000] tracking-tighter">₱{{ number_format($school->total_value, 2) }}</p>
+                            </div>
+                            @empty
+                            <p class="text-[10px] font-bold text-slate-400 italic text-center py-8">No assets have been assigned to schools yet.</p>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    {{-- System Oversight (super_admin only) --}}
+                    @if(auth()->user()->role === 'super_admin')
+                    <div class="bg-slate-900 rounded-[3rem] p-8 shadow-2xl text-white flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center gap-3 mb-8">
+                                <div class="w-1.5 h-4 bg-[#c00000] rounded-full shadow-[0_0_8px_rgba(192,0,0,0.6)]"></div>
+                                <h3 class="text-xs font-black uppercase tracking-[0.3em]">System Oversight</h3>
+                            </div>
+                            <div class="space-y-4">
+                                <div onclick="window.location.href='{{ url('/pending-registrations') }}'" class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10 hover:bg-white/10 transition-all cursor-pointer">
+                                    <div>
+                                        <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest italic">Pending Approvals</p>
+                                        <p class="text-3xl font-black tracking-tighter mt-1">{{ number_format($pendingRegistrationsCount ?? 0) }}</p>
+                                    </div>
+                                    <div class="w-11 h-11 bg-amber-500/10 text-amber-400 rounded-2xl flex items-center justify-center">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" /></svg>
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
+                                    <div>
+                                        <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest italic">Blocked Accounts</p>
+                                        <p class="text-3xl font-black tracking-tighter mt-1">{{ number_format($blockedAccountsCount ?? 0) }}</p>
+                                    </div>
+                                    <div class="w-11 h-11 bg-red-500/10 text-red-400 rounded-2xl flex items-center justify-center">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest italic mt-6">Visible to Super Admin only</p>
+                    </div>
+                    @endif
                 </div>
 
                 {{-- 5. Bottom Table Section --}}

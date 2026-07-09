@@ -999,13 +999,21 @@ class InventorySetupController extends Controller
                     ->where('asset_sources.id', '<=', $asset->asset_source_id)
                     ->count();
 
-                $eq = $asset->equipment ?: ($asset->asset_cost <= 49999 ? 'SEE' : 'PPE');
+                // Base type: SEE (semi-expendable) vs PPE (property, plant & equipment)
+                $baseType = $asset->equipment ?: ($asset->asset_cost <= 49999 ? 'SEE' : 'PPE');
                 $year = date('Y');
-                if ($eq === 'PPE') {
+
+                if ($baseType === 'PPE') {
+                    // PPE: unit cost > 49,999
+                    $label  = 'PPE';
                     $shCode = trim($asset->ppe_category_code ?? '0000');
                 } else {
+                    // SEE splits by unit cost into Low Value / High Value semi-expendable property
+                    // SPLV: unit cost <= 5,000 | SPHV: unit cost > 5,000 (and <= 49,999)
+                    $label  = ((float)$asset->asset_cost <= 5000) ? 'SPLV' : 'SPHV';
                     $shCode = trim($asset->see_category_code ?? '0000');
                 }
+
                 if (strlen($shCode) < 4) {
                     $shCode = str_pad($shCode, 4, '0', STR_PAD_LEFT);
                 }
@@ -1013,7 +1021,11 @@ class InventorySetupController extends Controller
                 $shCodePart2 = substr($shCode, 2, 2);
                 $orderStr = str_pad($order, 4, '0', STR_PAD_LEFT);
 
-                $asset->property_number = "{$eq} {$year}-{$shCodePart1}-{$shCodePart2}-{$orderStr}";
+                // Base property number: "{EQ} {YEAR}-{CODE_PART1}-{CODE_PART2}-{ORDER_NO}"
+                // The "-{school_id/office_id}" suffix is appended client-side (see
+                // assign-asset-step_blade.php) once a recipient is selected, since the
+                // recipient isn't known yet while the asset is still unassigned/in warehouse.
+                $asset->property_number = "{$label} {$year}-{$shCodePart1}-{$shCodePart2}-{$orderStr}";
             }
             return $asset;
         });

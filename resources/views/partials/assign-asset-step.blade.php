@@ -421,6 +421,7 @@
                             locResults: [],
                             
                             property_number: a.property_number || '',
+                            property_number_base: a.property_number || '',
                             serial_number: a.serial_number || '',
                             acquisition_date: a.acceptance_date || new Date().toISOString().split('T')[0]
                         }));
@@ -565,6 +566,13 @@
                     row.location = loc.location || 'Zamboanga City';
                     row.locSearch = loc.name || loc.global_id || '';
                     row.showLocDropdown = false;
+
+                    // Append the school_id (if a school) or office_id (if an office) to the
+                    // auto-generated property number: "{EQ} {YEAR}-{P1}-{P2}-{ORDER}-{school_id/office_id}"
+                    if (loc.global_id) {
+                        const base = row.property_number_base || row.property_number || '';
+                        row.property_number = base + '-' + loc.global_id;
+                    }
                 },
 
                 clearLocation(row) {
@@ -576,6 +584,9 @@
                     row.school_name = '';
                     row.location = '';
                     row.showLocDropdown = false;
+
+                    // Revert property number back to its auto-generated base (no location suffix)
+                    row.property_number = row.property_number_base || row.property_number;
                 },
 
                 openBulkAssignModal() {
@@ -825,6 +836,12 @@
                             asset.school_type = this.bulkData.school_type;
                             asset.school_name = this.bulkData.school_name;
                             asset.location = this.bulkData.location;
+
+                            // Append school_id/office_id to this row's property number
+                            if (this.bulkData.school_id) {
+                                const base = asset.property_number_base || asset.property_number || '';
+                                asset.property_number = base + '-' + this.bulkData.school_id;
+                            }
                         }
                         if (this.bulkData.acquisition_date) {
                             asset.acquisition_date = this.bulkData.acquisition_date;

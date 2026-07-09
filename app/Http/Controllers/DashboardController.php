@@ -169,6 +169,51 @@ class DashboardController extends Controller
         // Fetch active global notice
         $globalNotice = \App\Models\GlobalNotice::where('active', true)->latest()->first();
 
+        // 9. Classification Breakdown
+        $classificationBreakdown = DB::table('asset_sources as asrc')
+            ->join('items', 'asrc.item_id', '=', 'items.id')
+            ->join('categories as cat', 'items.category_id', '=', 'cat.id')
+            ->join('classifications as class', 'cat.classification_id', '=', 'class.id')
+            ->select(
+                'class.name',
+                DB::raw('SUM(asrc.quantity) as qty'),
+                DB::raw('SUM(asrc.quantity * asrc.asset_cost) as value')
+            )
+            ->groupBy('class.id', 'class.name')
+            ->get();
+
+        // 10. Top 5 Schools by Asset Value
+        $topSchools = DB::table('asset_assignments as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->leftJoin('employees as emp', 'ad.employee_id', '=', 'emp.id')
+            ->join('schools as s', function($join) {
+                $join->on('ad.school_id', '=', 's.id')
+                     ->orOn(function($q) {
+                         $q->whereNull('ad.school_id')
+                           ->whereColumn('emp.school_id', 's.id');
+                     });
+            })
+            ->select(
+                's.name',
+                DB::raw('SUM(asrc.quantity) as total_units'),
+                DB::raw('SUM(ad.acquisition_cost) as total_value')
+            )
+            ->groupBy('s.id', 's.name')
+            ->orderByDesc('total_value')
+            ->limit(5)
+            ->get();
+
+        // 11. System Oversight Counters
+        $pendingRegistrationsCount = DB::table('pending_registrations')->count();
+        $blockedAccountsCount = DB::table('blocked_accounts')->count();
+
+        // 12. Organizational Footprint Stats
+        $schoolsCount = DB::table('schools')->count();
+        $officesCount = DB::table('offices')->count();
+        $employeesCount = DB::table('employees')->count();
+        $buildingsCount = DB::table('building_records')->count();
+        $buildingsValue = DB::table('building_records')->sum('acquisition_cost');
+
         return view('dashboard', compact(
             'schools',
             'totalAssets',
@@ -186,7 +231,16 @@ class DashboardController extends Controller
             'categories',
             'items',
             'growthData',
-            'globalNotice'
+            'globalNotice',
+            'classificationBreakdown',
+            'topSchools',
+            'pendingRegistrationsCount',
+            'blockedAccountsCount',
+            'schoolsCount',
+            'officesCount',
+            'employeesCount',
+            'buildingsCount',
+            'buildingsValue'
         ));
     }
 
