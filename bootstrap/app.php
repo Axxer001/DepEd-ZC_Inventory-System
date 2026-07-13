@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureRole::class,
+            'main_system' => \App\Http\Middleware\EnsureMainSystem::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

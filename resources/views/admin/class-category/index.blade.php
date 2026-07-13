@@ -157,7 +157,7 @@
             </div>
 
             <div class="flex items-center gap-3">
-                @if(auth()->user()->isSuperAdmin())
+                @if(auth()->user()->isSuperAdmin() && auth()->user()->isMainSystem())
                 <button @click="showAddModal = true; addType = 'classification'" class="px-5 py-2.5 bg-deped text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-all shadow-sm flex items-center gap-2 active:scale-95">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                     Add Class / Category
@@ -207,7 +207,7 @@
                                 </td>
                                 <td class="xls-td text-right pr-6">
                                     <div class="flex items-center justify-end gap-3">
-                                        @if(auth()->user()->isSuperAdmin())
+                                        @if(auth()->user()->isSuperAdmin() && auth()->user()->isMainSystem())
                                         <button @click.prevent.stop="showEditModal = true; editType = 'classification'; editId = {{ $class->id }}; editName = '{{ addslashes($class->name) }}'" class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-deped dark:hover:text-red-400 transition-all active:scale-95" title="Edit Classification">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                         </button>
@@ -252,7 +252,7 @@
                                 </td>
                                 <td class="xls-td text-right pr-6">
                                     <div class="flex items-center justify-end gap-3">
-                                        @if(auth()->user()->isSuperAdmin())
+                                        @if(auth()->user()->isSuperAdmin() && auth()->user()->isMainSystem())
                                         <button @click.prevent.stop="showEditModal = true; editType = 'category'; editId = {{ $cat->id }}; editName = '{{ addslashes($cat->name) }}'; editSeeCode = '{{ addslashes($cat->see_category_code) }}'; editPpeCode = '{{ addslashes($cat->ppe_category_code) }}'; editClassificationId = '{{ $cat->classification_id }}'" class="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-deped dark:hover:text-red-400 transition-all active:scale-95" title="Edit Category">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                         </button>

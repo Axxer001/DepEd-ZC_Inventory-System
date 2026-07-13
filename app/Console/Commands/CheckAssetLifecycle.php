@@ -32,11 +32,20 @@ class CheckAssetLifecycle extends Command
 
         $thresholds = [50, 25, 10, 5, 1];
         $today = now()->startOfDay();
-        $admins = \App\Models\User::where('approved', true)->get();
-
         foreach ($assets as $asset) {
             $acceptanceDate = \Carbon\Carbon::parse($asset->acceptance_date)->startOfDay();
             $totalDays = $asset->estimated_useful_life * 365.25;
+
+            // Get all schools this batch is assigned to
+            $schoolIds = \Illuminate\Support\Facades\DB::table('asset_assignments')
+                ->where('asset_source_id', $asset->id)
+                ->pluck('school_id')
+                ->filter()
+                ->unique();
+
+            if ($schoolIds->isEmpty()) {
+                $schoolIds = collect([null]);
+            }
 
             foreach ($thresholds as $percent) {
                 $daysElapsedToThreshold = round($totalDays * (1 - ($percent / 100)));
@@ -49,7 +58,14 @@ class CheckAssetLifecycle extends Command
                         'message' => "Asset '{$asset->description}' has reached {$percent}% of its useful life.",
                         'detailed_message' => "The asset with Property Number '{$asset->property_number}' and Description '{$asset->description}' has {$percent}% ({$remainingDays} days) of its {$asset->estimated_useful_life} months useful life remaining."
                     ];
-                    foreach ($admins as $admin) {
+
+                    $recipients = collect();
+                    foreach ($schoolIds as $sid) {
+                        $recipients = $recipients->merge(\App\Models\User::getNotificationRecipients($sid));
+                    }
+                    $recipients = $recipients->unique('id');
+
+                    foreach ($recipients as $admin) {
                         $admin->notify(new \App\Notifications\AssetLifecycleNotification($dummyAsset));
                     }
                 }

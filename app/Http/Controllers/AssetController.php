@@ -308,13 +308,25 @@ class AssetController extends Controller
                 'e.last_name as custodian_last',
                 'e.position as custodian_position',
                 'e.employee_id as employee_id_code',
-                DB::raw('NULL as custodian_contact')
+                DB::raw('NULL as custodian_contact'),
+                'ad.created_at',
+                'ad.origin_system_type',
+                'ad.registered_by_school_id',
+                'ad.school_id'
             )
             ->where('ad.id', $id)
             ->first();
 
         if (!$asset) {
             abort(404, 'Asset not found');
+        }
+
+        $user = auth()->user();
+        if ($user && $user->isSchoolSystem()) {
+            $isOwnSchoolEmployee = $asset->employee_id && DB::table('employees')->where('id', $asset->employee_id)->where('school_id', $user->school_id)->exists();
+            if ($asset->school_id !== $user->school_id && !$isOwnSchoolEmployee) {
+                abort(403, 'Unauthorized action.');
+            }
         }
 
         $classifications = DB::table('classifications')->orderBy('name')->get();
@@ -574,7 +586,11 @@ class AssetController extends Controller
 
             $detailedMessage = "Edited {$qty} {$uom} {$propNoStr}{$itemName} assigned to {$empName}.";
 
-            $admins = \App\Models\User::where('approved', true)->get();
+            $schoolId = $asset->school_id;
+            if (!$schoolId && $asset->employee_id) {
+                $schoolId = DB::table('employees')->where('id', $asset->employee_id)->value('school_id');
+            }
+            $admins = \App\Models\User::getNotificationRecipients($schoolId);
             $dummyAsset = (object)[
                 'title' => 'Asset Updated',
                 'message' => 'An asset has been updated.',
@@ -608,6 +624,26 @@ class AssetController extends Controller
         $asset = DB::table('asset_assignments')->where('id', $id)->first();
         if (!$asset) {
             return back()->with('error', 'Asset not found');
+        }
+
+        $user = auth()->user();
+        if ($user && $user->isSchoolSystem()) {
+            if ($asset->school_id !== $user->school_id) {
+                $isOwnSchoolEmployee = $asset->employee_id && DB::table('employees')->where('id', $asset->employee_id)->where('school_id', $user->school_id)->exists();
+                if ($asset->school_id !== $user->school_id && !$isOwnSchoolEmployee) {
+                    abort(403, 'Unauthorized action.');
+                }
+            }
+
+            if (empty($validated['employee_id'])) {
+                return back()->with('error', 'School accounts must assign assets to an employee.');
+            }
+            $targetEmployee = DB::table('employees')->where('id', $validated['employee_id'])->first();
+            if (!$targetEmployee || $targetEmployee->school_id !== $user->school_id) {
+                return back()->with('error', 'Cannot transfer asset: employee must belong to your school.');
+            }
+            $validated['school_db_id'] = null;
+            $validated['is_office'] = null;
         }
 
         $transferId = DB::transaction(function () use ($id, $asset, $validated, $request) {
@@ -697,7 +733,20 @@ class AssetController extends Controller
             $propNoStr = $asset->property_number ? '[' . $asset->property_number . '] ' : '';
             $detailedMessage = "Transferred {$qty} {$uom} {$propNoStr}{$itemName} to {$toName}.";
 
-            $admins = \App\Models\User::where('approved', true)->get();
+            $schoolIds = collect([
+                $currentSchoolId,
+                $toSchoolId
+            ])->filter()->unique()->toArray();
+
+            $admins = collect();
+            foreach ($schoolIds as $sid) {
+                $admins = $admins->merge(\App\Models\User::getNotificationRecipients($sid));
+            }
+            if (empty($schoolIds)) {
+                $admins = $admins->merge(\App\Models\User::getNotificationRecipients(null));
+            }
+            $admins = $admins->unique('id');
+
             $dummyAsset = (object)[
                 'title' => 'Asset Transferred',
                 'message' => 'An asset has been transferred.',
@@ -803,7 +852,7 @@ class AssetController extends Controller
             $propNoStr = $asset->property_number ? '[' . $asset->property_number . '] ' : '';
             $detailedMessage = "Returned {$qty} {$uom} {$propNoStr}{$itemName} to AMU / Warehouse.";
 
-            $admins = \App\Models\User::where('approved', true)->get();
+            $admins = \App\Models\User::getNotificationRecipients($currentSchoolId);
             $dummyAsset = (object)[
                 'title' => 'Asset Returned',
                 'message' => 'An asset has been returned to AMU.',
@@ -854,6 +903,11 @@ class AssetController extends Controller
     {
         if (!Auth::check() || !Auth::user()->approved) {
             abort(403, 'Unauthorized action.');
+        }
+
+        $user = auth()->user();
+        if ($user && $user->isSchoolSystem()) {
+            abort(403, 'Unauthorized action. School accounts cannot return assets to supplier.');
         }
 
         $validated = $request->validate([
@@ -974,7 +1028,11 @@ class AssetController extends Controller
                 $detailedMessage .= " Repair expected by: " . \Carbon\Carbon::parse($validated['expected_return_date'])->format('M d, Y') . ".";
             }
 
-            $admins = \App\Models\User::where('approved', true)->get();
+            $schoolId = $asset->school_id;
+            if (!$schoolId && $asset->employee_id) {
+                $schoolId = DB::table('employees')->where('id', $asset->employee_id)->value('school_id');
+            }
+            $admins = \App\Models\User::getNotificationRecipients($schoolId);
             $dummyAsset = (object)[
                 'title'            => 'Asset Returned to Supplier',
                 'message'          => "An asset has been returned to its supplier: {$supName}.",
@@ -1110,5 +1168,57 @@ class AssetController extends Controller
             return back()->with('success', 'Document removed successfully!');
         }
         return back()->with('error', 'Document not found.');
+    }
+
+    public function destroy($id)
+    {
+        $assignment = \App\Models\AssetAssignment::findOrFail($id);
+        $user = auth()->user();
+
+        // Access check
+        if ($user->isSchoolSystem()) {
+            if ($assignment->school_id !== $user->school_id) {
+                $isOwnSchoolEmployee = $assignment->employee_id && DB::table('employees')->where('id', $assignment->employee_id)->where('school_id', $user->school_id)->exists();
+                if ($assignment->school_id !== $user->school_id && !$isOwnSchoolEmployee) {
+                    abort(403, 'Unauthorized action.');
+                }
+            }
+
+            // Must be self-registered
+            if ($assignment->origin_system_type !== 'school' || $assignment->registered_by_school_id !== $user->school_id) {
+                abort(403, 'Unauthorized action.');
+            }
+
+            // Limited deletion window: same-day only (created today)
+            if (!$assignment->created_at->isToday()) {
+                return back()->with('error', 'Same-day deletion window has expired for this asset.');
+            }
+
+            // Check if transferred
+            $hasTransfers = DB::table('asset_transfers')->where('asset_assignment_id', $assignment->id)->exists();
+            if ($hasTransfers) {
+                return back()->with('error', 'Cannot delete asset: asset has transfer history.');
+            }
+
+            // Check if serviced
+            $hasServices = DB::table('asset_services')->where('asset_assignment_id', $assignment->id)->exists();
+            if ($hasServices) {
+                return back()->with('error', 'Cannot delete asset: asset has repair/service history.');
+            }
+        }
+
+        $assignment->delete();
+
+        // Log the action to system_logs
+        DB::table('system_logs')->insert([
+            'user' => $user ? $user->name : 'System',
+            'action_type' => 'Delete',
+            'module' => 'Assets',
+            'activity' => "Asset assignment ID {$assignment->id} (Property: {$assignment->property_number}) was soft-deleted.",
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('assets.view')->with('success', 'Asset successfully archived.');
     }
 }

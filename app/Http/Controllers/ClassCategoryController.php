@@ -76,7 +76,7 @@ class ClassCategoryController extends Controller
 
     public function storeClassification(Request $request)
     {
-        if (Auth::user()->role !== 'super_admin') {
+        if (!Auth::user()->isAdmin() || !Auth::user()->isMainSystem()) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -91,7 +91,7 @@ class ClassCategoryController extends Controller
 
     public function storeCategory(Request $request)
     {
-        if (Auth::user()->role !== 'super_admin') {
+        if (!Auth::user()->isAdmin() || !Auth::user()->isMainSystem()) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -109,7 +109,7 @@ class ClassCategoryController extends Controller
 
     public function updateClassification(Request $request, $id)
     {
-        if (Auth::user()->role !== 'super_admin') {
+        if (!Auth::user()->isAdmin() || !Auth::user()->isMainSystem()) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -135,7 +135,7 @@ class ClassCategoryController extends Controller
 
     public function updateCategory(Request $request, $id)
     {
-        if (Auth::user()->role !== 'super_admin') {
+        if (!Auth::user()->isAdmin() || !Auth::user()->isMainSystem()) {
             abort(403, 'Unauthorized action.');
         }
 

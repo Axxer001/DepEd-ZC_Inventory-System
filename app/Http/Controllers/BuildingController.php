@@ -34,6 +34,10 @@ class BuildingController extends Controller
             abort(404, 'Building not found');
         }
 
+        if (auth()->check() && auth()->user()->isSchoolSystem() && $building->school_id !== auth()->user()->school_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $classifications = DB::table('building_classifications')->select('id', 'name')->orderBy('name')->get();
         $types = DB::table('building_types')->select('id', 'name')->orderBy('name')->get();
 
@@ -81,6 +85,10 @@ class BuildingController extends Controller
         $building = DB::table('building_records')->where('id', $id)->first();
         if (!$building) {
             return back()->with('error', 'Building not found');
+        }
+
+        if (auth()->user()->isSchoolSystem() && $building->school_id !== auth()->user()->school_id) {
+            abort(403, 'Unauthorized action.');
         }
 
         DB::transaction(function () use ($id, $building, $validated, $request) {
@@ -155,5 +163,41 @@ class BuildingController extends Controller
         });
 
         return back()->with('success', 'Building specifications updated successfully!');
+    }
+
+    public function destroy($id)
+    {
+        $building = BuildingRecord::findOrFail($id);
+        $user = auth()->user();
+
+        // Access check
+        if ($user->isSchoolSystem()) {
+            // Must belong to their own school
+            if ($building->school_id !== $user->school_id) {
+                abort(403, 'Unauthorized action.');
+            }
+            // Must be self-registered
+            if ($building->origin_system_type !== 'school' || $building->registered_by_school_id !== $user->school_id) {
+                abort(403, 'Unauthorized action.');
+            }
+            // Limited deletion window: same-day only (created today)
+            if (!$building->created_at->isToday()) {
+                return back()->with('error', 'Same-day deletion window has expired for this building.');
+            }
+        }
+
+        $building->delete();
+
+        // Log the action to system_logs
+        DB::table('system_logs')->insert([
+            'user' => $user ? $user->name : 'System',
+            'action_type' => 'Delete',
+            'module' => 'Buildings',
+            'activity' => "Building record ID {$building->id} was soft-deleted.",
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('register.building')->with('success', 'Building successfully archived.');
     }
 }

@@ -23,8 +23,9 @@ class UserManagementController extends Controller
         $pending  = PendingRegistration::orderByDesc('created_at')->get();
         $users    = User::where('approved', true)->orderBy('role')->orderBy('name')->get();
         $blocked  = BlockedAccount::orderByDesc('blocked_at')->get();
+        $schools  = \App\Models\School::orderBy('name')->get();
 
-        return view('admin.user-management', compact('pending', 'users', 'blocked'));
+        return view('admin.user-management', compact('pending', 'users', 'blocked', 'schools'));
     }
 
     /**
@@ -39,6 +40,11 @@ class UserManagementController extends Controller
         $request->validate([
             'role' => 'required|in:super_admin,admin,user',
         ]);
+
+        $pending = PendingRegistration::findOrFail($id);
+        if ($pending->system_type === 'school' && $request->role === 'super_admin') {
+            return back()->with('error', 'School system accounts cannot be assigned the Super Admin role.');
+        }
 
         $user = null;
         $pendingEmail = null;
@@ -68,6 +74,8 @@ class UserManagementController extends Controller
                 'password' => $pending->password ?? bcrypt(Str::random(32)),
                 'approved' => true,
                 'role'     => $request->role,
+                'system_type' => $pending->system_type ?? 'main',
+                'school_id' => $pending->system_type === 'school' ? $pending->school_id : null,
             ]);
 
             $dummyData = (object)[
@@ -141,6 +149,10 @@ class UserManagementController extends Controller
             return back()->with('error', 'You cannot change your own role.');
         }
 
+        if ($user->isSchoolSystem() && $request->role === 'super_admin') {
+            return back()->with('error', 'School system accounts cannot be assigned the Super Admin role.');
+        }
+
         $user->update(['role' => $request->role]);
 
         return back()->with('success', "Role updated for {$user->email}.");
@@ -197,5 +209,46 @@ class UserManagementController extends Controller
         $user->delete();
 
         return back()->with('success', "Account {$email} has been permanently deleted.");
+    }
+
+    /**
+     * Correct a user's system_type or school_id post-registration.
+     *
+     * Writes the change history to system_logs.
+     */
+    public function correctScope(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+
+        $request->validate([
+            'system_type' => 'required|in:main,school',
+            'school_id'   => 'required_if:system_type,school|nullable|exists:schools,id',
+        ]);
+
+        if ($request->system_type === 'school' && $user->role === 'super_admin') {
+            return back()->with('error', 'Super Admin accounts cannot be scoped to a school.');
+        }
+
+        $oldType = $user->system_type;
+        $oldSchoolId = $user->school_id;
+
+        $newType = $request->system_type;
+        $newSchoolId = $newType === 'school' ? $request->school_id : null;
+
+        $user->update([
+            'system_type' => $newType,
+            'school_id'   => $newSchoolId,
+        ]);
+
+        DB::table('system_logs')->insert([
+            'user'        => auth()->user()->name,
+            'activity'    => "Corrected scope of user {$user->email}: system_type from '{$oldType}' to '{$newType}', school_id from " . ($oldSchoolId ?? 'NULL') . " to " . ($newSchoolId ?? 'NULL'),
+            'module'      => 'User Management',
+            'action_type' => 'Update',
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+
+        return back()->with('success', "Scope for {$user->email} corrected successfully.");
     }
 }

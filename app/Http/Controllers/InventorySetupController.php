@@ -122,7 +122,7 @@ class InventorySetupController extends Controller
                 'updated_at' => now(),
             ]);
 
-            $admins = \App\Models\User::where('approved', true)->get();
+            $admins = \App\Models\User::getNotificationRecipients(null);
             $dummyAsset = (object)['description' => $validated['item_name']];
             foreach ($admins as $admin) {
                 $admin->notify(new \App\Notifications\AssetAddedNotification($dummyAsset));
@@ -350,7 +350,7 @@ class InventorySetupController extends Controller
                     $detailedMsg = implode('<br><br>', $addedDetails);
                 }
 
-                $admins = \App\Models\User::where('approved', true)->get();
+                $admins = \App\Models\User::getNotificationRecipients(null);
                 $dummyAsset = (object)[
                     'title' => 'Assets Registered',
                     'message' => "Successfully registered {$inserted} item(s).",
@@ -398,8 +398,15 @@ class InventorySetupController extends Controller
         DB::beginTransaction();
         try {
             foreach ($rows as $row) {
-                // We are registering unassigned buildings, so schoolId is always null initially.
                 $schoolId = null;
+                $originSystemType = 'main';
+                $registeredBySchoolId = null;
+                $user = auth()->user();
+                if ($user && $user->isSchoolSystem()) {
+                    $schoolId = $user->school_id;
+                    $originSystemType = 'school';
+                    $registeredBySchoolId = $user->school_id;
+                }
                 
                 // At least require an article or description to consider the row valid
                 $article = trim($row['article'] ?? '');
@@ -457,6 +464,8 @@ class InventorySetupController extends Controller
                     'appraised_value'   => $appraisedValue,
                     'appraisal_date'    => !empty($row['appraisal_date']) ? $row['appraisal_date'] : null,
                     'remarks'           => trim($row['remarks'] ?? '') ?: null,
+                    'origin_system_type' => $originSystemType,
+                    'registered_by_school_id' => $registeredBySchoolId,
                     'created_at'        => now(),
                     'updated_at'        => now(),
                 ]);
@@ -475,7 +484,7 @@ class InventorySetupController extends Controller
                     'updated_at'  => now(),
                 ]);
 
-                $admins = \App\Models\User::where('approved', true)->get();
+                $admins = \App\Models\User::getNotificationRecipients($schoolId);
                 $dummyAsset = (object)[
                     'title' => 'Buildings Registered',
                     'message' => "Successfully registered {$inserted} building(s).",
@@ -758,7 +767,8 @@ class InventorySetupController extends Controller
             ]);
 
             if ($updateCount > 0) {
-                $admins = \App\Models\User::where('approved', true)->get();
+                $schoolId = Auth::check() && Auth::user()->isSchoolSystem() ? Auth::user()->school_id : null;
+                $admins = \App\Models\User::getNotificationRecipients($schoolId);
                 $dummyAsset = (object)[
                     'title' => 'Bulk Edit Applied',
                     'message' => "Successfully updated {$updateCount} asset records.",
@@ -1046,6 +1056,18 @@ class InventorySetupController extends Controller
             'acquisition_date' => 'nullable|date',
         ]);
 
+        $user = auth()->user();
+        if ($user && $user->isSchoolSystem()) {
+            $targetEmployee = DB::table('employees')->where('id', $validated['employee_id'])->first();
+            if (!$targetEmployee || $targetEmployee->school_id !== $user->school_id) {
+                return response()->json(['success' => false, 'message' => 'Employee does not belong to your school.'], 403);
+            }
+            $assignment = DB::table('asset_assignments')->where('id', $validated['assignment_id'])->first();
+            if (!$assignment || ($assignment->school_id !== $user->school_id && (!DB::table('employees')->where('id', $assignment->employee_id)->where('school_id', $user->school_id)->exists()))) {
+                return response()->json(['success' => false, 'message' => 'Asset assignment does not belong to your school.'], 403);
+            }
+        }
+
         try {
             DB::beginTransaction();
 
@@ -1144,7 +1166,8 @@ class InventorySetupController extends Controller
                 'type' => 'asset_assigned'
             ];
 
-            $usersToNotify = \App\Models\User::where('approved', true)->get();
+            $schoolId = DB::table('employees')->where('id', $validated['employee_id'])->value('school_id');
+            $usersToNotify = \App\Models\User::getNotificationRecipients($schoolId);
             foreach ($usersToNotify as $user) {
                 $user->notify(new \App\Notifications\AssetAssignedNotification($notificationData));
             }
@@ -1177,6 +1200,30 @@ class InventorySetupController extends Controller
             'assignments.*.asset_cost'       => 'nullable',
             'assignments.*.quantity'         => 'nullable',
         ]);
+
+        $user = auth()->user();
+        if ($user && $user->isSchoolSystem()) {
+            foreach ($validated['assignments'] as $key => $data) {
+                // Ensure target assignment belongs to their school
+                $assignment = DB::table('asset_assignments')->where('id', $data['assignment_id'])->first();
+                if (!$assignment || ($assignment->school_id !== $user->school_id && (!DB::table('employees')->where('id', $assignment->employee_id)->where('school_id', $user->school_id)->exists()))) {
+                    return response()->json(['success' => false, 'message' => 'Asset assignment does not belong to your school.'], 403);
+                }
+
+                // Must specify employee_id, and employee must belong to their school
+                if (empty($data['employee_id'])) {
+                    return response()->json(['success' => false, 'message' => 'School accounts must assign assets to employees.'], 403);
+                }
+                $targetEmployee = DB::table('employees')->where('id', $data['employee_id'])->first();
+                if (!$targetEmployee || $targetEmployee->school_id !== $user->school_id) {
+                    return response()->json(['success' => false, 'message' => 'Employee must belong to your school.'], 403);
+                }
+
+                // Force school_db_id and is_office to be null for safety
+                $validated['assignments'][$key]['school_db_id'] = null;
+                $validated['assignments'][$key]['is_office'] = null;
+            }
+        }
 
         try {
             DB::beginTransaction();
@@ -1356,10 +1403,24 @@ class InventorySetupController extends Controller
             DB::commit();
 
             // Dispatch aggregated or individual notifications
-            $usersToNotify = \App\Models\User::where('approved', true)->get();
             foreach ($groupedNotification as $key => $group) {
                 $recipientName = $group['name'];
                 $itemCount = count($group['items']);
+
+                // Resolve school_id from recipient key
+                $schoolId = null;
+                $parts = explode('_', $key);
+                if (count($parts) === 2) {
+                    $recipientType = $parts[0];
+                    $recipientId = (int)$parts[1];
+                    if ($recipientType === 'school') {
+                        $schoolId = $recipientId;
+                    } elseif ($recipientType === 'employee') {
+                        $schoolId = DB::table('employees')->where('id', $recipientId)->value('school_id');
+                    }
+                }
+                
+                $usersToNotify = \App\Models\User::getNotificationRecipients($schoolId);
 
                 if ($itemCount > 10) {
                     $detailedList = [];

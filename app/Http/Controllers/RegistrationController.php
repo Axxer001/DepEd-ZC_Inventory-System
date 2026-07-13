@@ -25,6 +25,8 @@ class RegistrationController extends Controller
     {
         $request->validate([
             'email' => 'required|email|max:255',
+            'system_type' => 'required|in:main,school',
+            'school_id' => 'required_if:system_type,school|nullable|exists:schools,id',
             'password' => [
                 'required',
                 'string',
@@ -65,6 +67,8 @@ class RegistrationController extends Controller
             'email' => $email,
             'password' => $request->password,
             'token' => $token,
+            'system_type' => $request->system_type,
+            'school_id' => $request->system_type === 'school' ? $request->school_id : null,
             'expires_at' => now()->addHours(48),
         ]);
 
@@ -79,7 +83,10 @@ class RegistrationController extends Controller
             'detailed_message' => "User {$email} has registered and is awaiting admin approval."
         ];
         
-        $admins = User::where('approved', true)->where('role', 'super_admin')->get();
+        $admins = User::where('approved', true)
+            ->where('system_type', 'main')
+            ->whereIn('role', ['admin', 'super_admin'])
+            ->get();
         foreach ($admins as $admin) {
             $admin->notify(new \App\Notifications\NewUserRegistered($dummyUser));
         }
@@ -151,6 +158,8 @@ class RegistrationController extends Controller
                     'email'    => $email,
                     'password' => $pending->password ?? bcrypt(Str::random(32)),
                     'approved' => true,
+                    'system_type' => $pending->system_type ?? 'main',
+                    'school_id' => $pending->system_type === 'school' ? $pending->school_id : null,
                 ]);
 
                 $pending->delete();

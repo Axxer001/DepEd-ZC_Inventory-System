@@ -25,6 +25,7 @@ class ComprehensiveFeatureTest extends TestCase
             ->post('/register', [
                 'name' => 'John Doe',
                 'email' => 'john@example.com',
+                'system_type' => 'main',
                 'password' => 'Password123',
                 'password_confirmation' => 'Password123',
             ]);

@@ -33,6 +33,12 @@ class EmployeeController extends Controller
             'office_id' => 'nullable|exists:offices,id',
         ]);
 
+        $user = auth()->user();
+        if ($user && $user->isSchoolSystem()) {
+            $validated['school_id'] = $user->school_id;
+            $validated['office_id'] = null;
+        }
+
         $employee = Employee::create([
             'first_name' => $validated['first_name'],
             'middle_name' => $validated['middle_name'],
@@ -257,8 +263,13 @@ class EmployeeController extends Controller
             'date_of_birth' => 'nullable|date',
             'status' => 'required|string',
             'school_id' => 'nullable|exists:schools,id',
-            'office_id' => 'nullable|exists:offices,id',
         ]);
+
+        $user = auth()->user();
+        if ($user && $user->isSchoolSystem()) {
+            $validated['school_id'] = $user->school_id;
+            $validated['office_id'] = null;
+        }
 
         $changes = [];
         if ($employee->first_name !== $validated['first_name'] || $employee->last_name !== $validated['last_name']) {
@@ -315,6 +326,11 @@ class EmployeeController extends Controller
 
         if (!$custodian) {
             abort(404, 'Custodian not found');
+        }
+
+        $user = auth()->user();
+        if ($user && $user->isSchoolSystem() && $custodian->school_id !== $user->school_id) {
+            abort(403, 'Unauthorized action.');
         }
 
         $stats = DB::table('asset_assignments as ad')
@@ -702,5 +718,49 @@ class EmployeeController extends Controller
         }
 
         return redirect()->back()->with('error', 'Failed to upload photo.');
+    }
+
+    public function destroy($id)
+    {
+        $employee = Employee::findOrFail($id);
+        $user = auth()->user();
+
+        // Access check
+        if ($user->isSchoolSystem()) {
+            // Must belong to their own school
+            if ($employee->school_id !== $user->school_id) {
+                abort(403, 'Unauthorized action.');
+            }
+            // Limited deletion window: same-day only (created today)
+            if (!$employee->created_at->isToday()) {
+                return back()->with('error', 'Same-day deletion window has expired for this employee.');
+            }
+        }
+
+        // Check if employee is assigned to assets
+        $hasAssets = DB::table('asset_assignments')->where('employee_id', $employee->id)->whereNull('deleted_at')->exists();
+        if ($hasAssets) {
+            return back()->with('error', 'Cannot delete employee: employee has active asset assignments.');
+        }
+
+        $employee->delete();
+
+        // Log the action to system_logs and employee histories
+        DB::table('system_logs')->insert([
+            'user' => $user ? $user->name : 'System',
+            'action_type' => 'Delete',
+            'module' => 'Employees',
+            'activity' => "Employee {$employee->fullName} (ID: {$employee->employee_id}) was soft-deleted.",
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \App\Models\EmployeeHistory::create([
+            'employee_id' => $employee->id,
+            'action' => 'Deleted',
+            'description' => 'Employee record was soft-deleted.',
+        ]);
+
+        return back()->with('success', 'Employee successfully archived.');
     }
 }

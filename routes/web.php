@@ -33,7 +33,10 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-Route::get('/register', function () { return view('auth.register'); })->name('register');
+Route::get('/register', function () {
+    $schools = \App\Models\School::orderBy('name')->get();
+    return view('auth.register', compact('schools'));
+})->name('register');
 Route::post('/register', [RegistrationController::class, 'register'])->name('register.post');
 Route::get('/verify', [RegistrationController::class, 'verify'])->name('verify');
 Route::post('/otp/send', [RegistrationController::class, 'sendOtp'])->name('otp.send');
@@ -51,20 +54,14 @@ Route::middleware(['auth', 'role:super_admin'])->group(function () {
     Route::patch('/admin/users/{id}/block', [UserManagementController::class, 'blockUser'])->name('admin.users.block');
     Route::patch('/admin/users/{id}/unblock', [UserManagementController::class, 'unblock'])->name('admin.users.unblock');
     Route::delete('/admin/users/{id}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
-    
-    // Employee Management Actions (Super Admin Only)
-    Route::post('/admin/employees', [EmployeeController::class, 'store'])->name('admin.employees.store');
-    Route::post('/admin/employees/{id}/update', [EmployeeController::class, 'update'])->name('admin.employees.update');
-    Route::post('/admin/employee-management/store', [EmployeeController::class, 'store'])->name('admin.employee-management.store');
-    Route::post('/admin/employee-management/{id}/update', [EmployeeController::class, 'update'])->name('admin.employee-management.update');
-    
+    Route::post('/admin/users/{id}/correct-scope', [UserManagementController::class, 'correctScope'])->name('admin.users.correct-scope');
     // Source Management Actions (Super Admin Only)
-    Route::post('/admin/sources', [AcquisitionSourceController::class, 'store'])->name('admin.sources.store');
-    Route::post('/admin/sources/{id}/update', [AcquisitionSourceController::class, 'update'])->name('admin.sources.update');
+    Route::post('/admin/sources', [AcquisitionSourceController::class, 'store'])->name('admin.sources.store')->middleware('main_system');
+    Route::post('/admin/sources/{id}/update', [AcquisitionSourceController::class, 'update'])->name('admin.sources.update')->middleware('main_system');
 
     // Supplier Management Actions (Super Admin Only)
-    Route::post('/admin/suppliers', [SupplierController::class, 'store'])->name('admin.suppliers.store');
-    Route::post('/admin/suppliers/{id}/update', [SupplierController::class, 'update'])->name('admin.suppliers.update');
+    Route::post('/admin/suppliers', [SupplierController::class, 'store'])->name('admin.suppliers.store')->middleware('main_system');
+    Route::post('/admin/suppliers/{id}/update', [SupplierController::class, 'update'])->name('admin.suppliers.update')->middleware('main_system');
 });
 
 // --- Protected Admin Routes ---
@@ -74,14 +71,25 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/dashboard/growth-data', [DashboardController::class, 'getGrowthData'])->name('api.dashboard.growth_data');
     Route::post('/dashboard/quick-asset', [DashboardController::class, 'storeQuickAsset'])->name('inventory.dashboard.store')->middleware('role:super_admin,admin');
 
+    // --- Employee Management Actions ---
+    Route::post('/admin/employees', [EmployeeController::class, 'store'])->name('admin.employees.store')->middleware('role:super_admin,admin');
+    Route::post('/admin/employees/{id}/update', [EmployeeController::class, 'update'])->name('admin.employees.update')->middleware('role:super_admin,admin');
+    Route::post('/admin/employee-management/store', [EmployeeController::class, 'store'])->name('admin.employee-management.store')->middleware('role:super_admin,admin');
+    Route::post('/admin/employee-management/{id}/update', [EmployeeController::class, 'update'])->name('admin.employee-management.update')->middleware('role:super_admin,admin');
+    Route::delete('/admin/employees/{id}', [EmployeeController::class, 'destroy'])->name('admin.employees.destroy')->middleware('role:super_admin,admin');
+
+    // --- Soft Delete / Archive Actions ---
+    Route::delete('/assets/{id}', [AssetController::class, 'destroy'])->name('assets.destroy')->middleware('role:super_admin,admin');
+    Route::delete('/buildings/{id}', [BuildingController::class, 'destroy'])->name('buildings.destroy')->middleware('role:super_admin,admin');
+
     // --- Class & Category Feature ---
     Route::get('/admin/class-category', [\App\Http\Controllers\ClassCategoryController::class, 'index'])->name('admin.class-category.index');
     Route::get('/admin/classifications/{id}', [\App\Http\Controllers\ClassCategoryController::class, 'showClassification'])->name('admin.classifications.show');
     Route::get('/admin/categories/{id}', [\App\Http\Controllers\ClassCategoryController::class, 'showCategory'])->name('admin.categories.show');
-    Route::post('/admin/classifications', [\App\Http\Controllers\ClassCategoryController::class, 'storeClassification'])->name('admin.classifications.store');
-    Route::post('/admin/categories', [\App\Http\Controllers\ClassCategoryController::class, 'storeCategory'])->name('admin.categories.store');
-    Route::post('/admin/classifications/{id}/update', [\App\Http\Controllers\ClassCategoryController::class, 'updateClassification'])->name('admin.classifications.update');
-    Route::post('/admin/categories/{id}/update', [\App\Http\Controllers\ClassCategoryController::class, 'updateCategory'])->name('admin.categories.update');
+    Route::post('/admin/classifications', [\App\Http\Controllers\ClassCategoryController::class, 'storeClassification'])->name('admin.classifications.store')->middleware(['role:super_admin,admin', 'main_system']);
+    Route::post('/admin/categories', [\App\Http\Controllers\ClassCategoryController::class, 'storeCategory'])->name('admin.categories.store')->middleware(['role:super_admin,admin', 'main_system']);
+    Route::post('/admin/classifications/{id}/update', [\App\Http\Controllers\ClassCategoryController::class, 'updateClassification'])->name('admin.classifications.update')->middleware(['role:super_admin,admin', 'main_system']);
+    Route::post('/admin/categories/{id}/update', [\App\Http\Controllers\ClassCategoryController::class, 'updateCategory'])->name('admin.categories.update')->middleware(['role:super_admin,admin', 'main_system']);
 
     // --- Dark Mode Preference ---
     Route::post('/user/dark-mode', function (Request $request) {
@@ -229,12 +237,12 @@ Route::middleware('auth')->group(function () {
     // --- Schools Registry ---
     Route::get('/admin/schools', function () {
         return view('admin.schools');
-    })->name('admin.schools');
+    })->name('admin.schools')->middleware('main_system');
 
     // --- Offices Registry ---
     Route::get('/admin/offices', function () {
         return view('admin.offices');
-    })->name('admin.offices');
+    })->name('admin.offices')->middleware('main_system');
 
     // --- Sources Registry ---
     Route::get('/admin/sources', [AcquisitionSourceController::class, 'managementIndex'])->name('admin.sources');
@@ -272,7 +280,7 @@ Route::middleware('auth')->group(function () {
         } catch (\Exception $e) {
             return redirect()->route('admin.schools')->with('error', 'Failed to delete school.');
         }
-    })->name('admin.schools.destroy')->middleware('role:super_admin,admin');
+    })->name('admin.schools.destroy')->middleware(['role:super_admin,admin', 'main_system']);
 
     // --- System Logs ---
     Route::get('/admin/logs', function (Request $request) {

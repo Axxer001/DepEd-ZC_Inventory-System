@@ -140,7 +140,7 @@
         </div>{{-- /umFlash --}}
 
         {{-- Tabs --}}
-        <div x-data="{ tab: 'pending' }">
+        <div x-data="{ tab: 'pending', showCorrectModal: false, correctUser: { id: null, email: '', system_type: 'main', school_id: '' } }">
             <div class="flex gap-0 border-b border-slate-200 mb-6" id="umTabs">
                 <button @click="tab = 'pending'"
                         :class="tab === 'pending' ? 'tab-active' : 'text-slate-500 hover:text-slate-700'"
@@ -184,7 +184,20 @@
                                         {{ substr($reg->email, 0, 1) }}
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="text-sm font-bold text-slate-800 truncate">{{ $reg->email }}</p>
+                                        <div class="flex items-center gap-2">
+                                            <p class="text-sm font-bold text-slate-800 truncate">{{ $reg->email }}</p>
+                                            @if($reg->hasDomainMismatch())
+                                                <span class="px-2 py-0.5 bg-red-50 text-red-600 border border-red-200 rounded text-[9px] font-black animate-pulse uppercase tracking-wider shrink-0">
+                                                    ⚠️ Mismatch
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <p class="text-[11px] text-slate-500 font-medium">
+                                            Type: <span class="font-bold uppercase text-slate-600">{{ $reg->system_type }}</span>
+                                            @if($reg->system_type === 'school' && $reg->school)
+                                                • School: <span class="font-bold text-slate-600">{{ $reg->school->name }}</span>
+                                            @endif
+                                        </p>
                                         <p class="text-[11px] text-slate-400">Submitted {{ \Carbon\Carbon::parse($reg->created_at)->timezone('Asia/Manila')->diffForHumans() }}
                                             @if($reg->isExpired()) <span class="text-red-500 font-bold ml-1">• Expired</span> @endif
                                         </p>
@@ -265,12 +278,20 @@
                                                 @else bg-slate-100 text-slate-500 @endif">
                                                 {{ substr($u->name, 0, 1) }}
                                             </div>
-                                            <span class="font-semibold text-slate-800 text-sm">
-                                                {{ $u->name }}
-                                                @if($u->id === auth()->id())
-                                                    <span class="ml-1 text-[10px] text-slate-400 font-normal">(you)</span>
-                                                @endif
-                                            </span>
+                                            <div>
+                                                <span class="font-semibold text-slate-800 text-sm">
+                                                    {{ $u->name }}
+                                                    @if($u->id === auth()->id())
+                                                        <span class="ml-1 text-[10px] text-slate-400 font-normal">(you)</span>
+                                                    @endif
+                                                </span>
+                                                <div class="text-[10px] text-slate-400 font-medium">
+                                                    Scope: <span class="uppercase font-bold text-slate-500 text-[9px]">{{ $u->system_type }}</span>
+                                                    @if($u->system_type === 'school' && $u->school)
+                                                        • {{ $u->school->name }}
+                                                    @endif
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
                                     <td class="px-5 py-3.5 text-slate-500 text-xs">{{ $u->email }}</td>
@@ -303,6 +324,12 @@
                                     <td class="px-5 py-3.5">
                                         @if($u->id !== auth()->id())
                                         <div class="flex items-center justify-end gap-2">
+                                            {{-- Correct Scope --}}
+                                            <button type="button"
+                                                     @click="correctUser = { id: {{ $u->id }}, email: '{{ $u->email }}', system_type: '{{ $u->system_type }}', school_id: '{{ $u->school_id ?? '' }}' }; showCorrectModal = true"
+                                                     class="px-3 py-1.5 text-[11px] font-bold rounded-lg bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 border border-blue-200 transition-all">
+                                                 Correct
+                                             </button>
                                             {{-- Block --}}
                                             <form method="POST" action="{{ route('admin.users.block', $u->id) }}">
                                                 @csrf
@@ -383,6 +410,61 @@
                         </table>
                     </div>
                 @endif
+            </div>
+
+            <!-- ================= SCOPE CORRECTION MODAL ================= -->
+            <div x-show="showCorrectModal" 
+                 x-cloak 
+                 class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm transition-all"
+                 @keydown.escape.window="showCorrectModal = false">
+                <div class="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100"
+                     @click.away="showCorrectModal = false">
+                    <div class="h-1.5 bg-blue-600 w-full"></div>
+                    <div class="p-6 text-left">
+                        <h3 class="text-lg font-bold text-slate-800 mb-1">Correct Account Scope</h3>
+                        <p class="text-xs text-slate-400 mb-4" x-text="'Adjust system type or school for: ' + correctUser.email"></p>
+
+                        <form :action="'{{ url('/admin/users') }}/' + correctUser.id + '/correct-scope'" method="POST" class="space-y-4">
+                            @csrf
+                            
+                            <div class="space-y-2">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">System Type</label>
+                                <select name="system_type" 
+                                        x-model="correctUser.system_type"
+                                        required
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 font-semibold text-slate-700 text-sm">
+                                    <option value="main">Main System (SDO)</option>
+                                    <option value="school">School Account</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-2" x-show="correctUser.system_type === 'school'" x-cloak>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Select School</label>
+                                <select name="school_id" 
+                                        x-model="correctUser.school_id"
+                                        :required="correctUser.system_type === 'school'"
+                                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-300 font-semibold text-slate-700 text-sm">
+                                    <option value="">-- Choose a School --</option>
+                                    @foreach($schools as $school)
+                                        <option value="{{ $school->id }}">{{ $school->name }} ({{ $school->school_id }})</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="flex items-center justify-end gap-2 pt-2">
+                                <button type="button" 
+                                        @click="showCorrectModal = false" 
+                                        class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-colors">
+                                    Cancel
+                                </button>
+                                <button type="submit" 
+                                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-colors">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
             </div>
 
         </div>{{-- /x-data tabs --}}

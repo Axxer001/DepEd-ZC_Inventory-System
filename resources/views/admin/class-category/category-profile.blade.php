@@ -158,7 +158,7 @@
                 </div>
             </div>
             
-            @if(auth()->user()->isSuperAdmin())
+            @if(auth()->user()->isSuperAdmin() && auth()->user()->isMainSystem())
             <div class="flex items-center gap-3">
                 <button @click="showEditModal = true" class="px-5 py-2.5 bg-deped text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-all shadow-sm flex items-center gap-2 active:scale-95">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
@@ -277,7 +277,7 @@
         </div>
 
         {{-- Edit Category Modal --}}
-        @if(auth()->user()->isSuperAdmin())
+        @if(auth()->user()->isSuperAdmin() && auth()->user()->isMainSystem())
         <div x-show="showEditModal" class="fixed inset-0 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm z-[200] flex items-center justify-center p-4" x-cloak>
             <div @click.away="showEditModal = false" class="bg-white rounded-3xl border border-slate-200 dark:border-slate-700 shadow-2xl max-w-lg w-full overflow-hidden p-6 animate-fade transition-colors">
                 <div class="flex border-b border-slate-100 dark:border-slate-700 pb-3 mb-4">

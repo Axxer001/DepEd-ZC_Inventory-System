@@ -211,7 +211,11 @@ class AssetServiceController extends Controller
                 'detailed_message' => "Repair completed for {$propNo}{$itemName}. Returned to {$custName} ({$diffLabel}). Supplier: {$supName}.",
             ];
 
-            $admins = \App\Models\User::where('approved', true)->get();
+            $schoolId = $assignment ? $assignment->school_id : null;
+            if (!$schoolId && $custodian) {
+                $schoolId = $custodian->school_id;
+            }
+            $admins = \App\Models\User::getNotificationRecipients($schoolId);
             foreach ($admins as $admin) {
                 $admin->notify(new \App\Notifications\AssetReturnedNotification($dummyAsset));
             }
@@ -288,7 +292,8 @@ class AssetServiceController extends Controller
                 'detailed_message' => "Repair completed for {$propNo}{$itemName}. Returned to AMU ({$diffLabel}). Supplier: {$supName}.",
             ];
 
-            $admins = \App\Models\User::where('approved', true)->get();
+            $schoolId = $assignment ? $assignment->school_id : null;
+            $admins = \App\Models\User::getNotificationRecipients($schoolId);
             foreach ($admins as $admin) {
                 $admin->notify(new \App\Notifications\AssetReturnedNotification($dummyAsset));
             }

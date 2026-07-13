@@ -89,8 +89,14 @@ class AutoReturnBorrows extends Command
 
                 $detailedMessage = "Automatically returned {$qty} {$uom} {$propNoStr}{$itemName} from {$borrowerName} back to original custodian {$ownerName} (Borrow period expired).";
 
+                $assignment = DB::table('asset_assignments')->where('id', $borrow->asset_assignment_id)->first();
+                $schoolId = $assignment ? $assignment->school_id : null;
+                if (!$schoolId && $borrow->from_custodian_id) {
+                    $schoolId = DB::table('employees')->where('id', $borrow->from_custodian_id)->value('school_id');
+                }
+
                 /** @var \Illuminate\Database\Eloquent\Collection<\App\Models\User> $admins */
-                $admins = User::query()->where('approved', true)->get();
+                $admins = User::getNotificationRecipients($schoolId);
                 $notificationData = (object)[
                     'title' => 'Asset Auto-Returned',
                     'message' => 'A temporarily borrowed asset has been automatically returned.',

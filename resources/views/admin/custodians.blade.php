@@ -503,6 +503,12 @@
                         }
                     });
 
+                    @if(auth()->user()->isSchoolSystem())
+                        createSchoolTomSelect.setValue("{{ auth()->user()->school_id }}");
+                        createSchoolTomSelect.disable();
+                        createOfficeTomSelect.disable();
+                    @endif
+
                     createEmployeeModalLoaded = true;
                 } catch (e) {
                     console.error('Failed to load stations', e);

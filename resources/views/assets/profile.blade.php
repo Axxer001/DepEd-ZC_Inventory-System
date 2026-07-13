@@ -102,7 +102,32 @@
 
             {{-- Actions Menu --}}
             <div class="flex items-center gap-3 shrink-0" x-data="{ open: false }">
+                @php
+                    $canDelete = false;
+                    $user = auth()->user();
+                    if ($user && $user->isAdmin()) {
+                        if ($user->isMainSystem()) {
+                            $canDelete = true;
+                        } else {
+                            $createdToday = $asset->created_at ? \Carbon\Carbon::parse($asset->created_at)->isToday() : false;
+                            $isSelfRegistered = ($asset->origin_system_type === 'school' && $asset->registered_by_school_id === $user->school_id);
+                            $hasTransfersOrServices = DB::table('asset_transfers')->where('asset_assignment_id', $asset->id)->exists() 
+                                || DB::table('asset_services')->where('asset_assignment_id', $asset->id)->exists();
+                            $canDelete = $createdToday && $isSelfRegistered && !$hasTransfersOrServices;
+                        }
+                    }
+                @endphp
                 @if(auth()->check() && auth()->user()->isAdmin())
+                @if($canDelete)
+                <form action="{{ route('assets.destroy', $asset->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to archive/delete this asset? This action cannot be undone.');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="px-5 py-2.5 bg-red-50 border border-red-200 rounded-xl text-xs font-black text-red-600 uppercase tracking-widest hover:bg-red-600 hover:text-white hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group">
+                        <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Archive Asset
+                    </button>
+                </form>
+                @endif
                 <button @click="showEditModal = true" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 uppercase tracking-widest hover:border-deped hover:text-deped hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group">
                     <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                     Edit Asset
@@ -126,6 +151,7 @@
                         </button>
                         @endif
 
+                        @if(auth()->user()->isMainSystem())
                         @if(!($asset->is_in_source ?? false))
                         <button @click="showReturnSourceModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-orange-600 hover:pl-5 transition-all flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-6a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"></path></svg> Return to Supplier
@@ -134,6 +160,7 @@
                         <button disabled class="w-full text-left px-4 py-3 text-xs font-bold text-slate-400 cursor-not-allowed flex items-center gap-2" title="Asset is already at the acquisition source/supplier">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-6a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"></path></svg> Return to Supplier
                         </button>
+                        @endif
                         @endif
                     </div>
                 </div>

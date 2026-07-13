@@ -32,6 +32,8 @@
           passwordConf: '',
           showPw: false,
           showConfPw: false,
+          systemType: 'main',
+          schoolId: '',
 
           get isPasswordValid() {
               return this.password.length >= 8 && 
@@ -215,6 +217,32 @@
                         <div x-show="step === 2" x-transition.opacity.duration.300ms x-cloak class="w-full space-y-4">
 
                             <div class="space-y-4">
+                                {{-- System Type Dropdown --}}
+                                <div class="space-y-2">
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">System Type</label>
+                                    <select name="system_type" 
+                                            x-model="systemType"
+                                            required
+                                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus-ring-red transition-all duration-200 text-sm">
+                                        <option value="main">Main System (SDO)</option>
+                                        <option value="school">School Account</option>
+                                    </select>
+                                </div>
+
+                                {{-- School Selection --}}
+                                <div class="space-y-2" x-show="systemType === 'school'" x-cloak x-transition>
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Select School</label>
+                                    <select name="school_id" 
+                                            x-model="schoolId"
+                                            :required="systemType === 'school'"
+                                            class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus-ring-red transition-all duration-200 text-sm">
+                                        <option value="">-- Choose a School --</option>
+                                        @foreach($schools as $school)
+                                            <option value="{{ $school->id }}">{{ $school->name }} ({{ $school->school_id }})</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
                                 {{-- Password Field --}}
                                 <div class="space-y-2 relative w-full">
                                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">New Password</label>

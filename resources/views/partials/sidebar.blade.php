@@ -170,6 +170,7 @@
         </div>
 
 
+        @if(auth()->user()->isMainSystem())
         {{-- Schools Registry --}}
         <div class="relative group/navitem">
             @if(request()->routeIs('admin.schools'))
@@ -209,6 +210,7 @@
                 </a>
             @endif
         </div>
+        @endif
 
         {{-- Buildings Registry --}}
         <div class="relative group/navitem">

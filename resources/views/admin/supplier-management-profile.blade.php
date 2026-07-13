@@ -82,7 +82,7 @@
             </div>
 
             <div class="flex items-center gap-3 shrink-0">
-                @if(auth()->check() && auth()->user()->isSuperAdmin())
+                @if(auth()->check() && auth()->user()->isSuperAdmin() && auth()->user()->isMainSystem())
                 <button onclick="document.getElementById('editSupplierModal').classList.remove('hidden')" class="px-5 py-2.5 bg-red-700 text-white border border-red-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-800 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-md shadow-red-500/20 flex items-center gap-2 group">
                     <svg class="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.89 1.12l-2.828.941.941-2.828a4.5 4.5 0 011.12-1.89L16.862 4.487zM19.5 7.125L16.862 4.487"/></svg>
                     Edit Supplier
