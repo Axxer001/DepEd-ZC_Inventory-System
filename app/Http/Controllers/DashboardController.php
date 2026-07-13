@@ -3,256 +3,248 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $schools = DB::table('schools')
-            ->join('districts', 'schools.district_id', '=', 'districts.id')
-            ->select('schools.*', 'districts.quadrant_id')
-            ->orderBy('name')
-            ->get();
+        // Issue 3 — Dashboard stats caching.
+        // All expensive aggregate queries are cached for 60 seconds.
+        // Cache key is scoped to 'main' — school-scoped keys (dashboard:school:{id}:stats)
+        // will be added when the multi-tenant school dashboard is implemented.
+        $stats = Cache::remember('dashboard:main:stats', 60, function () {
+            $schools = DB::table('schools')
+                ->join('districts', 'schools.district_id', '=', 'districts.id')
+                ->select('schools.*', 'districts.quadrant_id')
+                ->orderBy('name')
+                ->get();
 
-        // 1. Total Assets Pool (Inventory Base)
-        $itemPool = DB::table('asset_sources')->sum('quantity');
-        $totalAssets = $itemPool;
+            // 1. Total Assets Pool (Inventory Base)
+            $itemPool    = DB::table('asset_sources')->sum('quantity');
+            $totalAssets = $itemPool;
 
-        // 2. Distributed Assets (What is currently in schools/offices)
-        $distributedCount = DB::table('asset_assignments')
-            ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
-            ->where(function($q) {
-                $q->whereNotNull('asset_assignments.employee_id')
-                  ->orWhereNotNull('asset_assignments.school_id')
-                  ->orWhereNotNull('asset_assignments.office_id');
-            })
-            ->sum('asset_sources.quantity');
+            // 2. Distributed Assets (What is currently in schools/offices)
+            $distributedCount = DB::table('asset_assignments')
+                ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+                ->where(function ($q) {
+                    $q->whereNotNull('asset_assignments.employee_id')
+                      ->orWhereNotNull('asset_assignments.school_id')
+                      ->orWhereNotNull('asset_assignments.office_id');
+                })
+                ->sum('asset_sources.quantity');
 
-        // 3. Total Asset Value
-        $itemsValue = DB::table('asset_sources')->sum(DB::raw('quantity * asset_cost'));
-        $totalAmount = $itemsValue;
+            // 3. Total Asset Value
+            $itemsValue  = DB::table('asset_sources')->sum(DB::raw('quantity * asset_cost'));
+            $totalAmount = $itemsValue;
 
-        // 4. Asset Source Portfolio (Dynamic Acquisition Sources)
-        $assetSources = DB::table('asset_sources')
-            ->join('acquisition_sources', 'asset_sources.acquisition_source_id', '=', 'acquisition_sources.id')
-            ->select(
-                'acquisition_sources.name as title',
-                DB::raw('SUM(asset_sources.quantity) as qty'),
-                DB::raw('SUM(asset_sources.asset_cost * asset_sources.quantity) as value')
-            )
-            ->groupBy('acquisition_sources.name')
-            ->get()
-            ->map(function($src) {
-                // Assign a generic image based on name or default
-                $name = strtolower($src->title);
-                $src->image = 'central.png';
-                if (str_contains($name, 'donate')) $src->image = 'donated.png';
-                elseif (str_contains($name, 'transfer')) $src->image = 'transferred.png';
-                elseif (str_contains($name, 'region')) $src->image = 'regional.png';
-                
-                // Format title for UI
-                $src->title = strtoupper($src->title) . ' ASSETS';
-                return (array)$src;
-            })
-            ->toArray();
+            // 4. Asset Source Portfolio (Dynamic Acquisition Sources)
+            $assetSources = DB::table('asset_sources')
+                ->join('acquisition_sources', 'asset_sources.acquisition_source_id', '=', 'acquisition_sources.id')
+                ->select(
+                    'acquisition_sources.name as title',
+                    DB::raw('SUM(asset_sources.quantity) as qty'),
+                    DB::raw('SUM(asset_sources.asset_cost * asset_sources.quantity) as value')
+                )
+                ->groupBy('acquisition_sources.name')
+                ->get()
+                ->map(function ($src) {
+                    $name = strtolower($src->title);
+                    $src->image = 'central.png';
+                    if (str_contains($name, 'donate')) $src->image = 'donated.png';
+                    elseif (str_contains($name, 'transfer')) $src->image = 'transferred.png';
+                    elseif (str_contains($name, 'region')) $src->image = 'regional.png';
+                    $src->title = strtoupper($src->title) . ' ASSETS';
+                    return (array) $src;
+                })
+                ->toArray();
 
-        // 5. Per-Quadrant Totals
-        $quadrantStats = DB::table('quadrants')
-            ->select('id')
-            ->get()
-            ->mapWithKeys(function($q) {
-                $itemId = $q->id;
-                
-                $itemData = DB::table('asset_assignments as ad')
-                    ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
-                    ->leftJoin('employees as c', 'ad.employee_id', '=', 'c.id')
-                    ->leftJoin('schools as s', function($join) {
-                        $join->on('ad.school_id', '=', 's.id')
-                             ->orOn('c.school_id', '=', 's.id');
-                    })
-                    ->join('districts as d', 's.district_id', '=', 'd.id')
-                    ->where('d.quadrant_id', $itemId)
-                    ->select(
-                        DB::raw('SUM(asrc.quantity) as qty'),
-                        DB::raw('SUM(ad.acquisition_cost) as value')
-                    )
-                    ->first();
+            // 5. Per-Quadrant Totals
+            $quadrantStats = DB::table('quadrants')
+                ->select('id')
+                ->get()
+                ->mapWithKeys(function ($q) {
+                    $itemId   = $q->id;
+                    $itemData = DB::table('asset_assignments as ad')
+                        ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+                        ->leftJoin('employees as c', 'ad.employee_id', '=', 'c.id')
+                        ->leftJoin('schools as s', function ($join) {
+                            $join->on('ad.school_id', '=', 's.id')
+                                 ->orOn('c.school_id', '=', 's.id');
+                        })
+                        ->join('districts as d', 's.district_id', '=', 'd.id')
+                        ->where('d.quadrant_id', $itemId)
+                        ->select(
+                            DB::raw('SUM(asrc.quantity) as qty'),
+                            DB::raw('SUM(ad.acquisition_cost) as value')
+                        )
+                        ->first();
+                    return [$itemId => [
+                        'qty'   => ($itemData->qty ?? 0),
+                        'value' => ($itemData->value ?? 0),
+                    ]];
+                })
+                ->toArray();
 
-                return [$itemId => [
-                    'qty' => ($itemData->qty ?? 0),
-                    'value' => ($itemData->value ?? 0)
-                ]];
-            })
-            ->toArray();
+            // 6. Recent Transaction Logs
+            $recentLogs = DB::table('asset_assignments as ad')
+                ->leftJoin('employees as c', 'ad.employee_id', '=', 'c.id')
+                ->leftJoin('offices as o_cus', 'c.office_id', '=', 'o_cus.id')
+                ->leftJoin('schools as s_cus', 'c.school_id', '=', 's_cus.id')
+                ->leftJoin('offices as o_dir', 'ad.office_id', '=', 'o_dir.id')
+                ->leftJoin('schools as s_dir', 'ad.school_id', '=', 's_dir.id')
+                ->select(
+                    'ad.id',
+                    DB::raw('COALESCE(s_dir.name, o_dir.name, s_cus.name, o_cus.name, "Warehouse") as school'),
+                    'ad.acquisition_cost as value',
+                    'ad.created_at as timestamp'
+                )
+                ->orderByDesc('ad.created_at')
+                ->limit(10)
+                ->get()
+                ->map(function ($log) {
+                    $dt = \Carbon\Carbon::parse($log->timestamp);
+                    $log->timestamp = $dt->format('M d, Y | h:i A');
+                    $log->qty   = 1;
+                    $log->year  = $dt->year;
+                    $log->month = $dt->month;
+                    return $log;
+                });
 
-        // 6. Recent Transaction Logs
-        $recentLogs = DB::table('asset_assignments as ad')
-            ->leftJoin('employees as c', 'ad.employee_id', '=', 'c.id')
-            ->leftJoin('offices as o_cus', 'c.office_id', '=', 'o_cus.id')
-            ->leftJoin('schools as s_cus', 'c.school_id', '=', 's_cus.id')
-            ->leftJoin('offices as o_dir', 'ad.office_id', '=', 'o_dir.id')
-            ->leftJoin('schools as s_dir', 'ad.school_id', '=', 's_dir.id')
-            ->select(
-                'ad.id',
-                DB::raw('COALESCE(s_dir.name, o_dir.name, s_cus.name, o_cus.name, "Warehouse") as school'),
-                'ad.acquisition_cost as value',
-                'ad.created_at as timestamp'
-            )
-            ->orderByDesc('ad.created_at')
-            ->limit(10)
-            ->get()
-            ->map(function($log) {
-                $dt = \Carbon\Carbon::parse($log->timestamp);
-                $log->timestamp = $dt->format('M d, Y | h:i A');
-                $log->qty = 1;
-                $log->year = $dt->year;
-                $log->month = $dt->month;
-                return $log;
-            });
+            // 7. Category Distribution & Values
+            $ppeStats     = DB::table('asset_sources')->where('asset_cost', '>=', 50000)->select(DB::raw('SUM(quantity) as qty'), DB::raw('SUM(quantity * asset_cost) as value'))->first();
+            $semiExpStats = DB::table('asset_sources')->where('asset_cost', '<', 50000)->select(DB::raw('SUM(quantity) as qty'), DB::raw('SUM(quantity * asset_cost) as value'))->first();
 
-        // 7. Category Distribution & Values (Chart Data & Filters)
-        $ppeStats = DB::table('asset_sources')->where('asset_cost', '>=', 50000)->select(DB::raw('SUM(quantity) as qty'), DB::raw('SUM(quantity * asset_cost) as value'))->first();
-        $semiExpStats = DB::table('asset_sources')->where('asset_cost', '<', 50000)->select(DB::raw('SUM(quantity) as qty'), DB::raw('SUM(quantity * asset_cost) as value'))->first();
-        
-        $ppeCount = $ppeStats->qty ?? 0;
-        $ppeValue = $ppeStats->value ?? 0;
-        $semiExpCount = $semiExpStats->qty ?? 0;
-        $semiExpValue = $semiExpStats->value ?? 0;
-        
-        $categoryData = [
-            'ppe' => $ppeCount,
-            'semi_exp' => $semiExpCount
-        ];
+            $ppeCount     = $ppeStats->qty ?? 0;
+            $ppeValue     = $ppeStats->value ?? 0;
+            $semiExpCount = $semiExpStats->qty ?? 0;
+            $semiExpValue = $semiExpStats->value ?? 0;
 
-        $totalForPercent = array_sum($categoryData);
-        $categoryPercents = [];
-        foreach ($categoryData as $key => $val) {
-            $categoryPercents[$key] = $totalForPercent > 0 ? round(($val / $totalForPercent) * 100) : 0;
-        }
+            $categoryData = ['ppe' => $ppeCount, 'semi_exp' => $semiExpCount];
 
-        $filterValues = [
-            'Overall' => $totalAmount,
-            'PPE' => $ppeValue,
-            'SemiExpendable' => $semiExpValue
-        ];
-
-        // Dynamically calculate asset condition summary based on database values
-        $conditions = DB::table('asset_sources')
-            ->select('condition', DB::raw('SUM(quantity) as qty'))
-            ->groupBy('condition')
-            ->get();
-
-        $serviceableCount = 0;
-        $unserviceableCount = 0;
-        $forRepairCount = 0;
-
-        foreach ($conditions as $c) {
-            $cond = strtolower(trim($c->condition ?? ''));
-            if ($cond === 'good condition' || $cond === 'serviceable') {
-                $serviceableCount += $c->qty;
-            } elseif ($cond === 'needs repair' || $cond === 'for repair') {
-                $forRepairCount += $c->qty;
-            } elseif ($cond === 'unserviceable') {
-                $unserviceableCount += $c->qty;
-            } else {
-                $serviceableCount += $c->qty;
+            $totalForPercent  = array_sum($categoryData);
+            $categoryPercents = [];
+            foreach ($categoryData as $key => $val) {
+                $categoryPercents[$key] = $totalForPercent > 0 ? round(($val / $totalForPercent) * 100) : 0;
             }
-        }
 
-        $categories = DB::table('categories')->orderBy('name')->get();
-        $items = DB::table('items')->orderBy('name')->get();
+            $filterValues = [
+                'Overall'        => $totalAmount,
+                'PPE'            => $ppeValue,
+                'SemiExpendable' => $semiExpValue,
+            ];
 
-        // 8. Default Growth Data (5-Year Intervals)
+            // Asset condition summary
+            $conditions = DB::table('asset_sources')
+                ->select('condition', DB::raw('SUM(quantity) as qty'))
+                ->groupBy('condition')
+                ->get();
+
+            $serviceableCount   = 0;
+            $unserviceableCount = 0;
+            $forRepairCount     = 0;
+
+            foreach ($conditions as $c) {
+                $cond = strtolower(trim($c->condition ?? ''));
+                if ($cond === 'good condition' || $cond === 'serviceable') {
+                    $serviceableCount += $c->qty;
+                } elseif ($cond === 'needs repair' || $cond === 'for repair') {
+                    $forRepairCount += $c->qty;
+                } elseif ($cond === 'unserviceable') {
+                    $unserviceableCount += $c->qty;
+                } else {
+                    $serviceableCount += $c->qty;
+                }
+            }
+
+            $categories = DB::table('categories')->orderBy('name')->get();
+            $items      = DB::table('items')->orderBy('name')->get();
+
+            // 9. Classification Breakdown
+            $classificationBreakdown = DB::table('asset_sources as asrc')
+                ->join('items', 'asrc.item_id', '=', 'items.id')
+                ->join('categories as cat', 'items.category_id', '=', 'cat.id')
+                ->join('classifications as class', 'cat.classification_id', '=', 'class.id')
+                ->select(
+                    'class.name',
+                    DB::raw('SUM(asrc.quantity) as qty'),
+                    DB::raw('SUM(asrc.quantity * asrc.asset_cost) as value')
+                )
+                ->groupBy('class.id', 'class.name')
+                ->get();
+
+            // 10. Top 5 Schools by Asset Value
+            $topSchools = DB::table('asset_assignments as ad')
+                ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+                ->leftJoin('employees as emp', 'ad.employee_id', '=', 'emp.id')
+                ->join('schools as s', function ($join) {
+                    $join->on('ad.school_id', '=', 's.id')
+                         ->orOn(function ($q) {
+                             $q->whereNull('ad.school_id')
+                               ->whereColumn('emp.school_id', 's.id');
+                         });
+                })
+                ->select(
+                    's.name',
+                    DB::raw('SUM(asrc.quantity) as total_units'),
+                    DB::raw('SUM(ad.acquisition_cost) as total_value')
+                )
+                ->groupBy('s.id', 's.name')
+                ->orderByDesc('total_value')
+                ->limit(5)
+                ->get();
+
+            // 11. System Oversight Counters
+            $pendingRegistrationsCount = DB::table('pending_registrations')->count();
+            $blockedAccountsCount      = DB::table('blocked_accounts')->count();
+
+            // 12. Organizational Footprint Stats
+            $schoolsCount   = DB::table('schools')->count();
+            $officesCount   = DB::table('offices')->count();
+            $employeesCount = DB::table('employees')->count();
+            $buildingsCount = DB::table('building_records')->count();
+            $buildingsValue = DB::table('building_records')->sum('acquisition_cost');
+
+            return compact(
+                'schools', 'totalAssets', 'distributedCount', 'totalAmount',
+                'serviceableCount', 'unserviceableCount', 'forRepairCount',
+                'assetSources', 'quadrantStats', 'recentLogs',
+                'categoryData', 'categoryPercents', 'filterValues',
+                'categories', 'items', 'classificationBreakdown', 'topSchools',
+                'pendingRegistrationsCount', 'blockedAccountsCount',
+                'schoolsCount', 'officesCount', 'employeesCount',
+                'buildingsCount', 'buildingsValue'
+            );
+        });
+
+        // Growth data is not included in the main stats cache because it accepts
+        // dynamic mode/value parameters via the API endpoint below.
         $growthData = $this->calculateGrowthData('gap', 5);
 
-        // Fetch active global notice
+        // Global notice is intentionally NOT cached (admins expect changes to show instantly)
         $globalNotice = \App\Models\GlobalNotice::where('active', true)->latest()->first();
 
-        // 9. Classification Breakdown
-        $classificationBreakdown = DB::table('asset_sources as asrc')
-            ->join('items', 'asrc.item_id', '=', 'items.id')
-            ->join('categories as cat', 'items.category_id', '=', 'cat.id')
-            ->join('classifications as class', 'cat.classification_id', '=', 'class.id')
-            ->select(
-                'class.name',
-                DB::raw('SUM(asrc.quantity) as qty'),
-                DB::raw('SUM(asrc.quantity * asrc.asset_cost) as value')
-            )
-            ->groupBy('class.id', 'class.name')
-            ->get();
-
-        // 10. Top 5 Schools by Asset Value
-        $topSchools = DB::table('asset_assignments as ad')
-            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
-            ->leftJoin('employees as emp', 'ad.employee_id', '=', 'emp.id')
-            ->join('schools as s', function($join) {
-                $join->on('ad.school_id', '=', 's.id')
-                     ->orOn(function($q) {
-                         $q->whereNull('ad.school_id')
-                           ->whereColumn('emp.school_id', 's.id');
-                     });
-            })
-            ->select(
-                's.name',
-                DB::raw('SUM(asrc.quantity) as total_units'),
-                DB::raw('SUM(ad.acquisition_cost) as total_value')
-            )
-            ->groupBy('s.id', 's.name')
-            ->orderByDesc('total_value')
-            ->limit(5)
-            ->get();
-
-        // 11. System Oversight Counters
-        $pendingRegistrationsCount = DB::table('pending_registrations')->count();
-        $blockedAccountsCount = DB::table('blocked_accounts')->count();
-
-        // 12. Organizational Footprint Stats
-        $schoolsCount = DB::table('schools')->count();
-        $officesCount = DB::table('offices')->count();
-        $employeesCount = DB::table('employees')->count();
-        $buildingsCount = DB::table('building_records')->count();
-        $buildingsValue = DB::table('building_records')->sum('acquisition_cost');
-
-        return view('dashboard', compact(
-            'schools',
-            'totalAssets',
-            'distributedCount',
-            'totalAmount',
-            'serviceableCount',
-            'unserviceableCount',
-            'forRepairCount',
-            'assetSources',
-            'quadrantStats',
-            'recentLogs',
-            'categoryData',
-            'categoryPercents',
-            'filterValues',
-            'categories',
-            'items',
-            'growthData',
-            'globalNotice',
-            'classificationBreakdown',
-            'topSchools',
-            'pendingRegistrationsCount',
-            'blockedAccountsCount',
-            'schoolsCount',
-            'officesCount',
-            'employeesCount',
-            'buildingsCount',
-            'buildingsValue'
-        ));
+        return view('dashboard', array_merge($stats, compact('growthData', 'globalNotice')));
     }
 
     /**
-     * API Endpoint for dynamic growth data
+     * API Endpoint for dynamic growth data.
+     *
+     * Cached per mode+value combination for 60 seconds.
      */
     public function getGrowthData(Request $request)
     {
-        $mode = $request->input('mode', 'gap');
-        $value = (int)$request->input('value', 5);
-        
-        return response()->json($this->calculateGrowthData($mode, $value));
+        $mode  = $request->input('mode', 'gap');
+        $value = (int) $request->input('value', 5);
+
+        // Cache key per mode/value pair so different chart views are cached independently
+        $data = Cache::remember("dashboard:main:growth:{$mode}:{$value}", 60, function () use ($mode, $value) {
+            return $this->calculateGrowthData($mode, $value);
+        });
+
+        return response()->json($data);
     }
 
     private function calculateGrowthData($mode, $value)

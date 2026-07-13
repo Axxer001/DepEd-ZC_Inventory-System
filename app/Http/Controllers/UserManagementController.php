@@ -12,6 +12,7 @@ use Illuminate\Support\Str;
 use App\Mail\RegistrationApproved;
 use App\Mail\RegistrationRejected;
 
+
 class UserManagementController extends Controller
 {
     /**
@@ -28,6 +29,10 @@ class UserManagementController extends Controller
 
     /**
      * Approve a pending registration and assign a role.
+     *
+     * Uses DB::transaction() + lockForUpdate() to prevent race conditions when
+     * two super-admins click approve simultaneously — the second request will
+     * see status='approved' inside the lock and exit cleanly.
      */
     public function approve(Request $request, $id)
     {
@@ -35,45 +40,83 @@ class UserManagementController extends Controller
             'role' => 'required|in:super_admin,admin,user',
         ]);
 
-        $pending = PendingRegistration::findOrFail($id);
+        $user = null;
+        $pendingEmail = null;
 
-        if ($pending->isExpired()) {
+        DB::transaction(function () use ($request, $id, &$user, &$pendingEmail) {
+            // Lock the row — second concurrent request blocks here until we commit
+            $pending = PendingRegistration::lockForUpdate()->findOrFail($id);
+
+            // Idempotency guard — already processed by a concurrent request
+            if ($pending->status !== 'pending') {
+                return;
+            }
+
+            if ($pending->isExpired()) {
+                $pending->update(['status' => 'rejected']);
+                $pending->delete();
+                return;
+            }
+
+            // Mark as approved atomically before creating the user
+            $pending->update(['status' => 'approved']);
+            $pendingEmail = $pending->email;
+
+            $user = User::create([
+                'name'     => Str::before($pending->email, '@'),
+                'email'    => $pending->email,
+                'password' => $pending->password ?? bcrypt(Str::random(32)),
+                'approved' => true,
+                'role'     => $request->role,
+            ]);
+
+            $dummyData = (object)[
+                'title' => 'Account Approved',
+                'message' => 'Your account has been approved by the administrator.',
+                'detailed_message' => "Your account ({$user->email}) has been approved with the role of: {$user->role}. You can now login and access the system."
+            ];
+            $user->notify(new \App\Notifications\AccountApprovedNotification($dummyData));
+
             $pending->delete();
-            return back()->with('error', "Registration for {$pending->email} has expired.");
+        });
+
+        if (!$user || !$pendingEmail) {
+            return back()->with('error', 'This registration has already been processed or has expired.');
         }
 
-        $user = User::create([
-            'name'     => Str::before($pending->email, '@'),
-            'email'    => $pending->email,
-            'password' => $pending->password ?? bcrypt(Str::random(32)),
-            'approved' => true,
-            'role'     => $request->role,
-        ]);
-
-        $dummyData = (object)[
-            'title' => 'Account Approved',
-            'message' => 'Your account has been approved by the administrator.',
-            'detailed_message' => "Your account ({$user->email}) has been approved with the role of: {$user->role}. You can now login and access the system."
-        ];
-        $user->notify(new \App\Notifications\AccountApprovedNotification($dummyData));
-
-        $pending->delete();
-
         try {
-            Mail::to($pending->email)->send(new RegistrationApproved($pending->email));
+            Mail::to($pendingEmail)->send(new RegistrationApproved($pendingEmail));
         } catch (\Exception $e) {}
 
-        return back()->with('success', "Account for {$pending->email} approved as " . ucfirst(str_replace('_', ' ', $request->role)) . ".");
+        return back()->with('success', "Account for {$pendingEmail} approved as " . ucfirst(str_replace('_', ' ', $request->role)) . ".");
     }
 
     /**
      * Reject a pending registration.
+     *
+     * Uses DB::transaction() + lockForUpdate() to prevent a reject running
+     * after an approve has already created the user (double-click or dual-admin).
      */
     public function reject($id)
     {
-        $pending = PendingRegistration::findOrFail($id);
-        $email   = $pending->email;
-        $pending->delete();
+        $email = null;
+
+        DB::transaction(function () use ($id, &$email) {
+            $pending = PendingRegistration::lockForUpdate()->findOrFail($id);
+
+            // Idempotency guard
+            if ($pending->status !== 'pending') {
+                return;
+            }
+
+            $email = $pending->email;
+            $pending->update(['status' => 'rejected']);
+            $pending->delete();
+        });
+
+        if (!$email) {
+            return back()->with('error', 'This registration has already been processed.');
+        }
 
         try {
             Mail::to($email)->send(new RegistrationRejected($email));

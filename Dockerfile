@@ -71,6 +71,9 @@ RUN install-php-extensions pdo_mysql gd zip bcmath exif pcntl opcache redis
 # Copy production OPcache configuration
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
+# Copy custom PHP-FPM pool configuration (overrides Alpine default of 5 workers)
+COPY docker/php/www.conf /usr/local/etc/php-fpm.d/www.conf
+
 # Copy entrypoint script and make it executable (as root)
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh

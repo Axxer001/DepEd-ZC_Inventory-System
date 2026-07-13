@@ -80,13 +80,17 @@ services:
       - amu_network
 
   # Queue worker service (Reuses the built PHP image)
+  # Note: No container_name so this service can be scaled:
+  #   docker compose up -d --scale queue=3
   queue:
     image: amu_app:latest
-    container_name: amu_queue
     restart: unless-stopped
     command: php artisan queue:work --tries=3 --timeout=90
     depends_on:
-      - app
+      app:
+        condition: service_started
+      redis:
+        condition: service_healthy
     env_file:
       - .env
     volumes:

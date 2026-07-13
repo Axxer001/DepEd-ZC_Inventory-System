@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use App\Models\BlockedAccount;
 use App\Models\PendingRegistration;
@@ -12,6 +13,7 @@ use App\Mail\AdminRegistrationNotification;
 use App\Mail\OtpVerification;
 use App\Mail\RegistrationApproved;
 use App\Mail\RegistrationRejected;
+
 
 class RegistrationController extends Controller
 {
@@ -90,94 +92,138 @@ class RegistrationController extends Controller
 
     /**
      * Handle admin's accept/reject/block decision via URL click.
+     *
+     * Issue 2 fix: The entire decision is wrapped in a DB::transaction() with
+     * lockForUpdate() on the pending_registrations row. If an admin clicks the
+     * link twice, or two admins click simultaneously, only the first request
+     * proceeds — the second sees status != 'pending' and returns an error view.
      */
     public function verify(Request $request)
     {
         $action = $request->query('action');
-        $token = $request->query('token');
+        $token  = $request->query('token');
 
-        // Validate parameters
         if (!in_array($action, ['accept', 'reject', 'block']) || empty($token)) {
             return view('auth.verify-result', [
-                'status' => 'error',
-                'title' => 'Invalid Request',
+                'status'  => 'error',
+                'title'   => 'Invalid Request',
                 'message' => 'The link you followed is invalid or missing parameters.',
             ]);
         }
 
-        // Find the pending registration
-        $pending = PendingRegistration::where('token', $token)->first();
+        // Variables populated inside the transaction, used after commit for side-effects
+        $result      = null; // 'accepted' | 'rejected' | 'blocked' | 'already_processed' | 'expired' | 'not_found'
+        $resultEmail = null;
 
-        if (!$pending) {
+        DB::transaction(function () use ($action, $token, &$result, &$resultEmail) {
+            // Lock the row for the duration of this transaction
+            $pending = PendingRegistration::where('token', $token)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$pending) {
+                $result = 'not_found';
+                return;
+            }
+
+            // Idempotency guard — already processed by a concurrent or duplicate request
+            if ($pending->status !== 'pending') {
+                $result = 'already_processed';
+                return;
+            }
+
+            if ($pending->isExpired()) {
+                $pending->update(['status' => 'rejected']);
+                $pending->delete();
+                $result = 'expired';
+                return;
+            }
+
+            $email = $pending->email;
+            $resultEmail = $email;
+
+            if ($action === 'accept') {
+                // Mark status atomically BEFORE creating the user
+                $pending->update(['status' => 'approved']);
+
+                User::create([
+                    'name'     => Str::before($email, '@'),
+                    'email'    => $email,
+                    'password' => $pending->password ?? bcrypt(Str::random(32)),
+                    'approved' => true,
+                ]);
+
+                $pending->delete();
+                $result = 'accepted';
+                return;
+            }
+
+            if ($action === 'reject') {
+                $pending->update(['status' => 'rejected']);
+                $pending->delete();
+                $result = 'rejected';
+                return;
+            }
+
+            if ($action === 'block') {
+                $pending->update(['status' => 'rejected']);
+                BlockedAccount::firstOrCreate(
+                    ['email' => $email],
+                    ['blocked_at' => now()]
+                );
+                $pending->delete();
+                $result = 'blocked';
+            }
+        });
+
+        // Handle cases that don't require any side-effect emails
+        if ($result === 'not_found' || $result === 'already_processed') {
             return view('auth.verify-result', [
-                'status' => 'error',
-                'title' => 'Link Expired',
+                'status'  => 'error',
+                'title'   => 'Link Expired',
                 'message' => 'This registration link has already been used or has expired.',
             ]);
         }
 
-        // Check if the token has expired (48h window)
-        if ($pending->isExpired()) {
-            $pending->delete();
+        if ($result === 'expired') {
             return view('auth.verify-result', [
-                'status' => 'error',
-                'title' => 'Link Expired',
+                'status'  => 'error',
+                'title'   => 'Link Expired',
                 'message' => 'This request link has expired. The user will need to submit a new registration request.',
             ]);
         }
 
-        $email = $pending->email;
-
-        if ($action === 'accept') {
-            // Create the user account
-            User::create([
-                'name' => Str::before($email, '@'),
-                'email' => $email,
-                'password' => $pending->password ?? bcrypt(Str::random(32)),
-                'approved' => true,
-            ]);
-
-            // Remove from pending
-            $pending->delete();
-
-            // Send welcome email to user
-            Mail::to($email)->send(new RegistrationApproved($email));
+        // Side-effects (mail) are intentionally OUTSIDE the transaction — mail
+        // failures should not roll back a successfully committed approval.
+        if ($result === 'accepted') {
+            try {
+                Mail::to($resultEmail)->send(new RegistrationApproved($resultEmail));
+            } catch (\Exception $e) {}
 
             return view('auth.verify-result', [
-                'status' => 'accepted',
-                'title' => 'User Approved',
-                'message' => "The account for {$email} has been created. A welcome email has been sent.",
+                'status'  => 'accepted',
+                'title'   => 'User Approved',
+                'message' => "The account for {$resultEmail} has been created. A welcome email has been sent.",
             ]);
         }
 
-        if ($action === 'reject') {
-            // Remove from pending
-            $pending->delete();
-
-            // Send rejection email to user
-            Mail::to($email)->send(new RegistrationRejected($email));
+        if ($result === 'rejected') {
+            try {
+                Mail::to($resultEmail)->send(new RegistrationRejected($resultEmail));
+            } catch (\Exception $e) {}
 
             return view('auth.verify-result', [
-                'status' => 'rejected',
-                'title' => 'Registration Declined',
-                'message' => "The registration for {$email} has been declined. A notification email has been sent.",
+                'status'  => 'rejected',
+                'title'   => 'Registration Declined',
+                'message' => "The registration for {$resultEmail} has been declined. A notification email has been sent.",
             ]);
         }
 
-        if ($action === 'block') {
-            // Block the email permanently
-            BlockedAccount::firstOrCreate(
-                ['email' => $email],
-                ['blocked_at' => now()]
-            );
-
-            // Remove from pending
-            $pending->delete();
-
+        if ($result === 'blocked') {
             return view('auth.verify-result', [
-                'status' => 'blocked',
-                'title' => 'User Blocked',
-                'message' => "The email {$email} has been permanently blocked from submitting access requests.",
+                'status'  => 'blocked',
+                'title'   => 'User Blocked',
+                'message' => "The email {$resultEmail} has been permanently blocked from submitting access requests.",
             ]);
         }
     }
