@@ -6,29 +6,29 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('custodians', function (Blueprint $table) {
+        Schema::create('employees', function (Blueprint $table) {
             $table->id();
             $table->string('first_name');
             $table->string('last_name');
+            $table->string('middle_name')->nullable();
             $table->string('employee_id')->unique()->nullable();
             $table->string('position')->nullable();
-            $table->string('school_id')->nullable()->index();
-            $table->string('contact_number')->nullable();
-            $table->enum('status', ['Active', 'Inactive'])->default('Active');
+
+            // Stored as plain FK integers here; the FK constraints and the XOR
+            // CHECK constraint are added together in create_offices_table, AFTER
+            // offices exists and in the correct order to satisfy MySQL 8.4 error 3823.
+            $table->unsignedBigInteger('school_id')->nullable();
+            // office_id is added in create_offices_table (offices must exist first)
+
+            $table->enum('status', ['Active', 'Inactive', 'On Leave', 'Retired'])->default('Active');
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('custodians');
+        Schema::dropIfExists('employees');
     }
 };

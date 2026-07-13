@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('asset_distributions', function (Blueprint $table) {
             $table->unsignedBigInteger('custodian_id')->nullable()->after('asset_source_id');
-            $table->foreign('custodian_id')->references('id')->on('custodians')->onDelete('set null');
+            $table->foreign('custodian_id')->references('id')->on('employees')->onDelete('set null');
             
             // Add index for performance on large datasets (10k+ assets)
             $table->index('custodian_id');

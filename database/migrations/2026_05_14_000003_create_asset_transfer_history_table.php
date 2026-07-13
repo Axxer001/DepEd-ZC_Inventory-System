@@ -23,8 +23,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('asset_distribution_id')->references('id')->on('asset_distributions')->onDelete('cascade');
-            $table->foreign('from_custodian_id')->references('id')->on('custodians')->onDelete('set null');
-            $table->foreign('to_custodian_id')->references('id')->on('custodians')->onDelete('cascade');
+            $table->foreign('from_custodian_id')->references('id')->on('employees')->onDelete('set null');
+            $table->foreign('to_custodian_id')->references('id')->on('employees')->onDelete('cascade');
             $table->foreign('authorized_by')->references('id')->on('users')->onDelete('set null');
 
             // Indices for high performance tracking

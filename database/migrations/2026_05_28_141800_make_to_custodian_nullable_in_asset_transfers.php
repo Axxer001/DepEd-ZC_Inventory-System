@@ -19,7 +19,7 @@ return new class extends Migration
 
         // Re-add the FK with set null on delete
         Schema::table('asset_transfers', function (Blueprint $table) {
-            $table->foreign('to_custodian_id')->references('id')->on('custodians')->onDelete('set null');
+            $table->foreign('to_custodian_id')->references('id')->on('employees')->onDelete('set null');
         });
     }
 
@@ -28,7 +28,7 @@ return new class extends Migration
         Schema::table('asset_transfers', function (Blueprint $table) {
             $table->dropForeign(['to_custodian_id']);
             $table->unsignedBigInteger('to_custodian_id')->nullable(false)->change();
-            $table->foreign('to_custodian_id')->references('id')->on('custodians')->onDelete('cascade');
+            $table->foreign('to_custodian_id')->references('id')->on('employees')->onDelete('cascade');
         });
     }
 };

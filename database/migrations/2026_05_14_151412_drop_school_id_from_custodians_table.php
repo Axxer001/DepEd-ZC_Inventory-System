@@ -1,28 +1,18 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::table('custodians', function (Blueprint $table) {
-            $table->dropColumn('school_id');
-        });
+        // Retired: school_id is now defined as a proper integer FK directly in the
+        // create_employees migration. There is no string school_id column to drop.
+        // Left in place to preserve migration history where it already ran.
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::table('custodians', function (Blueprint $table) {
-            $table->string('school_id')->nullable();
-        });
+        //
     }
 };
