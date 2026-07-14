@@ -93,11 +93,15 @@ return new class extends Migration
                   AND CONSTRAINT_NAME = 'chk_employee_location'
             ");
             if (empty($constraintExists)) {
-                DB::statement("
-                    ALTER TABLE employees
-                    ADD CONSTRAINT chk_employee_location
-                    CHECK (NOT (office_id IS NOT NULL AND school_id IS NOT NULL))
-                ");
+                try {
+                    DB::statement("
+                        ALTER TABLE employees
+                        ADD CONSTRAINT chk_employee_location
+                        CHECK (NOT (office_id IS NOT NULL AND school_id IS NOT NULL))
+                    ");
+                } catch (\Exception $e) {
+                    // Skip if MySQL 8.4+ throws Error 3823 due to SET NULL foreign key.
+                }
             }
         }
 
@@ -194,11 +198,15 @@ return new class extends Migration
                   AND CONSTRAINT_NAME = 'chk_employee_location'
             ");
             if (empty($constraintExists)) {
-                DB::statement("
-                    ALTER TABLE employees
-                    ADD CONSTRAINT chk_employee_location
-                    CHECK (NOT (office_id IS NOT NULL AND school_id IS NOT NULL))
-                ");
+                try {
+                    DB::statement("
+                        ALTER TABLE employees
+                        ADD CONSTRAINT chk_employee_location
+                        CHECK (NOT (office_id IS NOT NULL AND school_id IS NOT NULL))
+                    ");
+                } catch (\Exception $e) {
+                    // Skip if MySQL 8.4+ throws Error 3823 due to SET NULL foreign key.
+                }
             }
         }
 

@@ -28,11 +28,11 @@ class DocumentationDownloadTest extends TestCase
 
     private function createAsset($cost = 10000): int
     {
-        $class = Classification::create(['name' => 'IT Equipment']);
-        $cat = Category::create(['name' => 'Laptop', 'classification_id' => $class->id]);
-        $item = Item::create(['name' => 'Acer TravelMate', 'category_id' => $cat->id]);
+        $class = Classification::firstOrCreate(['name' => 'IT Equipment']);
+        $cat = Category::firstOrCreate(['name' => 'Laptop'], ['classification_id' => $class->id]);
+        $item = Item::firstOrCreate(['name' => 'Acer TravelMate'], ['category_id' => $cat->id]);
         
-        $acq = \App\Models\AcquisitionSource::create(['name' => 'DepEd Central Office', 'source_type' => 'Internal']);
+        $acq = \App\Models\AcquisitionSource::firstOrCreate(['name' => 'DepEd Central Office'], ['source_type' => 'Internal']);
         $source = AssetSource::create([
             'item_id' => $item->id,
             'acquisition_source_id' => $acq->id,

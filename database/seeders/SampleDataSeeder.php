@@ -16,7 +16,7 @@ class SampleDataSeeder extends Seeder
     {
         $faker = Faker::create();
 
-        // 1. Ensure Base Data
+        // 1. Ensure Base Data (Schools)
         $schoolIds = DB::table('schools')->pluck('id')->toArray();
         if (empty($schoolIds)) {
             for ($i = 0; $i < 5; $i++) {
@@ -29,38 +29,66 @@ class SampleDataSeeder extends Seeder
             }
         }
 
-        // Classifications & Categories
+        // Classifications
         $classIds = [];
-        for ($i = 0; $i < 3; $i++) {
-            $classIds[] = DB::table('classifications')->insertGetId([
-                'name' => $faker->unique()->word . ' Class',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        $catIds = [];
-        foreach ($classIds as $classId) {
-            for ($j = 0; $j < 2; $j++) {
-                $catIds[] = DB::table('categories')->insertGetId([
-                    'classification_id' => $classId,
-                    'name' => $faker->unique()->word . ' Category',
+        $classNames = ['Office Equipment', 'IT Equipment', 'Furniture'];
+        foreach ($classNames as $name) {
+            $existing = DB::table('classifications')->where('name', $name)->first();
+            if ($existing) {
+                $classIds[] = $existing->id;
+            } else {
+                $classIds[] = DB::table('classifications')->insertGetId([
+                    'name' => $name,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
             }
         }
 
+        // Categories
+        $catIds = [];
+        $catNamesByClass = [
+            'Office Equipment' => ['Appliances', 'Machinery'],
+            'IT Equipment' => ['Laptops', 'Desktops', 'Printers'],
+            'Furniture' => ['Chairs', 'Tables', 'Cabinets']
+        ];
+        foreach ($classNames as $index => $className) {
+            $classId = $classIds[$index] ?? null;
+            if (!$classId) continue;
+            
+            $categories = $catNamesByClass[$className] ?? ['Generic'];
+            foreach ($categories as $catName) {
+                $existing = DB::table('categories')->where('name', $catName)->first();
+                if ($existing) {
+                    $catIds[] = $existing->id;
+                } else {
+                    $catIds[] = DB::table('categories')->insertGetId([
+                        'classification_id' => $classId,
+                        'name' => $catName,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+        }
+
         // Items
         $itemIds = [];
         foreach ($catIds as $catId) {
-            for ($k = 0; $k < 3; $k++) {
-                $itemIds[] = DB::table('items')->insertGetId([
-                    'category_id' => $catId,
-                    'name' => $faker->unique()->word . ' Item',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+            $catName = DB::table('categories')->where('id', $catId)->value('name');
+            $itemNames = [$catName . ' Brand A', $catName . ' Brand B'];
+            foreach ($itemNames as $itemName) {
+                $existing = DB::table('items')->where('name', $itemName)->first();
+                if ($existing) {
+                    $itemIds[] = $existing->id;
+                } else {
+                    $itemIds[] = DB::table('items')->insertGetId([
+                        'category_id' => $catId,
+                        'name' => $itemName,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
             }
         }
         $itemIds = array_values(array_unique($itemIds));
@@ -79,11 +107,16 @@ class SampleDataSeeder extends Seeder
         $modeIds = [];
         $modes = ['PROCUREMENT', 'TRANSFER', 'DONATION'];
         foreach ($modes as $mode) {
-            $modeIds[] = DB::table('procurement_modes')->insertGetId([
-                'name' => $mode,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            $existing = DB::table('procurement_modes')->where('name', $mode)->first();
+            if ($existing) {
+                $modeIds[] = $existing->id;
+            } else {
+                $modeIds[] = DB::table('procurement_modes')->insertGetId([
+                    'name' => $mode,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         }
 
         // 2. Generating 100 Sample Records per Section
@@ -92,39 +125,30 @@ class SampleDataSeeder extends Seeder
         $officeIds = [];
         for ($i = 0; $i < 100; $i++) {
             $officeIds[] = DB::table('offices')->insertGetId([
-                'school_id' => $faker->randomElement($schoolIds),
                 'name' => 'Office of ' . $faker->jobTitle,
-                'office_code' => strtoupper(Str::random(4)),
-                'room_number' => $faker->numerify('Room ###'),
+                'office_id' => strtoupper(Str::random(6)),
+                'type' => $faker->randomElement(['Administrative', 'Technical', 'Support']),
+                'location' => $faker->word . ' Building',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
         }
 
-        // Section: Supplier Personnel (Acquisition Contacts)
-        $contactIds = [];
+        // Section: Employees (Renamed from Custodians)
+        $employeeIds = [];
         for ($i = 0; $i < 100; $i++) {
-            $contactIds[] = DB::table('acquisition_contacts')->insertGetId([
-                'acquisition_source_id' => $faker->randomElement($sourceIds),
-                'name' => $faker->name,
-                'position' => $faker->jobTitle,
-                'contact_number' => $faker->phoneNumber,
-                'email' => $faker->unique()->safeEmail,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        // Section: Custodians
-        $custodianIds = [];
-        for ($i = 0; $i < 100; $i++) {
-            $custodianIds[] = DB::table('custodians')->insertGetId([
+            $isSchool = $faker->boolean;
+            $employeeIds[] = DB::table('employees')->insertGetId([
                 'first_name' => $faker->firstName,
                 'middle_name' => $faker->lastName,
                 'last_name' => $faker->lastName,
+                'sex' => $faker->randomElement(['Male', 'Female']),
+                'employee_id' => 'EMP-' . $faker->unique()->numerify('######'),
                 'position' => $faker->jobTitle,
-                'contact_number' => $faker->phoneNumber,
+                'date_of_birth' => $faker->date('Y-m-d', '-20 years'),
                 'status' => 'Active',
+                'school_id' => $isSchool ? $faker->randomElement($schoolIds) : null,
+                'office_id' => !$isSchool ? $faker->randomElement($officeIds) : null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -132,36 +156,31 @@ class SampleDataSeeder extends Seeder
 
         // Section: Assets (Sources and Assignments)
         for ($i = 0; $i < 100; $i++) {
+            $assetCost = $faker->randomFloat(2, 500, 100000);
             $assetSourceId = DB::table('asset_sources')->insertGetId([
                 'item_id' => $faker->randomElement($itemIds),
                 'description' => $faker->sentence,
-                'brand' => $faker->word,
-                'model' => $faker->word,
-                'serial_number' => $faker->unique()->numerify('SN-######'),
                 'unit_of_measurement' => $faker->randomElement(['Unit', 'Pc', 'Set']),
                 'acquisition_source_id' => $faker->randomElement($sourceIds),
-                'asset_cost' => $faker->randomFloat(2, 500, 50000),
+                'asset_cost' => $assetCost,
                 'quantity' => 1,
                 'estimated_useful_life' => $faker->numberBetween(3, 15),
                 'acceptance_date' => $faker->date(),
-                'remarks' => 'Sample Asset Data',
+                'condition' => $faker->randomElement(['Good Condition', 'Needs Repair', 'Unserviceable']),
+                'equipment' => $assetCost <= 49999 ? 'SEE' : 'PPE',
                 'created_at' => now(),
                 'updated_at' => now(),
                 'procurement_mode_id' => $faker->randomElement($modeIds),
-                'acquisition_contact_id' => $faker->randomElement($contactIds),
             ]);
 
             DB::table('asset_assignments')->insert([
                 'asset_source_id' => $assetSourceId,
-                'custodian_id' => $faker->randomElement($custodianIds),
+                'employee_id' => $faker->randomElement($employeeIds),
                 'office_id' => $faker->randomElement($officeIds),
-                'condition' => 'Serviceable',
-                'office_school_type' => 'School',
                 'school_id' => $faker->randomElement($schoolIds),
-                'nature_of_occupancy' => 'Issued',
-                'location' => $faker->word,
                 'property_number' => $faker->unique()->numerify('PROP-####-####'),
-                'acquisition_cost' => $faker->randomFloat(2, 500, 50000),
+                'serial_number' => $faker->unique()->numerify('SN-######'),
+                'acquisition_cost' => $assetCost,
                 'acquisition_date' => $faker->date(),
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -171,15 +190,24 @@ class SampleDataSeeder extends Seeder
         // Section: Buildings
         // First building specs
         $bClassIds = [];
-        for($i=0;$i<3;$i++){
-            $bClassIds[] = DB::table('building_classifications')->insertGetId(['name' => $faker->unique()->word . ' Bldg Class', 'created_at' => now(), 'updated_at' => now()]);
+        for ($i = 0; $i < 3; $i++) {
+            $bClassIds[] = DB::table('building_classifications')->insertGetId([
+                'name' => $faker->unique()->word . ' Bldg Class',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
         $bTypeIds = [];
-        foreach($bClassIds as $bcId){
-            $bTypeIds[] = DB::table('building_types')->insertGetId(['building_classification_id' => $bcId, 'name' => $faker->unique()->word . ' Bldg Type', 'created_at' => now(), 'updated_at' => now()]);
+        foreach ($bClassIds as $bcId) {
+            $bTypeIds[] = DB::table('building_types')->insertGetId([
+                'building_classification_id' => $bcId,
+                'name' => $faker->unique()->word . ' Bldg Type',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         }
         $bSpecIds = [];
-        foreach($bTypeIds as $btId){
+        foreach ($bTypeIds as $btId) {
             $bSpecIds[] = DB::table('building_specs')->insertGetId([
                 'building_type_id' => $btId,
                 'description' => $faker->sentence,

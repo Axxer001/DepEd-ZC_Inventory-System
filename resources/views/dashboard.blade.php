@@ -160,7 +160,13 @@
                 </button>
                 <span class="font-extrabold italic text-sm text-slate-800 uppercase tracking-tight">DepEd ZC Inventory Management</span>
             </div>
-            <div class="w-8 h-8 bg-[#c00000] rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-red-100 italic">A</div>
+            <div class="flex items-center gap-3">
+                <button @click="openNotifications()" :class="hasUnread ? 'bell-has-unread border-red-200' : 'border-slate-200'" class="relative p-2 bg-white border text-slate-900 rounded-xl hover:text-[#c00000] hover:border-[#c00000]/30 transition-all shadow-sm active:scale-90 animate-fade">
+                    <svg :class="hasUnread ? 'text-[#c00000]' : ''" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                    <span x-show="hasUnread" x-cloak class="absolute -top-1 -right-1 min-w-[16px] h-[16px] bg-red-600 border-2 border-white rounded-full badge-pulse flex items-center justify-center text-white text-[7px] font-black" x-text="unreadCount > 9 ? '9+' : unreadCount"></span>
+                </button>
+                <div class="w-8 h-8 bg-[#c00000] rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-lg shadow-red-100 italic">A</div>
+            </div>
         </header>
 
         {{-- MAIN CONTENT AREA --}}
