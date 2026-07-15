@@ -12,7 +12,9 @@ class QuadrantSeeder extends Seeder
      */
     public function run(): void
     {
-        \Illuminate\Support\Facades\DB::table('quadrants')->truncate();
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        \Illuminate\Support\Facades\DB::table('quadrants')->delete();
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $quadrants = [
             ['name' => 'Quadrant 1.1', 'legislative_district_id' => 1, 'created_at' => now(), 'updated_at' => now()],

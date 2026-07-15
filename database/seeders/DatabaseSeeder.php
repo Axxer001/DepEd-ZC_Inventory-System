@@ -19,8 +19,13 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             SuperAdminSeeder::class,
+            LegislativeDistrictSeeder::class,
             QuadrantSeeder::class,
             DistrictSeeder::class,
+            SchoolsSeeder::class,
+            ClassificationCategorySeeder::class,
+            OfficeSeeder::class,
+            EmployeeSeeder::class,
         ]);
 
         \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
