@@ -87,59 +87,90 @@
                class="notification-drawer fixed right-0 top-0 bottom-0 w-full md:w-96 bg-white z-[70] shadow-2xl flex flex-col overflow-hidden border-l border-slate-100">
             <div class="p-6 flex items-center justify-between border-b border-slate-50">
                 <div>
-                    <h3 class="text-2xl font-black tracking-tight italic uppercase leading-none text-slate-900">Notifications</h3>
-                    <p class="text-[10px] font-bold text-[#c00000] uppercase tracking-widest mt-1.5">System Alerts &amp; Notices</p>
+                    <h3 class="text-2xl font-black tracking-tight italic uppercase leading-none text-slate-900" x-text="showMuteSettings ? 'Mute Settings' : 'Notifications'">Notifications</h3>
+                    <p class="text-[10px] font-bold text-[#c00000] uppercase tracking-widest mt-1.5" x-text="showMuteSettings ? 'Manage per-type notification preferences' : 'System Alerts &amp; Notices'">System Alerts &amp; Notices</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span x-show="hasUnread" x-cloak class="px-2 py-0.5 bg-red-100 text-red-600 text-[9px] font-black uppercase tracking-widest rounded-full" x-text="unreadCount + ' new'"></span>
-                    <button @click="showNotifications = false" class="p-2.5 bg-slate-50 text-slate-900 rounded-xl hover:text-red-600 hover:bg-red-50 border border-slate-100 transition-all">
+                    <span x-show="hasUnread && !showMuteSettings" x-cloak class="px-2 py-0.5 bg-red-100 text-red-600 text-[9px] font-black uppercase tracking-widest rounded-full" x-text="unreadCount + ' new'"></span>
+                    {{-- Mute Settings Toggle --}}
+                    <button @click="showMuteSettings = !showMuteSettings" :class="showMuteSettings ? 'bg-slate-900 text-white border-slate-900' : 'bg-slate-50 text-slate-600 border-slate-100'" class="p-2.5 rounded-xl hover:bg-slate-900 hover:text-white border transition-all" title="Notification Preferences">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    </button>
+                    <button @click="showNotifications = false; showMuteSettings = false" class="p-2.5 bg-slate-50 text-slate-900 rounded-xl hover:text-red-600 hover:bg-red-50 border border-slate-100 transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
             </div>
 
             <div class="flex-grow overflow-y-auto custom-scroll p-6 space-y-3">
-                <template x-if="notifications.length === 0 && !notifLoading">
-                    <div class="flex flex-col items-center justify-center h-48 text-center text-slate-400">
-                        <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
-                        <p class="text-xs font-bold uppercase tracking-widest">No notifications yet</p>
-                    </div>
-                </template>
 
-                <template x-if="notifLoading">
-                    <div class="flex items-center justify-center h-24 text-slate-400">
-                        <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
-                    </div>
-                </template>
-
-                <template x-for="notification in notifications" :key="notification.id">
-                    <div :class="notification.read_at ? 'notif-read' : 'notif-unread'" class="p-4 rounded-2xl border group relative transition-all">
-                        {{-- Unread dot --}}
-                        <div x-show="!notification.read_at" class="absolute top-4 left-4 w-2 h-2 bg-red-500 rounded-full badge-pulse"></div>
-                        <div class="flex items-start gap-4" :class="!notification.read_at ? 'pl-4' : ''">
-                            <div class="flex-1 min-w-0 pr-6">
-                                <p class="text-[11px] font-black uppercase italic" :class="notification.read_at ? 'text-slate-500' : 'text-slate-800'" x-text="notification.data.title"></p>
-                                <p class="text-[10px] font-bold text-slate-500 mt-1 leading-relaxed truncate" x-text="notification.data.message"></p>
-                                <div class="flex items-center justify-between mt-2">
-                                    <button type="button" @click="showNotificationDetails(notification.data)" class="text-[9px] font-black text-[#c00000] uppercase tracking-widest hover:underline cursor-pointer">View Details</button>
-                                    <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest" x-text="formatNotifDate(notification.created_at)"></span>
+                {{-- ============ MUTE SETTINGS PANEL ============ --}}
+                <template x-if="showMuteSettings">
+                    <div class="space-y-2">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Toggle to mute each notification type. Changes save instantly.</p>
+                        <template x-for="type in availableMuteTypes" :key="type.key">
+                            <div class="flex items-center justify-between p-3.5 rounded-2xl border border-slate-100 hover:border-slate-200 bg-slate-50 hover:bg-white transition-all group">
+                                <div class="flex items-center gap-3">
+                                    <div :class="mutedTypes.includes(type.key) ? 'bg-slate-300' : 'bg-[#c00000]'" class="w-2 h-2 rounded-full transition-colors"></div>
+                                    <p class="text-[10px] font-black text-slate-700 uppercase tracking-widest" x-text="type.label"></p>
                                 </div>
+                                <button @click="toggleMuteType(type.key)"
+                                    :class="mutedTypes.includes(type.key) ? 'bg-slate-200 text-slate-500' : 'bg-emerald-100 text-emerald-700'"
+                                    class="px-3 py-1.5 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all"
+                                    :title="mutedTypes.includes(type.key) ? 'Click to unmute' : 'Click to mute'"
+                                    x-text="mutedTypes.includes(type.key) ? 'Muted' : 'Active'">
+                                </button>
                             </div>
-                        </div>
-                        <template x-if="!notification.read_at">
-                            <button @click="markAsRead(notification.id)" class="absolute top-3 right-3 p-1.5 text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors" title="Mark as read">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
-                            </button>
                         </template>
                     </div>
                 </template>
 
-                {{-- Pagination --}}
-                <div x-show="notifPagination.last_page > 1" class="flex items-center justify-between pt-2">
-                    <button @click="loadNotificationsFromServer(notifPage - 1)" :disabled="notifPage <= 1" class="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all">← Prev</button>
-                    <span class="text-[10px] font-bold text-slate-400" x-text="'Page ' + notifPage + ' of ' + notifPagination.last_page"></span>
-                    <button @click="loadNotificationsFromServer(notifPage + 1)" :disabled="notifPage >= notifPagination.last_page" class="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all">Next →</button>
-                </div>
+                {{-- ============ NOTIFICATIONS LIST ============ --}}
+                <template x-if="!showMuteSettings">
+                    <div class="space-y-3">
+                        <template x-if="notifications.length === 0 && !notifLoading">
+                            <div class="flex flex-col items-center justify-center h-48 text-center text-slate-400">
+                                <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
+                                <p class="text-xs font-bold uppercase tracking-widest">No notifications yet</p>
+                            </div>
+                        </template>
+
+                        <template x-if="notifLoading">
+                            <div class="flex items-center justify-center h-24 text-slate-400">
+                                <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                            </div>
+                        </template>
+
+                        <template x-for="notification in notifications" :key="notification.id">
+                            <div :class="notification.read_at ? 'notif-read' : 'notif-unread'" class="p-4 rounded-2xl border group relative transition-all">
+                                {{-- Unread dot --}}
+                                <div x-show="!notification.read_at" class="absolute top-4 left-4 w-2 h-2 bg-red-500 rounded-full badge-pulse"></div>
+                                <div class="flex items-start gap-4" :class="!notification.read_at ? 'pl-4' : ''">
+                                    <div class="flex-1 min-w-0 pr-6">
+                                        <p class="text-[11px] font-black uppercase italic" :class="notification.read_at ? 'text-slate-500' : 'text-slate-800'" x-text="notification.data.title"></p>
+                                        <p class="text-[10px] font-bold text-slate-500 mt-1 leading-relaxed truncate" x-text="notification.data.message"></p>
+                                        <div class="flex items-center justify-between mt-2">
+                                            <button type="button" @click="showNotificationDetails(notification.data)" class="text-[9px] font-black text-[#c00000] uppercase tracking-widest hover:underline cursor-pointer">View Details</button>
+                                            <span class="text-[8px] font-bold text-slate-400 uppercase tracking-widest" x-text="formatNotifDate(notification.created_at)"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <template x-if="!notification.read_at">
+                                    <button @click="markAsRead(notification.id)" class="absolute top-3 right-3 p-1.5 text-slate-300 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors" title="Mark as read">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
+                                    </button>
+                                </template>
+                            </div>
+                        </template>
+
+                        {{-- Pagination --}}
+                        <div x-show="notifPagination.last_page > 1" class="flex items-center justify-between pt-2">
+                            <button @click="loadNotificationsFromServer(notifPage - 1)" :disabled="notifPage <= 1" class="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all">← Prev</button>
+                            <span class="text-[10px] font-bold text-slate-400" x-text="'Page ' + notifPage + ' of ' + notifPagination.last_page"></span>
+                            <button @click="loadNotificationsFromServer(notifPage + 1)" :disabled="notifPage >= notifPagination.last_page" class="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all">Next →</button>
+                        </div>
+                    </div>
+                </template>
             </div>
 
             <div class="p-5 border-t border-slate-50 space-y-2">
@@ -839,8 +870,24 @@
                 notifPagination: { current_page: 1, last_page: 1, total: 0 },
                 notifLoading: false,
 
+                // --- Mute Settings ---
+                showMuteSettings: false,
+                mutedTypes: [],
+                availableMuteTypes: [
+                    { key: 'AssetAddedNotification',       label: 'Asset Registration' },
+                    { key: 'AssetUpdatedNotification',     label: 'Asset Modifications' },
+                    { key: 'AssetAssignedNotification',    label: 'Asset Assignments' },
+                    { key: 'AssetTransferNotification',    label: 'Asset Transfers' },
+                    { key: 'AssetReturnedNotification',    label: 'Asset Returns' },
+                    { key: 'AssetLifecycleNotification',   label: 'End of Useful Life' },
+                    { key: 'NewUserRegistered',            label: 'New User Registration' },
+                    { key: 'AccountApprovedNotification',  label: 'Account Approval Status' },
+                    { key: 'SystemAnnouncementNotification', label: 'Global Announcements' },
+                ],
+
                 init() {
                     this.loadNotificationsFromServer(1);
+                    this.loadMuteSettings();
                 },
 
                 async loadNotificationsFromServer(page = 1) {
@@ -860,8 +907,37 @@
 
                 async openNotifications() {
                     this.showNotifications = true;
-                    // Refresh the current page when opening
+                    this.showMuteSettings = false;
                     await this.loadNotificationsFromServer(this.notifPage);
+                },
+
+                async loadMuteSettings() {
+                    try {
+                        const res = await fetch('/api/notifications/mute-settings', { headers: { 'Accept': 'application/json' } });
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.mutedTypes = data.muted_types || [];
+                        }
+                    } catch (e) { console.error('Failed to load mute settings:', e); }
+                },
+
+                async toggleMuteType(typeKey) {
+                    if (this.mutedTypes.includes(typeKey)) {
+                        this.mutedTypes = this.mutedTypes.filter(t => t !== typeKey);
+                    } else {
+                        this.mutedTypes = [...this.mutedTypes, typeKey];
+                    }
+                    try {
+                        await fetch('/api/notifications/mute-settings', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({ muted_types: this.mutedTypes })
+                        });
+                    } catch (e) { console.error('Failed to save mute settings:', e); }
                 },
 
                 formatNotifDate(dateStr) {

@@ -148,6 +148,24 @@ Route::middleware('auth')->group(function () {
         return response()->json(['success' => true]);
     })->name('api.notifications.custom');
 
+    // --- Notification Mute Preferences ---
+    Route::get('/api/notifications/mute-settings', function () {
+        return response()->json([
+            'muted_types' => auth()->user()->muted_notifications ?? []
+        ]);
+    })->name('api.notifications.mute_settings.get');
+
+    Route::post('/api/notifications/mute-settings', function (Illuminate\Http\Request $request) {
+        $request->validate([
+            'muted_types'   => 'nullable|array',
+            'muted_types.*' => 'string|max:255',
+        ]);
+        $user = auth()->user();
+        $user->muted_notifications = $request->input('muted_types', []);
+        $user->save();
+        return response()->json(['success' => true]);
+    })->name('api.notifications.mute_settings.update');
+
     // --- Global Notice Board API ---
     Route::post('/api/global-notice', function (Illuminate\Http\Request $request) {
         if (auth()->user()->role !== 'super_admin') {

@@ -13,7 +13,10 @@ use Illuminate\Support\Facades\Auth;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory;
+    use Notifiable {
+        notify as sendNotification;
+    }
 
 
     /**
@@ -26,6 +29,7 @@ class User extends Authenticatable
         'email',
         'password',
         'dark_mode',
+        'muted_notifications',
         'role',
         'approved',
         'system_type',
@@ -68,11 +72,33 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'approved' => 'boolean',
-            'dark_mode' => 'boolean',
+            'email_verified_at'    => 'datetime',
+            'password'             => 'hashed',
+            'approved'             => 'boolean',
+            'dark_mode'            => 'boolean',
+            'muted_notifications'  => 'array',
         ];
+    }
+
+    /**
+     * Check if a specific notification class (by short name) is muted by this user.
+     */
+    public function isNotificationMuted(string $type): bool
+    {
+        return in_array($type, $this->muted_notifications ?? []);
+    }
+
+    /**
+     * Override notify() to silently drop muted notification types.
+     *
+     * @param  mixed  $instance
+     */
+    public function notify($instance): void
+    {
+        if ($this->isNotificationMuted(class_basename($instance))) {
+            return;
+        }
+        $this->sendNotification($instance);
     }
 
     protected static function booted()
