@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Custodian Registry | DepEd Zamboanga City</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Employee Registry | DepEd Zamboanga City</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -25,7 +25,7 @@
         .xls-row:active { transform: scale(0.995); transition: all 0.1s; }
         .xls-row:active .xls-td { background-color: #fbe3e3 !important; }
         .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
-        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 350px); min-height: 400px; background: white; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
+        .xls-scroll-wrap { --col1-width: 40px; width: 100%; max-width: 100%; min-width: 0; position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 350px); min-height: 400px; background: white; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
         .xls-scroll-wrap.expanded { height: calc(100vh - 250px); }
         .pg-btn {
             padding: 8px 18px;
@@ -115,7 +115,7 @@
 
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10 px-2 animate-fade">
             <div class="shrink-0">
-                <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-700 to-red-500 uppercase italic leading-none drop-shadow-sm tracking-tight">Custodian Registry</h2>
+                <h2 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-red-700 to-red-500 uppercase italic leading-none drop-shadow-sm tracking-tight">Employee Registry</h2>
                 <p class="text-slate-500 text-[11px] font-bold uppercase tracking-[0.25em] mt-3 flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>
                     Asset Custodians & Accountable Personnel
@@ -245,18 +245,18 @@
             </div>
         </div>
 
-        <div class="rounded-[2rem] border border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col animate-fade relative ring-1 ring-black/5">
+        <div class="w-full max-w-full rounded-[2rem] border border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col animate-fade relative ring-1 ring-black/5">
             <div class="xls-scroll-wrap expanded">
                 <table class="w-full border-collapse" style="min-width:1200px;">
                     <thead><tr>
-                        <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                        <th class="xls-th sticky left-[40px] z-30" style="min-width:250px">Full Name</th>
-                        <th class="xls-th" style="min-width:150px">Employee ID</th>
-                        <th class="xls-th" style="min-width:200px">Position</th>
-                        <th class="xls-th" style="min-width:250px">Assigned Station</th>
-                        <th class="xls-th text-center" style="min-width:120px">Assets</th>
-                        <th class="xls-th text-right" style="min-width:180px">Portfolio Value</th>
-                        <th class="xls-th" style="min-width:120px">Status</th>
+                        <th class="xls-th w-10 text-center sticky top-0 left-0 z-40 bg-[#f8fafc] dark:bg-[#0f172a]">#</th>
+                        <th class="xls-th sticky top-0 z-40 bg-[#f8fafc] dark:bg-[#0f172a]" style="left: var(--col1-width); min-width:250px">Full Name</th>
+                        <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:150px">Employee ID</th>
+                        <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:200px">Position</th>
+                        <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:250px">Assigned Station</th>
+                        <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a] text-center" style="min-width:120px">Assets</th>
+                        <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a] text-right" style="min-width:180px">Portfolio Value</th>
+                        <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:120px">Status</th>
                     </tr></thead>
                     <tbody id="custodianBody"></tbody>
                 </table>
@@ -280,10 +280,10 @@
                 </div>
             </div>
 
-            <div id="custodianTableFooter" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                <div class="flex items-center gap-6">
-                    <p id="custodianRowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 Rows</p>
-                    <div id="custodianPaginationControls" class="flex items-center gap-3 border-l border-slate-200 pl-6">
+            <div id="custodianTableFooter" class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] bg-white">
+                <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto">
+                    <p id="custodianRowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center sm:text-left">0 Rows</p>
+                    <div id="custodianPaginationControls" class="flex items-center justify-center gap-3 border-t sm:border-t-0 sm:border-l border-slate-200 pt-4 sm:pt-0 sm:pl-6 w-full sm:w-auto">
                         <button onclick="custodianPrevPage()" id="custodianPrevBtn" class="pg-btn">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
                             Prev
@@ -299,6 +299,7 @@
                         </button>
                     </div>
                 </div>
+                <div></div>
             </div>
         </div>
     </div>
@@ -408,8 +409,8 @@
                 };
 
                 tr.innerHTML = `
-                    <td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
-                    <td class="xls-td relative sticky left-[40px] z-20">
+                    <td class="xls-td text-center sticky left-0 w-10 z-20 bg-white dark:bg-[#1e293b]"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
+                    <td class="xls-td relative sticky z-20 bg-white dark:bg-[#1e293b]" style="left: var(--col1-width);">
                         <span class="xls-const font-bold text-slate-800 uppercase">${row.first_name} ${row.last_name}</span>
                     </td>
                     ${cell(row.employee_id)}

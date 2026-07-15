@@ -9,12 +9,12 @@ use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InventorySetupController;
 use App\Http\Controllers\AssetController;
-use App\Http\Controllers\BuildingImportController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\AcquisitionSourceController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\AssetServiceController;
+use App\Http\Controllers\BuildingController;
 
 // --- Public Routes ---
 Route::middleware('guest')->group(function () {
@@ -423,10 +423,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/buildings/edit-preview', [\App\Http\Controllers\InventorySetupController::class, 'getBuildingEditPreview'])->name('api.buildings.edit_preview');
     Route::post('/api/buildings/update-batch', [\App\Http\Controllers\InventorySetupController::class, 'updateBuildingBatch'])->name('api.buildings.updateBatch');
 
-    // --- Building PIF Import (must be before /buildings/{id} wildcard) ---
-    Route::get('/buildings/import', [BuildingImportController::class, 'show'])->name('buildings.import');
-    Route::post('/buildings/import/preview', [BuildingImportController::class, 'preview'])->name('buildings.import.preview');
-    Route::post('/buildings/import/confirm', [BuildingImportController::class, 'confirm'])->name('buildings.import.confirm');
 
     Route::get('/buildings/{id}', [\App\Http\Controllers\BuildingController::class, 'profile'])->name('buildings.profile');
     Route::post('/buildings/{id}/update', [\App\Http\Controllers\BuildingController::class, 'update'])->name('buildings.update');

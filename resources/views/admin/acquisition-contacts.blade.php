@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acquisition Source Registry | DepEd Zamboanga City</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -23,7 +23,7 @@
         .xls-row:hover .xls-td { background-color: rgba(192, 0, 0, 0.03) !important; border-bottom-color: #c00000; }
         .xls-row:hover .xls-td:first-child { box-shadow: inset 4px 0 0 #c00000; }
         .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
-        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 350px); min-height: 400px; background: transparent; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
+        .xls-scroll-wrap { --col1-width: 40px; position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 350px); min-height: 400px; background: transparent; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
         .xls-scroll-wrap.expanded { height: calc(100vh - 250px); }
         .filter-chip {
             padding: 8px 16px;
@@ -90,12 +90,12 @@
                     <table class="w-full border-collapse" style="min-width:1200px;">
                         <thead>
                             <tr>
-                                <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                                <th class="xls-th sticky left-[40px] z-30" style="min-width:250px">Personnel Name</th>
-                                <th class="xls-th" style="min-width:200px">Position</th>
-                                <th class="xls-th" style="min-width:250px">Organization (Source)</th>
-                                <th class="xls-th" style="min-width:180px">Contact Number</th>
-                                <th class="xls-th" style="min-width:220px">Email Address</th>
+                                <th class="xls-th w-10 text-center sticky top-0 left-0 z-40 bg-[#f8fafc]">#</th>
+                                <th class="xls-th sticky top-0 z-40 bg-[#f8fafc]" style="left: var(--col1-width); min-width:250px">Personnel Name</th>
+                                <th class="xls-th sticky top-0 z-30 bg-[#f8fafc]" style="min-width:200px">Position</th>
+                                <th class="xls-th sticky top-0 z-30 bg-[#f8fafc]" style="min-width:250px">Organization (Source)</th>
+                                <th class="xls-th sticky top-0 z-30 bg-[#f8fafc]" style="min-width:180px">Contact Number</th>
+                                <th class="xls-th sticky top-0 z-30 bg-[#f8fafc]" style="min-width:220px">Email Address</th>
                             </tr>
                         </thead>
                         <tbody id="contactBody"></tbody>
@@ -179,8 +179,8 @@
                 tr.className = 'xls-row group border-b border-slate-100';
                 tr.onclick = () => window.location.href = '/admin/supplier-contacts/' + row.id;
                 tr.innerHTML = `
-                    <td class="xls-td text-center sticky left-0 w-10 bg-slate-50 z-20"><span class="text-[10px] font-black text-slate-500">${idx + 1}</span></td>
-                    <td class="xls-td relative sticky left-[40px] bg-slate-50 z-20">
+                    <td class="xls-td text-center sticky left-0 w-10 bg-white z-20"><span class="text-[10px] font-black text-slate-500">${idx + 1}</span></td>
+                    <td class="xls-td relative sticky z-20 bg-white" style="left: var(--col1-width);">
                         <span class="xls-const font-bold text-slate-800 uppercase">${row.name || 'N/A'}</span>
                     </td>
                     <td class="xls-td relative"><span class="xls-const uppercase">${row.position || 'N/A'}</span></td>

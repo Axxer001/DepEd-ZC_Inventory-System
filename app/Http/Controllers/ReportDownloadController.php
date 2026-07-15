@@ -280,6 +280,42 @@ class ReportDownloadController extends Controller
             }
         }
 
+        // --- School-scope enforcement ---
+        // School-system users may only see assets that belong to their own school.
+        // Distribution tab: filter by school_id on asset_assignments or via employee school.
+        // Source tab: filter asset_sources to those with at least one assignment in the school.
+        $user = auth()->user();
+        if ($user && $user->isSchoolSystem()) {
+            $schoolId = $user->school_id;
+            if ($tab === 'distribution') {
+                $query->where(function ($q) use ($schoolId) {
+                    $q->where('asset_assignments.school_id', $schoolId)
+                      ->orWhereExists(function ($sub) use ($schoolId) {
+                          $sub->select(DB::raw(1))
+                              ->from('employees')
+                              ->whereColumn('employees.id', 'asset_assignments.employee_id')
+                              ->where('employees.school_id', $schoolId);
+                      });
+                });
+            } else {
+                // source tab: scope to asset_sources assigned to this school
+                $query->whereExists(function ($sub) use ($schoolId) {
+                    $sub->select(DB::raw(1))
+                        ->from('asset_assignments')
+                        ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id')
+                        ->where(function ($q2) use ($schoolId) {
+                            $q2->where('asset_assignments.school_id', $schoolId)
+                               ->orWhereExists(function ($sub2) use ($schoolId) {
+                                   $sub2->select(DB::raw(1))
+                                        ->from('employees')
+                                        ->whereColumn('employees.id', 'asset_assignments.employee_id')
+                                        ->where('employees.school_id', $schoolId);
+                               });
+                        });
+                });
+            }
+        }
+
         return $query;
     }
 
@@ -906,8 +942,14 @@ class ReportDownloadController extends Controller
             ->select(
                 'employees.*',
                 DB::raw('COALESCE(s.name, o.name) as school_name')
-            )
-            ->addSelect([
+            );
+
+        $user = auth()->user();
+        if ($user && $user->isSchoolSystem()) {
+            $query->where('employees.school_id', $user->school_id);
+        }
+
+        $query->addSelect([
                 'total_assets' => DB::table('asset_assignments')
                     ->whereColumn('employee_id', 'employees.id')
                     ->selectRaw('COUNT(*)'),

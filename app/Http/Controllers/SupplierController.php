@@ -120,23 +120,78 @@ class SupplierController extends Controller
     public function apiSearch(Request $request)
     {
         $q = $request->input('q', '');
+        $user = auth()->user();
 
-        $suppliers = DB::table('suppliers as sup')
-            ->leftJoin(DB::raw('(SELECT supplier_id, COUNT(id) as cnt FROM asset_sources GROUP BY supplier_id) as src'), 'src.supplier_id', '=', 'sup.id')
-            ->when($q !== '', fn($query) => $query->where('sup.name', 'like', '%' . $q . '%')
-                ->orWhere('sup.service_center', 'like', '%' . $q . '%'))
-            ->select(
-                'sup.id',
-                'sup.name',
-                'sup.supplier_personnel',
-                'sup.service_center',
-                'sup.contact_number',
-                'sup.contact_email',
-                DB::raw('COALESCE(src.cnt, 0) as asset_count')
-            )
-            ->orderBy('sup.name')
-            ->limit(500)
-            ->get();
+        if ($user && $user->isSchoolSystem()) {
+            $schoolId = $user->school_id;
+            
+            $scopedCountSub = DB::table('asset_sources')
+                ->whereColumn('asset_sources.supplier_id', 'sup.id')
+                ->whereExists(function ($sub) use ($schoolId) {
+                    $sub->select(DB::raw(1))
+                        ->from('asset_assignments')
+                        ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id')
+                        ->where(function ($q2) use ($schoolId) {
+                            $q2->where('asset_assignments.school_id', $schoolId)
+                               ->orWhereExists(function ($sub2) use ($schoolId) {
+                                   $sub2->select(DB::raw(1))
+                                        ->from('employees')
+                                        ->whereColumn('employees.id', 'asset_assignments.employee_id')
+                                        ->where('employees.school_id', $schoolId);
+                               });
+                        });
+                });
+            
+            $suppliers = DB::table('suppliers as sup')
+                ->whereExists(function ($sub) use ($schoolId) {
+                    $sub->select(DB::raw(1))
+                        ->from('asset_sources')
+                        ->join('asset_assignments', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+                        ->whereColumn('asset_sources.supplier_id', 'sup.id')
+                        ->where(function ($q2) use ($schoolId) {
+                            $q2->where('asset_assignments.school_id', $schoolId)
+                               ->orWhereExists(function ($sub2) use ($schoolId) {
+                                   $sub2->select(DB::raw(1))
+                                        ->from('employees')
+                                        ->whereColumn('employees.id', 'asset_assignments.employee_id')
+                                        ->where('employees.school_id', $schoolId);
+                               });
+                        });
+                })
+                ->when($q !== '', fn($query) => $query->where(function($qq) use ($q) {
+                    $qq->where('sup.name', 'like', '%' . $q . '%')
+                       ->orWhere('sup.service_center', 'like', '%' . $q . '%');
+                }))
+                ->select(
+                    'sup.id',
+                    'sup.name',
+                    'sup.supplier_personnel',
+                    'sup.service_center',
+                    'sup.contact_number',
+                    'sup.contact_email'
+                )
+                ->selectSub($scopedCountSub->selectRaw('COUNT(id)'), 'asset_count')
+                ->orderBy('sup.name')
+                ->limit(500)
+                ->get();
+        } else {
+            $suppliers = DB::table('suppliers as sup')
+                ->leftJoin(DB::raw('(SELECT supplier_id, COUNT(id) as cnt FROM asset_sources GROUP BY supplier_id) as src'), 'src.supplier_id', '=', 'sup.id')
+                ->when($q !== '', fn($query) => $query->where('sup.name', 'like', '%' . $q . '%')
+                    ->orWhere('sup.service_center', 'like', '%' . $q . '%'))
+                ->select(
+                    'sup.id',
+                    'sup.name',
+                    'sup.supplier_personnel',
+                    'sup.service_center',
+                    'sup.contact_number',
+                    'sup.contact_email',
+                    DB::raw('COALESCE(src.cnt, 0) as asset_count')
+                )
+                ->orderBy('sup.name')
+                ->limit(500)
+                ->get();
+        }
 
         return response()->json($suppliers);
     }

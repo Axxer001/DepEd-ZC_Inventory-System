@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Office Registry | DepEd Zamboanga City</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { darkMode: 'class' };
-    </script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -63,7 +61,7 @@
         .xls-row:active { transform: scale(0.995); transition: all 0.1s; }
         .xls-row:active .xls-td { background-color: var(--row-active-bg) !important; }
         .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
-        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 350px); min-height: 400px; background: var(--bg-card); flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid var(--border-primary); }
+        .xls-scroll-wrap { --col1-width: 40px; width: 100%; max-width: 100%; min-width: 0; position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 350px); min-height: 400px; background: var(--bg-card); flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid var(--border-primary); }
         .xls-scroll-wrap.expanded { height: calc(100vh - 250px); }
 
         /* Adaptive Tailwind overrides */
@@ -233,17 +231,17 @@
             </div>
         </div>
 
-        <div class="rounded-[2rem] border border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col animate-fade relative ring-1 ring-black/5">
+        <div class="w-full max-w-full rounded-[2rem] border border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col animate-fade relative ring-1 ring-black/5">
             <div class="xls-scroll-wrap expanded">
                 <table class="w-full border-collapse" style="min-width:1200px;">
                     <thead><tr>
-                        <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                        <th class="xls-th sticky left-[40px] z-30" style="min-width:300px">Office Name</th>
-                        <th class="xls-th" style="min-width:180px">Type</th>
-                        <th class="xls-th" style="min-width:180px">Location</th>
-                        <th class="xls-th text-right" style="min-width:150px">Total Bldg Cost</th>
-                        <th class="xls-th text-right" style="min-width:150px">Total PPE Cost</th>
-                        <th class="xls-th text-right" style="min-width:150px">Total Semi-PPE Cost</th>
+                        <th class="xls-th w-10 text-center sticky top-0 left-0 z-40 bg-[var(--bg-secondary)]">#</th>
+                        <th class="xls-th sticky top-0 z-40 bg-[var(--bg-secondary)]" style="left: var(--col1-width); min-width:300px">Office Name</th>
+                        <th class="xls-th sticky top-0 z-30 bg-[var(--bg-secondary)]" style="min-width:180px">Type</th>
+                        <th class="xls-th sticky top-0 z-30 bg-[var(--bg-secondary)]" style="min-width:180px">Location</th>
+                        <th class="xls-th sticky top-0 z-30 bg-[var(--bg-secondary)] text-right" style="min-width:150px">Total Bldg Cost</th>
+                        <th class="xls-th sticky top-0 z-30 bg-[var(--bg-secondary)] text-right" style="min-width:150px">Total PPE Cost</th>
+                        <th class="xls-th sticky top-0 z-30 bg-[var(--bg-secondary)] text-right" style="min-width:150px">Total Semi-PPE Cost</th>
                     </tr></thead>
                     <tbody id="officeBody"></tbody>
                 </table>
@@ -267,10 +265,10 @@
                 </div>
             </div>
 
-            <div id="officeTableFooter" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                <div class="flex items-center gap-6">
-                    <p id="officeRowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 Rows</p>
-                    <div id="officePaginationControls" class="flex items-center gap-3 border-l border-slate-200 pl-6">
+            <div id="officeTableFooter" class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] bg-white">
+                <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto">
+                    <p id="officeRowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center sm:text-left">0 Rows</p>
+                    <div id="officePaginationControls" class="flex items-center justify-center gap-3 border-t sm:border-t-0 sm:border-l border-slate-200 pt-4 sm:pt-0 sm:pl-6 w-full sm:w-auto">
                         <button onclick="officePrevPage()" id="officePrevBtn" class="pg-btn">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
                             Prev
@@ -286,6 +284,7 @@
                         </button>
                     </div>
                 </div>
+                <div></div>
             </div>
         </div>
     </div>
@@ -365,8 +364,8 @@
                 const costCell = (val, color) => `<td class="xls-td relative text-right"><span class="xls-const font-black italic ${color} justify-end">₱ ${Number(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></td>`;
 
                 tr.innerHTML = `
-                    <td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
-                    <td class="xls-td relative sticky left-[40px] z-20">
+                    <td class="xls-td text-center sticky left-0 w-10 z-20 bg-[var(--bg-card)]"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
+                    <td class="xls-td relative sticky z-20 bg-[var(--bg-card)]" style="left: var(--col1-width);">
                         <span class="xls-const font-bold text-slate-800 uppercase">${row.name || ''}</span>
                     </td>
                     ${cell(row.type)}

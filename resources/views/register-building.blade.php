@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Building Records | DepEd Zamboanga City</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -26,7 +26,7 @@
         .xls-row:active { transform: scale(0.995); transition: all 0.1s; }
         .xls-row:active .xls-td { background-color: rgba(192, 0, 0, 0.08) !important; }
         .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
-        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 450px); min-height: 400px; background: white; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
+        .xls-scroll-wrap { --col1-width: 40px; position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 450px); min-height: 400px; background: white; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
         .xls-scroll-wrap.expanded { height: calc(100vh - 250px); }
         .pg-btn {
             padding: 8px 18px;
@@ -278,16 +278,16 @@
                 <table id="bldgTable" class="w-full border-collapse" style="min-width:1200px;">
                     <thead id="bldgHeader">
                         <tr>
-                            <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                            <th class="xls-th" style="min-width:100px">School ID</th>
-                            <th class="xls-th" style="min-width:200px">Office/School Name</th>
-                            <th class="xls-th" style="min-width:140px">Article</th>
-                            <th class="xls-th" style="min-width:170px">Description</th>
-                            <th class="xls-th" style="min-width:130px">Property No.</th>
-                            <th class="xls-th" style="min-width:70px">Storeys</th>
-                            <th class="xls-th" style="min-width:90px">Classrooms</th>
-                            <th class="xls-th text-right" style="min-width:120px">Acq. Cost (₱)</th>
-                            <th class="xls-th" style="min-width:120px">Date Constructed</th>
+                            <th class="xls-th w-10 text-center sticky top-0 left-0 z-40 bg-[#f8fafc] dark:bg-[#0f172a]">#</th>
+                            <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:100px">School ID</th>
+                            <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:200px">Office/School Name</th>
+                            <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:140px">Article</th>
+                            <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:170px">Description</th>
+                            <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:130px">Property No.</th>
+                            <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:70px">Storeys</th>
+                            <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:90px">Classrooms</th>
+                            <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a] text-right" style="min-width:120px">Acq. Cost (₱)</th>
+                            <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:120px">Date Constructed</th>
                         </tr>
                     </thead>
                     <tbody id="bldgBody"></tbody>
@@ -356,43 +356,43 @@
                 btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" /></svg> Hide Extra Columns`;
                 table.style.minWidth = '2400px';
                 thead.innerHTML = `<tr>
-                    <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                    <th class="xls-th" style="min-width:90px">Region</th>
-                    <th class="xls-th" style="min-width:190px">Division</th>
-                    <th class="xls-th" style="min-width:140px">Office/School Type</th>
-                    <th class="xls-th" style="min-width:100px">School ID</th>
-                    <th class="xls-th" style="min-width:200px">Office/School Name</th>
-                    <th class="xls-th" style="min-width:180px">Address</th>
-                    <th class="xls-th" style="min-width:70px">Storeys</th>
-                    <th class="xls-th" style="min-width:90px">Classrooms</th>
-                    <th class="xls-th" style="min-width:140px">Article</th>
-                    <th class="xls-th" style="min-width:170px">Description</th>
-                    <th class="xls-th" style="min-width:130px">Classification</th>
-                    <th class="xls-th" style="min-width:130px">Occupancy</th>
-                    <th class="xls-th" style="min-width:150px">Location</th>
-                    <th class="xls-th" style="min-width:120px">Date Constructed</th>
-                    <th class="xls-th" style="min-width:120px">Acquisition Date</th>
-                    <th class="xls-th" style="min-width:130px">Property No.</th>
-                    <th class="xls-th text-right" style="min-width:120px">Acq. Cost (₱)</th>
-                    <th class="xls-th text-center" style="min-width:100px">Est. Useful Life</th>
-                    <th class="xls-th text-right" style="min-width:120px">Appraised Value</th>
-                    <th class="xls-th" style="min-width:120px">Appraisal Date</th>
-                    <th class="xls-th" style="min-width:140px">Remarks</th>
+                    <th class="xls-th w-10 text-center sticky top-0 left-0 z-40 bg-[#f8fafc] dark:bg-[#0f172a]">#</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:90px">Region</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:190px">Division</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:140px">Office/School Type</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:100px">School ID</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:200px">Office/School Name</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:180px">Address</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:70px">Storeys</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:90px">Classrooms</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:140px">Article</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:170px">Description</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:130px">Classification</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:130px">Occupancy</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:150px">Location</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:120px">Date Constructed</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:120px">Acquisition Date</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:130px">Property No.</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a] text-right" style="min-width:120px">Acq. Cost (₱)</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a] text-center" style="min-width:100px">Est. Useful Life</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a] text-right" style="min-width:120px">Appraised Value</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:120px">Appraisal Date</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:140px">Remarks</th>
                 </tr>`;
             } else {
                 btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg> View All Columns`;
                 table.style.minWidth = '1200px';
                 thead.innerHTML = `<tr>
-                    <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                    <th class="xls-th" style="min-width:100px">School ID</th>
-                    <th class="xls-th" style="min-width:200px">Office/School Name</th>
-                    <th class="xls-th" style="min-width:140px">Article</th>
-                    <th class="xls-th" style="min-width:170px">Description</th>
-                    <th class="xls-th" style="min-width:130px">Property No.</th>
-                    <th class="xls-th" style="min-width:70px">Storeys</th>
-                    <th class="xls-th" style="min-width:90px">Classrooms</th>
-                    <th class="xls-th text-right" style="min-width:120px">Acq. Cost (₱)</th>
-                    <th class="xls-th" style="min-width:120px">Date Constructed</th>
+                    <th class="xls-th w-10 text-center sticky top-0 left-0 z-40 bg-[#f8fafc] dark:bg-[#0f172a]">#</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:100px">School ID</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:200px">Office/School Name</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:140px">Article</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:170px">Description</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:130px">Property No.</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:70px">Storeys</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:90px">Classrooms</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a] text-right" style="min-width:120px">Acq. Cost (₱)</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:120px">Date Constructed</th>
                 </tr>`;
             }
             renderBldgTable();
@@ -505,7 +505,7 @@
 
                 if (bldgShowAllColumns) {
                     tr.innerHTML = `
-                        <td class="xls-td text-center sticky left-0 w-10 z-10"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
+                        <td class="xls-td text-center sticky left-0 w-10 z-20 bg-white dark:bg-[#1e293b]"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
                         ${cell(row.region)}
                         ${cell(row.division)}
                         ${cell(row.office_type)}
@@ -530,7 +530,7 @@
                     `;
                 } else {
                     tr.innerHTML = `
-                        <td class="xls-td text-center sticky left-0 w-10 z-10"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
+                        <td class="xls-td text-center sticky left-0 w-10 z-20 bg-white dark:bg-[#1e293b]"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
                         ${cell(row.school_identifier)}
                         ${cell(row.office_name, 'font-bold text-[#c00000]')}
                         ${cell(row.article)}

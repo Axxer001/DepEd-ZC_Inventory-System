@@ -388,7 +388,7 @@ class DashboardController extends Controller
 
                 // 12. Organizational Footprint Stats
                 $schoolsCount   = 1;
-                $officesCount   = DB::table('offices')->where('school_id', $school_id)->count();
+                $officesCount   = 0; // Schools do not contain offices
                 $employeesCount = DB::table('employees')->where('school_id', $school_id)->count();
                 $buildingsCount = DB::table('building_records')->where('school_id', $school_id)->count();
                 $buildingsValue = DB::table('building_records')->where('school_id', $school_id)->sum('acquisition_cost');

@@ -148,72 +148,8 @@ function handleAutocompleteEvent(e) {
 }
 
 function updateNewLabels() {
-    const visibleInputs = document.querySelectorAll('input[data-col], input[data-bldg-col]');
-    if (visibleInputs.length === 0) return;
-
-    const colNames = Array.from(new Set(Array.from(visibleInputs).map(el => el.getAttribute('data-col') || el.getAttribute('data-bldg-col'))));
-    const colContexts = {};
-    colNames.forEach(cn => {
-        colContexts[cn] = {
-            seen: new Set((dbSuggestions[cn] || []).map(v => v.toLowerCase().trim())),
-            firstOccurrences: new Map()
-        };
-    });
-
-    // Process only current page state to find first occurrences
-    const isBldgStep = document.getElementById('stepAddBuilding')?.classList.contains('active');
-    
-    let dataToUse, pageToUse, rowsPerPageToUse;
-    if (isBldgStep) {
-        dataToUse = typeof bldgEntryRows !== 'undefined' ? bldgEntryRows : [];
-        pageToUse = typeof bldgEntryPage !== 'undefined' ? bldgEntryPage : 1;
-        rowsPerPageToUse = typeof BLDG_RPP !== 'undefined' ? BLDG_RPP : 50;
-    } else {
-        // Determine if we are in building management or item management
-        const isBldgMgmt = false; // Add logic if needed
-        dataToUse = isBldgMgmt ? (typeof bldgRowsData !== 'undefined' ? bldgRowsData : []) : allRowsData;
-        pageToUse = isBldgMgmt ? (typeof bldgCurrentPage !== 'undefined' ? bldgCurrentPage : 1) : currentPage;
-        rowsPerPageToUse = isBldgMgmt ? (typeof bldgRowsPerPage !== 'undefined' ? bldgRowsPerPage : 50) : rowsPerPage;
-    }
-
-    const start = (pageToUse - 1) * rowsPerPageToUse;
-    const end   = start + rowsPerPageToUse;
-    const pageData = dataToUse.slice(start, end);
-
-    pageData.forEach(row => {
-        colNames.forEach(cn => {
-            const val = (row[cn] || "").toString().trim().toLowerCase();
-            const dataId = isBldgStep ? row._id : row.id;
-            if (val && !colContexts[cn].seen.has(val)) {
-                colContexts[cn].firstOccurrences.set(val, dataId);
-                colContexts[cn].seen.add(val);
-            }
-        });
-    });
-
-    // Update only visible DOM elements
-    visibleInputs.forEach(input => {
-        const cn = input.getAttribute('data-col') || input.getAttribute('data-bldg-col');
-        const val = input.value.trim().toLowerCase();
-        const tr = input.closest('tr');
-        if (!tr) return;
-        const rowId = parseInt(tr.id.split('-').pop());
-        const td = input.closest('td');
-        
-        const existingBadge = td.querySelector('.new-badge');
-        if (existingBadge) existingBadge.remove();
-
-        if (val !== '' && colContexts[cn].firstOccurrences.get(val) === rowId) {
-            const badge = document.createElement('span');
-            badge.className = 'new-badge';
-            badge.textContent = 'NEW';
-            td.appendChild(badge);
-        }
-    });
+    // Label updates disabled
 }
-
-// Attach input listener strictly for the new labels
-document.addEventListener('input', updateNewLabels);
 
 window.addEventListener('scroll', (e) => {
     if (activeAutocomplete && (e.target === activeAutocomplete || activeAutocomplete.contains(e.target))) return;

@@ -262,9 +262,6 @@ class InventorySetupController extends Controller
                         $errors[] = "Row {$rowNum}: Mode of Acquisition '{$modeName}' does not exist. Only 'PROCUREMENT', 'TRANSFER', and 'DONATION' are allowed.";
                         continue;
                     }
-                } else {
-                    $errors[] = "Row {$rowNum}: Mode of Acquisition is required.";
-                    continue;
                 }
 
                 // ── Resolve Acquisition Source (lookup only) ─────────────────
@@ -1413,9 +1410,9 @@ class InventorySetupController extends Controller
                 if (count($parts) === 2) {
                     $recipientType = $parts[0];
                     $recipientId = (int)$parts[1];
-                    if ($recipientType === 'school') {
+                    if ($recipientType === 'sch') {
                         $schoolId = $recipientId;
-                    } elseif ($recipientType === 'employee') {
+                    } elseif ($recipientType === 'emp') {
                         $schoolId = DB::table('employees')->where('id', $recipientId)->value('school_id');
                     }
                 }

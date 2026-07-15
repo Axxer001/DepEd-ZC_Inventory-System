@@ -164,28 +164,6 @@
             background: #1a2535;
         }
 
-        /* NEW Badge */
-        .new-badge {
-            position: absolute;
-            top: 3px;
-            right: 3px;
-            font-size: 8px;
-            font-weight: 900;
-            background: #10b981;
-            color: white;
-            padding: 1px 4px;
-            border-radius: 4px;
-            text-transform: uppercase;
-            pointer-events: none;
-            z-index: 10;
-            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
-            letter-spacing: 0.5px;
-        }
-        html.dark .new-badge {
-            background: #059669;
-            color: #ecfdf5;
-            box-shadow: none;
-        }
 
         html.dark .xls-const { color: #2e4060 !important; }
         /* Dark: section 1 card */

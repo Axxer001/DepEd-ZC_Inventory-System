@@ -16,11 +16,30 @@ class ClassCategoryController extends Controller
             ->orderBy('name')
             ->get();
 
-        $categories = Category::with('classification')
+        $user = Auth::user();
+        $categoriesQuery = Category::with('classification')
             ->leftJoin('items as i', 'categories.id', '=', 'i.category_id')
-            ->leftJoin('asset_sources as asrc', 'i.id', '=', 'asrc.item_id')
-            ->leftJoin('asset_assignments as ad', 'asrc.id', '=', 'ad.asset_source_id')
-            ->select('categories.*')
+            ->leftJoin('asset_sources as asrc', 'i.id', '=', 'asrc.item_id');
+
+        if ($user && $user->isSchoolSystem()) {
+            $schoolId = $user->school_id;
+            $categoriesQuery->leftJoin('asset_assignments as ad', function($join) use ($schoolId) {
+                $join->on('asrc.id', '=', 'ad.asset_source_id')
+                     ->where(function($q) use ($schoolId) {
+                         $q->where('ad.school_id', $schoolId)
+                           ->orWhereExists(function ($sub) use ($schoolId) {
+                               $sub->select(DB::raw(1))
+                                   ->from('employees')
+                                   ->whereColumn('employees.id', 'ad.employee_id')
+                                   ->where('employees.school_id', $schoolId);
+                           });
+                     });
+            });
+        } else {
+            $categoriesQuery->leftJoin('asset_assignments as ad', 'asrc.id', '=', 'ad.asset_source_id');
+        }
+
+        $categories = $categoriesQuery->select('categories.*')
             ->selectRaw('COUNT(ad.id) as assets_count')
             ->groupBy('categories.id', 'categories.name', 'categories.classification_id', 'categories.see_category_code', 'categories.ppe_category_code', 'categories.created_at', 'categories.updated_at')
             ->orderBy('categories.name')
@@ -33,11 +52,30 @@ class ClassCategoryController extends Controller
     {
         $classification = Classification::findOrFail($id);
 
-        $categories = Category::where('classification_id', $id)
+        $user = Auth::user();
+        $categoriesQuery = Category::where('classification_id', $id)
             ->leftJoin('items as i', 'categories.id', '=', 'i.category_id')
-            ->leftJoin('asset_sources as asrc', 'i.id', '=', 'asrc.item_id')
-            ->leftJoin('asset_assignments as ad', 'asrc.id', '=', 'ad.asset_source_id')
-            ->select('categories.*')
+            ->leftJoin('asset_sources as asrc', 'i.id', '=', 'asrc.item_id');
+
+        if ($user && $user->isSchoolSystem()) {
+            $schoolId = $user->school_id;
+            $categoriesQuery->leftJoin('asset_assignments as ad', function($join) use ($schoolId) {
+                $join->on('asrc.id', '=', 'ad.asset_source_id')
+                     ->where(function($q) use ($schoolId) {
+                         $q->where('ad.school_id', $schoolId)
+                           ->orWhereExists(function ($sub) use ($schoolId) {
+                               $sub->select(DB::raw(1))
+                                   ->from('employees')
+                                   ->whereColumn('employees.id', 'ad.employee_id')
+                                   ->where('employees.school_id', $schoolId);
+                           });
+                     });
+            });
+        } else {
+            $categoriesQuery->leftJoin('asset_assignments as ad', 'asrc.id', '=', 'ad.asset_source_id');
+        }
+
+        $categories = $categoriesQuery->select('categories.*')
             ->selectRaw('COUNT(ad.id) as assets_count')
             ->groupBy('categories.id', 'categories.name', 'categories.classification_id', 'categories.see_category_code', 'categories.ppe_category_code', 'categories.created_at', 'categories.updated_at')
             ->orderBy('categories.name')
@@ -50,14 +88,29 @@ class ClassCategoryController extends Controller
     {
         $category = Category::with('classification')->findOrFail($id);
 
-        $assets = DB::table('asset_assignments as ad')
+        $query = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items as i', 'asrc.item_id', '=', 'i.id')
             ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
             ->leftJoin('schools as s', 'ad.school_id', '=', 's.id')
             ->leftJoin('offices as o', 'ad.office_id', '=', 'o.id')
-            ->where('i.category_id', $id)
-            ->select(
+            ->where('i.category_id', $id);
+
+        $user = Auth::user();
+        if ($user && $user->isSchoolSystem()) {
+            $schoolId = $user->school_id;
+            $query->where(function($q) use ($schoolId) {
+                $q->where('ad.school_id', $schoolId)
+                  ->orWhereExists(function ($sub) use ($schoolId) {
+                      $sub->select(DB::raw(1))
+                          ->from('employees')
+                          ->whereColumn('employees.id', 'ad.employee_id')
+                          ->where('employees.school_id', $schoolId);
+                  });
+            });
+        }
+
+        $assets = $query->select(
                 'ad.id',
                 'ad.property_number',
                 'ad.serial_number',

@@ -414,8 +414,6 @@ function renderBldgEntryTable() {
     document.getElementById('bldgNextBtn').disabled = bldgEntryPage === totalPages;
     const pag = document.getElementById('bldgEntryPagination');
     bldgEntryRows.length > BLDG_RPP ? pag.classList.remove('hidden') : pag.classList.add('hidden');
-    
-    if(typeof updateBldgNewLabels === 'function') updateBldgNewLabels();
 }
 
 function escBldg(v) { return String(v ?? '').replace(/"/g, '&quot;'); }
@@ -544,38 +542,6 @@ async function submitBuildingRegistration() {
 
 // (Dropdown logic removed)
 
-function updateBldgNewLabels() {
-    const inputs = document.querySelectorAll('input[data-bldg-col]');
-    if (inputs.length === 0) return;
-    const colNames = Array.from(new Set(Array.from(inputs).map(el => el.getAttribute('data-bldg-col'))));
-    const firstOccurrences = {};
-    colNames.forEach(cn => firstOccurrences[cn] = new Map());
-
-    const start = (bldgEntryPage - 1) * BLDG_RPP;
-    const pageData = bldgEntryRows.slice(start, start + BLDG_RPP);
-
-    pageData.forEach(row => {
-        colNames.forEach(cn => {
-            const val = (row[cn] || "").toString().trim().toLowerCase();
-            if (val && !firstOccurrences[cn].has(val)) firstOccurrences[cn].set(val, row._id);
-        });
-    });
-
-    inputs.forEach(input => {
-        const cn = input.getAttribute('data-bldg-col');
-        const val = input.value.trim().toLowerCase();
-        const tr = input.closest('tr');
-        if (!tr) return;
-        const rowId = parseInt(input.getAttribute('data-bldg-id'));
-        const td = input.closest('td');
-        const badge = td.querySelector('.new-badge');
-        if (badge) badge.remove();
-        if (val !== '' && firstOccurrences[cn].get(val) === rowId) {
-            const b = document.createElement('span'); b.className = 'new-badge'; b.textContent = 'NEW';
-            td.appendChild(b);
-        }
-    });
-}
 
 // Hook into nextStep render call
 window.renderBldgTable = function() { renderBldgEntryTable(); };

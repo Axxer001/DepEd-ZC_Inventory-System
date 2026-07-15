@@ -114,6 +114,26 @@ class AcquisitionSourceController extends Controller
     {
         $query = AcquisitionSource::query();
 
+        $user = auth()->user();
+        if ($user && $user->isSchoolSystem()) {
+            $schoolId = $user->school_id;
+            $query->whereExists(function ($sub) use ($schoolId) {
+                $sub->select(DB::raw(1))
+                    ->from('asset_sources')
+                    ->join('asset_assignments', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+                    ->whereColumn('asset_sources.acquisition_source_id', 'acquisition_sources.id')
+                    ->where(function ($q) use ($schoolId) {
+                        $q->where('asset_assignments.school_id', $schoolId)
+                          ->orWhereExists(function ($sub2) use ($schoolId) {
+                              $sub2->select(DB::raw(1))
+                                  ->from('employees')
+                                  ->whereColumn('employees.id', 'asset_assignments.employee_id')
+                                  ->where('employees.school_id', $schoolId);
+                          });
+                    });
+            });
+        }
+
         if ($request->has('q') && $request->q !== '') {
             $query->where('name', 'like', '%' . $request->q . '%');
         }

@@ -4,22 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $category->name }} | Category Profile</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        deped: '#c00000',
-                        deped_light: '#fef2f2',
-                    }
-                }
-            }
-        }
-    </script>
+    
     <style>
         /* === CSS Custom Properties for Light/Dark Theming === */
         :root {
@@ -138,6 +126,45 @@
             background-color: var(--bg-card) !important;
             border-color: var(--row-hover-border) !important;
         }
+        .pg-btn {
+            padding: 8px 18px;
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border-radius: 9999px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-primary);
+            background: var(--bg-card);
+            color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05);
+        }
+        .pg-btn:hover:not(:disabled) {
+            border-color: #ef4444;
+            color: #ef4444;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.15);
+        }
+        .pg-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: var(--bg-secondary);
+        }
+        .glass-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
     </style>
 </head>
 <body class="flex min-h-screen overflow-hidden">
@@ -221,7 +248,7 @@
             </aside>
 
             {{-- Main Content - Assets Table --}}
-            <main class="lg:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-full transition-colors animate-fade">
+            <main class="lg:col-span-8 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-full transition-colors animate-fade w-full max-w-full min-w-0">
                 <div class="flex items-center justify-between p-6 border-b border-slate-100 shrink-0">
                     <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-deped"></span> Registered Assets under this Category
@@ -268,8 +295,42 @@
                 </div>
 
                 @if($assets->hasPages())
-                <div class="p-4 border-t border-slate-100 shrink-0">
-                    {{ $assets->links() }}
+                <div id="categoryAssetsFooter" class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] bg-white shrink-0">
+                    <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto">
+                        <p id="categoryRowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center sm:text-left">{{ $assets->total() }} Assets Found</p>
+                        <div id="categoryPaginationControls" class="flex items-center justify-center gap-3 border-t sm:border-t-0 sm:border-l border-slate-200 pt-4 sm:pt-0 sm:pl-6 w-full sm:w-auto">
+                            @if($assets->onFirstPage())
+                                <button class="pg-btn" disabled>
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
+                                    Prev
+                                </button>
+                            @else
+                                <a href="{{ $assets->previousPageUrl() }}" class="pg-btn">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
+                                    Prev
+                                </a>
+                            @endif
+                            
+                            <div class="glass-indicator">
+                                <span class="text-[10px] font-black text-red-600">{{ $assets->currentPage() }}</span>
+                                <span class="text-[10px] font-bold text-slate-500">/</span>
+                                <span class="text-[10px] font-black text-slate-500">{{ $assets->lastPage() }}</span>
+                            </div>
+                            
+                            @if($assets->hasMorePages())
+                                <a href="{{ $assets->nextPageUrl() }}" class="pg-btn">
+                                    Next
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
+                                </a>
+                            @else
+                                <button class="pg-btn" disabled>
+                                    Next
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                    <div></div>
                 </div>
                 @endif
             </main>

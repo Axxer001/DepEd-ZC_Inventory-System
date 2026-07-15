@@ -4,22 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Class & Category | DepEd ZC</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        deped: '#c00000',
-                        deped_light: '#fef2f2',
-                    }
-                }
-            }
-        }
-    </script>
+    
     <style>
         /* === CSS Custom Properties for Light/Dark Theming === */
         :root {
@@ -157,6 +145,10 @@
             </div>
 
             <div class="flex items-center gap-3">
+                <a href="/dashboard" class="px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 bg-white border border-slate-200 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"></path></svg>
+                    Back
+                </a>
                 @if(auth()->user()->isSuperAdmin() && auth()->user()->isMainSystem())
                 <button @click="showAddModal = true; addType = 'classification'" class="px-5 py-2.5 bg-deped text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-all shadow-sm flex items-center gap-2 active:scale-95">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>

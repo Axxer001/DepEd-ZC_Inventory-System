@@ -3175,7 +3175,7 @@
             let invalidRows = [];
             allRowsData.forEach((row, idx) => {
                 const rowNum = idx + 1;
-                const required = ['classification', 'category', 'item', 'uom', 'source', 'cost', 'qty', 'useful-life', 'acceptance-date'];
+                const required = ['classification', 'category', 'item', 'uom', 'source', 'cost', 'qty', 'useful-life', 'acceptance-date', 'mode'];
                 required.forEach(field => { if (!row[field]) isValid = false; });
 
                 if (row.classification) {

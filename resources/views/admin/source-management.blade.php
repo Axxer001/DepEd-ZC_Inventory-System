@@ -4,20 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sources Registry | DepEd Zamboanga City</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: { deped: '#c00000', deped_light: '#fef2f2' }
-                }
-            }
-        }
-    </script>
+    
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -35,7 +26,7 @@
         .xls-row:active { transform: scale(0.995); transition: all 0.1s; }
         .xls-row:active .xls-td { background-color: #fbe3e3 !important; }
         .xls-const { display: flex; align-items: center; padding: 0 16px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
-        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 350px); min-height: 400px; background: white; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
+        .xls-scroll-wrap { --col1-width: 40px; width: 100%; max-width: 100%; min-width: 0; position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 350px); min-height: 400px; background: white; flex-grow: 1; transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1); border-top: 1px solid #e2e8f0; }
         .xls-scroll-wrap.expanded { height: calc(100vh - 250px); }
         .pg-btn { padding: 8px 18px; font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; border-radius: 9999px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid #e2e8f0; background: white; color: #475569; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05); }
         .pg-btn:hover:not(:disabled) { border-color: #ef4444; color: #ef4444; transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.15); }
@@ -111,15 +102,15 @@
         </div>
         @endif
 
-        <div class="rounded-[2rem] border border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col animate-fade relative ring-1 ring-black/5">
+        <div class="w-full max-w-full rounded-[2rem] border border-slate-200/60 shadow-xl shadow-slate-200/50 overflow-hidden flex flex-col animate-fade relative ring-1 ring-black/5">
             <div class="xls-scroll-wrap expanded">
                 <table class="w-full border-collapse" style="min-width:900px;">
                     <thead><tr>
-                        <th class="xls-th w-10 text-center sticky left-0 z-30">#</th>
-                        <th class="xls-th sticky left-[40px] z-30" style="min-width:250px">Source Name</th>
-                        <th class="xls-th" style="min-width:120px">Type</th>
-                        <th class="xls-th" style="min-width:200px">Contact Person</th>
-                        <th class="xls-th" style="min-width:200px">Contact Position</th>
+                        <th class="xls-th w-10 text-center sticky top-0 left-0 z-40 bg-[#f8fafc] dark:bg-[#0f172a]">#</th>
+                        <th class="xls-th sticky top-0 z-40 bg-[#f8fafc] dark:bg-[#0f172a]" style="left: var(--col1-width); min-width:250px">Source Name</th>
+                        <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:120px">Type</th>
+                        <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:200px">Contact Person</th>
+                        <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:200px">Contact Position</th>
                     </tr></thead>
                     <tbody id="sourceBody"></tbody>
                 </table>
@@ -135,10 +126,10 @@
                 </div>
             </div>
 
-            <div id="tableFooter" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] bg-white">
-                <div class="flex items-center gap-6">
-                    <p id="rowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 Rows</p>
-                    <div class="flex items-center gap-3 border-l border-slate-200 pl-6">
+            <div id="tableFooter" class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] bg-white">
+                <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto">
+                    <p id="rowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center sm:text-left">0 Rows</p>
+                    <div class="flex items-center justify-center gap-3 border-t sm:border-t-0 sm:border-l border-slate-200 pt-4 sm:pt-0 sm:pl-6 w-full sm:w-auto">
                         <button onclick="prevPage()" id="prevBtn" class="pg-btn">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
                             Prev
@@ -154,6 +145,7 @@
                         </button>
                     </div>
                 </div>
+                <div></div>
             </div>
         </div>
     </div>
@@ -218,8 +210,8 @@
                 };
 
                 tr.innerHTML = `
-                    <td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
-                    <td class="xls-td relative sticky left-[40px] z-20">
+                    <td class="xls-td text-center sticky left-0 w-10 z-20 bg-white dark:bg-[#1e293b]"><span class="text-[10px] font-black text-slate-500">${displayNum}</span></td>
+                    <td class="xls-td relative sticky z-20 bg-white dark:bg-[#1e293b]" style="left: var(--col1-width);">
                         <span class="xls-const font-bold text-slate-800 uppercase">${s.name}</span>
                     </td>
                     ${typeBadge(s.source_type)}
@@ -252,8 +244,8 @@
                         <div>
                             <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Source Type *</label>
                             <select id="swal-type" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-red-500">
-                                <option value="Internal">Internal (System)</option>
-                                <option value="External">External (Distributor)</option>
+                                <option value="Internal">Internal</option>
+                                <option value="External">External</option>
                             </select>
                         </div>
                         <div>

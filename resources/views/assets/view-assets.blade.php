@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asset Inventory | DepEd Zamboanga City</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -58,7 +58,7 @@
             box-shadow: inset 4px 0 0 #c00000; 
         }
         .xls-const { display: flex; align-items: center; padding: 0 18px; height: 100%; font-size: 11.5px; font-weight: 700; color: inherit; white-space: nowrap; }
-        .xls-scroll-wrap { position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 350px); min-height: 400px; background: white; flex-grow: 1; transition: height 0.3s ease-in-out; border-top: 1px solid #e2e8f0; }
+        .xls-scroll-wrap { --col1-width: 40px; width: 100%; max-width: 100%; min-width: 0; position: relative; overflow-x: auto; overflow-y: auto; height: calc(100vh - 350px); min-height: 400px; background: white; flex-grow: 1; transition: height 0.3s ease-in-out; border-top: 1px solid #e2e8f0; }
         .xls-scroll-wrap.expanded { height: calc(100vh - 280px); }
         
         .pg-btn {
@@ -458,10 +458,6 @@
                 </div>
 
                 <div class="flex items-center gap-4 shrink-0">
-                    <button onclick="toggleAssetColumns()" id="toggleColumnsBtn" class="px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 bg-white border border-slate-200 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:rotate-12 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
-                        View All Columns
-                    </button>
                     <button onclick="toggleAssetFilters()" id="toggleFilterBtn" class="px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 bg-white border border-slate-200 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:rotate-12 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
                         Filters
@@ -677,21 +673,9 @@
             </div>
         </div>
 
-        <!-- Tab Selection + Filters Row -->
-        <div class="flex flex-wrap justify-start items-center gap-3 mb-5">
-            {{-- Tab Pill --}}
-            <div class="inline-flex p-1 bg-slate-100 rounded-2xl border border-slate-200 shadow-inner">
-                <button onclick="setAssetTab('source')" id="tabBtnSource" class="relative z-10 px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-white bg-[#c00000] shadow-md shadow-red-200">
-                    Asset Source
-                </button>
-                <button onclick="setAssetTab('distribution')" id="tabBtnDist" class="relative z-10 px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-slate-500 hover:text-slate-700">
-                    Asset Distribution
-                </button>
-            </div>
 
-        </div>
 
-        <div class="rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden flex flex-col animate-fade relative">
+        <div class="w-full max-w-full rounded-[2rem] border border-slate-100 shadow-lg overflow-hidden flex flex-col animate-fade relative">
             <div class="xls-scroll-wrap expanded">
                 <table id="assetTable" class="w-full border-collapse" style="min-width:1000px;">
                     <thead id="assetHeader"></thead>
@@ -715,10 +699,10 @@
                 </div>
             </div>
 
-            <div id="assetTableFooter" class="px-6 py-4 border-t border-slate-100 flex items-center justify-between relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                <div class="flex items-center gap-6">
-                    <p id="assetRowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest">0 Rows</p>
-                    <div id="assetPaginationControls" class="flex items-center gap-3 border-l border-slate-200 pl-6">
+            <div id="assetTableFooter" class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 relative z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] bg-white">
+                <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full sm:w-auto">
+                    <p id="assetRowCountLabel" class="text-[9px] font-black text-slate-400 uppercase tracking-widest text-center sm:text-left">0 Rows</p>
+                    <div id="assetPaginationControls" class="flex items-center justify-center gap-3 border-t sm:border-t-0 sm:border-l border-slate-200 pt-4 sm:pt-0 sm:pl-6 w-full sm:w-auto">
                         <button onclick="assetPrevPage()" id="assetPrevBtn" class="pg-btn">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"/></svg>
                             Prev
@@ -748,44 +732,7 @@
         let allOfficeList = [];
         let isSchoolInit = false;
         let isOfficeInit = false;
-        let currentAssetTab = 'source';
-        let assetShowAllColumns = false;
-
-        function toggleAssetColumns() {
-            assetShowAllColumns = !assetShowAllColumns;
-            const btn = document.getElementById('toggleColumnsBtn');
-            const table = document.getElementById('assetTable');
-            
-            if (assetShowAllColumns) {
-                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0 1 12 4.5c4.756 0 8.773 3.162 10.065 7.498a10.522 10.522 0 0 1-4.293 5.774M6.228 6.228 3 3m3.228 3.228 3.65 3.65m7.894 7.894L21 21m-3.228-3.228-3.65-3.65m0 0a3 3 0 1 0-4.243-4.243m4.242 4.242L9.88 9.88" /></svg> Hide Extra Columns`;
-                table.style.minWidth = currentAssetTab === 'source' ? '2000px' : '2600px';
-            } else {
-                btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg> View All Columns`;
-                table.style.minWidth = '900px';
-            }
-            renderAssetTable();
-        }
-
-        function setAssetTab(tab) {
-            currentAssetTab = tab;
-            const sourceBtn = document.getElementById('tabBtnSource');
-            const distBtn = document.getElementById('tabBtnDist');
-            const schoolWrap = document.getElementById('assetFilterSchool').parentElement.parentElement;
-            const officeWrap = document.getElementById('assetFilterOffice').parentElement.parentElement;
-            if (tab === 'source') {
-                sourceBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-white bg-[#c00000] shadow-md shadow-red-200";
-                distBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-slate-500 hover:text-[#c00000]";
-                schoolWrap.classList.add('opacity-30', 'pointer-events-none');
-                officeWrap.classList.add('opacity-30', 'pointer-events-none');
-            } else {
-                distBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-white bg-[#c00000] shadow-md shadow-red-200";
-                sourceBtn.className = "relative z-10 px-8 py-2.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 rounded-xl text-slate-500 hover:text-[#c00000]";
-                schoolWrap.classList.remove('opacity-30', 'pointer-events-none');
-                officeWrap.classList.remove('opacity-30', 'pointer-events-none');
-            }
-            assetCurrentPage = 1;
-            assetFetchData();
-        }
+        let currentAssetTab = 'distribution';
 
         async function assetFetchFilters() {
             try {
@@ -941,67 +888,19 @@
             const header = document.getElementById('assetHeader');
             const tbody = document.getElementById('assetBody');
             
-            if (currentAssetTab === 'source') {
-                if (assetShowAllColumns) {
-                    header.innerHTML = `<tr>
-                        <th class="xls-th w-10 text-center sticky left-0 z-40">#</th>
-                        <th class="xls-th" style="min-width:140px">Classification</th>
-                        <th class="xls-th" style="min-width:140px">Category</th>
-                        <th class="xls-th" style="min-width:180px">Item</th>
-                        <th class="xls-th" style="min-width:260px">Description</th>
-                        <th class="xls-th" style="min-width:70px">Unit</th>
-                        <th class="xls-th" style="min-width:160px">Mode of Acquisition</th>
-                        <th class="xls-th" style="min-width:180px">Source Personnel</th>
-                        <th class="xls-th" style="min-width:180px">Personnel Position</th>
-                        <th class="xls-th" style="min-width:130px">Cost/Unit (₱)</th>
-                        <th class="xls-th" style="min-width:80px">Quantity</th>
-                        <th class="xls-th" style="min-width:110px">Useful Life (Yrs)</th>
-                        <th class="xls-th" style="min-width:110px">Warranty (Mos)</th>
-                        <th class="xls-th" style="min-width:140px">Acceptance Date</th>
-                        <th class="xls-th" style="min-width:130px">Condition</th>
-                    </tr>`;
-                } else {
-                    header.innerHTML = `<tr>
-                        <th class="xls-th w-10 text-center sticky left-0 z-40">#</th>
-                        <th class="xls-th" style="min-width:180px">Item</th>
-                        <th class="xls-th" style="min-width:260px">Description</th>
-                        <th class="xls-th" style="min-width:70px">Unit</th>
-                        <th class="xls-th" style="min-width:130px">Cost/Unit (₱)</th>
-                        <th class="xls-th" style="min-width:80px">Quantity</th>
-                        <th class="xls-th" style="min-width:130px">Condition</th>
-                    </tr>`;
-                }
-            } else {
-                if (assetShowAllColumns) {
-                    header.innerHTML = `<tr>
-                        <th class="xls-th w-10 text-center sticky left-0 z-40">#</th>
-                        <th class="xls-th" style="min-width:100px">Region</th>
-                        <th class="xls-th" style="min-width:180px">Division</th>
-                        <th class="xls-th" style="min-width:220px">Employee Search</th>
-                        <th class="xls-th" style="min-width:130px">Employee ID</th>
-                        <th class="xls-th" style="min-width:200px">Employee Name</th>
-                        <th class="xls-th" style="min-width:180px">Employee Position</th>
-                        <th class="xls-th" style="min-width:130px">Employee Status</th>
-                        <th class="xls-th" style="min-width:220px">School/Office Search</th>
-                        <th class="xls-th" style="min-width:130px">Office/School ID</th>
-                        <th class="xls-th" style="min-width:200px">Office/School Type</th>
-                        <th class="xls-th" style="min-width:230px">Office/School Name</th>
-                        <th class="xls-th" style="min-width:160px">Location</th>
-                        <th class="xls-th" style="min-width:180px">Property No.</th>
-                        <th class="xls-th" style="min-width:160px">Acquisition Cost (₱)</th>
-                        <th class="xls-th" style="min-width:150px">Acquisition Date</th>
-                    </tr>`;
-                } else {
-                    header.innerHTML = `<tr>
-                        <th class="xls-th w-10 text-center sticky left-0 z-40">#</th>
-                        <th class="xls-th" style="min-width:200px">Employee Name</th>
-                        <th class="xls-th" style="min-width:230px">Office/School Name</th>
-                        <th class="xls-th" style="min-width:180px">Property No.</th>
-                        <th class="xls-th" style="min-width:160px">Acquisition Cost (₱)</th>
-                        <th class="xls-th" style="min-width:150px">Acquisition Date</th>
-                    </tr>`;
-                }
-            }
+            header.innerHTML = `<tr>
+                <th class="xls-th w-10 text-center sticky top-0 left-0 z-40 bg-[#f8fafc] dark:bg-[#0f172a]">#</th>
+                <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:180px">Item</th>
+                <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:240px">Description</th>
+                <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:70px">Unit</th>
+                <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:130px">Cost (₱)</th>
+                <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:160px">Acquisition</th>
+                <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:240px">Office/School Name</th>
+                <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:150px">Property #</th>
+                <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:140px">Acquisition Date</th>
+                <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:130px">Condition</th>
+            </tr>`;
+            
             tbody.innerHTML = '';
             if (assetRowsData.length === 0) {
                 document.getElementById('assetEmpty').classList.remove('hidden');
@@ -1017,85 +916,30 @@
                 tr.onclick = () => { window.location.href = `/assets/${row.id}/profile`; };
                 const cell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const">${val || ''}</span></td>`;
                 const costCell = (val, extra = '') => `<td class="xls-td relative ${extra}"><span class="xls-const font-black text-emerald-600 italic">₱ ${Number(val || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></td>`;
-                if (currentAssetTab === 'source') {
-                    const srcCond = (row.condition || '').toLowerCase();
-                    let srcBadge;
-                    if (srcCond.includes('good') || srcCond.includes('serviceable')) {
-                        srcBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>${row.condition || 'Good Condition'}</span>`;
-                    } else if (srcCond.includes('repair')) {
-                        srcBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-amber-200 bg-amber-50 text-amber-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>${row.condition || 'Needs Repair'}</span>`;
-                    } else if (srcCond.includes('unserviceable')) {
-                        srcBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-rose-200 bg-rose-50 text-rose-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>${row.condition || 'Unserviceable'}</span>`;
-                    } else {
-                        srcBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-slate-200 bg-slate-50 text-slate-400 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm">${row.condition || 'N/A'}</span>`;
-                    }
-                    const srcCondCell = `<td class="xls-td relative"><span class="xls-const">${srcBadge}</span></td>`;
-                    if (assetShowAllColumns) {
-                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
-                            ${cell(row.classification, 'text-blue-700 font-bold')}
-                            ${cell(row.category, 'text-slate-600')}
-                            ${cell(row.article, 'font-bold text-slate-800')}
-                            ${cell(row.description, 'text-slate-600 italic')}
-                            ${cell(row.unit_of_measurement)}
-                            ${cell(row.mode_of_acquisition, 'text-violet-700 font-bold')}
-                            ${cell(row.source_personnel, 'font-bold text-blue-600')}
-                            ${cell(row.personnel_position, 'text-slate-500 italic')}
-                            ${costCell(row.asset_cost)}
-                            ${cell(row.quantity, 'font-black text-amber-600')}
-                            ${cell(row.estimated_useful_life, 'font-black text-slate-600')}
-                            ${cell(row.warranty, 'font-black text-slate-600')}
-                            ${cell(row.acceptance_date)}
-                            ${srcCondCell}`;
-                    } else {
-                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
-                            ${cell(row.article, 'font-bold text-slate-800')}
-                            ${cell(row.description, 'text-slate-600 italic')}
-                            ${cell(row.unit_of_measurement)}
-                            ${costCell(row.asset_cost)}
-                            ${cell(row.quantity, 'font-black text-amber-600')}
-                            ${srcCondCell}`;
-                    }
+                
+                const srcCond = (row.condition || row.remarks || '').toLowerCase();
+                let srcBadge;
+                if (srcCond.includes('good') || srcCond.includes('serviceable')) {
+                    srcBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>${row.condition || row.remarks || 'Good Condition'}</span>`;
+                } else if (srcCond.includes('repair')) {
+                    srcBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-amber-200 bg-amber-50 text-amber-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>${row.condition || row.remarks || 'Needs Repair'}</span>`;
+                } else if (srcCond.includes('unserviceable')) {
+                    srcBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-rose-200 bg-rose-50 text-rose-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>${row.condition || row.remarks || 'Unserviceable'}</span>`;
                 } else {
-                    const empStatus = (row.custodian_status || '').toLowerCase();
-                    let empBadge;
-                    if (empStatus === 'active') {
-                        empBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>Active</span>`;
-                    } else if (empStatus === 'on leave') {
-                        empBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-amber-200 bg-amber-50 text-amber-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>On Leave</span>`;
-                    } else if (empStatus === 'retired') {
-                        empBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-slate-200 bg-slate-100 text-slate-500 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>Retired</span>`;
-                    } else if (empStatus === 'inactive') {
-                        empBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-rose-200 bg-rose-50 text-rose-700 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Inactive</span>`;
-                    } else {
-                        empBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-slate-200 bg-slate-50 text-slate-400 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm">${row.custodian_status || 'N/A'}</span>`;
-                    }
-                    const empStatusCell = `<td class="xls-td relative"><span class="xls-const">${empBadge}</span></td>`;
-                    if (assetShowAllColumns) {
-                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
-                            <td class="xls-td"><span class="xls-const">Region IX</span></td>
-                            <td class="xls-td"><span class="xls-const">Division of Zamboanga City</span></td>
-                            ${cell(row.custodian_name, 'text-slate-500 italic')}
-                            ${cell(row.custodian_employee_id, 'font-bold text-slate-700')}
-                            ${cell(row.custodian_name, 'font-bold text-blue-700')}
-                            ${cell(row.custodian_position, 'text-slate-500 italic')}
-                            ${empStatusCell}
-                            ${cell(row.office_school_name, 'text-slate-500 italic')}
-                            ${cell(row.school_id, 'font-bold text-slate-700')}
-                            ${cell(row.school_type, 'text-slate-500')}
-                            ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
-                            ${cell(row.location)}
-                            ${cell(row.property_number, 'font-bold text-emerald-600')}
-                            ${costCell(row.acquisition_cost)}
-                            ${cell(row.acquisition_date)}`;
-                    } else {
-                        tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 z-20"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
-                            ${cell(row.custodian_name, 'font-bold text-blue-700')}
-                            ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
-                            ${cell(row.property_number, 'font-bold text-emerald-600')}
-                            ${costCell(row.acquisition_cost)}
-                            ${cell(row.acquisition_date)}`;
-                    }
+                    srcBadge = `<span class="px-2.5 py-1 text-[9px] font-black rounded-full border border-slate-200 bg-slate-50 text-slate-400 tracking-wider uppercase inline-flex items-center gap-1 shadow-sm">${row.condition || row.remarks || 'N/A'}</span>`;
                 }
+                const srcCondCell = `<td class="xls-td relative"><span class="xls-const">${srcBadge}</span></td>`;
+                
+                tr.innerHTML = `<td class="xls-td text-center sticky left-0 w-10 z-20 bg-white dark:bg-[#1e293b]"><span class="text-[10px] font-black text-slate-500">${start + idx + 1}</span></td>
+                    ${cell(row.article, 'font-bold text-slate-800')}
+                    ${cell(row.description, 'text-slate-600 italic')}
+                    ${cell(row.unit_of_measurement)}
+                    ${costCell(row.asset_cost)}
+                    ${cell(row.acq_source, 'text-blue-700 font-bold')}
+                    ${cell(row.office_school_name, 'font-bold text-[#c00000]')}
+                    ${cell(row.property_number, 'font-bold text-emerald-600')}
+                    ${cell(row.acquisition_date)}
+                    ${srcCondCell}`;
                 tbody.appendChild(tr);
             });
             const totalPages = Math.ceil(assetRowsData.length / assetRowsPerPage) || 1;
@@ -1224,11 +1068,7 @@
                 }
             }
 
-            if (tabParam === 'source' || tabParam === 'distribution') {
-                setAssetTab(tabParam);
-            } else {
-                assetFetchData(); 
-            }
+            assetFetchData();
         });
     </script>
 </body>

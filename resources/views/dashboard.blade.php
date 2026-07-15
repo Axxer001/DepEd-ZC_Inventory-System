@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>DepEd ZC IMS | Inventory Management</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -285,7 +285,7 @@
                                 <span class="text-xs font-black uppercase tracking-[0.2em] text-slate-900 group-hover:text-[#c00000] transition-colors">TOTAL AMOUNT OF ASSETS</span>
                                 <div class="flex items-center gap-2 mt-2">
                                     <span class="text-[10px] font-bold uppercase tracking-widest text-slate-900" x-text="cardFilter === 'Overall' ? 'System Verified' : (cardFilter === 'SemiExpendable' ? 'Semi-Expendable' : cardFilter) + ' Value'">System Verified</span>
-                                    <select x-model="cardFilter" class="bg-slate-50 border-none text-slate-900 text-[8px] font-black uppercase tracking-widest rounded-lg px-2 py-0.5 focus:ring-0 cursor-pointer hover:bg-slate-100 transition-colors">
+                                    <select id="cardFilter" name="cardFilter" x-model="cardFilter" class="bg-slate-50 border-none text-slate-900 text-[8px] font-black uppercase tracking-widest rounded-lg px-2 py-0.5 focus:ring-0 cursor-pointer hover:bg-slate-100 transition-colors">
                                         <option value="Overall">All</option>
                                         <option value="PPE">PPE</option>
                                         <option value="SemiExpendable">Semi-Exp</option>
@@ -427,8 +427,9 @@
                         <div class="w-1.5 h-4 bg-slate-400 rounded-full"></div>
                         <h3 class="text-xs font-black uppercase tracking-[0.3em]">Organizational Footprint</h3>
                     </div>
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div @if(auth()->user()->isMainSystem()) onclick="window.location.href='{{ url('/schools') }}'" class="bg-white p-6 rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-slate-50 hover:border-[#c00000]/20 hover:shadow-xl transition-all duration-500 cursor-pointer group" @else class="bg-white p-6 rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-slate-50 transition-all duration-500 group" @endif>
+                    <div class="grid grid-cols-2 {{ auth()->user()->isMainSystem() ? 'lg:grid-cols-4' : 'lg:grid-cols-2' }} gap-6">
+                        @if(auth()->user()->isMainSystem())
+                        <div onclick="window.location.href='{{ url('/schools') }}'" class="bg-white p-6 rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-slate-50 hover:border-[#c00000]/20 hover:shadow-xl transition-all duration-500 cursor-pointer group">
                             <div class="flex items-center justify-between mb-4">
                                 <div class="w-11 h-11 bg-red-50 text-[#c00000] rounded-2xl flex items-center justify-center group-hover:bg-[#c00000] group-hover:text-white transition-all duration-500">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" /></svg>
@@ -437,7 +438,7 @@
                             <p class="text-[9px] font-black text-slate-900 uppercase tracking-widest italic mb-1">Schools</p>
                             <p class="text-3xl font-black tracking-tighter text-slate-900">{{ number_format($schoolsCount ?? 0) }}</p>
                         </div>
-                        <div @if(auth()->user()->isMainSystem()) onclick="window.location.href='{{ url('/admin/offices') }}'" class="bg-white p-6 rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-slate-50 hover:border-[#c00000]/20 hover:shadow-xl transition-all duration-500 cursor-pointer group" @else class="bg-white p-6 rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-slate-50 transition-all duration-500 group" @endif>
+                        <div onclick="window.location.href='{{ url('/admin/offices') }}'" class="bg-white p-6 rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-slate-50 hover:border-[#c00000]/20 hover:shadow-xl transition-all duration-500 cursor-pointer group">
                             <div class="flex items-center justify-between mb-4">
                                 <div class="w-11 h-11 bg-red-50 text-[#c00000] rounded-2xl flex items-center justify-center group-hover:bg-[#c00000] group-hover:text-white transition-all duration-500">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21" /></svg>
@@ -446,6 +447,7 @@
                             <p class="text-[9px] font-black text-slate-900 uppercase tracking-widest italic mb-1">Offices</p>
                             <p class="text-3xl font-black tracking-tighter text-slate-900">{{ number_format($officesCount ?? 0) }}</p>
                         </div>
+                        @endif
                         <div onclick="window.location.href='{{ route('admin.employees') }}'" class="bg-white p-6 rounded-[2rem] shadow-[0_10px_30px_rgba(0,0,0,0.04)] border border-slate-50 hover:border-[#c00000]/20 hover:shadow-xl transition-all duration-500 cursor-pointer group">
                             <div class="flex items-center justify-between mb-4">
                                 <div class="w-11 h-11 bg-red-50 text-[#c00000] rounded-2xl flex items-center justify-center group-hover:bg-[#c00000] group-hover:text-white transition-all duration-500">
@@ -498,16 +500,16 @@
                                             
                                             <div class="space-y-6">
                                                 <div>
-                                                    <label class="text-[9px] font-black text-slate-100 uppercase tracking-widest mb-3 block italic">Filtering Mode</label>
-                                                    <div class="flex p-1 bg-slate-800 rounded-xl border border-slate-700">
+                                                    <span id="filteringModeLabel" class="text-[9px] font-black text-slate-100 uppercase tracking-widest mb-3 block italic">Filtering Mode</span>
+                                                    <div role="group" aria-labelledby="filteringModeLabel" class="flex p-1 bg-slate-800 rounded-xl border border-slate-700">
                                                         <button @click="mode = 'specific'" :class="mode === 'specific' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all">Specific Year</button>
                                                         <button @click="mode = 'gap'" :class="mode === 'gap' ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-400 hover:text-white'" class="flex-1 py-2 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all">Year Gap</button>
                                                     </div>
                                                 </div>
 
                                                 <div x-show="mode === 'specific'" x-transition x-cloak>
-                                                    <label class="text-[9px] font-black text-slate-100 uppercase tracking-widest mb-2 block italic">Choose Year</label>
-                                                    <select x-model="selectedYear" @click.stop class="w-full bg-slate-800 border-slate-700 text-white rounded-xl text-[11px] font-black uppercase py-2.5 px-4 focus:ring-[#c00000] focus:border-[#c00000]">
+                                                    <label for="selectedYear" class="text-[9px] font-black text-slate-100 uppercase tracking-widest mb-2 block italic">Choose Year</label>
+                                                    <select id="selectedYear" name="selectedYear" x-model="selectedYear" @click.stop class="w-full bg-slate-800 border-slate-700 text-white rounded-xl text-[11px] font-black uppercase py-2.5 px-4 focus:ring-[#c00000] focus:border-[#c00000]">
                                                         <template x-for="y in availableYears" :key="y">
                                                             <option :value="y" x-text="y"></option>
                                                         </template>
@@ -516,10 +518,10 @@
 
                                                 <div x-show="mode === 'gap'" x-transition x-cloak>
                                                     <div class="flex justify-between items-center mb-2">
-                                                        <label class="text-[9px] font-black text-slate-200 uppercase tracking-widest block italic">Gap Range (Years)</label>
+                                                        <label for="selectedGap" class="text-[9px] font-black text-slate-200 uppercase tracking-widest block italic">Gap Range (Years)</label>
                                                         <span class="text-[10px] font-black text-white bg-[#c00000] px-2 py-0.5 rounded-md" x-text="selectedGap + ' yrs'"></span>
                                                     </div>
-                                                    <input type="range" x-model="selectedGap" min="1" max="10" step="1" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#c00000]">
+                                                    <input id="selectedGap" name="selectedGap" type="range" x-model="selectedGap" min="1" max="10" step="1" class="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-[#c00000]">
                                                     <div class="flex justify-between mt-2 px-1">
                                                         <span class="text-[8px] font-bold text-slate-200 uppercase">1yr</span>
                                                         <span class="text-[8px] font-bold text-slate-200 uppercase">10yrs</span>

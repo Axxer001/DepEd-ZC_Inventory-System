@@ -4,20 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $source->name }} | Source Profile</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: { deped: '#c00000', deped_light: '#fef2f2' }
-                }
-            }
-        }
-    </script>
+    
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f4f5f7; }
         .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
