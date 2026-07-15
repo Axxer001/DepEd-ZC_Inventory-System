@@ -183,13 +183,33 @@ class InventorySetupController extends Controller
             $itemCache[$item->category_id . '_' . strtolower(trim($item->name))] = $item->id;
         }
 
+        $acqContactCache = [];
+        foreach (DB::table('acquisition_sources')->select('id', 'contact_person', 'contact_position')->get() as $src) {
+            $acqContactCache[$src->id] = [
+                'contact_person' => $src->contact_person,
+                'contact_position' => $src->contact_position,
+            ];
+        }
+
+        $supplierContactCache = [];
+        foreach (DB::table('suppliers')->select('id', 'supplier_personnel', 'contact_number', 'contact_email', 'service_center')->get() as $sup) {
+            $supplierContactCache[$sup->id] = [
+                'supplier_personnel' => $sup->supplier_personnel,
+                'contact_number' => $sup->contact_number,
+                'contact_email' => $sup->contact_email,
+                'service_center' => $sup->service_center,
+            ];
+        }
+
         $cache = [
             'acq_source' => array_change_key_case(DB::table('acquisition_sources')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'acq_contact'=> $acqContactCache,
             'class'      => array_change_key_case(DB::table('classifications')->pluck('id', 'name')->toArray(), CASE_LOWER),
             'cat_composite'  => $catCache,
             'item_composite' => $itemCache,
             'mode'       => array_change_key_case(DB::table('procurement_modes')->pluck('id', 'name')->toArray(), CASE_LOWER),
             'supplier'   => array_change_key_case(DB::table('suppliers')->pluck('id', 'name')->toArray(), CASE_LOWER),
+            'supplier_contact' => $supplierContactCache,
         ];
 
         $conditionMap = [
@@ -284,6 +304,34 @@ class InventorySetupController extends Controller
                 $rawCondition = strtolower(trim($row['condition'] ?? ''));
                 $condition    = $conditionMap[$rawCondition] ?? 'Good Condition';
 
+                $personnel = !empty($row['personnel']) ? trim($row['personnel']) : null;
+                $position = !empty($row['position']) ? trim($row['position']) : null;
+
+                if ($acqSourceId && isset($cache['acq_contact'][$acqSourceId])) {
+                    if (empty($personnel)) {
+                        $personnel = $cache['acq_contact'][$acqSourceId]['contact_person'];
+                    }
+                    if (empty($position)) {
+                        $position = $cache['acq_contact'][$acqSourceId]['contact_position'];
+                    }
+                }
+
+                $suppPersonnel = !empty($row['supplier_personnel']) ? trim($row['supplier_personnel']) : null;
+                $suppServiceCenter = !empty($row['service_center']) ? trim($row['service_center']) : null;
+                $suppContactNumber = null;
+                $suppContactEmail = null;
+
+                if ($supplierId && isset($cache['supplier_contact'][$supplierId])) {
+                    if (empty($suppPersonnel)) {
+                        $suppPersonnel = $cache['supplier_contact'][$supplierId]['supplier_personnel'];
+                    }
+                    if (empty($suppServiceCenter)) {
+                        $suppServiceCenter = $cache['supplier_contact'][$supplierId]['service_center'];
+                    }
+                    $suppContactNumber = $cache['supplier_contact'][$supplierId]['contact_number'];
+                    $suppContactEmail = $cache['supplier_contact'][$supplierId]['contact_email'];
+                }
+
                 // ── Insert asset_sources ─────────────────────────────────────
                 $assetSourceId = DB::table('asset_sources')->insertGetId([
                     'item_id'                => $itemId,
@@ -299,6 +347,12 @@ class InventorySetupController extends Controller
                     'acceptance_date'        => $row['acceptance-date']   ?? now()->toDateString(),
                     'condition'              => $condition,
                     'equipment'              => ((float)($row['cost'] ?? 0) <= 49999 ? 'SEE' : 'PPE'),
+                    'contact_person'         => $personnel,
+                    'contact_position'       => $position,
+                    'supplier_personnel'     => $suppPersonnel,
+                    'supplier_contact_number'=> $suppContactNumber,
+                    'supplier_contact_email' => $suppContactEmail,
+                    'supplier_service_center'=> $suppServiceCenter,
                     'created_at'             => now(),
                     'updated_at'             => now(),
                 ]);

@@ -31,7 +31,7 @@ class AssetServiceController extends Controller
                 'asrc.description',
                 'items.name as item_name',
                 'suppliers.name as supplier_name',
-                'suppliers.service_center',
+                DB::raw('COALESCE(asrc.supplier_service_center, suppliers.service_center) as service_center'),
                 DB::raw("CONCAT(COALESCE(prev_emp.first_name,''), ' ', COALESCE(prev_emp.last_name,'')) as previous_custodian_name"),
                 'asv.previous_custodian_id'
             )
@@ -91,8 +91,8 @@ class AssetServiceController extends Controller
                 'classifications.name as classification_name',
                 'acquisition_sources.name as source_name',
                 'suppliers.name as supplier_name',
-                'suppliers.service_center',
-                'suppliers.contact_number as supplier_contact',
+                DB::raw('COALESCE(asrc.supplier_service_center, suppliers.service_center) as service_center'),
+                DB::raw('COALESCE(asrc.supplier_contact_number, suppliers.contact_number) as supplier_contact'),
                 'pm.name as mode_of_acquisition',
                 'prev_emp.first_name as prev_first',
                 'prev_emp.middle_name as prev_middle',

@@ -243,6 +243,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/offices', function () {
         return view('admin.offices');
     })->name('admin.offices')->middleware('main_system');
+    Route::post('/admin/offices', [\App\Http\Controllers\OfficeController::class, 'store'])->name('admin.offices.store')->middleware(['role:super_admin,admin', 'main_system']);
 
     // --- Sources Registry ---
     Route::get('/admin/sources', [AcquisitionSourceController::class, 'managementIndex'])->name('admin.sources');
@@ -270,6 +271,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/custodians/{id}', [EmployeeController::class, 'profile'])->name('custodians.profile');
     Route::get('/admin/employee-management/{id}', [EmployeeController::class, 'profile'])->name('admin.employee-management.profile');
     Route::post('/admin/employees/{id}/photo', [EmployeeController::class, 'uploadPhoto'])->name('admin.employees.photo.upload');
+    Route::delete('/admin/employees/{id}/photo', [EmployeeController::class, 'removePhoto'])->name('admin.employees.photo.remove');
 
 
 

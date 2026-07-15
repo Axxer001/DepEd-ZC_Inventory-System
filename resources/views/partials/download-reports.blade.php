@@ -6,9 +6,9 @@
     <title>Download Reports | DepEd Zamboanga City</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script defer src="https://unpkg.com/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
@@ -309,7 +309,7 @@
                                 <th class="px-4 py-4">Contact Position</th>
                                 <th class="px-4 py-4 text-right">Total Cost</th>
                                 <th class="px-4 py-4">Acceptance Date</th>
-                                <th class="px-4 py-4">Acquisition Date</th>
+                                <th class="px-4 py-4">Issuance Date</th>
                                 <th class="px-4 py-4">Remarks (Condition)</th>
                             </tr>
                         </thead>

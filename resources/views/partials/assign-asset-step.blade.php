@@ -116,7 +116,7 @@
                             <th class="xls-th col-identity" x-show="!hideAutofill" style="min-width:158px">Office/School Type</th>
                             <th class="xls-th col-identity" x-show="!hideAutofill" style="min-width:158px">Office/School Name</th>
                             <th class="xls-th col-identity" x-show="!hideAutofill" style="min-width:158px">Location</th>
-                            <th class="xls-th col-temporal" style="min-width:158px">Acquisition Date</th>
+                            <th class="xls-th col-temporal" style="min-width:158px">Issuance Date</th>
                             <th class="xls-th text-center" style="min-width:80px">Select</th>
                         </tr>
                     </thead>
@@ -320,9 +320,9 @@
                     <input type="text" readonly :value="bulkData.school_name || 'Not Assigned'" class="xls-input bg-slate-50 text-slate-500 cursor-not-allowed">
                 </div>
 
-                <!-- Acquisition Date -->
+                <!-- Issuance Date -->
                 <div class="relative p-1 rounded-2xl col-span-2">
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label>
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Issuance Date</label>
                     <input type="date" x-model="bulkData.acquisition_date" class="xls-input !border border-slate-100 rounded-xl bg-transparent">
                 </div>
             </div>

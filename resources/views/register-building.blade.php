@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Building Records | DepEd Zamboanga City</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
@@ -203,7 +203,7 @@
 
         </div>
 
-        <!-- Filter Configuration -->
+        
         <div id="bldgFilterSection" class="hidden bg-white rounded-[2.5rem] shadow-lg border border-slate-100 p-8 mb-8 relative z-50 animate-fade transition-all duration-300 origin-top">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8 relative z-10">
                 <div>
@@ -234,7 +234,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Acquisition Date</label>
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Issuance Date</label>
                     <input type="date" id="bldgFilterDate" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
                 </div>
                 <div>
@@ -255,7 +255,7 @@
                         <option value="occupancy_nature">Missing Occupancy</option>
                         <option value="location">Missing Location</option>
                         <option value="date_constructed">Missing Date Constructed</option>
-                        <option value="acquisition_date">Missing Acquisition Date</option>
+                        <option value="acquisition_date">Missing Issuance Date</option>
                         <option value="property_number">Missing Property Number</option>
                         <option value="acquisition_cost">Missing Acquisition Cost</option>
                         <option value="estimated_useful_life">Missing Useful Life</option>
@@ -371,7 +371,7 @@
                     <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:130px">Occupancy</th>
                     <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:150px">Location</th>
                     <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:120px">Date Constructed</th>
-                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:120px">Acquisition Date</th>
+                    <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:120px">Issuance Date</th>
                     <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:130px">Property No.</th>
                     <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a] text-right" style="min-width:120px">Acq. Cost (₱)</th>
                     <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a] text-center" style="min-width:100px">Est. Useful Life</th>
@@ -624,7 +624,7 @@
             bldgFetchData();
         });
     </script>
-    <!-- Depreciation Tooltip -->
+    
     <div id="depTooltip" class="dep-tooltip">
         <div class="flex items-center gap-3 mb-4">
             <div class="w-8 h-8 rounded-lg bg-red-600/20 flex items-center justify-center">

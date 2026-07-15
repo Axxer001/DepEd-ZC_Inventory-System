@@ -165,7 +165,7 @@
                             <th class="xls-th text-blue-600" style="min-width:160px">Location</th>
                             <th class="xls-th text-blue-600" style="min-width:150px">Property No.</th>
                             <th class="xls-th text-blue-600 text-right" style="min-width:130px">Acquisition Cost (₱)</th>
-                            <th class="xls-th text-blue-600" style="min-width:140px">Acquisition Date</th>
+                            <th class="xls-th text-blue-600" style="min-width:140px">Issuance Date</th>
                         </tr>
                     </thead>
                     <tbody id="editAssetDistBody"></tbody>
@@ -284,7 +284,7 @@
                             <input type="text" id="ebCostTotal" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 cursor-not-allowed outline-none text-right pr-10 opacity-60" placeholder="Auto calculated" readonly tabindex="-1">
                         </div>
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Acquisition Date</label><input type="date" id="ebDate2" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Issuance Date</label><input type="date" id="ebDate2" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                 </div>
             </div>
 

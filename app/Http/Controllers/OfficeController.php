@@ -2,11 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Office;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class OfficeController extends Controller
 {
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name'      => 'required|string|max:255',
+            'office_id' => 'required|string|max:255|unique:offices,office_id',
+            'type'      => 'required|string|max:255',
+            'location'  => 'required|string|max:255',
+        ]);
+
+        Office::create([
+            'name'      => $validated['name'],
+            'office_id' => $validated['office_id'],
+            'type'      => $validated['type'],
+            'location'  => $validated['location'],
+        ]);
+
+        return redirect()->route('admin.offices')->with('success', 'Office created successfully.');
+    }
     public function profile($id)
     {
         // Fetch the office details with its school, district, and quadrant

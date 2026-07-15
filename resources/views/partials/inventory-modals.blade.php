@@ -106,7 +106,7 @@
                             <option value="Not Useable">Not Useable</option>
                         </select>
                     </div>
-                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Date of Registration</label><input type="date" id="bDate1" class="xls-input !border border-slate-100 rounded-xl bg-transparent"></div>
+                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Date of Acquisition</label><input type="date" id="bDate1" class="xls-input !border border-slate-100 rounded-xl bg-transparent"></div>
                 </div>
             </div>
 

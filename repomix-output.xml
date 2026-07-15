@@ -9434,7 +9434,7 @@ old_integrity = '''            <div>
                     <option value="school_name">Missing School Name</option>
                     <option value="occupancy">Missing Nature of Occupancy</option>
                     <option value="location">Missing Location</option>
-                    <option value="acquisition_date">Missing Acquisition Date</option>
+                    <option value="acquisition_date">Missing Issuance Date</option>
                 </select>
             </div>'''
 c = c.replace(old_integrity, '')
@@ -9519,7 +9519,7 @@ old_source_table = '''        {{-- ── Asset Source Table ── --}}
                             <th class="xls-th text-blue-600" style="min-width:160px">Location</th>
                             <th class="xls-th text-blue-600" style="min-width:150px">Property No.</th>
                             <th class="xls-th text-blue-600 text-right" style="min-width:130px">Acquisition Cost (&#8369;)</th>
-                            <th class="xls-th text-blue-600" style="min-width:140px">Acquisition Date</th>
+                            <th class="xls-th text-blue-600" style="min-width:140px">Issuance Date</th>
                         </tr>
                     </thead>
                     <tbody id="bldgDistBody"></tbody>
@@ -9548,7 +9548,7 @@ new_bldg_table = '''        {{-- ── Buildings Table ── --}}
                             <th class="xls-th text-emerald-600" style="min-width:160px">Nature of Occupancy</th>
                             <th class="xls-th text-emerald-600" style="min-width:160px">Location</th>
                             <th class="xls-th text-emerald-600" style="min-width:140px">Date Constructed</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Acquisition Date</th>
+                            <th class="xls-th text-emerald-600" style="min-width:140px">Issuance Date</th>
                             <th class="xls-th text-emerald-600" style="min-width:150px">Property No.</th>
                             <th class="xls-th text-emerald-600 text-right" style="min-width:140px">Acquisition Cost (&#8369;)</th>
                             <th class="xls-th text-emerald-600 text-right" style="min-width:120px">Useful Life (yrs)</th>
@@ -10045,7 +10045,7 @@ new_body = '''        {{-- Body --}}
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Acquisition Cost (₱)</label><input type="number" id="bebAcqCost" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="0.01"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Useful Life (yrs)</label><input type="number" id="bebLife" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="1"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Date Constructed</label><input type="date" id="bebDateConstructed" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Acquisition Date</label><input type="date" id="bebAcqDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Issuance Date</label><input type="date" id="bebAcqDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                     <div class="relative col-span-2">
                         <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Remarks</label>
                         <select id="bebRemarks" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl bg-transparent">
@@ -13383,7 +13383,7 @@ new_bldg_table = '''        {{-- ── Buildings Table ── --}}
                             <th class="xls-th text-emerald-600" style="min-width:160px">Nature of Occupancy</th>
                             <th class="xls-th text-emerald-600" style="min-width:160px">Location</th>
                             <th class="xls-th text-emerald-600" style="min-width:140px">Date Constructed</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Acquisition Date</th>
+                            <th class="xls-th text-emerald-600" style="min-width:140px">Issuance Date</th>
                             <th class="xls-th text-emerald-600" style="min-width:150px">Property No.</th>
                             <th class="xls-th text-emerald-600 text-right" style="min-width:140px">Acquisition Cost (₱)</th>
                             <th class="xls-th text-emerald-600 text-right" style="min-width:120px">Useful Life (yrs)</th>
@@ -13430,7 +13430,7 @@ new_bulk_body = '''{{-- Body --}}
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Acquisition Cost (₱)</label><input type="number" id="bebAcqCost" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="0.01"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Useful Life (yrs)</label><input type="number" id="bebLife" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="1"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Date Constructed</label><input type="date" id="bebDateConstructed" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Acquisition Date</label><input type="date" id="bebAcqDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Issuance Date</label><input type="date" id="bebAcqDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                     <div class="relative col-span-2">
                         <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Remarks</label>
                         <select id="bebRemarks" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl bg-transparent">
@@ -13622,7 +13622,7 @@ new_bldg_table = '''        {{-- ── Buildings Table ── --}}
                             <th class="xls-th text-emerald-600" style="min-width:160px">Nature of Occupancy</th>
                             <th class="xls-th text-emerald-600" style="min-width:160px">Location</th>
                             <th class="xls-th text-emerald-600" style="min-width:140px">Date Constructed</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Acquisition Date</th>
+                            <th class="xls-th text-emerald-600" style="min-width:140px">Issuance Date</th>
                             <th class="xls-th text-emerald-600" style="min-width:150px">Property No.</th>
                             <th class="xls-th text-emerald-600 text-right" style="min-width:140px">Acquisition Cost (&#8369;)</th>
                             <th class="xls-th text-emerald-600 text-right" style="min-width:120px">Useful Life (yrs)</th>
@@ -13669,7 +13669,7 @@ new_bulk_body = '''{{-- Body --}}
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Acquisition Cost (&#8369;)</label><input type="number" id="bebAcqCost" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="0.01"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Useful Life (yrs)</label><input type="number" id="bebLife" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="1"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Date Constructed</label><input type="date" id="bebDateConstructed" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Acquisition Date</label><input type="date" id="bebAcqDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Issuance Date</label><input type="date" id="bebAcqDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                     <div class="relative col-span-2">
                         <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Remarks</label>
                         <select id="bebRemarks" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl bg-transparent">
@@ -17830,7 +17830,7 @@ print("Removed specified functions.")
                             <th class="xls-th text-emerald-600" style="min-width:160px">Nature of Occupancy</th>
                             <th class="xls-th text-emerald-600" style="min-width:160px">Location</th>
                             <th class="xls-th text-emerald-600" style="min-width:140px">Date Constructed</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Acquisition Date</th>
+                            <th class="xls-th text-emerald-600" style="min-width:140px">Issuance Date</th>
                             <th class="xls-th text-emerald-600" style="min-width:150px">Property No.</th>
                             <th class="xls-th text-emerald-600 text-right" style="min-width:140px">Acquisition Cost (₱)</th>
                             <th class="xls-th text-emerald-600 text-right" style="min-width:120px">Useful Life (yrs)</th>
@@ -17923,7 +17923,7 @@ print("Removed specified functions.")
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Acquisition Cost (₱)</label><input type="number" id="bebAcqCost" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="0.01"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Useful Life (yrs)</label><input type="number" id="bebLife" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="1"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Date Constructed</label><input type="date" id="bebDateConstructed" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Acquisition Date</label><input type="date" id="bebAcqDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Issuance Date</label><input type="date" id="bebAcqDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                     <div class="relative col-span-2">
                         <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Remarks</label>
                         <select id="bebRemarks" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl bg-transparent">
@@ -18435,7 +18435,7 @@ print("Removed specified functions.")
                     <option value="school_name">Missing School Name</option>
                     <option value="occupancy">Missing Nature of Occupancy</option>
                     <option value="location">Missing Location</option>
-                    <option value="acquisition_date">Missing Acquisition Date</option>
+                    <option value="acquisition_date">Missing Issuance Date</option>
                 </select>
             </div>
         </div>
@@ -18532,7 +18532,7 @@ print("Removed specified functions.")
                             <th class="xls-th text-blue-600" style="min-width:160px">Location</th>
                             <th class="xls-th text-blue-600" style="min-width:150px">Property No.</th>
                             <th class="xls-th text-blue-600 text-right" style="min-width:130px">Acquisition Cost (₱)</th>
-                            <th class="xls-th text-blue-600" style="min-width:140px">Acquisition Date</th>
+                            <th class="xls-th text-blue-600" style="min-width:140px">Issuance Date</th>
                         </tr>
                     </thead>
                     <tbody id="editAssetDistBody"></tbody>
@@ -18651,7 +18651,7 @@ print("Removed specified functions.")
                             <input type="text" id="ebCostTotal" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 cursor-not-allowed outline-none text-right pr-10 opacity-60" placeholder="Auto calculated" readonly tabindex="-1">
                         </div>
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Acquisition Date</label><input type="date" id="ebDate2" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Issuance Date</label><input type="date" id="ebDate2" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                 </div>
             </div>
 
@@ -20347,7 +20347,7 @@ new_bulk_body = """
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Location</label><input type="text" id="bbLocation" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Date Constructed</label><input type="date" id="bbConstructed" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                     
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Acquisition Date</label><input type="date" id="bbAcqDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Issuance Date</label><input type="date" id="bbAcqDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Property No.</label><input type="text" id="bbPropertyNo" autocomplete="off" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl" placeholder="Leave empty to ignore"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Acquisition Cost</label><input type="number" id="bbCost" step="0.01" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore"></div>
                     
@@ -20575,7 +20575,7 @@ with open('resources/views/partials/building-edit-step.blade.php', 'w') as f:
                             <th class="xls-th text-blue-600" style="min-width:160px">Location</th>
                             <th class="xls-th text-blue-600" style="min-width:150px">Property No.</th>
                             <th class="xls-th text-blue-600 text-right" style="min-width:130px">Acquisition Cost (₱)</th>
-                            <th class="xls-th text-blue-600" style="min-width:140px">Acquisition Date</th>
+                            <th class="xls-th text-blue-600" style="min-width:140px">Issuance Date</th>
                         </tr>
                     </thead>
                     <tbody id="editAssetDistBody"></tbody>
@@ -20694,7 +20694,7 @@ with open('resources/views/partials/building-edit-step.blade.php', 'w') as f:
                             <input type="text" id="ebCostTotal" class="w-full px-4 py-[11px] font-semibold text-[11.5px] bg-slate-100/50 dark:bg-white/5 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 dark:text-slate-400 cursor-not-allowed outline-none text-right pr-10 opacity-60" placeholder="Auto calculated" readonly tabindex="-1">
                         </div>
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Acquisition Date</label><input type="date" id="ebDate2" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-blue-600">Issuance Date</label><input type="date" id="ebDate2" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                 </div>
             </div>
 
@@ -25201,7 +25201,7 @@ class BuildingImportController extends Controller
                             </h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8 bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
                                 <div>
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Acquisition Date</p>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Issuance Date</p>
                                     <p class="text-sm font-black text-slate-800 mt-1 uppercase">{{ $asset->acquisition_date ? \Carbon\Carbon::parse($asset->acquisition_date)->format('F d, Y') : 'N/A' }}</p>
                                 </div>
                                 <div>
@@ -25878,8 +25878,8 @@ class BuildingImportController extends Controller
                 });
             }
 
-            const buildingHeaders = ['#','Region','Division','Office/School Type','School ID','Office/School Name','Address','Storeys','Classrooms','Article/Item','Description','Classification','Occupancy','Location','Date Constructed','Acquisition Date','Property No.','Acquisition Cost','Est. Useful Life','Appraised Value','Appraisal Date','Remarks'];
-            const assetHeaders    = ['#','Region','Division','Office/School Type','School ID','Office/School Name','Article/Item','Description','Classification','Occupancy','Location','Acquisition Date','Property No.','Acquisition Cost'];
+            const buildingHeaders = ['#','Region','Division','Office/School Type','School ID','Office/School Name','Address','Storeys','Classrooms','Article/Item','Description','Classification','Occupancy','Location','Date Constructed','Issuance Date','Property No.','Acquisition Cost','Est. Useful Life','Appraised Value','Appraisal Date','Remarks'];
+            const assetHeaders    = ['#','Region','Division','Office/School Type','School ID','Office/School Name','Article/Item','Description','Classification','Occupancy','Location','Issuance Date','Property No.','Acquisition Cost'];
 
             function switchTab(key) {
                 currentTab = key; currentPage = 1;
@@ -26691,7 +26691,7 @@ class BuildingImportController extends Controller
                         <th class="xls-th" style="min-width:120px">Occupancy</th>
                         <th class="xls-th" style="min-width:150px">Location</th>
                         <th class="xls-th" style="min-width:130px">Date Constructed</th>
-                        <th class="xls-th" style="min-width:130px">Acquisition Date</th>
+                        <th class="xls-th" style="min-width:130px">Issuance Date</th>
                         <th class="xls-th" style="min-width:140px">Property No.</th>
                         <th class="xls-th text-right" style="min-width:130px">Acquisition Cost (₱)</th>
                         <th class="xls-th text-right" style="min-width:115px">Useful Life (yrs)</th>
@@ -26801,7 +26801,7 @@ class BuildingImportController extends Controller
                     <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Location</label><input type="text" id="bldgBulkLocation" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Combo-box: type/select" list="dl-bldg-school-name"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Property Number</label><input type="text" id="bldgBulkPropertyNo" autocomplete="off" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50" placeholder="Leave empty to ignore"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Date Constructed</label><input type="date" id="bldgBulkDateConstructed" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label><input type="date" id="bldgBulkAcqDate" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Issuance Date</label><input type="date" id="bldgBulkAcqDate" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Cost (₱)</label><input type="number" id="bldgBulkAcqCost" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50 text-right" placeholder="0.00" min="0" step="0.01"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Expected Useful Life</label><input type="number" id="bldgBulkLife" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50 text-right" placeholder="25" min="0" step="1"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Appraised Value (₱)</label><input type="number" id="bldgBulkAppraisedVal" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50 text-right" placeholder="0.00" min="0" step="0.01"></div>
@@ -28797,7 +28797,7 @@ class ImportController extends Controller
                         <option value="school_name">Missing School Name</option>
                         <option value="occupancy">Missing Nature of Occupancy</option>
                         <option value="location">Missing Location</option>
-                        <option value="acquisition_date">Missing Acquisition Date</option>
+                        <option value="acquisition_date">Missing Issuance Date</option>
                     </select>
                 </div>
             </div>
@@ -29033,7 +29033,7 @@ class ImportController extends Controller
                         <th class="xls-th" style="min-width:150px">Location</th>
                         <th class="xls-th" style="min-width:180px">Property No.</th>
                         <th class="xls-th" style="min-width:150px">Acquisition Cost (₱)</th>
-                        <th class="xls-th" style="min-width:150px">Acquisition Date</th>
+                        <th class="xls-th" style="min-width:150px">Issuance Date</th>
                     </tr>`;
                 } else {
                     header.innerHTML = `<tr>
@@ -29043,7 +29043,7 @@ class ImportController extends Controller
                         <th class="xls-th" style="min-width:150px">Location</th>
                         <th class="xls-th" style="min-width:180px">Property No.</th>
                         <th class="xls-th" style="min-width:150px">Acquisition Cost (₱)</th>
-                        <th class="xls-th" style="min-width:150px">Acquisition Date</th>
+                        <th class="xls-th" style="min-width:150px">Issuance Date</th>
                     </tr>`;
                 }
             }
@@ -30817,7 +30817,7 @@ class DashboardController extends Controller
                     </select>
                 </div>
                 <div>
-                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Acquisition Date</label>
+                    <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-2 block italic">Issuance Date</label>
                     <input type="date" id="bldgFilterDate" class="w-full bg-slate-50 border-slate-100 rounded-xl px-4 py-2.5 text-[10px] font-bold focus:ring-4 focus:ring-red-50 focus:border-red-500 transition-all text-slate-500">
                 </div>
                 <div>
@@ -30838,7 +30838,7 @@ class DashboardController extends Controller
                         <option value="occupancy_nature">Missing Occupancy</option>
                         <option value="location">Missing Location</option>
                         <option value="date_constructed">Missing Date Constructed</option>
-                        <option value="acquisition_date">Missing Acquisition Date</option>
+                        <option value="acquisition_date">Missing Issuance Date</option>
                         <option value="property_number">Missing Property Number</option>
                         <option value="acquisition_cost">Missing Acquisition Cost</option>
                         <option value="estimated_useful_life">Missing Useful Life</option>
@@ -30955,7 +30955,7 @@ class DashboardController extends Controller
                     <th class="xls-th" style="min-width:130px">Occupancy</th>
                     <th class="xls-th" style="min-width:150px">Location</th>
                     <th class="xls-th" style="min-width:120px">Date Constructed</th>
-                    <th class="xls-th" style="min-width:120px">Acquisition Date</th>
+                    <th class="xls-th" style="min-width:120px">Issuance Date</th>
                     <th class="xls-th" style="min-width:130px">Property No.</th>
                     <th class="xls-th text-right" style="min-width:120px">Acq. Cost (₱)</th>
                     <th class="xls-th text-center" style="min-width:100px">Est. Useful Life</th>
@@ -34829,7 +34829,7 @@ class InventorySetupController extends Controller
                         <th class="xls-th" style="min-width:160px">Location</th>
                         <th class="xls-th" style="min-width:150px">Property No.</th>
                         <th class="xls-th text-right" style="min-width:130px">Acquisition Cost (₱)</th>
-                        <th class="xls-th" style="min-width:140px">Acquisition Date</th>
+                        <th class="xls-th" style="min-width:140px">Issuance Date</th>
                         <th class="xls-th w-10 text-center">Del</th>
                     </tr>
                 </thead>
@@ -37126,7 +37126,7 @@ class InventorySetupController extends Controller
                             <svg class="w-3.5 h-3.5 opacity-50 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                         </div>
                     </div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label><input type="date" id="bDate2" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Issuance Date</label><input type="date" id="bDate2" class="xls-input !border border-slate-100 rounded-xl bg-slate-50/50"></div>
                 </div>
             </div>
 

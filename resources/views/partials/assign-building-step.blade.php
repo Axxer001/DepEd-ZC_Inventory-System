@@ -42,7 +42,7 @@
                             <th class="xls-th col-personnel" style="min-width:220px">School Search</th>
                             <th class="xls-th col-personnel" style="min-width:180px">Assigned To</th>
                             <th class="xls-th col-personnel" style="min-width:150px">Property Number</th>
-                            <th class="xls-th col-temporal" style="min-width:140px">Acquisition Date</th>
+                            <th class="xls-th col-temporal" style="min-width:140px">Issuance Date</th>
                         </tr>
                     </thead>
                     <tbody>

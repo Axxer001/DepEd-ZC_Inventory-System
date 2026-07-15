@@ -63,7 +63,7 @@ old_integrity = '''            <div>
                     <option value="school_name">Missing School Name</option>
                     <option value="occupancy">Missing Nature of Occupancy</option>
                     <option value="location">Missing Location</option>
-                    <option value="acquisition_date">Missing Acquisition Date</option>
+                    <option value="acquisition_date">Missing Issuance Date</option>
                 </select>
             </div>'''
 c = c.replace(old_integrity, '')

@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $custodian->first_name }} {{ $custodian->last_name }} | Custodian Profile</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,800&display=swap" rel="stylesheet">
     
     <style>
@@ -88,15 +87,19 @@
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen lg:overflow-hidden overflow-y-auto custom-scroll p-4 lg:p-8 gap-5" x-data="{ activeTab: 'assets' }">
+    <div class="flex-grow flex flex-col min-w-0 h-screen lg:overflow-hidden overflow-y-auto custom-scroll p-4 lg:p-8 gap-5" x-data="{ activeTab: 'assets', photoPreview: null, showPhotoConfirmModal: false, isHoveringImage: false }">
 
         {{-- ===== STICKY HEADER ===== --}}
         <header class="bg-white rounded-2xl shadow-sm border border-slate-200 px-6 py-5 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sticky top-0 z-50 anim-0">
             <div class="flex items-center gap-4">
                 {{-- Avatar --}}
-                <div class="w-14 h-14 bg-deped_light rounded-2xl flex items-center justify-center border border-deped/15 shadow-sm shrink-0 text-deped font-black text-xl uppercase select-none">
-                    {{ substr($custodian->first_name, 0, 1) }}{{ substr($custodian->last_name, 0, 1) }}
-                </div>
+                @if($custodian->photo_path)
+                    <img src="{{ asset('storage/' . $custodian->photo_path) }}" alt="Avatar" class="w-14 h-14 rounded-2xl border border-deped/15 shadow-sm shrink-0 object-cover">
+                @else
+                    <div class="w-14 h-14 bg-deped_light rounded-2xl flex items-center justify-center border border-deped/15 shadow-sm shrink-0 text-deped font-black text-xl uppercase select-none">
+                        {{ substr($custodian->first_name, 0, 1) }}{{ substr($custodian->last_name, 0, 1) }}
+                    </div>
+                @endif
                 <div>
                     <h1 class="text-xl font-black text-slate-900 tracking-tight leading-none uppercase italic">
                         {{ $custodian->first_name }}
@@ -131,6 +134,33 @@
 
             {{-- ===== LEFT SIDEBAR ===== --}}
             <aside class="lg:col-span-3 flex flex-col gap-5 anim-1 lg:h-full lg:overflow-y-auto custom-scroll pr-1">
+
+                <form action="{{ route('admin.employees.photo.upload', $custodian->id) }}" method="POST" enctype="multipart/form-data" class="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-visible flex flex-col relative" @mouseenter="isHoveringImage = true" @mouseleave="isHoveringImage = false">
+                    @csrf
+                    <div class="aspect-square bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-700 flex items-center justify-center p-6 relative group rounded-t-2xl overflow-hidden">
+                        <input type="file" name="photo" id="photo-upload" class="hidden" accept="image/*" capture="environment" @change="
+                            const file = $event.target.files[0]; 
+                            if (file) {
+                                const reader = new FileReader();
+                                reader.onload = (e) => photoPreview = e.target.result;
+                                reader.readAsDataURL(file);
+                            }
+                        ">
+                        <img :src="photoPreview || '{{ $custodian->photo_path ? asset('storage/' . $custodian->photo_path) : asset('images/employee.png') }}'" alt="Profile Photo" class="w-full h-full object-cover rounded-xl transition-transform duration-500" :class="(photoPreview || '{{ $custodian->photo_path }}') ? 'opacity-100 scale-100 group-hover:scale-105' : 'opacity-50 group-hover:scale-105'" onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($custodian->first_name . ' ' . $custodian->last_name) }}&background=fef2f2&color=c00000&size=256'">
+
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4 pointer-events-none rounded-t-2xl">
+                            <label x-show="!photoPreview" for="photo-upload" class="w-full py-2.5 bg-white/90 backdrop-blur-md rounded-lg text-[10px] font-black uppercase tracking-widest text-slate-800 hover:bg-white shadow-lg text-center cursor-pointer transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 pointer-events-auto">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                <span>{{ $custodian->photo_path ? 'Change Photo' : 'Upload Photo' }}</span>
+                            </label>
+
+                            <div x-show="photoPreview" x-cloak class="w-full flex gap-2 pointer-events-auto">
+                                <button type="button" @click="photoPreview = null; document.getElementById('photo-upload').value = ''" class="flex-1 py-2.5 bg-white/90 backdrop-blur-md text-slate-700 hover:bg-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm transition-all active:scale-95">Cancel</button>
+                                <button type="submit" class="flex-[2] py-2.5 bg-deped hover:bg-red-800 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-red-600/30 transition-all active:scale-95">Save Photo</button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
 
                 {{-- Info Card --}}
                 <div class="glass-card p-5 space-y-5">
@@ -678,6 +708,7 @@
             </div>
 
         </div>
+
     </div>
 
 <script>
@@ -730,7 +761,8 @@
 
     function calNavYear(dir) {
         calViewYear += dir;
-        document.getElementById('cal-year-display').textContent = calViewYear;
+        const display = document.getElementById('cal-year-display');
+        if (display) display.textContent = calViewYear;
         renderCalMonthGrid();
     }
 
@@ -874,12 +906,13 @@
                 .filter(y => y > 0);
             if (years.length) calViewYear = Math.max(...years);
         }
-        document.getElementById('cal-year-display').textContent = calViewYear;
+        const display = document.getElementById('cal-year-display');
+        if (display) display.textContent = calViewYear;
         applyCustodianFilters();
     });
 </script>
 
-<!-- Edit Employee Modal -->
+
 <div id="editEmployeeModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
     <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeEditEmployeeModal()"></div>
     <form id="editEmployeeForm" action="{{ route('admin.employees.update', $custodian->id) }}" method="POST" class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-xl mx-4 relative z-10 flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700">
@@ -1022,8 +1055,7 @@
     </form>
 </div>
 
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
 <style>
     /* TomSelect Custom Overrides for standard styling */
     .ts-wrapper.single .ts-control {

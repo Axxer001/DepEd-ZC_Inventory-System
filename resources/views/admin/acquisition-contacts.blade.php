@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acquisition Source Registry | DepEd Zamboanga City</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
@@ -73,7 +73,7 @@
                 </div>
             </div>
 
-            <!-- Filter Configuration -->
+            
             <div id="contactFilterSection" class="hidden bg-white rounded-[2.5rem] shadow-xl border border-slate-100 p-8 mb-8 animate-fade">
                 <div>
                     <label class="text-[10px] font-black text-slate-900 uppercase tracking-widest italic mb-4 block">Organization</label>

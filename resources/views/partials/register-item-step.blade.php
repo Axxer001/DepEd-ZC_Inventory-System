@@ -77,7 +77,7 @@
                         <th class="xls-th col-temporal text-right" style="min-width:100px">Warranty (Mos)</th>
                         <th class="xls-th col-temporal text-right" style="min-width:100px">Useful Life(Yrs)</th>
                         <th class="xls-th col-status" style="min-width:185px">Condition</th>
-                        <th class="xls-th col-temporal" style="min-width:165px">Date of Registration</th>
+                        <th class="xls-th col-temporal" style="min-width:165px">Date of Acquisition</th>
                         <th class="xls-th w-10 text-center">Del</th>
                     </tr>
                 </thead>

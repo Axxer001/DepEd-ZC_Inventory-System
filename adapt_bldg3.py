@@ -47,7 +47,7 @@ old_source_table = '''        {{-- ── Asset Source Table ── --}}
                             <th class="xls-th text-blue-600" style="min-width:160px">Location</th>
                             <th class="xls-th text-blue-600" style="min-width:150px">Property No.</th>
                             <th class="xls-th text-blue-600 text-right" style="min-width:130px">Acquisition Cost (&#8369;)</th>
-                            <th class="xls-th text-blue-600" style="min-width:140px">Acquisition Date</th>
+                            <th class="xls-th text-blue-600" style="min-width:140px">Issuance Date</th>
                         </tr>
                     </thead>
                     <tbody id="bldgDistBody"></tbody>
@@ -76,7 +76,7 @@ new_bldg_table = '''        {{-- ── Buildings Table ── --}}
                             <th class="xls-th text-emerald-600" style="min-width:160px">Nature of Occupancy</th>
                             <th class="xls-th text-emerald-600" style="min-width:160px">Location</th>
                             <th class="xls-th text-emerald-600" style="min-width:140px">Date Constructed</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Acquisition Date</th>
+                            <th class="xls-th text-emerald-600" style="min-width:140px">Issuance Date</th>
                             <th class="xls-th text-emerald-600" style="min-width:150px">Property No.</th>
                             <th class="xls-th text-emerald-600 text-right" style="min-width:140px">Acquisition Cost (&#8369;)</th>
                             <th class="xls-th text-emerald-600 text-right" style="min-width:120px">Useful Life (yrs)</th>

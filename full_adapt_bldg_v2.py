@@ -510,7 +510,7 @@ new_bldg_table = '''        {{-- ── Buildings Table ── --}}
                             <th class="xls-th text-emerald-600" style="min-width:160px">Nature of Occupancy</th>
                             <th class="xls-th text-emerald-600" style="min-width:160px">Location</th>
                             <th class="xls-th text-emerald-600" style="min-width:140px">Date Constructed</th>
-                            <th class="xls-th text-emerald-600" style="min-width:140px">Acquisition Date</th>
+                            <th class="xls-th text-emerald-600" style="min-width:140px">Issuance Date</th>
                             <th class="xls-th text-emerald-600" style="min-width:150px">Property No.</th>
                             <th class="xls-th text-emerald-600 text-right" style="min-width:140px">Acquisition Cost (₱)</th>
                             <th class="xls-th text-emerald-600 text-right" style="min-width:120px">Useful Life (yrs)</th>
@@ -557,7 +557,7 @@ new_bulk_body = '''{{-- Body --}}
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Acquisition Cost (₱)</label><input type="number" id="bebAcqCost" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="0.01"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Useful Life (yrs)</label><input type="number" id="bebLife" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl text-right" placeholder="Leave empty to ignore" min="0" step="1"></div>
                     <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Date Constructed</label><input type="date" id="bebDateConstructed" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
-                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Acquisition Date</label><input type="date" id="bebAcqDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
+                    <div class="relative"><label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Issuance Date</label><input type="date" id="bebAcqDate" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl"></div>
                     <div class="relative col-span-2">
                         <label class="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1 block mb-1 text-emerald-600">Remarks</label>
                         <select id="bebRemarks" class="xls-input !border border-slate-200 dark:border-slate-800 rounded-xl bg-transparent">

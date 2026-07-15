@@ -720,6 +720,21 @@ class EmployeeController extends Controller
         return redirect()->back()->with('error', 'Failed to upload photo.');
     }
 
+    public function removePhoto($id)
+    {
+        $employee = Employee::findOrFail($id);
+
+        if ($employee->photo_path) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($employee->photo_path);
+            $employee->photo_path = null;
+            $employee->save();
+
+            return redirect()->back()->with('success', 'Profile photo removed successfully!');
+        }
+
+        return redirect()->back()->with('error', 'No photo to remove.');
+    }
+
     public function destroy($id)
     {
         $employee = Employee::findOrFail($id);

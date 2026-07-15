@@ -6,7 +6,7 @@
     <title>Office Registry | DepEd Zamboanga City</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
@@ -176,6 +176,12 @@
             </div>
 
             <div class="flex items-center gap-4 shrink-0">
+                @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin')
+                <button onclick="openAddOfficeModal()" class="px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white bg-gradient-to-r from-red-700 to-red-500 hover:from-red-800 hover:to-red-600 hover:-translate-y-0.5 hover:shadow-md hover:shadow-red-200 active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor" class="w-4 h-4 group-hover:scale-110 transition-transform"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                    Add Office
+                </button>
+                @endif
                 <button onclick="toggleOfficeFilters()" id="toggleFilterBtn" class="px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-600 bg-white border border-slate-200 hover:text-[#c00000] hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:rotate-12 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 0 1-.659 1.591l-5.432 5.432a2.25 2.25 0 0 0-.659 1.591v2.927a2.25 2.25 0 0 1-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 0 0-.659-1.591L3.659 7.409A2.25 2.25 0 0 1 3 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0 1 12 3Z" /></svg>
                     Filters
@@ -187,7 +193,7 @@
             </div>
         </div>
 
-        <!-- Filter Configuration -->
+        
         <div id="officeFilterSection" class="hidden bg-white rounded-[2.5rem] shadow-xl border border-slate-100 p-8 mb-8 relative z-50 animate-fade transition-all duration-300 origin-top">
             <div class="flex items-center gap-2 mb-6">
                 <span class="w-2 h-2 rounded-full bg-red-600"></span>
@@ -403,10 +409,75 @@
             }
         }
 
+        function openAddOfficeModal() {
+            document.getElementById('addOfficeModal').classList.remove('hidden');
+        }
+
+        function closeAddOfficeModal() {
+            document.getElementById('addOfficeModal').classList.add('hidden');
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             officeFetchFilters();
             officeFetchData();
         });
     </script>
+
+    
+    <div id="addOfficeModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeAddOfficeModal()"></div>
+        <form action="{{ route('admin.offices.store') }}" method="POST" class="bg-white dark:bg-[#1e293b] rounded-3xl shadow-2xl w-full max-w-xl mx-4 relative z-10 flex flex-col overflow-hidden border border-slate-100 dark:border-slate-800">
+            @csrf
+            
+            <div class="bg-slate-50 dark:bg-[#0f172a] border-b border-slate-100 dark:border-slate-800 px-6 py-5 flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center shadow-inner">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-[0.1em]">Add New Office</h3>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Register a new administrative or division unit</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeAddOfficeModal()" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-2.5 rounded-full transition-colors active:scale-95">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            
+            <div class="p-6 space-y-6">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Office Name <span class="text-red-500">*</span></label>
+                    <input type="text" name="name" required placeholder="ENTER OFFICE NAME..." class="w-full bg-white dark:bg-[#0f172a] border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-xs font-black text-slate-700 dark:text-slate-300 uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300">
+                </div>
+
+                <div class="grid grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Office Code / ID <span class="text-red-500">*</span></label>
+                        <input type="text" name="office_id" value="095" required class="w-full bg-white dark:bg-[#0f172a] border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-xs font-black text-slate-700 dark:text-slate-300 uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Office Type <span class="text-red-500">*</span></label>
+                        <input type="text" name="type" value="office" required class="w-full bg-white dark:bg-[#0f172a] border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-xs font-black text-slate-700 dark:text-slate-300 uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Location <span class="text-red-500">*</span></label>
+                    <input type="text" name="location" value="Deped SDO - Baliwasan Chico rd., Zamboanga City" required class="w-full bg-white dark:bg-[#0f172a] border-2 border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-xs font-black text-slate-700 dark:text-slate-300 uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300">
+                </div>
+            </div>
+
+            
+            <div class="bg-slate-50 dark:bg-[#0f172a] border-t border-slate-100 dark:border-slate-800 px-6 py-4 flex justify-end gap-3">
+                <button type="button" onclick="closeAddOfficeModal()" class="px-5 py-2.5 bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-black text-slate-500 uppercase tracking-widest hover:bg-slate-100 hover:text-slate-700 transition-all duration-300">
+                    Cancel
+                </button>
+                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-red-700 to-red-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:from-red-800 hover:to-red-600 transition-all duration-300 shadow-md shadow-red-500/20 flex items-center gap-2">
+                    Register Office
+                </button>
+            </div>
+        </form>
+    </div>
 </body>
 </html>

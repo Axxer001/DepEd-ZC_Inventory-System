@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asset Inventory | DepEd Zamboanga City</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
@@ -431,7 +431,7 @@
 
     <div class="flex-grow flex flex-col min-w-0 h-screen overflow-y-auto custom-scroll bg-slate-50">
 
-        <!-- Header -->
+        
         <div class="w-full mx-auto p-6 lg:p-10 min-h-screen flex flex-col relative z-10 gap-6">
 
             <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6 px-2 animate-fade">
@@ -453,7 +453,7 @@
                     </div>
                     {{-- Suggestions Dropdown --}}
                     <div id="assetSearchSuggestions" class="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 z-50 overflow-hidden hidden flex-col max-h-60 overflow-y-auto custom-scroll">
-                        <!-- Suggested items populated via JS -->
+                        
                     </div>
                 </div>
 
@@ -469,7 +469,7 @@
                 </div>
             </div>
 
-        <!-- Filter Configuration -->
+        
         <div id="assetFilterSection" class="bg-white rounded-[2.5rem] shadow-lg border border-slate-100 p-8 mb-8 relative z-50 animate-fade transition-all duration-300 origin-top hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8 relative z-10">
                 {{-- PPE Type --}}
@@ -660,7 +660,7 @@
                         <option value="school_name">Missing School Name</option>
                         <option value="occupancy">Missing Nature of Occupancy</option>
                         <option value="location">Missing Location</option>
-                        <option value="acquisition_date">Missing Acquisition Date</option>
+                        <option value="acquisition_date">Missing Issuance Date</option>
                     </select>
                 </div>
             </div>
@@ -897,7 +897,7 @@
                 <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:160px">Acquisition</th>
                 <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:240px">Office/School Name</th>
                 <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:150px">Property #</th>
-                <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:140px">Acquisition Date</th>
+                <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:140px">Issuance Date</th>
                 <th class="xls-th sticky top-0 z-30 bg-[#f8fafc] dark:bg-[#0f172a]" style="min-width:130px">Condition</th>
             </tr>`;
             

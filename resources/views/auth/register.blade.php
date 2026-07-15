@@ -6,7 +6,7 @@
     <title>Register | DepEd Zamboanga City</title>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
@@ -136,7 +136,7 @@
                         @csrf
                         <input type="hidden" name="email" :value="email">
 
-                        <!-- ================= STATUS MESSAGES ================= -->
+                        
                         <div x-show="otpMessage" x-transition class="mb-4">
                             <div :class="otpMessageType === 'success' ? 'bg-[#ecfdf5] text-[#059669]' : 'bg-red-50 text-red-600'"
                                  class="p-3 rounded-[1.5rem] text-xs text-center font-semibold">
@@ -144,7 +144,7 @@
                             </div>
                         </div>
 
-                        <!-- ================= STEP 1: EMAIL & OTP ================= -->
+                        
                         <div x-show="step === 1" x-transition.opacity.duration.300ms class="w-full space-y-4">
                             
                             {{-- Email section --}}
@@ -210,10 +210,10 @@
                                 </button>
                             </div>
                         </div>
-                        <!-- ================= END STEP 1 ================= -->
+                        
 
 
-                        <!-- ================= STEP 2: PASSWORD ================= -->
+                        
                         <div x-show="step === 2" x-transition.opacity.duration.300ms x-cloak class="w-full space-y-4">
 
                             <div class="space-y-4">
@@ -308,7 +308,7 @@
                                 <button type="button" @click="step = 1; otpSent = false; otpMessage = ''; otpVerified = false;" class="font-bold text-[#c00000] hover:underline transition-colors text-sm">Cancel</button>
                             </div>
                         </div>
-                        <!-- ================= END STEP 2 ================= -->
+                        
 
                         @if(session('error'))
                             <div class="bg-red-50 border border-red-100 text-red-600 p-3 rounded-2xl text-xs text-center font-semibold">

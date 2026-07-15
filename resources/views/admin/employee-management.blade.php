@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Registry | DepEd Zamboanga City</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
@@ -541,7 +541,7 @@
         });
     </script>
 
-    <!-- Create Employee Modal -->
+    
     <div id="createEmployeeModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeCreateEmployeeModal()"></div>
         <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-xl p-8 relative z-10 animate-fade mx-4">
@@ -612,7 +612,7 @@
                 <div class="space-y-3 p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
                     <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest">Station Assignment</label>
                     
-                    <!-- School Selection -->
+                    
                     <div id="schoolAssignmentField" class="space-y-1">
                         <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Select School</label>
                         <select name="school_id" id="modalSchoolSelect" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-800 dark:border-slate-700 dark:text-white">
@@ -620,7 +620,7 @@
                         </select>
                     </div>
 
-                    <!-- Office Selection -->
+                    
                     <div id="officeAssignmentField" class="space-y-1 mt-3">
                         <label class="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Select Office</label>
                         <select name="office_id" id="modalOfficeSelect" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-800 dark:border-slate-700 dark:text-white">
@@ -668,8 +668,8 @@
         </script>
     @endif
 
-<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+
+
 <style>
     /* TomSelect Custom Overrides for standard styling */
     .ts-wrapper.single .ts-control {

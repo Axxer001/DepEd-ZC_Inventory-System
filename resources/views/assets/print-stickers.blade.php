@@ -7,7 +7,7 @@
     <title>Print QR Stickers | DepEd ZC</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <!-- qrcode.js for client-side QR generation -->
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; }
@@ -619,7 +619,7 @@ function buildStickerHTML(a) {
     }
 
     return `<div class="sticker-card" style="width: 95mm; height: 75mm; border: 2.5px solid #c00000; padding: 0; box-sizing: border-box; background: white; display: flex; flex-direction: column; overflow: hidden; font-family: Arial, sans-serif; position: relative;">
-        <!-- Header -->
+        
         <div style="display: flex; align-items: center; border-bottom: 1.5px solid #c00000; padding: 5px 8px; gap: 6px; background: #fff; flex-shrink: 0; min-height: 61px; box-sizing: border-box; overflow: hidden;">
             <img src="/images/deped_logo.png" style="height: 51px; width: auto; flex-shrink: 0;" onerror="this.style.display='none'">
             <div style="flex-grow: 1; text-align: center; display: flex; flex-direction: column; justify-content: center; line-height: 1.2;">
@@ -631,45 +631,45 @@ function buildStickerHTML(a) {
             <img src="/images/deped_zc_logo.png" style="height: 51px; width: auto; flex-shrink: 0;" onerror="this.style.display='none'">
         </div>
 
-        <!-- Title -->
+        
         <div style="text-align: center; color: #c00000; font-size: 12px; font-weight: bold; letter-spacing: 0.5px; padding: 4px 0; border-bottom: 1.5px solid #c00000; background: #fff; text-transform: uppercase; font-family: Arial, sans-serif; flex-shrink: 0; box-sizing: border-box;">
             PROPERTY INVENTORY STICKER
         </div>
 
-        <!-- Body -->
+        
         <div style="display: flex; flex-grow: 1; background: #fff; overflow: hidden; box-sizing: border-box;">
-            <!-- Left Side (Property details) -->
+            
             <div style="display: flex; flex-direction: column; width: 62%; border-right: 1px solid #cbd5e1; box-sizing: border-box;">
-                <!-- Row 1: Classification -->
+                
                 <div style="flex: 3; border-bottom: 1px solid #cbd5e1; padding: 4px 7px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: hidden;">
                     <div style="font-size: 10.5px; font-weight: bold; color: #64748b; letter-spacing: 0.3px; text-transform: uppercase; line-height: 1;">CLASSIFICATION</div>
                     <div style="font-size: ${classFontSize}; font-weight: bold; color: #000; line-height: 1.2; word-break: break-all; margin-top: 2px;">${classification}</div>
                 </div>
-                <!-- Row 2: Property Number -->
+                
                 <div style="flex: 3; border-bottom: 1px solid #cbd5e1; padding: 4px 7px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: hidden;">
                     <div style="font-size: 10.5px; font-weight: bold; color: #64748b; letter-spacing: 0.3px; text-transform: uppercase; line-height: 1;">PROPERTY NUMBER</div>
                     <div style="font-size: ${propNumFontSize}; font-weight: bold; color: #000; line-height: 1.2; word-break: break-all; margin-top: 2px;">${propNum}</div>
                 </div>
-                <!-- Row 3: Serial Number -->
+                
                 <div style="flex: 3; border-bottom: 1px solid #cbd5e1; padding: 4px 7px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: hidden;">
                     <div style="font-size: 10.5px; font-weight: bold; color: #64748b; letter-spacing: 0.3px; text-transform: uppercase; line-height: 1;">SERIAL NUMBER</div>
                     <div style="font-size: ${serialNumFontSize}; font-weight: bold; color: #000; line-height: 1.2; word-break: break-all; margin-top: 2px;">${serialNum}</div>
                 </div>
-                <!-- Row 4: Item Brand Model -->
+                
                 <div style="flex: 5; padding: 4px 7px; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: hidden;">
                     <div style="font-size: 10.5px; font-weight: bold; color: #64748b; letter-spacing: 0.3px; text-transform: uppercase; line-height: 1;">ITEM/BRAND/MODEL</div>
                     <div style="font-size: ${itemBrandFontSize}; font-weight: bold; color: #000; line-height: 1.2; word-break: break-word; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">${itemBrand}</div>
                 </div>
             </div>
 
-            <!-- Right Side (QR & Scan Me) -->
+            
             <div style="width: 38%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 6px; box-sizing: border-box; background: #fff; overflow: hidden; gap: 4px;">
                 <div id="qr-${a.id}" style="width: 108px; height: 108px; display: flex; align-items: center; justify-content: center; background: #fff; overflow: hidden; flex-shrink: 0;"></div>
                 <div style="font-size: 11px; font-weight: bold; color: #64748b; letter-spacing: 0.3px; text-transform: uppercase; line-height: 1; text-align: center;">SCAN ME</div>
             </div>
         </div>
 
-        <!-- Footer -->
+        
         <div style="border-top: 1.5px solid #c00000; padding: 5px 6px; text-align: center; line-height: 1.1; background: #fff; box-sizing: border-box; flex-shrink: 0; min-height: 26px; display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
             <div style="font-size: 12px; font-weight: bold; color: #c00000; letter-spacing: 0.3px; text-transform: uppercase; font-family: Arial, sans-serif; line-height: 1;">DO NOT REMOVE UNDER PENALTY OF LAW</div>
         </div>

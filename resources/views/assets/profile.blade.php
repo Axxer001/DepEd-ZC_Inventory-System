@@ -43,7 +43,7 @@
     @endif
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
@@ -69,7 +69,7 @@
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen lg:overflow-hidden overflow-y-auto custom-scroll p-4 lg:p-8" x-data="{ activeTab: 'specs', showEditModal: false, showTransferModal: false, showReturnAmuModal: false, showReturnSourceModal: false, showImageFullscreen: false, showRemoveConfirmModal: false, isSaving: false, historyLimit: 5 }">
+    <div class="flex-grow flex flex-col min-w-0 h-screen lg:overflow-hidden overflow-y-auto custom-scroll p-4 lg:p-8" x-data="{ activeTab: 'specs', showEditModal: false, showTransferModal: false, showReturnAmuModal: false, showReturnSourceModal: false, isSaving: false, historyLimit: 5, photoPreview: null, showPhotoConfirmModal: false, isHoveringImage: false }">
         
         {{-- Global Header (Fixed/Sticky) --}}
         <header class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sticky top-0 z-50">
@@ -166,7 +166,7 @@
             
             {{-- Left Sidebar: Asset Identity Card --}}
             <aside class="lg:col-span-3 flex flex-col gap-6 z-40 relative lg:h-full lg:overflow-y-auto custom-scroll pr-1">
-                <form action="{{ route('assets.photo.upload', $asset->id) }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible flex flex-col relative" x-data="{ photoPreview: null, showPhotoConfirmModal: false, isHoveringImage: false }">
+                <form action="{{ route('assets.photo.upload', $asset->id) }}" method="POST" enctype="multipart/form-data" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible flex flex-col relative">
                     @csrf
                     <div class="aspect-square bg-slate-50 border-b border-slate-100 flex items-center justify-center p-6 relative group rounded-t-2xl overflow-hidden" @mouseenter="isHoveringImage = true" @mouseleave="isHoveringImage = false">
                         <input type="file" name="photo" id="photo-upload" class="hidden" accept="image/*" capture="environment" @change="
@@ -177,7 +177,7 @@
                                 reader.readAsDataURL(file);
                             }
                         ">
-                        <img :src="photoPreview || '{{ $asset->photo_path ? asset('storage/' . $asset->photo_path) : asset('images/asset.png') }}'" alt="Asset Photo" class="w-full h-full object-contain transition-transform duration-500 cursor-pointer" :class="(photoPreview || '{{ $asset->photo_path }}') ? 'opacity-100 scale-100 group-hover:scale-110' : 'opacity-50 group-hover:scale-105'" @click="if(!photoPreview && '{{ $asset->photo_path }}') showImageFullscreen = true">
+                        <img :src="photoPreview || '{{ $asset->photo_path ? asset('storage/' . $asset->photo_path) : asset('images/asset.png') }}'" alt="Asset Photo" class="w-full h-full object-contain transition-transform duration-500" :class="(photoPreview || '{{ $asset->photo_path }}') ? 'opacity-100 scale-100 group-hover:scale-110' : 'opacity-50 group-hover:scale-105'">
                         
                         {{-- Hover Preview Popout (E-commerce Style) --}}
                         <div x-show="isHoveringImage && !photoPreview && '{{ $asset->photo_path }}'" 
@@ -191,19 +191,7 @@
                             <img src="{{ $asset->photo_path ? asset('storage/' . $asset->photo_path) : '' }}" class="w-full h-full object-contain rounded-xl drop-shadow-md">
                         </div>
                         
-                        {{-- Controls for View/Remove --}}
-                        @if($asset->photo_path)
-                        <div x-show="!photoPreview" class="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                            <button type="button" @click="showImageFullscreen = true" class="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full text-slate-700 hover:text-blue-600 shadow-sm flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
-                            </button>
-                            @if(auth()->check() && auth()->user()->isAdmin())
-                            <button type="button" @click="showRemoveConfirmModal = true" class="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full text-slate-700 hover:text-red-600 shadow-sm flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
-                            @endif
-                        </div>
-                        @endif
+
 
                         <div class="absolute inset-0 bg-gradient-to-t from-slate-900/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4 pointer-events-none">
                             
@@ -497,7 +485,7 @@
                                     <p class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $asset->serial_number ?: 'N/A' }}</p>
                                 </div>
                                 <div>
-                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Acquisition Date</p>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Issuance Date</p>
                                     <p class="text-sm font-black text-slate-800 mt-1 uppercase">{{ $asset->acquisition_date ? \Carbon\Carbon::parse($asset->acquisition_date)->format('F d, Y') : 'N/A' }}</p>
                                 </div>
                                 <div>
@@ -511,6 +499,14 @@
                                 <div>
                                     <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Supplier</p>
                                     <p class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $asset->supplier_name ?? 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Source Personnel</p>
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $asset->source_personnel ?? 'N/A' }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Supplier Service Center</p>
+                                    <p class="text-xs font-bold text-slate-800 mt-1 uppercase">{{ $asset->supplier_service_center ?? 'N/A' }}</p>
                                 </div>
                             </div>
                         </div>
@@ -1137,27 +1133,6 @@
             </form>
         </div>
 
-        {{-- Hidden Form for Photo Removal --}}
-        <form id="remove-photo-form" action="{{ route('assets.photo.remove', $asset->id) }}" method="POST" class="hidden">
-            @csrf
-            @method('DELETE')
-        </form>
-
-        {{-- Remove Photo Confirm Modal --}}
-        <div x-show="showRemoveConfirmModal" x-cloak class="fixed inset-0 z-[120] flex items-center justify-center">
-            <div x-show="showRemoveConfirmModal" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showRemoveConfirmModal = false"></div>
-            <div x-show="showRemoveConfirmModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8 scale-95" class="bg-white rounded-3xl shadow-2xl p-8 max-w-sm w-full mx-4 relative z-10 border border-slate-100 flex flex-col items-center text-center">
-                <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-5 ring-8 ring-red-50">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                </div>
-                <h3 class="text-xl font-black text-slate-800 uppercase tracking-tight mb-2">Remove Photo?</h3>
-                <p class="text-xs font-bold text-slate-500 mb-8 leading-relaxed">Are you sure you want to delete this asset's photo permanently? This action cannot be undone.</p>
-                <div class="flex items-center gap-3 w-full">
-                    <button type="button" @click="showRemoveConfirmModal = false" class="flex-1 py-3.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-black uppercase tracking-widest transition-colors">Cancel</button>
-                    <button type="button" @click="document.getElementById('remove-photo-form').submit()" class="flex-1 py-3.5 px-4 bg-red-600 hover:bg-red-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-red-600/30 transition-all active:scale-95">Yes, Remove</button>
-                </div>
-            </div>
-        </div>
 
         {{-- Edit Asset Modal --}}
         <div x-show="showEditModal" x-cloak class="fixed inset-0 z-[120] flex items-center justify-center">
@@ -1219,7 +1194,7 @@
                                 <input type="text" name="property_number" value="{{ $asset->property_number }}" placeholder="N/A" {{ $asset->property_number ? "readonly class='w-full bg-slate-50 border-2 border-slate-100 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner'" : "class='w-full bg-white border-2 border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300'" }}>
                             </div>
                             <div>
-                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Acquisition Date</label>
+                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Issuance Date</label>
                                 <input type="date" name="acquisition_date" value="{{ $asset->acquisition_date }}" {{ $asset->acquisition_date ? "readonly class='w-full bg-slate-50 border-2 border-slate-100 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner'" : "class='w-full bg-white border-2 border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer'" }}>
                             </div>
                             <div>
@@ -1292,13 +1267,6 @@
             </form>
         </div>
 
-        {{-- Fullscreen Image Modal --}}
-        <div x-show="showImageFullscreen" x-cloak class="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/95 backdrop-blur-md">
-            <button @click="showImageFullscreen = false" class="absolute top-6 right-6 text-white/50 hover:text-white transition-colors p-2 rounded-full hover:bg-white/10 active:scale-95">
-                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-            <img src="{{ $asset->photo_path ? asset('storage/' . $asset->photo_path) : '' }}" class="max-w-[90vw] max-h-[90vh] object-contain rounded-xl shadow-2xl" @click.away="showImageFullscreen = false" x-show="showImageFullscreen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
-        </div>
 
         @include('partials.documentation-modal')
 

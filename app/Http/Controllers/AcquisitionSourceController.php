@@ -75,7 +75,7 @@ class AcquisitionSourceController extends Controller
                 'asrc.id',
                 'i.name as item_name',
                 'aqs.name as source_name',
-                'aqs.contact_person as source_personnel',
+                DB::raw('COALESCE(asrc.contact_person, aqs.contact_person) as source_personnel'),
                 'pm.name as mode_of_procurement',
                 'ad.property_number',
                 'ad.serial_number',

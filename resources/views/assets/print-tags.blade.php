@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Print Asset Tags</title>
-    <!-- Use Tailwind for quick styling -->
+    
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -65,7 +65,7 @@
 </head>
 <body>
 
-    <!-- Controls Ribbon -->
+    
     <div class="no-print bg-slate-900 text-white p-4 fixed w-full top-0 z-50 flex justify-between items-center shadow-lg">
         <div>
             <h1 class="font-black italic tracking-tight text-xl">Asset Tag Generator</h1>
@@ -82,7 +82,7 @@
         </div>
     </div>
 
-    <!-- Padding for fixed header -->
+    
     <div class="h-24 no-print"></div>
 
     <div class="print-container">
@@ -96,7 +96,7 @@
                     @foreach($pageTags as $tag)
                         <div class="asset-tag">
                             <div class="tag-header">
-                                <!-- Using placeholder logo if actual fails, or actual relative path if it works -->
+                                
                                 <img src="{{ asset('images/deped_logo.png') }}" class="tag-logo" alt="DepEd Logo" onerror="this.style.display='none'">
                                 <div>
                                     <div class="tag-title">DepEd Zamboanga City</div>
@@ -104,7 +104,7 @@
                                 </div>
                             </div>
                             <div class="tag-qr">
-                                <!-- Generate the QR pointing to the scan route -->
+                                
                                 {!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(55)->margin(0)->generate(url('/scan?tag=' . $tag)) !!}
                             </div>
                             <div class="tag-hash">{{ substr($tag, 0, 8) }}-{{ substr($tag, 9, 4) }}</div>

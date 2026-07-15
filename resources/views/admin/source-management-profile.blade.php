@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $source->name }} | Source Profile</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,800&display=swap" rel="stylesheet">
     
     <style>
@@ -305,7 +305,7 @@
         </div>
     </div>
 
-    <!-- Edit Source Modal -->
+    
     <div id="editSourceModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="document.getElementById('editSourceModal').classList.add('hidden')"></div>
         <form method="POST" action="{{ route('admin.sources.update', $source->id) }}" class="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl w-full max-w-xl mx-4 relative z-10 flex flex-col overflow-hidden border border-slate-100 dark:border-slate-700">
@@ -348,20 +348,13 @@
                                 <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-red-500 transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                {{-- Conditionally Editable --}}
-                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-                    <h4 class="text-[10px] font-black text-slate-800 dark:text-slate-200 uppercase tracking-widest flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Editable if Empty</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="md:col-span-2">
                             <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Contact Person</label>
-                            <input type="text" name="contact_person" value="{{ $source->contact_person }}" {{ $source->contact_person ? "readonly class='w-full bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700/50 text-slate-400 dark:text-slate-500 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner'" : "class='w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600'" }}>
+                            <input type="text" name="contact_person" value="{{ $source->contact_person }}" class="w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600">
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-[10px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest mb-2 ml-1">Contact Position</label>
-                            <input type="text" name="contact_position" value="{{ $source->contact_position }}" {{ $source->contact_position ? "readonly class='w-full bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-100 dark:border-slate-700/50 text-slate-400 dark:text-slate-500 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner'" : "class='w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600'" }}>
+                            <input type="text" name="contact_position" value="{{ $source->contact_position }}" class="w-full bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-white rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-red-500 focus:ring-4 focus:ring-red-500/10 outline-none transition-all shadow-sm hover:border-slate-300 dark:hover:border-slate-600">
                         </div>
                     </div>
                 </div>

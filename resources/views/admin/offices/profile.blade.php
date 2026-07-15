@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $office->name }} | Office Profile</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
@@ -96,7 +96,7 @@
         <header class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sticky top-0 z-50">
             <div class="flex items-center gap-5">
                 <div class="w-12 h-12 bg-red-50 rounded-xl flex items-center justify-center border border-deped/20 shadow-sm shrink-0 dark:bg-red-950/20 dark:border-red-900/40">
-                    <!-- Briefcase/Office Icon -->
+                    
                     <svg class="w-6 h-6 text-deped dark:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 .966-.784 1.75-1.75 1.75H5.5a1.75 1.75 0 0 1-1.75-1.75V14.15M2.25 10.5h19.5M3 10.5V5.5c0-.966.784-1.75 1.75-1.75h14.5c.966 0 1.75.784 1.75 1.75v5M12 10.5v8.25" />
                     </svg>

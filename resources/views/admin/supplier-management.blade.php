@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suppliers Registry | DepEd Zamboanga City</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
@@ -117,7 +117,7 @@
         </div>
         @endif
 
-        <!-- Filter Configuration -->
+        
         <div id="filterSection" class="bg-white rounded-[2.5rem] shadow-lg border border-slate-100 p-8 mb-8 relative z-50 animate-fade transition-all duration-300 origin-top hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-8 relative z-10">
                 {{-- Sort By --}}
@@ -205,7 +205,7 @@
     </div>
     </div>
 
-    <!-- Hidden Form for Submit -->
+    
     <form id="createForm" method="POST" action="{{ route('admin.suppliers.store') }}" style="display: none;">
         @csrf
         <input type="text" name="name" id="f_name">

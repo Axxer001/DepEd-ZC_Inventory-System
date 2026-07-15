@@ -164,7 +164,7 @@ new_html = '''<div id="editBulkModal" class="fixed inset-0 z-[150] flex items-ce
                     </div>
 
                     <div class="relative col-identity p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Property Number</label><input type="text" id="ebPropertyNo" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Leave empty to ignore"></div>
-                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Acquisition Date</label><input type="date" id="ebDate2" class="xls-input !border border-slate-100 rounded-xl bg-transparent"></div>
+                    <div class="relative col-temporal p-1 rounded-2xl"><label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Issuance Date</label><input type="date" id="ebDate2" class="xls-input !border border-slate-100 rounded-xl bg-transparent"></div>
                 </div>
             </div>
 
