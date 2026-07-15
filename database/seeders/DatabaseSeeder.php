@@ -21,7 +21,6 @@ class DatabaseSeeder extends Seeder
             SuperAdminSeeder::class,
             QuadrantSeeder::class,
             DistrictSeeder::class,
-            UpdateSchoolsSeeder::class,
         ]);
 
         \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');

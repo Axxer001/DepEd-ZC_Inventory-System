@@ -16,40 +16,64 @@ class SupplierController extends Controller
     public function profile($id)
     {
         $supplier = Supplier::findOrFail($id);
+        $user = auth()->user();
+        $isSchool = $user && $user->isSchoolSystem();
+        $schoolId = $isSchool ? $user->school_id : null;
 
-        $stats = DB::table('asset_sources as asrc')
-            ->where('asrc.supplier_id', $id)
-            ->selectRaw('COUNT(asrc.id) as total_assets, COALESCE(SUM(asrc.asset_cost * asrc.quantity), 0) as total_value')
-            ->first();
+        $statsQuery = DB::table('asset_sources as asrc')
+            ->where('asrc.supplier_id', $id);
 
-        $assets = DB::table('asset_sources as asrc')
+        if ($isSchool) {
+            $statsQuery->join('asset_assignments as ad', 'ad.asset_source_id', '=', 'asrc.id')
+                ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
+                ->where(function ($q) use ($schoolId) {
+                    $q->where('ad.school_id', $schoolId)
+                      ->orWhere('e.school_id', $schoolId);
+                });
+
+            $stats = $statsQuery->selectRaw('COUNT(ad.id) as total_assets, COALESCE(SUM(ad.acquisition_cost), 0) as total_value')
+                ->first();
+        } else {
+            $stats = $statsQuery->selectRaw('COUNT(asrc.id) as total_assets, COALESCE(SUM(asrc.asset_cost * asrc.quantity), 0) as total_value')
+                ->first();
+        }
+
+        $assetsQuery = DB::table('asset_sources as asrc')
             ->join('asset_assignments as ad', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items as i', 'asrc.item_id', '=', 'i.id')
             ->join('categories as cat', 'i.category_id', '=', 'cat.id')
             ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
             ->leftJoin('schools as s', 'e.school_id', '=', 's.id')
             ->leftJoin('offices as o', 'e.office_id', '=', 'o.id')
-            ->where('asrc.supplier_id', $id)
-            ->select(
-                'ad.id',
-                'ad.property_number',
-                'ad.serial_number',
-                'ad.acquisition_date',
-                'asrc.asset_cost',
-                'asrc.acceptance_date',
-                'asrc.created_at as registered_at',
-                'i.name as item_name',
-                'cat.name as category_name',
-                'asrc.condition',
-                'asrc.quantity',
-                DB::raw('COALESCE(s.name, o.name) as location_name'),
-                DB::raw("CONCAT(COALESCE(e.first_name,''), ' ', COALESCE(e.last_name,'')) as custodian_name")
-            )
-            ->orderByDesc('asrc.acceptance_date')
-            ->paginate(50, ['*'], 'assets_page');
+            ->where('asrc.supplier_id', $id);
+
+        if ($isSchool) {
+            $assetsQuery->where(function ($q) use ($schoolId) {
+                $q->where('ad.school_id', $schoolId)
+                  ->orWhere('e.school_id', $schoolId);
+            });
+        }
+
+        $assets = $assetsQuery->select(
+            'ad.id',
+            'ad.property_number',
+            'ad.serial_number',
+            'ad.acquisition_date',
+            'asrc.asset_cost',
+            'asrc.acceptance_date',
+            'asrc.created_at as registered_at',
+            'i.name as item_name',
+            'cat.name as category_name',
+            'asrc.condition',
+            'asrc.quantity',
+            DB::raw('COALESCE(s.name, o.name) as location_name'),
+            DB::raw("CONCAT(COALESCE(e.first_name,''), ' ', COALESCE(e.last_name,'')) as custodian_name")
+        )
+        ->orderByDesc('asrc.acceptance_date')
+        ->paginate(50, ['*'], 'assets_page');
 
         // Service history: transfers related to assets from this supplier
-        $history = DB::table('asset_transfers as at')
+        $historyQuery = DB::table('asset_transfers as at')
             ->join('asset_assignments as ad', 'at.asset_assignment_id', '=', 'ad.id')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items as i', 'asrc.item_id', '=', 'i.id')
@@ -62,24 +86,33 @@ class SupplierController extends Controller
                       $sub->where('at.transfer_type', 'Return')
                           ->whereNotNull('at.repair_status');
                   });
-            })
-            ->select(
-                'at.id',
-                'at.transfer_type',
-                'at.transfer_date',
-                'at.return_date',
-                'at.remarks',
-                'ad.property_number',
-                'ad.serial_number',
-                'asrc.condition',
-                'i.name as item_name',
-                DB::raw("CONCAT(COALESCE(from_emp.first_name,''), ' ', COALESCE(from_emp.last_name,'')) as from_custodian"),
-                DB::raw("CONCAT(COALESCE(to_emp.first_name,''), ' ', COALESCE(to_emp.last_name,'')) as to_custodian"),
-                'at.created_at'
-            )
-            ->orderByDesc('at.transfer_date')
-            ->orderByDesc('at.created_at')
-            ->paginate(50, ['*'], 'history_page');
+            });
+
+        if ($isSchool) {
+            $historyQuery->where(function ($q) use ($schoolId) {
+                $q->where('ad.school_id', $schoolId)
+                  ->orWhere('from_emp.school_id', $schoolId)
+                  ->orWhere('to_emp.school_id', $schoolId);
+            });
+        }
+
+        $history = $historyQuery->select(
+            'at.id',
+            'at.transfer_type',
+            'at.transfer_date',
+            'at.return_date',
+            'at.remarks',
+            'ad.property_number',
+            'ad.serial_number',
+            'asrc.condition',
+            'i.name as item_name',
+            DB::raw("CONCAT(COALESCE(from_emp.first_name,''), ' ', COALESCE(from_emp.last_name,'')) as from_custodian"),
+            DB::raw("CONCAT(COALESCE(to_emp.first_name,''), ' ', COALESCE(to_emp.last_name,'')) as to_custodian"),
+            'at.created_at'
+        )
+        ->orderByDesc('at.transfer_date')
+        ->orderByDesc('at.created_at')
+        ->paginate(50, ['*'], 'history_page');
 
         return view('admin.supplier-management-profile', compact('supplier', 'stats', 'assets', 'history'));
     }

@@ -30,39 +30,63 @@ class AcquisitionSourceController extends Controller
     public function managementProfile($id)
     {
         $source = AcquisitionSource::findOrFail($id);
+        $user = auth()->user();
+        $isSchool = $user && $user->isSchoolSystem();
+        $schoolId = $isSchool ? $user->school_id : null;
 
-        $stats = DB::table('asset_sources as asrc')
-            ->where('asrc.acquisition_source_id', $id)
-            ->selectRaw('COUNT(asrc.id) as total_assets, COALESCE(SUM(asrc.asset_cost * asrc.quantity), 0) as total_value')
-            ->first();
+        $statsQuery = DB::table('asset_sources as asrc')
+            ->where('asrc.acquisition_source_id', $id);
 
-        $assets = DB::table('asset_sources as asrc')
+        if ($isSchool) {
+            $statsQuery->join('asset_assignments as ad', 'ad.asset_source_id', '=', 'asrc.id')
+                ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
+                ->where(function ($q) use ($schoolId) {
+                    $q->where('ad.school_id', $schoolId)
+                      ->orWhere('e.school_id', $schoolId);
+                });
+
+            $stats = $statsQuery->selectRaw('COUNT(ad.id) as total_assets, COALESCE(SUM(ad.acquisition_cost), 0) as total_value')
+                ->first();
+        } else {
+            $stats = $statsQuery->selectRaw('COUNT(asrc.id) as total_assets, COALESCE(SUM(asrc.asset_cost * asrc.quantity), 0) as total_value')
+                ->first();
+        }
+
+        $assetsQuery = DB::table('asset_sources as asrc')
             ->join('asset_assignments as ad', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items as i', 'asrc.item_id', '=', 'i.id')
             ->join('categories as cat', 'i.category_id', '=', 'cat.id')
             ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
             ->leftJoin('schools as s', 'e.school_id', '=', 's.id')
             ->leftJoin('offices as o', 'e.office_id', '=', 'o.id')
-            ->where('asrc.acquisition_source_id', $id)
-            ->select(
-                'ad.id',
-                'ad.property_number',
-                'ad.serial_number',
-                'ad.acquisition_date',
-                'asrc.asset_cost',
-                'asrc.acceptance_date',
-                'asrc.created_at as registered_at',
-                'i.name as item_name',
-                'cat.name as category_name',
-                'asrc.condition',
-                'asrc.quantity',
-                DB::raw('COALESCE(s.name, o.name) as location_name'),
-                DB::raw("CONCAT(COALESCE(e.first_name,''), ' ', COALESCE(e.last_name,'')) as custodian_name")
-            )
-            ->orderByDesc('asrc.acceptance_date')
-            ->paginate(50, ['*'], 'assets_page');
+            ->where('asrc.acquisition_source_id', $id);
 
-        $history = DB::table('asset_sources as asrc')
+        if ($isSchool) {
+            $assetsQuery->where(function ($q) use ($schoolId) {
+                $q->where('ad.school_id', $schoolId)
+                  ->orWhere('e.school_id', $schoolId);
+            });
+        }
+
+        $assets = $assetsQuery->select(
+            'ad.id',
+            'ad.property_number',
+            'ad.serial_number',
+            'ad.acquisition_date',
+            'asrc.asset_cost',
+            'asrc.acceptance_date',
+            'asrc.created_at as registered_at',
+            'i.name as item_name',
+            'cat.name as category_name',
+            'asrc.condition',
+            'asrc.quantity',
+            DB::raw('COALESCE(s.name, o.name) as location_name'),
+            DB::raw("CONCAT(COALESCE(e.first_name,''), ' ', COALESCE(e.last_name,'')) as custodian_name")
+        )
+        ->orderByDesc('asrc.acceptance_date')
+        ->paginate(50, ['*'], 'assets_page');
+
+        $historyQuery = DB::table('asset_sources as asrc')
             ->join('items as i', 'asrc.item_id', '=', 'i.id')
             ->join('acquisition_sources as aqs', 'asrc.acquisition_source_id', '=', 'aqs.id')
             ->leftJoin('procurement_modes as pm', 'asrc.procurement_mode_id', '=', 'pm.id')
@@ -70,26 +94,34 @@ class AcquisitionSourceController extends Controller
             ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
             ->leftJoin('schools as s', 'ad.school_id', '=', 's.id')
             ->leftJoin('offices as o', 'ad.office_id', '=', 'o.id')
-            ->where('asrc.acquisition_source_id', $id)
-            ->select(
-                'asrc.id',
-                'i.name as item_name',
-                'aqs.name as source_name',
-                DB::raw('COALESCE(asrc.contact_person, aqs.contact_person) as source_personnel'),
-                'pm.name as mode_of_procurement',
-                'ad.property_number',
-                'ad.serial_number',
-                'ad.acquisition_date',
-                'asrc.quantity',
-                'asrc.asset_cost',
-                'asrc.acceptance_date',
-                'asrc.created_at',
-                DB::raw("CONCAT(COALESCE(e.first_name,''), ' ', COALESCE(e.last_name,'')) as employee_name"),
-                's.name as school_name',
-                'o.name as office_name'
-            )
-            ->orderByDesc('asrc.created_at')
-            ->paginate(50, ['*'], 'history_page');
+            ->where('asrc.acquisition_source_id', $id);
+
+        if ($isSchool) {
+            $historyQuery->where(function ($q) use ($schoolId) {
+                $q->where('ad.school_id', $schoolId)
+                  ->orWhere('e.school_id', $schoolId);
+            });
+        }
+
+        $history = $historyQuery->select(
+            'asrc.id',
+            'i.name as item_name',
+            'aqs.name as source_name',
+            DB::raw('COALESCE(asrc.contact_person, aqs.contact_person) as source_personnel'),
+            'pm.name as mode_of_procurement',
+            'ad.property_number',
+            'ad.serial_number',
+            'ad.acquisition_date',
+            'asrc.quantity',
+            'asrc.asset_cost',
+            'asrc.acceptance_date',
+            'asrc.created_at',
+            DB::raw("CONCAT(COALESCE(e.first_name,''), ' ', COALESCE(e.last_name,'')) as employee_name"),
+            's.name as school_name',
+            'o.name as office_name'
+        )
+        ->orderByDesc('asrc.created_at')
+        ->paginate(50, ['*'], 'history_page');
 
         return view('admin.source-management-profile', compact('source', 'stats', 'assets', 'history'));
     }

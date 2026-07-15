@@ -202,4 +202,101 @@ class ComprehensiveFeatureTest extends TestCase
         $response->assertDontSee('Contact Person 2');
         $response->assertDontSee('Service Center 2');
     }
+
+    public function test_school_users_only_see_own_school_assets_on_supplier_and_source_profiles()
+    {
+        $school1 = \App\Models\School::withoutEvents(fn() => \App\Models\School::create([
+            'school_id' => 'SCH-TEST-01', 'name' => 'School Alpha', 'type' => 'Elementary', 'location' => 'ZC'
+        ]));
+        $school2 = \App\Models\School::withoutEvents(fn() => \App\Models\School::create([
+            'school_id' => 'SCH-TEST-02', 'name' => 'School Beta', 'type' => 'Elementary', 'location' => 'ZC'
+        ]));
+
+        $schoolUser1 = User::factory()->create(['system_type' => 'school', 'school_id' => $school1->id, 'role' => 'admin', 'approved' => true]);
+        $schoolUser2 = User::factory()->create(['system_type' => 'school', 'school_id' => $school2->id, 'role' => 'admin', 'approved' => true]);
+        $mainAdmin = User::factory()->create(['system_type' => 'main', 'role' => 'admin', 'approved' => true]);
+
+        $class = \App\Models\Classification::firstOrCreate(['name' => 'IT Equipment']);
+        $cat = \App\Models\Category::firstOrCreate(['name' => 'Laptop'], ['classification_id' => $class->id]);
+        $item = \App\Models\Item::firstOrCreate(['name' => 'Acer TravelMate'], ['category_id' => $cat->id]);
+
+        $acq = \App\Models\AcquisitionSource::create([
+            'name' => 'Test Source Scoped', 'source_type' => 'Internal', 'contact_person' => 'Supplier Guy'
+        ]);
+
+        $supplier = DB::table('suppliers')->insertGetId([
+            'name' => 'Test Supplier Scoped', 'service_center' => 'ZC Service Center', 'created_at' => now(), 'updated_at' => now()
+        ]);
+
+        // Create 2 assets: one assigned to School 1, one assigned to School 2
+        $source1 = \App\Models\AssetSource::create([
+            'item_id' => $item->id, 'acquisition_source_id' => $acq->id, 'supplier_id' => $supplier,
+            'asset_cost' => 10000, 'quantity' => 1, 'condition' => 'Good Condition', 'acceptance_date' => now()->toDateString()
+        ]);
+
+        $source2 = \App\Models\AssetSource::create([
+            'item_id' => $item->id, 'acquisition_source_id' => $acq->id, 'supplier_id' => $supplier,
+            'asset_cost' => 20000, 'quantity' => 1, 'condition' => 'Good Condition', 'acceptance_date' => now()->toDateString()
+        ]);
+
+        $assign1 = DB::table('asset_assignments')->insertGetId([
+            'asset_source_id' => $source1->id, 'school_id' => $school1->id, 'acquisition_cost' => 10000,
+            'acquisition_date' => now()->toDateString(), 'property_number' => 'PROP-SCH1', 'created_at' => now(), 'updated_at' => now()
+        ]);
+
+        $assign2 = DB::table('asset_assignments')->insertGetId([
+            'asset_source_id' => $source2->id, 'school_id' => $school2->id, 'acquisition_cost' => 20000,
+            'acquisition_date' => now()->toDateString(), 'property_number' => 'PROP-SCH2', 'created_at' => now(), 'updated_at' => now()
+        ]);
+
+        // --- SUPPLIER SCOPING TEST ---
+        // School User 1 sees School 1 asset, not School 2
+        $response1 = $this->actingAs($schoolUser1)->get("/admin/suppliers/{$supplier}");
+        $response1->assertStatus(200);
+        $response1->assertSee('PROP-SCH1');
+        $response1->assertDontSee('PROP-SCH2');
+        $this->assertEquals(1, $response1->viewData('stats')->total_assets);
+        $this->assertEquals(10000, $response1->viewData('stats')->total_value);
+
+        // School User 2 sees School 2 asset, not School 1
+        $response2 = $this->actingAs($schoolUser2)->get("/admin/suppliers/{$supplier}");
+        $response2->assertStatus(200);
+        $response2->assertSee('PROP-SCH2');
+        $response2->assertDontSee('PROP-SCH1');
+        $this->assertEquals(1, $response2->viewData('stats')->total_assets);
+        $this->assertEquals(20000, $response2->viewData('stats')->total_value);
+
+        // Main Admin sees both
+        $responseMain = $this->actingAs($mainAdmin)->get("/admin/suppliers/{$supplier}");
+        $responseMain->assertStatus(200);
+        $responseMain->assertSee('PROP-SCH1');
+        $responseMain->assertSee('PROP-SCH2');
+        $this->assertEquals(2, $responseMain->viewData('stats')->total_assets);
+        $this->assertEquals(30000, $responseMain->viewData('stats')->total_value);
+
+        // --- SOURCE SCOPING TEST ---
+        // School User 1 sees School 1 asset, not School 2
+        $sResponse1 = $this->actingAs($schoolUser1)->get("/admin/sources/{$acq->id}");
+        $sResponse1->assertStatus(200);
+        $sResponse1->assertSee('PROP-SCH1');
+        $sResponse1->assertDontSee('PROP-SCH2');
+        $this->assertEquals(1, $sResponse1->viewData('stats')->total_assets);
+        $this->assertEquals(10000, $sResponse1->viewData('stats')->total_value);
+
+        // School User 2 sees School 2 asset, not School 1
+        $sResponse2 = $this->actingAs($schoolUser2)->get("/admin/sources/{$acq->id}");
+        $sResponse2->assertStatus(200);
+        $sResponse2->assertSee('PROP-SCH2');
+        $sResponse2->assertDontSee('PROP-SCH1');
+        $this->assertEquals(1, $sResponse2->viewData('stats')->total_assets);
+        $this->assertEquals(20000, $sResponse2->viewData('stats')->total_value);
+
+        // Main Admin sees both
+        $sResponseMain = $this->actingAs($mainAdmin)->get("/admin/sources/{$acq->id}");
+        $sResponseMain->assertStatus(200);
+        $sResponseMain->assertSee('PROP-SCH1');
+        $sResponseMain->assertSee('PROP-SCH2');
+        $this->assertEquals(2, $sResponseMain->viewData('stats')->total_assets);
+        $this->assertEquals(30000, $sResponseMain->viewData('stats')->total_value);
+    }
 }
