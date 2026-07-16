@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             ClassificationCategorySeeder::class,
             OfficeSeeder::class,
             EmployeeSeeder::class,
+            ItemsAndAssetSourcesSeeder::class,
         ]);
 
         \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
