@@ -67,7 +67,8 @@ function handleAutocompleteEvent(e) {
     ];
 
     const localData = [];
-    if (!skipLocalCols.includes(colName)) {
+    // Local row autocomplete disabled to prevent suggesting data typed on other rows
+    if (false && !skipLocalCols.includes(colName)) {
         for (let i = pageData.length - 1; i >= 0; i--) {
             const val = (pageData[i][colName] || "").toString().trim();
             if (val && !localData.includes(val)) {

@@ -78,11 +78,6 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                         <span>Bulk Assign</span>
                     </button>
-                    <button @click="submitBatch" :disabled="pendingCount === 0"
-                        class="px-8 py-2.5 bg-[#c00000] disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-all flex items-center gap-3 shadow-sm active:scale-95">
-                        <span>Deploy Assignments</span>
-                        <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center" x-text="pendingCount">0</div>
-                    </button>
                 </div>
             </div>
 
@@ -146,17 +141,16 @@
                                         placeholder="Serial No.">
                                 </td>
                                 
-                                <td class="xls-td col-personnel relative" style="overflow:visible;">
-                                    <input type="text" x-model="asset.empSearch" @input="searchEmployee(asset)" @focus="asset.showEmpDropdown = true; searchEmployee(asset)" @click.away="asset.showEmpDropdown = false" class="xls-input font-bold text-[#c00000]" placeholder="Search ID or Name...">
+                                <td class="xls-td col-personnel relative" style="overflow:visible;" @click.away="asset.showEmpDropdown = false">
+                                    <input type="text" x-model="asset.empSearch" @input="searchEmployee(asset)" @focus="closeAllDropdowns(); asset.showEmpDropdown = true; searchEmployee(asset)" class="xls-input font-bold text-[#c00000]" placeholder="Search ID or Name...">
                                     <button type="button" @click="clearEmployee(asset)" x-show="asset.empSearch" class="absolute right-2 top-1/2 -translate-y-1/2 p-[2.3px] text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"><svg class="w-[13.2px] h-[13.2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-                                    <div x-show="asset.showEmpDropdown" class="custom-autocomplete" style="width: 100%;">
+                                    <div x-show="asset.showEmpDropdown" class="xls-custom-dd" style="display: block; width: 100%;">
                                         <template x-for="emp in asset.empResults" :key="emp.id">
-                                            <div class="custom-autocomplete-item" @click="selectEmployee(asset, emp)">
-                                                <div x-text="emp.first_name + ' ' + emp.last_name"></div>
-                                                <div class="text-[9px] text-slate-400 mt-0.5" x-text="(emp.employee_id || 'No ID')"></div>
+                                            <div class="xls-dd-item" @click="selectEmployee(asset, emp)">
+                                                <span x-text="emp.first_name + ' ' + emp.last_name"></span><span style="color:#64748b;font-size:8px;margin-left:6px;" x-text="(emp.employee_id || '')"></span>
                                             </div>
                                         </template>
-                                        <div x-show="asset.empResults.length === 0" class="p-2 text-[10px] text-slate-400 italic">No matches...</div>
+                                        <div x-show="asset.empResults.length === 0" class="xls-dd-empty">No employees found</div>
                                     </div>
                                 </td>
                                 
@@ -165,17 +159,16 @@
                                 <td class="xls-td col-personnel" x-show="!hideAutofill"><input type="text" readonly x-model="asset.employee_pos" class="xls-input bg-slate-50 cursor-not-allowed"></td>
                                 <td class="xls-td col-personnel" x-show="!hideAutofill"><input type="text" readonly x-model="asset.employee_status" class="xls-input bg-slate-50 cursor-not-allowed"></td>
  
-                                <td class="xls-td col-identity relative" style="overflow:visible;">
-                                    <input type="text" x-model="asset.locSearch" @input="searchLocation(asset)" @focus="asset.showLocDropdown = true; searchLocation(asset)" @click.away="asset.showLocDropdown = false" class="xls-input font-bold text-[#c00000]" placeholder="Search School/Office...">
+                                <td class="xls-td col-identity relative" style="overflow:visible;" @click.away="asset.showLocDropdown = false">
+                                    <input type="text" x-model="asset.locSearch" @input="searchLocation(asset)" @focus="closeAllDropdowns(); asset.showLocDropdown = true; searchLocation(asset)" class="xls-input font-bold text-[#c00000]" placeholder="Search School/Office...">
                                     <button type="button" @click="clearLocation(asset)" x-show="asset.locSearch" class="absolute right-2 top-1/2 -translate-y-1/2 -mt-1 p-[2.3px] text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"><svg class="w-[13.2px] h-[13.2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-                                    <div x-show="asset.showLocDropdown" class="custom-autocomplete" style="width: 100%;">
+                                    <div x-show="asset.showLocDropdown" class="xls-custom-dd" style="display: block; width: 100%;">
                                         <template x-for="loc in asset.locResults" :key="loc.id">
-                                            <div class="custom-autocomplete-item" @click="selectLocation(asset, loc)">
-                                                <div x-text="loc.name || loc.id"></div>
-                                                <div class="text-[9px] text-slate-400 mt-0.5" x-text="(loc.type || '') + ' - ' + (loc.location || '')"></div>
+                                            <div class="xls-dd-item" @click="selectLocation(asset, loc)">
+                                                <span x-text="loc.name || loc.id"></span><span style="color:#64748b;font-size:8px;margin-left:6px;" x-text="(loc.type || '') + ' - ' + (loc.location || '')"></span>
                                             </div>
                                         </template>
-                                        <div x-show="asset.locResults.length === 0" class="p-2 text-[10px] text-slate-400 italic">No matches...</div>
+                                        <div x-show="asset.locResults.length === 0" class="xls-dd-empty">No locations found</div>
                                     </div>
                                 </td>
                                 
@@ -224,6 +217,11 @@
                         </button>
                     </div>
                 </div>
+                <button @click="submitBatch" :disabled="pendingCount === 0"
+                    class="px-8 py-2.5 bg-[#c00000] disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-red-700 transition-all flex items-center gap-3 shadow-sm active:scale-95">
+                    <span>Deploy Assignments</span>
+                    <div class="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center" x-text="pendingCount">0</div>
+                </button>
             </div>
         </div>
     </div>
@@ -273,20 +271,19 @@
                 </div>
 
                 <!-- Employee Search -->
-                <div class="relative p-1 rounded-2xl" style="position:relative;overflow:visible;">
+                <div class="relative p-1 rounded-2xl" style="position:relative;overflow:visible;" @click.away="bulkData.showEmpDropdown = false">
                     <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">Employee Search</label>
                     <div class="relative w-full">
-                        <input type="text" x-model="bulkData.empSearch" @input="searchBulkEmployee()" @focus="bulkData.showEmpDropdown = true; searchBulkEmployee()" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Search ID or Name...">
+                        <input type="text" x-model="bulkData.empSearch" @input="searchBulkEmployee()" @focus="closeAllDropdowns(); bulkData.showEmpDropdown = true; searchBulkEmployee()" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Search ID or Name...">
                         <button type="button" x-show="bulkData.empSearch" @click="clearBulkEmployee()" class="absolute right-2 top-1/2 -translate-y-1/2 p-[2.3px] text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"><svg class="w-[13.2px] h-[13.2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                     </div>
-                    <div x-show="bulkData.showEmpDropdown" class="custom-autocomplete" style="width: 100%;">
+                    <div x-show="bulkData.showEmpDropdown" class="xls-custom-dd" style="display: block; width: 100%;">
                         <template x-for="emp in bulkData.empResults" :key="emp.id">
-                            <div class="custom-autocomplete-item" @mousedown="selectBulkEmployee(emp)">
-                                <div x-text="emp.first_name + ' ' + emp.last_name"></div>
-                                <div class="text-[9px] text-slate-400 mt-0.5" x-text="(emp.employee_id || 'No ID')"></div>
+                            <div class="xls-dd-item" @mousedown="selectBulkEmployee(emp)">
+                                <span x-text="emp.first_name + ' ' + emp.last_name"></span><span style="color:#64748b;font-size:8px;margin-left:6px;" x-text="(emp.employee_id || '')"></span>
                             </div>
                         </template>
-                        <div x-show="bulkData.empResults.length === 0" class="p-2 text-[10px] text-slate-400 italic">No matches...</div>
+                        <div x-show="bulkData.empResults.length === 0" class="xls-dd-empty">No employees found</div>
                     </div>
                 </div>
 
@@ -297,20 +294,19 @@
                 </div>
 
                 <!-- School/Office Search -->
-                <div class="relative p-1 rounded-2xl" style="position:relative;overflow:visible;">
+                <div class="relative p-1 rounded-2xl" style="position:relative;overflow:visible;" @click.away="bulkData.showLocDropdown = false">
                     <label class="text-[9px] font-black text-slate-900 uppercase tracking-widest ml-1 block mb-1">School/Office Search</label>
                     <div class="relative w-full">
-                        <input type="text" x-model="bulkData.locSearch" @input="searchBulkLocation()" @focus="bulkData.showLocDropdown = true; searchBulkLocation()" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Search School/Office...">
+                        <input type="text" x-model="bulkData.locSearch" @input="searchBulkLocation()" @focus="closeAllDropdowns(); bulkData.showLocDropdown = true; searchBulkLocation()" class="xls-input !border border-slate-100 rounded-xl bg-transparent" placeholder="Search School/Office...">
                         <button type="button" x-show="bulkData.locSearch" @click="clearBulkLocation()" class="absolute right-2 top-1/2 -translate-y-1/2 p-[2.3px] text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-all cursor-pointer"><svg class="w-[13.2px] h-[13.2px]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                     </div>
-                    <div x-show="bulkData.showLocDropdown" class="custom-autocomplete" style="width: 100%;">
+                    <div x-show="bulkData.showLocDropdown" class="xls-custom-dd" style="display: block; width: 100%;">
                         <template x-for="loc in bulkData.locResults" :key="loc.id">
-                            <div class="custom-autocomplete-item" @mousedown="selectBulkLocation(loc)">
-                                <div x-text="loc.name || loc.id"></div>
-                                <div class="text-[9px] text-slate-400 mt-0.5" x-text="(loc.type || '') + ' - ' + (loc.location || '')"></div>
+                            <div class="xls-dd-item" @mousedown="selectBulkLocation(loc)">
+                                <span x-text="loc.name || loc.id"></span><span style="color:#64748b;font-size:8px;margin-left:6px;" x-text="(loc.type || '') + ' - ' + (loc.location || '')"></span>
                             </div>
                         </template>
-                        <div x-show="bulkData.locResults.length === 0" class="p-2 text-[10px] text-slate-400 italic">No matches...</div>
+                        <div x-show="bulkData.locResults.length === 0" class="xls-dd-empty">No locations found</div>
                     </div>
                 </div>
 
@@ -431,6 +427,15 @@
                     } finally {
                         this.loading = false;
                     }
+                },
+
+                closeAllDropdowns() {
+                    this.assets.forEach(a => {
+                        a.showEmpDropdown = false;
+                        a.showLocDropdown = false;
+                    });
+                    this.bulkData.showEmpDropdown = false;
+                    this.bulkData.showLocDropdown = false;
                 },
 
                 get availableClassifications() {

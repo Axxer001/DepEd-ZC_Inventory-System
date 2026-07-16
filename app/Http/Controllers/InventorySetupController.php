@@ -32,7 +32,7 @@ class InventorySetupController extends Controller
             'items'               => Item::get()->groupBy('category_id')->map(fn($items) => $items->keyBy('name')),
             'acquisition_sources' => AcquisitionSource::pluck('id', 'name')->toArray(),
             'procurement_modes'   => ProcurementMode::pluck('id', 'name')->toArray(),
-            'employees'           => Employee::get()->keyBy(function($e) {
+            'employees'           => Employee::where('status', 'Active')->get()->keyBy(function($e) {
                                         return strtolower(trim("{$e->first_name} {$e->last_name}"));
                                     }),
             'schools'             => School::pluck('id', 'school_id')->toArray(),
@@ -236,8 +236,15 @@ class InventorySetupController extends Controller
             foreach ($rows as $rowIndex => $row) {
                 $rowNum = $rowIndex + 1;
 
+                // Normalize keys to lowercase with spaces
+                $normalizedRow = [];
+                foreach ($row as $key => $val) {
+                    $normalizedKey = strtolower(str_replace(['_', '-'], ' ', trim($key)));
+                    $normalizedRow[$normalizedKey] = $val;
+                }
+
                 // ── Resolve Classification → Category → Item ─────────────────
-                $className = trim($row['classification'] ?? '');
+                $className = trim($normalizedRow['classification'] ?? '');
                 if (empty($className)) {
                     $errors[] = "Row {$rowNum}: Classification is required.";
                     continue;
@@ -248,7 +255,7 @@ class InventorySetupController extends Controller
                     continue;
                 }
 
-                $catName = trim($row['category'] ?? '');
+                $catName = trim($normalizedRow['category'] ?? '');
                 if (empty($catName)) {
                     $errors[] = "Row {$rowNum}: Category is required.";
                     continue;
@@ -260,7 +267,7 @@ class InventorySetupController extends Controller
                     continue;
                 }
 
-                $itemName = trim($row['item'] ?? 'Unknown Item');
+                $itemName = trim($normalizedRow['item'] ?? 'Unknown Item');
                 $itemKey  = $catId . '_' . strtolower($itemName);
                 $itemId   = $cache['item_composite'][$itemKey] ?? null;
                 if (!$itemId) {
@@ -274,7 +281,7 @@ class InventorySetupController extends Controller
                 }
 
                 // ── Resolve Procurement Mode (lookup only, cannot create) ───
-                $modeName = trim($row['mode'] ?? '');
+                $modeName = trim($normalizedRow['mode'] ?? '');
                 $modeId = null;
                 if ($modeName) {
                     $modeId = $cache['mode'][strtolower($modeName)] ?? null;
@@ -285,27 +292,53 @@ class InventorySetupController extends Controller
                 }
 
                 // ── Resolve Acquisition Source (lookup only) ─────────────────
-                $acqSourceName = trim($row['source'] ?? '');
+                $acqSourceName = trim($normalizedRow['source'] ?? '');
+                if ($acqSourceName === '') {
+                    $acqSourceName = 'N/A';
+                }
                 $acqSourceId = $cache['acq_source'][strtolower($acqSourceName)] ?? null;
                 if (!$acqSourceId) {
-                    $errors[] = "Row {$rowNum}: Source of Acquisition '{$acqSourceName}' does not exist. Please create it in Source Management first.";
-                    continue;
+                    if (strtolower($acqSourceName) === 'n/a') {
+                        $acqSourceId = DB::table('acquisition_sources')->insertGetId([
+                            'name' => 'N/A',
+                            'source_type' => 'Internal',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                        $cache['acq_source']['n/a'] = $acqSourceId;
+                    } else {
+                        $errors[] = "Row {$rowNum}: Source of Acquisition '{$acqSourceName}' does not exist. Please create it in Source Management first.";
+                        continue;
+                    }
                 }
 
                 // ── Resolve Supplier (lookup only) ───────────────────────────
-                $supplierName = trim($row['supplier'] ?? '');
-                $supplierId = $supplierName ? ($cache['supplier'][strtolower($supplierName)] ?? null) : null;
+                $supplierName = trim($normalizedRow['supplier'] ?? '');
+                if ($supplierName === '') {
+                    $supplierName = 'N/A';
+                }
+                $supplierId = $cache['supplier'][strtolower($supplierName)] ?? null;
+                if (!$supplierId) {
+                    if (strtolower($supplierName) === 'n/a') {
+                        $supplierId = DB::table('suppliers')->insertGetId([
+                            'name' => 'N/A',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                        $cache['supplier']['n/a'] = $supplierId;
+                    }
+                }
 
                 // ── Assets go to Warehouse (AMU) by default ──────────────────
                 $employeeId = null;
                 $employeeName = "Unassigned";
 
                 // ── Map Condition to ENUM (stored on asset_sources) ──────────
-                $rawCondition = strtolower(trim($row['condition'] ?? ''));
+                $rawCondition = strtolower(trim($normalizedRow['condition'] ?? ''));
                 $condition    = $conditionMap[$rawCondition] ?? 'Good Condition';
 
-                $personnel = !empty($row['personnel']) ? trim($row['personnel']) : null;
-                $position = !empty($row['position']) ? trim($row['position']) : null;
+                $personnel = !empty($normalizedRow['personnel']) ? trim($normalizedRow['personnel']) : null;
+                $position = !empty($normalizedRow['position']) ? trim($normalizedRow['position']) : null;
 
                 if ($acqSourceId && isset($cache['acq_contact'][$acqSourceId])) {
                     if (empty($personnel)) {
@@ -316,8 +349,8 @@ class InventorySetupController extends Controller
                     }
                 }
 
-                $suppPersonnel = !empty($row['supplier_personnel']) ? trim($row['supplier_personnel']) : null;
-                $suppServiceCenter = !empty($row['service_center']) ? trim($row['service_center']) : null;
+                $suppPersonnel = !empty($normalizedRow['supplier personnel']) ? trim($normalizedRow['supplier personnel']) : null;
+                $suppServiceCenter = !empty($normalizedRow['service center']) ? trim($normalizedRow['service center']) : null;
                 $suppContactNumber = null;
                 $suppContactEmail = null;
 
@@ -332,21 +365,87 @@ class InventorySetupController extends Controller
                     $suppContactEmail = $cache['supplier_contact'][$supplierId]['contact_email'];
                 }
 
+                // 1. Resolve UOM / Unit
+                $uom = 'Unit';
+                foreach (['uom', 'unit', 'unit of measurement'] as $k) {
+                    if (isset($normalizedRow[$k]) && $normalizedRow[$k] !== '') {
+                        $uom = trim($normalizedRow[$k]);
+                        break;
+                    }
+                }
+
+                // 2. Resolve Qty / Quantity
+                $qty = 1;
+                foreach (['qty', 'quantity'] as $k) {
+                    if (isset($normalizedRow[$k]) && $normalizedRow[$k] !== '') {
+                        $cleanQty = preg_replace('/[^0-9]/', '', $normalizedRow[$k]);
+                        if ($cleanQty !== '') {
+                            $qty = (int) $cleanQty;
+                        }
+                        break;
+                    }
+                }
+
+                // 3. Resolve Cost / Price
+                $cost = 0.0;
+                foreach (['cost', 'price', 'asset cost'] as $k) {
+                    if (isset($normalizedRow[$k]) && $normalizedRow[$k] !== '') {
+                        $cleanCost = preg_replace('/[^0-9.]/', '', str_replace(',', '', $normalizedRow[$k]));
+                        if ($cleanCost !== '') {
+                            $cost = (float) $cleanCost;
+                        }
+                        break;
+                    }
+                }
+
+                // 4. Resolve Warranty
+                $warranty = null;
+                foreach (['warranty', 'warranty period'] as $k) {
+                    if (isset($normalizedRow[$k]) && $normalizedRow[$k] !== '') {
+                        $cleanWarranty = preg_replace('/[^0-9]/', '', $normalizedRow[$k]);
+                        if ($cleanWarranty !== '') {
+                            $warranty = (int) $cleanWarranty;
+                        }
+                        break;
+                    }
+                }
+
+                // 5. Resolve Useful Life
+                $usefulLife = 0;
+                foreach (['useful life', 'useful_life', 'useful-life', 'estimated useful life'] as $k) {
+                    if (isset($normalizedRow[$k]) && $normalizedRow[$k] !== '') {
+                        $cleanLife = preg_replace('/[^0-9]/', '', $normalizedRow[$k]);
+                        if ($cleanLife !== '') {
+                            $usefulLife = (int) $cleanLife;
+                        }
+                        break;
+                    }
+                }
+
+                // 6. Resolve Acceptance Date
+                $acceptanceDate = now()->toDateString();
+                foreach (['acceptance date', 'acceptance_date', 'acceptance-date', 'date'] as $k) {
+                    if (!empty($normalizedRow[$k])) {
+                        $acceptanceDate = trim($normalizedRow[$k]);
+                        break;
+                    }
+                }
+
                 // ── Insert asset_sources ─────────────────────────────────────
                 $assetSourceId = DB::table('asset_sources')->insertGetId([
                     'item_id'                => $itemId,
                     'acquisition_source_id'  => $acqSourceId,
                     'supplier_id'            => $supplierId,
                     'procurement_mode_id'    => $modeId,
-                    'description'            => $row['description']      ?? null,
-                    'unit_of_measurement'    => $row['uom']               ?? 'Unit',
-                    'asset_cost'             => (float) ($row['cost']     ?? 0),
-                    'quantity'               => (int)   ($row['qty']      ?? 1),
-                    'estimated_useful_life'  => (int)   ($row['useful-life'] ?? 0),
-                    'warranty'               => isset($row['warranty']) && $row['warranty'] !== '' ? (int)$row['warranty'] : null,
-                    'acceptance_date'        => $row['acceptance-date']   ?? now()->toDateString(),
+                    'description'            => $normalizedRow['description'] ?? null,
+                    'unit_of_measurement'    => $uom,
+                    'asset_cost'             => $cost,
+                    'quantity'               => $qty,
+                    'estimated_useful_life'  => $usefulLife,
+                    'warranty'               => $warranty,
+                    'acceptance_date'        => $acceptanceDate,
                     'condition'              => $condition,
-                    'equipment'              => ((float)($row['cost'] ?? 0) <= 49999 ? 'SEE' : 'PPE'),
+                    'equipment'              => ($cost <= 49999 ? 'SEE' : 'PPE'),
                     'contact_person'         => $personnel,
                     'contact_position'       => $position,
                     'supplier_personnel'     => $suppPersonnel,
@@ -362,13 +461,13 @@ class InventorySetupController extends Controller
                     'asset_source_id'  => $assetSourceId,
                     'employee_id'      => null,
                     'property_number'  => null,
-                    'acquisition_cost' => (float) ($row['cost']     ?? 0) * (int) ($row['qty'] ?? 1),
-                    'acquisition_date' => $row['acceptance-date']  ?? now()->toDateString(),
+                    'acquisition_cost' => $cost * $qty,
+                    'acquisition_date' => $acceptanceDate,
                     'created_at'       => now(),
                     'updated_at'       => now(),
                 ]);
 
-                $addedDetails[] = "Added " . (int)($row['qty'] ?? 1) . " " . ($row['uom'] ?? 'Unit') . " {$itemName} to Warehouse/AMU";
+                $addedDetails[] = "Added " . $qty . " " . $uom . " {$itemName} to Warehouse/AMU";
 
                 $inserted++;
             }
@@ -1052,6 +1151,8 @@ class InventorySetupController extends Controller
             });
         }
 
+        $query->orderBy('asset_assignments.id', 'asc');
+
         $assets = $query->get()->map(function($asset) {
             if (empty($asset->property_number)) {
                 $order = DB::table('asset_sources')
@@ -1175,18 +1276,7 @@ class InventorySetupController extends Controller
                 'updated_at'          => now(),
             ]);
 
-            session()->flash('download_docs', [
-                [
-                    'recipient_name' => $recipientName,
-                    'recipient_type' => 'employee',
-                    'school_type'    => null,
-                    'cost_threshold' => ($cost > 49999) ? 'high' : 'low',
-                    'doc_type'       => $docType,
-                    'asset_count'    => 1,
-                    'assignment_id'  => $validated['assignment_id'],
-                    'transfer_id'    => $transferId,
-                ]
-            ]);
+
 
             $userName = Auth::user() ? Auth::user()->name : 'System';
             DB::table('system_logs')->insert([
@@ -1506,9 +1596,7 @@ class InventorySetupController extends Controller
                 }
             }
 
-            if (!empty($docsToDownload)) {
-                session()->flash('download_docs', array_values($docsToDownload));
-            }
+
 
             return response()->json(['success' => true, 'message' => "Successfully assigned {$count} asset(s)."]);
         } catch (\Exception $e) {

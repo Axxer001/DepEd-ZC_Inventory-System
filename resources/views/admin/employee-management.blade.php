@@ -544,13 +544,13 @@
     
     <div id="createEmployeeModal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onclick="closeCreateEmployeeModal()"></div>
-        <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-xl p-8 relative z-10 animate-fade mx-4">
+        <div class="bg-white dark:bg-slate-800 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-700 w-full max-w-xl max-h-[90vh] overflow-y-auto p-5 sm:p-8 relative z-10 animate-fade mx-4">
             <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h3 class="text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Register Employee</h3>
+                    <h3 class="text-xl sm:text-2xl font-black text-slate-800 dark:text-white uppercase tracking-tight">Register Employee</h3>
                     <p class="text-slate-500 text-[11px] font-bold uppercase tracking-widest mt-1">Add new custodian or staff member</p>
                 </div>
-                <button onclick="closeCreateEmployeeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                <button onclick="closeCreateEmployeeModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors shrink-0 ml-4">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
@@ -558,7 +558,7 @@
             <form action="{{ route('admin.employees.store') }}" method="POST" class="space-y-5">
                 @csrf
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="space-y-1">
                         <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">First Name</label>
                         <input type="text" name="first_name" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white" placeholder="John">
@@ -569,7 +569,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="space-y-1">
                         <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Last Name</label>
                         <input type="text" name="last_name" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white" placeholder="Smith">
@@ -580,7 +580,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="space-y-1">
                         <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Sex</label>
                         <select name="sex" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white">
@@ -595,7 +595,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div class="space-y-1">
                         <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Position</label>
                         <input type="text" name="position" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 text-sm font-semibold dark:bg-slate-900 dark:border-slate-700 dark:text-white" placeholder="Teacher I / Admin Assistant">
@@ -629,9 +629,9 @@
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
-                    <button type="button" onclick="closeCreateEmployeeModal()" class="px-6 py-3 border border-slate-200 text-slate-500 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900 transition-all">Cancel</button>
-                    <button type="submit" class="px-8 py-3 bg-gradient-to-r from-red-700 to-red-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:from-red-800 hover:to-red-600 transition-all shadow-md shadow-red-500/20">Register</button>
+                <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-700">
+                    <button type="button" onclick="closeCreateEmployeeModal()" class="w-full sm:w-auto px-6 py-3 border border-slate-200 text-slate-500 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-900 transition-all">Cancel</button>
+                    <button type="submit" class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-red-700 to-red-500 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:from-red-800 hover:to-red-600 transition-all shadow-md shadow-red-500/20">Register</button>
                 </div>
             </form>
         </div>

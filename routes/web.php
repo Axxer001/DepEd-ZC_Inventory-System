@@ -239,6 +239,8 @@ Route::middleware('auth')->group(function () {
         $allSchools = $schools->concat($offices)->sortBy('name')->values();
 
         $allCustodians = DB::table('employees')
+            ->whereNull('deleted_at')
+            ->where('status', 'Active')
             ->select('id', 'first_name', 'middle_name', 'last_name', 'position', 'employee_id', 'status', 'school_id', 'office_id')
             ->orderBy('last_name')
             ->get();

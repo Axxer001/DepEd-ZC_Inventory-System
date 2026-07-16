@@ -134,6 +134,7 @@
         function filterEmpDropdown(rowId, query) {
             const dd = document.getElementById(`emp-dd-${rowId}`);
             if (!dd) return;
+            closeAllDropdowns(); // force-close every other open dropdown first
             const q = (query || '').trim().toLowerCase();
             const matches = q.length === 0
                 ? globalEmployees.slice(0, 50)
@@ -210,6 +211,7 @@
         function filterLocDropdown(rowId, query) {
             const dd = document.getElementById(`loc-dd-${rowId}`);
             if (!dd) return;
+            closeAllDropdowns(); // force-close every other open dropdown first
             const q = (query || '').trim().toLowerCase();
             const matches = q.length === 0
                 ? globalLocations.slice(0, 50)
@@ -310,30 +312,36 @@
             syncState(rowId, 'position', position);
         }
 
-        // Close all custom dropdowns when clicking outside
-        document.addEventListener('click', e => {
-            if (e.target.closest('.xls-custom-dd')) return;
-            
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('svg') || e.target.hasAttribute('data-col')) {
-                let clickedContainerDd = null;
-                const dds = Array.from(document.querySelectorAll('.xls-custom-dd'));
-                for (const dd of dds) {
-                    if (dd.parentElement && dd.parentElement.contains(e.target)) {
-                        clickedContainerDd = dd;
-                        break;
-                    }
+        // Centralized helper to close all dropdowns (manual or autocomplete)
+        window.closeAllDropdowns = function(exceptElement = null) {
+            const allDropdowns = document.querySelectorAll('.xls-custom-dd, .custom-autocomplete');
+            allDropdowns.forEach(dd => {
+                if (exceptElement && dd.contains(exceptElement)) return;
+                
+                // Keep the dropdown open if the target is the input field that triggered it
+                if (exceptElement && exceptElement.tagName === 'INPUT' && dd.parentElement && dd.parentElement.contains(exceptElement)) return;
+                
+                // Keep autocomplete open if it is the active one and the input is currently focused
+                if (dd.classList.contains('custom-autocomplete') && typeof activeAutocomplete !== 'undefined' && dd === activeAutocomplete && exceptElement === document.activeElement) {
+                    return;
                 }
-                
-                document.querySelectorAll('.xls-custom-dd').forEach(dd => {
-                    if (dd !== clickedContainerDd) {
-                        dd.style.display = 'none';
-                    }
-                });
-                
-                if (clickedContainerDd || e.target.hasAttribute('data-col')) return;
-            }
-            
-            document.querySelectorAll('.xls-custom-dd').forEach(dd => dd.style.display = 'none');
+
+                dd.style.display = 'none';
+                if (dd.classList.contains('custom-autocomplete')) {
+                    dd.remove();
+                }
+            });
+        };
+
+        // Close dropdowns on clicking outside
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.xls-custom-dd') || e.target.closest('.custom-autocomplete')) return;
+            closeAllDropdowns(e.target);
+        });
+
+        // Close dropdowns on focus shift (arrow/tab navigation)
+        document.addEventListener('focusin', function(e) {
+            closeAllDropdowns(e.target);
         });
         document.addEventListener('keydown', e => {
             if (e.key === 'Escape') {
@@ -513,7 +521,7 @@
                 : globalClassifications.filter(c => c.name.toLowerCase().includes(q)).slice(0, 50);
 
             if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No classifications found</div>`;
-            else dd.innerHTML = matches.map(c => `<div class="xls-dd-item" onmousedown="selectClass(${rowId}, this.getAttribute('data-name'))" data-name="${c.name.replace(/"/g, '&quot;')}">${c.name}</div>`).join('');
+            else dd.innerHTML = matches.map(c => `<div class="xls-dd-item" onmousedown="selectClass(${rowId}, this.getAttribute('data-name'))" data-name="${c.name.replace(/"/g, '&quot;')}">${c.name}<span style="color:#64748b;font-size:8px;margin-left:6px;">Classification</span></div>`).join('');
             dd.style.display = 'block';
         }
         window.selectClass = function(rowId, className) {
@@ -586,7 +594,7 @@
                 : globalAcqSources.filter(s => s.name.toLowerCase().includes(q)).slice(0, 50);
 
             if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No sources found</div>`;
-            else dd.innerHTML = matches.map(s => `<div class="xls-dd-item" onmousedown="selectSource(${rowId}, this.getAttribute('data-name'))" data-name="${s.name.replace(/"/g, '&quot;')}">${s.name}</div>`).join('');
+            else dd.innerHTML = matches.map(s => `<div class="xls-dd-item" onmousedown="selectSource(${rowId}, this.getAttribute('data-name'))" data-name="${s.name.replace(/"/g, '&quot;')}">${s.name}<span style="color:#64748b;font-size:8px;margin-left:6px;">${s.source_type || ''}</span></div>`).join('');
             dd.style.display = 'block';
         }
 
@@ -647,7 +655,7 @@
                 : globalSuppliers.filter(s => s.name.toLowerCase().includes(q)).slice(0, 50);
 
             if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No suppliers found</div>`;
-            else dd.innerHTML = matches.map(s => `<div class="xls-dd-item" onmousedown="selectSupplier(${rowId}, this.getAttribute('data-name'))" data-name="${s.name.replace(/"/g, '&quot;')}">${s.name}</div>`).join('');
+            else dd.innerHTML = matches.map(s => `<div class="xls-dd-item" onmousedown="selectSupplier(${rowId}, this.getAttribute('data-name'))" data-name="${s.name.replace(/"/g, '&quot;')}">${s.name}<span style="color:#64748b;font-size:8px;margin-left:6px;">${s.service_center || ''}</span></div>`).join('');
             dd.style.display = 'block';
         }
 
@@ -709,7 +717,7 @@
                 : globalClassifications.filter(c => c.name.toLowerCase().includes(q)).slice(0, 50);
 
             if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No classifications found</div>`;
-            else dd.innerHTML = matches.map(c => `<div class="xls-dd-item" onmousedown="selectBulkClass(this.getAttribute('data-name'))" data-name="${c.name.replace(/"/g, '&quot;')}">${c.name}</div>`).join('');
+            else dd.innerHTML = matches.map(c => `<div class="xls-dd-item" onmousedown="selectBulkClass(this.getAttribute('data-name'))" data-name="${c.name.replace(/"/g, '&quot;')}">${c.name}<span style="color:#64748b;font-size:8px;margin-left:6px;">Classification</span></div>`).join('');
             dd.style.display = 'block';
         }
         window.selectBulkClass = function(className) {
@@ -775,7 +783,7 @@
                 : globalSuppliers.filter(s => s.name.toLowerCase().includes(q)).slice(0, 50);
 
             if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No suppliers found</div>`;
-            else dd.innerHTML = matches.map(s => `<div class="xls-dd-item" onmousedown="selectBulkSupplier(this.getAttribute('data-name'))" data-name="${s.name.replace(/"/g, '&quot;')}">${s.name}</div>`).join('');
+            else dd.innerHTML = matches.map(s => `<div class="xls-dd-item" onmousedown="selectBulkSupplier(this.getAttribute('data-name'))" data-name="${s.name.replace(/"/g, '&quot;')}">${s.name}<span style="color:#64748b;font-size:8px;margin-left:6px;">${s.service_center || ''}</span></div>`).join('');
             dd.style.display = 'block';
         }
         window.selectBulkSupplier = function(supplierName) {
@@ -818,7 +826,7 @@
                 : globalAcqSources.filter(s => s.name.toLowerCase().includes(q)).slice(0, 50);
 
             if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No sources found</div>`;
-            else dd.innerHTML = matches.map(s => `<div class="xls-dd-item" onmousedown="selectBulkSource(this.getAttribute('data-name'))" data-name="${s.name.replace(/"/g, '&quot;')}">${s.name}</div>`).join('');
+            else dd.innerHTML = matches.map(s => `<div class="xls-dd-item" onmousedown="selectBulkSource(this.getAttribute('data-name'))" data-name="${s.name.replace(/"/g, '&quot;')}">${s.name}<span style="color:#64748b;font-size:8px;margin-left:6px;">${s.source_type || ''}</span></div>`).join('');
             dd.style.display = 'block';
         }
         window.selectBulkSource = function(sourceName) {
@@ -862,7 +870,7 @@
                 : globalProcurementModes.filter(m => m.name.toLowerCase().includes(q)).slice(0, 50);
 
             if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No modes found</div>`;
-            else dd.innerHTML = matches.map(m => `<div class="xls-dd-item" onmousedown="selectMode(${rowId}, this.getAttribute('data-name'))" data-name="${m.name.replace(/"/g, '&quot;')}">${m.name}</div>`).join('');
+            else dd.innerHTML = matches.map(m => `<div class="xls-dd-item" onmousedown="selectMode(${rowId}, this.getAttribute('data-name'))" data-name="${m.name.replace(/"/g, '&quot;')}">${m.name}<span style="color:#64748b;font-size:8px;margin-left:6px;">Mode</span></div>`).join('');
             dd.style.display = 'block';
         }
         window.selectMode = function(rowId, modeName) {
@@ -884,7 +892,7 @@
                 : globalProcurementModes.filter(m => m.name.toLowerCase().includes(q)).slice(0, 50);
 
             if (matches.length === 0) dd.innerHTML = `<div class="xls-dd-empty">No modes found</div>`;
-            else dd.innerHTML = matches.map(m => `<div class="xls-dd-item" onmousedown="selectBulkMode(this.getAttribute('data-name'))" data-name="${m.name.replace(/"/g, '&quot;')}">${m.name}</div>`).join('');
+            else dd.innerHTML = matches.map(m => `<div class="xls-dd-item" onmousedown="selectBulkMode(this.getAttribute('data-name'))" data-name="${m.name.replace(/"/g, '&quot;')}">${m.name}<span style="color:#64748b;font-size:8px;margin-left:6px;">Mode</span></div>`).join('');
             dd.style.display = 'block';
         }
         window.selectBulkMode = function(modeName) {
@@ -1141,6 +1149,7 @@
             const row = allRowsData.find(r => r.id === rowId);
             if(!row) return;
             const emp = globalEmployees.find(e => e.full_name === val);
+            const searchInp = document.querySelector(`#dst-${rowId} input[data-col="school-search"]`);
             if(emp) {
                 row['employee-id']     = emp.employee_id;
                 row['employee-name']   = emp.full_name;
@@ -1160,17 +1169,25 @@
                     row['school-type']   = emp.location_type_label || emp.location_type || '';
                     row['location']      = emp.location || 'Zamboanga City';
 
-                    const searchInp = document.querySelector(`#dst-${rowId} input[data-col="school-search"]`);
                     const nameInp   = document.querySelector(`#dst-${rowId} input[data-col="school-name"]`);
                     const idInp     = document.querySelector(`#dst-${rowId} input[data-col="school-id"]`);
                     const typeInp   = document.querySelector(`#dst-${rowId} input[data-col="school-type"]`);
                     const locInp    = document.querySelector(`#dst-${rowId} input[data-col="location"]`);
 
-                    if (searchInp) searchInp.value = emp.location_name;
+                    if (searchInp) {
+                        searchInp.value = emp.location_name;
+                        searchInp.disabled = true;
+                        searchInp.classList.add('bg-slate-50', 'cursor-not-allowed', 'text-slate-500');
+                    }
                     if (nameInp)   nameInp.value   = emp.location_name;
                     if (idInp)     idInp.value     = row['school-id'];
                     if (typeInp)   typeInp.value   = row['school-type'];
                     if (locInp)    locInp.value    = row['location'];
+                } else {
+                    if (searchInp) {
+                        searchInp.disabled = false;
+                        searchInp.classList.remove('bg-slate-50', 'cursor-not-allowed', 'text-slate-500');
+                    }
                 }
             } else if (!val) {
                 row['employee-id']     = '';
@@ -1189,13 +1206,16 @@
                 row['school-type']   = '';
                 row['location']      = '';
 
-                const searchInp = document.querySelector(`#dst-${rowId} input[data-col="school-search"]`);
                 const nameInp   = document.querySelector(`#dst-${rowId} input[data-col="school-name"]`);
                 const idInp     = document.querySelector(`#dst-${rowId} input[data-col="school-id"]`);
                 const typeInp   = document.querySelector(`#dst-${rowId} input[data-col="school-type"]`);
                 const locInp    = document.querySelector(`#dst-${rowId} input[data-col="location"]`);
 
-                if (searchInp) searchInp.value = '';
+                if (searchInp) {
+                    searchInp.value = '';
+                    searchInp.disabled = false;
+                    searchInp.classList.remove('bg-slate-50', 'cursor-not-allowed', 'text-slate-500');
+                }
                 if (nameInp)   nameInp.value   = '';
                 if (idInp)     idInp.value     = '';
                 if (typeInp)   typeInp.value   = '';
@@ -1391,24 +1411,17 @@
                     if (distInput) distInput.value = (cost * qty).toFixed(2);
                 }
                 if (col === 'property-no') {
-                    if (value.trim() !== '') {
-                        row.qty = 1;
-                        const qtyInp = document.querySelector(`#src-${rowId} input[data-col="qty"]`);
-                        if (qtyInp) {
-                            qtyInp.value = 1;
-                            qtyInp.readOnly = true;
-                            qtyInp.classList.add('bg-slate-50', 'cursor-not-allowed');
-                        }
-                        const cost = parseFloat(row.cost || 0);
-                        const distInput = document.getElementById(`dst-cost-${rowId}`);
-                        if (distInput) distInput.value = (cost * 1).toFixed(2);
-                    } else {
-                        const qtyInp = document.querySelector(`#src-${rowId} input[data-col="qty"]`);
-                        if (qtyInp) {
-                            qtyInp.readOnly = false;
-                            qtyInp.classList.remove('bg-slate-50', 'cursor-not-allowed');
-                        }
+                    // Quantity is always locked to 1
+                    row.qty = 1;
+                    const qtyInp = document.querySelector(`#src-${rowId} input[data-col="qty"]`);
+                    if (qtyInp) {
+                        qtyInp.value = 1;
+                        qtyInp.readOnly = true;
+                        qtyInp.classList.add('bg-slate-50', 'cursor-not-allowed');
                     }
+                    const cost = parseFloat(row.cost || 0);
+                    const distInput = document.getElementById(`dst-cost-${rowId}`);
+                    if (distInput) distInput.value = (cost * 1).toFixed(2);
                 }
             }
         }
@@ -1420,7 +1433,7 @@
                 classification: '', category: '', item: '', description: '', uom: '', 
                 source: '', mode: '', supplier: '', supplier_personnel: '', service_center: '',
                 personnel: '', position: '',
-                cost: '', qty: '', 
+                cost: '', qty: 1, 
                 'useful-life': '', warranty: '', 
                 'acceptance-date': today,
                 condition: 'Good Condition',
@@ -1500,7 +1513,7 @@
                     <input type="text" data-col="service_center" value="${data.service_center || ''}" readonly class="xls-input bg-slate-50 cursor-not-allowed text-slate-500" placeholder="Auto-filled">
                 </td>
                 <td class="xls-td col-financial"><input type="number" oninput="syncState(${data.id}, 'cost', this.value)" data-col="cost" value="${data.cost}" class="xls-input text-right font-mono" placeholder="0.00" min="0" step="0.01"></td>
-                <td class="xls-td col-financial"><input type="number" oninput="syncState(${data.id}, 'qty', this.value)"  data-col="qty"  value="${data.qty}"  class="xls-input text-right font-mono ${data['property-no'] ? 'bg-slate-50 cursor-not-allowed' : ''}" placeholder="0" min="0" step="1" ${data['property-no'] ? 'readonly' : ''}></td>
+                <td class="xls-td col-financial"><input type="number" oninput="syncState(${data.id}, 'qty', this.value)"  data-col="qty"  value="${data.qty || 1}"  class="xls-input text-right font-mono bg-slate-50 cursor-not-allowed text-slate-500" placeholder="1" min="1" max="1" step="1" readonly></td>
                 <td class="xls-td col-temporal"><input type="number" oninput="syncState(${data.id}, 'warranty', this.value)" data-col="warranty" value="${data['warranty'] || ''}" class="xls-input text-right font-mono" placeholder="0"    min="0" step="1"></td>
                 <td class="xls-td col-temporal"><input type="number" oninput="syncState(${data.id}, 'useful-life', this.value)" data-col="useful-life" value="${data['useful-life'] || ''}" class="xls-input text-right font-mono" placeholder="0"    min="0" step="1"></td>
                 <td class="xls-td col-status">
@@ -3153,13 +3166,9 @@
             const propInput = document.getElementById('bPropertyNo');
             const qtyInput = document.getElementById('bQty1');
             if (!propInput || !qtyInput) return;
-            if (propInput.value.trim() !== '') {
-                qtyInput.value = 1; qtyInput.readOnly = true;
-                qtyInput.classList.add('bg-slate-50', 'dark:bg-white/5', 'cursor-not-allowed');
-            } else {
-                qtyInput.readOnly = false;
-                qtyInput.classList.remove('bg-slate-50', 'dark:bg-white/5', 'cursor-not-allowed');
-            }
+            qtyInput.value = 1;
+            qtyInput.readOnly = true;
+            qtyInput.classList.add('bg-slate-50', 'dark:bg-white/5', 'cursor-not-allowed');
             calcBulkCost();
         }
 
@@ -3175,7 +3184,7 @@
             let invalidRows = [];
             allRowsData.forEach((row, idx) => {
                 const rowNum = idx + 1;
-                const required = ['classification', 'category', 'item', 'uom', 'source', 'cost', 'qty', 'useful-life', 'acceptance-date', 'mode'];
+                const required = ['classification', 'category', 'item', 'acceptance-date', 'mode'];
                 required.forEach(field => { if (!row[field]) isValid = false; });
 
                 if (row.classification) {
@@ -3241,3 +3250,100 @@
                 }
             });
         }
+
+        // --- Caret/Focus Navigation via Arrow Keys for Register & Assign Assets tables ---
+        document.addEventListener('keydown', function(e) {
+            const active = document.activeElement;
+            if (!active || active.tagName !== 'INPUT') return;
+
+            const table = active.closest('table');
+            if (!table) return;
+
+            // Target either Register Assets (assetSourceTable) or Assign Assets (inside stepAssignAsset)
+            const isRegisterTable = table.id === 'assetSourceTable';
+            const isAssignTable = active.closest('#stepAssignAsset') !== null;
+            if (!isRegisterTable && !isAssignTable) return;
+
+            const row = active.closest('tr');
+            if (!row) return;
+
+            // Get visible dropdown (either xls-custom-dd or global activeAutocomplete)
+            let visibleDropdown = row.querySelector('.xls-custom-dd');
+            if (!visibleDropdown || visibleDropdown.style.display === 'none') {
+                if (typeof activeAutocomplete !== 'undefined' && activeAutocomplete) {
+                    visibleDropdown = activeAutocomplete;
+                } else {
+                    visibleDropdown = null;
+                }
+            }
+            const isDropdownVisible = visibleDropdown && visibleDropdown.style.display !== 'none';
+
+            // --- FEATURE 1: ENTER SELECTS FIRST RESULT ---
+            if (e.key === 'Enter') {
+                if (isDropdownVisible) {
+                    const firstItem = visibleDropdown.querySelector('.xls-dd-item, .custom-autocomplete-item');
+                    if (firstItem) {
+                        e.preventDefault();
+                        // Trigger mousedown event to select the item
+                        firstItem.dispatchEvent(new Event('mousedown', { bubbles: true }));
+                        return;
+                    }
+                } else {
+                    e.preventDefault(); // Stop default enter key actions
+                }
+            }
+
+            // If an autocomplete dropdown is currently open and visible, let arrow keys handle autocomplete selection
+            if (isDropdownVisible && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+                return;
+            }
+
+            const inputs = Array.from(row.querySelectorAll('input:not([disabled]):not([readonly])'));
+            const colIdx = inputs.indexOf(active);
+            if (colIdx === -1) return;
+
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                e.stopPropagation();
+                const siblingRow = e.key === 'ArrowUp' ? row.previousElementSibling : row.nextElementSibling;
+                if (siblingRow) {
+                    const siblingInputs = Array.from(siblingRow.querySelectorAll('input:not([disabled]):not([readonly])'));
+                    const targetInput = siblingInputs[colIdx] || siblingInputs[siblingInputs.length - 1];
+                    if (targetInput) targetInput.focus();
+                }
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                // Exclude cost, quantity, warranty, and useful-life from custom horizontal navigation
+                const colName = active.getAttribute('data-col');
+                if (['cost', 'qty', 'warranty', 'useful-life'].includes(colName)) return;
+
+                let isAtBoundary = false;
+                try {
+                    const caretPos = active.selectionStart;
+                    const textLen = active.value.length;
+                    if (e.key === 'ArrowLeft' && caretPos === 0) {
+                        isAtBoundary = true;
+                    } else if (e.key === 'ArrowRight' && caretPos === textLen) {
+                        isAtBoundary = true;
+                    }
+                } catch (err) {
+                    // For inputs that don't support selection range (date, number, etc.)
+                    isAtBoundary = true;
+                }
+
+                if (isAtBoundary) {
+                    const targetInput = e.key === 'ArrowLeft' ? inputs[colIdx - 1] : inputs[colIdx + 1];
+                    if (targetInput) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        targetInput.focus();
+                        try {
+                            if (e.key === 'ArrowLeft') {
+                                targetInput.setSelectionRange(targetInput.value.length, targetInput.value.length);
+                            } else {
+                                targetInput.setSelectionRange(0, 0);
+                            }
+                        } catch (err) {}
+                    }
+                }
+            }
+        });

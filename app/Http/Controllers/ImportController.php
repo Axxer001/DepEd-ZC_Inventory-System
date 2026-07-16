@@ -276,7 +276,7 @@ class ImportController extends Controller
                 }
 
                 if (empty($sourceName)) {
-                    $sourceName = 'Unknown Source';
+                    $sourceName = 'N/A';
                 }
 
                 $acqSourceId = $cache['acquisition_sources'][$sourceName] ?? null;

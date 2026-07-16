@@ -68,11 +68,7 @@ class EmployeeController extends Controller
 
     public function managementProfile($id)
     {
-        $custodian = DB::table('employees')->where('id', $id)->first();
-
-        if (!$custodian) {
-            abort(404, 'Employee not found');
-        }
+        $custodian = Employee::withTrashed()->findOrFail($id);
 
         $stats = DB::table('asset_assignments as ad')
             ->where('ad.employee_id', $id)
@@ -322,11 +318,7 @@ class EmployeeController extends Controller
 
     public function profile($id)
     {
-        $custodian = DB::table('employees')->where('id', $id)->first();
-
-        if (!$custodian) {
-            abort(404, 'Custodian not found');
-        }
+        $custodian = Employee::withTrashed()->findOrFail($id);
 
         $user = auth()->user();
         if ($user && $user->isSchoolSystem() && $custodian->school_id !== $user->school_id) {
@@ -517,7 +509,7 @@ class EmployeeController extends Controller
     {
         $q = (string)$request->string('q')->trim();
 
-        $query = Employee::query()->with(['office', 'school']);
+        $query = Employee::query()->where('status', 'Active')->with(['office', 'school']);
 
         if ($q !== '') {
             $query->where(function ($query) use ($q) {
@@ -758,22 +750,23 @@ class EmployeeController extends Controller
             return back()->with('error', 'Cannot delete employee: employee has active asset assignments.');
         }
 
-        $employee->delete();
+        $employee->status = 'Inactive';
+        $employee->save();
 
         // Log the action to system_logs and employee histories
         DB::table('system_logs')->insert([
             'user' => $user ? $user->name : 'System',
-            'action_type' => 'Delete',
+            'action_type' => 'Update',
             'module' => 'Employees',
-            'activity' => "Employee {$employee->fullName} (ID: {$employee->employee_id}) was soft-deleted.",
+            'activity' => "Employee {$employee->fullName} (ID: {$employee->employee_id}) was archived (status set to Inactive).",
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
         \App\Models\EmployeeHistory::create([
             'employee_id' => $employee->id,
-            'action' => 'Deleted',
-            'description' => 'Employee record was soft-deleted.',
+            'action' => 'Updated',
+            'description' => 'Employee status was changed to Inactive (archived).',
         ]);
 
         return back()->with('success', 'Employee successfully archived.');

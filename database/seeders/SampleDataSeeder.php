@@ -126,7 +126,7 @@ class SampleDataSeeder extends Seeder
         for ($i = 0; $i < 100; $i++) {
             $officeIds[] = DB::table('offices')->insertGetId([
                 'name' => 'Office of ' . $faker->jobTitle,
-                'office_id' => strtoupper(Str::random(6)),
+                'office_id' => '095',
                 'type' => $faker->randomElement(['Administrative', 'Technical', 'Support']),
                 'location' => $faker->word . ' Building',
                 'created_at' => now(),

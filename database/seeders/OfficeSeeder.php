@@ -78,7 +78,7 @@ class OfficeSeeder extends Seeder
             $code = $officeCodeMap[$name] ?? ('095-' . strtoupper(preg_replace('/[^A-Za-z0-9]/', '-', $name)));
             DB::table('offices')->insert([
                 'name' => $name,
-                'office_id' => $code,
+                'office_id' => '095',
                 'type' => 'office',
                 'location' => 'Deped SDO - Baliwasan Chico rd., Zamboanga City',
                 'created_at' => now(),

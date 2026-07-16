@@ -335,6 +335,8 @@ class AssetController extends Controller
         $items = DB::table('items')->orderBy('name')->get();
         $acquisitionSources = DB::table('acquisition_sources')->orderBy('name')->get();
         $employees = DB::table('employees as e')
+            ->whereNull('e.deleted_at')
+            ->where('e.status', 'Active')
             ->leftJoin('schools as s', 'e.school_id', '=', 's.id')
             ->leftJoin('offices as o', 'e.office_id', '=', 'o.id')
             ->select('e.*', DB::raw('COALESCE(s.name, o.name) as location_name'))

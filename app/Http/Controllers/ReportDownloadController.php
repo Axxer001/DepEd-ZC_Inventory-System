@@ -937,6 +937,7 @@ class ReportDownloadController extends Controller
         if (is_string($filters)) { $filters = json_decode($filters, true) ?: []; }
 
         $query = DB::table('employees')
+            ->whereNull('employees.deleted_at')
             ->leftJoin('schools as s', 'employees.school_id', '=', 's.id')
             ->leftJoin('offices as o', 'employees.office_id', '=', 'o.id')
             ->select(
@@ -1013,8 +1014,8 @@ class ReportDownloadController extends Controller
 
     public function getCustodiansFilterOptions(Request $request)
     {
-        $positions = DB::table('employees')->distinct()->pluck('position')->filter()->sort()->values();
-        $statuses  = DB::table('employees')->distinct()->pluck('status')->filter()->values();
+        $positions = DB::table('employees')->whereNull('deleted_at')->distinct()->pluck('position')->filter()->sort()->values();
+        $statuses  = DB::table('employees')->whereNull('deleted_at')->distinct()->pluck('status')->filter()->values();
 
         return response()->json([
             'positions'       => $positions,
