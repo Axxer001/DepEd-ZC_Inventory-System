@@ -1182,6 +1182,10 @@
                                     <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-deped transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                                 </div>
                             </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Unit Cost</label>
+                                <input type="number" step="0.01" name="asset_cost" value="{{ $asset->asset_cost }}" placeholder="0.00" class="w-full bg-white border-2 border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300">
+                            </div>
                         </div>
                     </div>
 
@@ -1196,10 +1200,6 @@
                             <div>
                                 <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Issuance Date</label>
                                 <input type="date" name="acquisition_date" value="{{ $asset->acquisition_date }}" {{ $asset->acquisition_date ? "readonly class='w-full bg-slate-50 border-2 border-slate-100 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner'" : "class='w-full bg-white border-2 border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer'" }}>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Unit Cost</label>
-                                <input type="number" step="0.01" name="asset_cost" value="{{ $asset->asset_cost }}" placeholder="0.00" {{ $asset->asset_cost ? "readonly class='w-full bg-slate-50 border-2 border-slate-100 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner'" : "class='w-full bg-white border-2 border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300'" }}>
                             </div>
                             <div>
                                 <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Quantity</label>

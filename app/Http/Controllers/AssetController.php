@@ -258,7 +258,7 @@ class AssetController extends Controller
             ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->join('classifications', 'categories.classification_id', '=', 'classifications.id')
-            ->join('acquisition_sources', 'asrc.acquisition_source_id', '=', 'acquisition_sources.id')
+            ->leftJoin('acquisition_sources', 'asrc.acquisition_source_id', '=', 'acquisition_sources.id')
             ->leftJoin('suppliers', 'asrc.supplier_id', '=', 'suppliers.id')
             ->leftJoin('employees as e', 'ad.employee_id', '=', 'e.id')
             ->leftJoin('offices', function($join) {
@@ -540,20 +540,23 @@ class AssetController extends Controller
                 'item_id' => $finalItemId,
                 'description' => $validated['description'],
                 'condition' => $validated['condition'],
+                'asset_cost' => $validated['asset_cost'] ?? 0.00,
                 'updated_at' => now(),
             ];
             
-            if (empty($asset->asset_cost) && isset($validated['asset_cost'])) {
-                $sourceUpdates['asset_cost'] = $validated['asset_cost'];
-            }
             if (empty($asset->quantity) && isset($validated['quantity'])) {
                 $sourceUpdates['quantity'] = $validated['quantity'];
+                $finalQty = (int)$validated['quantity'];
+            } else {
+                $finalQty = (int)($asset->quantity ?? 1);
             }
 
             DB::table('asset_sources')->where('id', $asset->asset_source_id)->update($sourceUpdates);
 
             // Update Asset Assignment
-            $assignmentUpdates = [];
+            $assignmentUpdates = [
+                'acquisition_cost' => (float)($validated['asset_cost'] ?? 0.00) * $finalQty,
+            ];
             if (empty($asset->property_number) && isset($validated['property_number'])) {
                 $assignmentUpdates['property_number'] = $validated['property_number'];
             }
@@ -561,10 +564,8 @@ class AssetController extends Controller
                 $assignmentUpdates['acquisition_date'] = $validated['acquisition_date'];
             }
 
-            if (!empty($assignmentUpdates)) {
-                $assignmentUpdates['updated_at'] = now();
-                DB::table('asset_assignments')->where('id', $id)->update($assignmentUpdates);
-            }
+            $assignmentUpdates['updated_at'] = now();
+            DB::table('asset_assignments')->where('id', $id)->update($assignmentUpdates);
             
             /** @var \App\Models\User|null $user */
             $user = Auth::user();
