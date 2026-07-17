@@ -75,7 +75,7 @@ class EmployeeController extends Controller
             ->selectRaw('COUNT(ad.id) as total_assets, COALESCE(SUM(ad.acquisition_cost), 0) as total_value')
             ->first();
 
-        $assets = DB::table('asset_assignments as ad')
+        $assetsQuery = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items as i', 'asrc.item_id', '=', 'i.id')
             ->join('categories as cat', 'i.category_id', '=', 'cat.id')
@@ -89,13 +89,16 @@ class EmployeeController extends Controller
                 'ad.serial_number',
                 'ad.acquisition_date',
                 'ad.acquisition_cost as asset_cost',
+                'asrc.asset_cost as unit_cost',
                 'ad.acquisition_date as assigned_at',
                 'i.name as item_name',
                 'cat.name as category_name',
                 'asrc.condition',
                 DB::raw('COALESCE(s.name, o.name) as school_name')
-            )
-            ->orderByDesc('ad.acquisition_date')
+            );
+
+        $downloadAssets = (clone $assetsQuery)->get();
+        $assets = $assetsQuery->orderByDesc('ad.acquisition_date')
             ->paginate(50, ['*'], 'assets_page');
 
         $schools = DB::table('employees as e')
@@ -242,7 +245,7 @@ class EmployeeController extends Controller
         }
         $assetEvents = $assetEvents->sortBy('event_date')->values();
 
-        return view('admin.employee-management-profile', compact('custodian', 'stats', 'schools', 'assets', 'transfers', 'histories', 'assetEvents'));
+        return view('admin.employee-management-profile', compact('custodian', 'stats', 'schools', 'assets', 'downloadAssets', 'transfers', 'histories', 'assetEvents'));
     }
 
     public function update(Request $request, $id)
@@ -344,6 +347,7 @@ class EmployeeController extends Controller
                 'ad.serial_number',
                 'ad.acquisition_date',
                 'ad.acquisition_cost as asset_cost',
+                'asrc.asset_cost as unit_cost',
                 'ad.acquisition_date as assigned_at',
                 'i.name as item_name',
                 'cat.name as category_name',
@@ -352,6 +356,8 @@ class EmployeeController extends Controller
             )
             ->orderByDesc('ad.acquisition_date')
             ->get();
+
+        $downloadAssets = $assets;
 
         // Fetch assigned station directly from the employee record (not through asset_assignments)
         // so employees with 0 assets also show their school/office.
@@ -499,7 +505,7 @@ class EmployeeController extends Controller
         }
         $assetEvents = $assetEvents->sortBy('event_date')->values();
 
-        return view('admin.custodians.profile', compact('custodian', 'stats', 'schools', 'assets', 'transfers', 'histories', 'assetEvents'));
+        return view('admin.custodians.profile', compact('custodian', 'stats', 'schools', 'assets', 'downloadAssets', 'transfers', 'histories', 'assetEvents'));
     }
 
     /**
@@ -752,11 +758,12 @@ class EmployeeController extends Controller
 
         $employee->status = 'Inactive';
         $employee->save();
+        $employee->delete();
 
         // Log the action to system_logs and employee histories
         DB::table('system_logs')->insert([
             'user' => $user ? $user->name : 'System',
-            'action_type' => 'Update',
+            'action_type' => 'Delete',
             'module' => 'Employees',
             'activity' => "Employee {$employee->fullName} (ID: {$employee->employee_id}) was archived (status set to Inactive).",
             'created_at' => now(),

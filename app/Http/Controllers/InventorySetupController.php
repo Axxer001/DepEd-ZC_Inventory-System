@@ -76,6 +76,21 @@ class InventorySetupController extends Controller
 
         $userName = Auth::user() ? Auth::user()->name : 'System';
 
+        // Resolve origin tracking (mirrors storeBuilding pattern)
+        $user = Auth::user();
+        $originSystemType = 'main';
+        $registeredBySchoolId = null;
+        if ($user && $user->isSchoolSystem()) {
+            if (empty($user->school_id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your account is not linked to a school. Contact an administrator.'
+                ], 422);
+            }
+            $originSystemType = 'school';
+            $registeredBySchoolId = $user->school_id;
+        }
+
         try {
             DB::beginTransaction();
 
@@ -106,11 +121,13 @@ class InventorySetupController extends Controller
 
             // 4. Create Asset Assignment (In Warehouse/AMU)
             AssetAssignment::create([
-                'asset_source_id'  => $assetSource->id,
-                'employee_id'      => null,
-                'property_number'  => null,
-                'acquisition_cost' => $validated['asset_cost'] * $validated['quantity'],
-                'acquisition_date' => $validated['acceptance_date'] ?? now(),
+                'asset_source_id'         => $assetSource->id,
+                'employee_id'             => null,
+                'property_number'         => null,
+                'acquisition_cost'        => $validated['asset_cost'] * $validated['quantity'],
+                'acquisition_date'        => $validated['acceptance_date'] ?? now(),
+                'origin_system_type'      => $originSystemType,
+                'registered_by_school_id' => $registeredBySchoolId,
             ]);
 
             DB::table('system_logs')->insert([
@@ -172,6 +189,20 @@ class InventorySetupController extends Controller
         /** @var \App\Models\User|null $user */
         $user     = \Illuminate\Support\Facades\Auth::user();
         $userName = $user?->name ?? 'System';
+
+        // Resolve origin tracking once — same value for every row in the batch
+        $originSystemType = 'main';
+        $registeredBySchoolId = null;
+        if ($user && $user->isSchoolSystem()) {
+            if (empty($user->school_id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Your account is not linked to a school. Contact an administrator.'
+                ], 422);
+            }
+            $originSystemType = 'school';
+            $registeredBySchoolId = $user->school_id;
+        }
 
         $catCache = [];
         foreach (DB::table('categories')->get() as $cat) {
@@ -458,13 +489,15 @@ class InventorySetupController extends Controller
 
                 // ── Insert asset_assignments (Unassigned / AMU) ───────────────
                 DB::table('asset_assignments')->insert([
-                    'asset_source_id'  => $assetSourceId,
-                    'employee_id'      => null,
-                    'property_number'  => null,
-                    'acquisition_cost' => $cost * $qty,
-                    'acquisition_date' => $acceptanceDate,
-                    'created_at'       => now(),
-                    'updated_at'       => now(),
+                    'asset_source_id'         => $assetSourceId,
+                    'employee_id'             => null,
+                    'property_number'         => null,
+                    'acquisition_cost'        => $cost * $qty,
+                    'acquisition_date'        => $acceptanceDate,
+                    'origin_system_type'      => $originSystemType,
+                    'registered_by_school_id' => $registeredBySchoolId,
+                    'created_at'              => now(),
+                    'updated_at'              => now(),
                 ]);
 
                 $addedDetails[] = "Added " . $qty . " " . $uom . " {$itemName} to Warehouse/AMU";
@@ -1115,33 +1148,47 @@ class InventorySetupController extends Controller
      */
     public function getUnassignedAssets(Request $request)
     {
+        $user = auth()->user();
         $query = DB::table('asset_assignments')
             ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
             ->join('items', 'asset_sources.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->join('classifications', 'categories.classification_id', '=', 'classifications.id')
-            ->whereNull('asset_assignments.employee_id')
-            ->whereNull('asset_assignments.school_id')
-            ->whereNull('asset_assignments.office_id')
-            ->select(
-                'asset_assignments.id as assignment_id',
-                'asset_assignments.property_number',
-                'asset_assignments.serial_number',
-                'classifications.name as classification',
-                'categories.name as category',
-                'items.name as item_name',
-                'asset_sources.description as sub_item_name',
-                'asset_sources.quantity',
-                'asset_sources.unit_of_measurement as uom',
-                'asset_sources.asset_cost',
-                'asset_sources.condition',
-                'asset_sources.acceptance_date',
-                'categories.id as category_id',
-                'categories.see_category_code',
-                'categories.ppe_category_code',
-                'asset_sources.equipment',
-                'asset_sources.id as asset_source_id'
-            );
+            ->whereNull('asset_assignments.employee_id');
+
+        if ($user && $user->isSchoolSystem()) {
+            $schoolId = $user->school_id;
+            $query->where(function ($q) use ($schoolId) {
+                $q->where(function ($q2) use ($schoolId) {
+                    // Self-registered by this school, not yet pushed to school/office
+                    $q2->where('asset_assignments.registered_by_school_id', $schoolId)
+                       ->whereNull('asset_assignments.school_id');
+                })->orWhere('asset_assignments.school_id', $schoolId); // Assigned to this school by main system
+            })->whereNull('asset_assignments.office_id');
+        } else {
+            $query->whereNull('asset_assignments.school_id')
+                  ->whereNull('asset_assignments.office_id');
+        }
+
+        $query->select(
+            'asset_assignments.id as assignment_id',
+            'asset_assignments.property_number',
+            'asset_assignments.serial_number',
+            'classifications.name as classification',
+            'categories.name as category',
+            'items.name as item_name',
+            'asset_sources.description as sub_item_name',
+            'asset_sources.quantity',
+            'asset_sources.unit_of_measurement as uom',
+            'asset_sources.asset_cost',
+            'asset_sources.condition',
+            'asset_sources.acceptance_date',
+            'categories.id as category_id',
+            'categories.see_category_code',
+            'categories.ppe_category_code',
+            'asset_sources.equipment',
+            'asset_sources.id as asset_source_id'
+        );
 
         if ($request->has('search')) {
             $search = $request->input('search');
@@ -1215,7 +1262,12 @@ class InventorySetupController extends Controller
                 return response()->json(['success' => false, 'message' => 'Employee does not belong to your school.'], 403);
             }
             $assignment = DB::table('asset_assignments')->where('id', $validated['assignment_id'])->first();
-            if (!$assignment || ($assignment->school_id !== $user->school_id && (!DB::table('employees')->where('id', $assignment->employee_id)->where('school_id', $user->school_id)->exists()))) {
+            $belongsToSchool = $assignment && (
+                $assignment->school_id === $user->school_id
+                || ($assignment->school_id === null && $assignment->registered_by_school_id === $user->school_id)
+                || DB::table('employees')->where('id', $assignment->employee_id)->where('school_id', $user->school_id)->exists()
+            );
+            if (!$belongsToSchool) {
                 return response()->json(['success' => false, 'message' => 'Asset assignment does not belong to your school.'], 403);
             }
         }
@@ -1231,6 +1283,8 @@ class InventorySetupController extends Controller
 
             DB::table('asset_assignments')->where('id', $validated['assignment_id'])->update([
                 'employee_id'      => $validated['employee_id'],
+                'school_id'        => null,
+                'office_id'        => null,
                 'property_number'  => $validated['property_number'] ?? null,
                 'serial_number'    => $validated['serial_number'] ?? null,
                 'acquisition_date' => $validated['acquisition_date'] ?? now()->toDateString(),
@@ -1290,6 +1344,15 @@ class InventorySetupController extends Controller
 
             DB::commit();
 
+            session()->flash('download_docs', [
+                [
+                    'recipient_name' => $recipientName,
+                    'doc_type'       => $docType,
+                    'assignment_id'  => $validated['assignment_id'],
+                    'transfer_id'    => $transferId,
+                ]
+            ]);
+
             // Dispatch notification
             $item = DB::table('asset_assignments')
                 ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
@@ -1347,7 +1410,12 @@ class InventorySetupController extends Controller
             foreach ($validated['assignments'] as $key => $data) {
                 // Ensure target assignment belongs to their school
                 $assignment = DB::table('asset_assignments')->where('id', $data['assignment_id'])->first();
-                if (!$assignment || ($assignment->school_id !== $user->school_id && (!DB::table('employees')->where('id', $assignment->employee_id)->where('school_id', $user->school_id)->exists()))) {
+                $belongsToSchool = $assignment && (
+                    $assignment->school_id === $user->school_id
+                    || ($assignment->school_id === null && $assignment->registered_by_school_id === $user->school_id)
+                    || DB::table('employees')->where('id', $assignment->employee_id)->where('school_id', $user->school_id)->exists()
+                );
+                if (!$belongsToSchool) {
                     return response()->json(['success' => false, 'message' => 'Asset assignment does not belong to your school.'], 403);
                 }
 
@@ -1375,8 +1443,8 @@ class InventorySetupController extends Controller
 
             foreach ($validated['assignments'] as $data) {
                 $assignment = DB::table('asset_assignments')->where('id', $data['assignment_id'])->first();
-                if ($assignment->employee_id !== null || $assignment->school_id !== null || $assignment->office_id !== null) {
-                    continue; // Skip if already assigned
+                if ($assignment->employee_id !== null) {
+                    continue; // Skip if already assigned to an employee
                 }
 
                 if (!empty($data['employee_id']) || !empty($data['school_db_id'])) {
@@ -1389,6 +1457,8 @@ class InventorySetupController extends Controller
 
                     if (!empty($data['employee_id'])) {
                         $updateData['employee_id'] = $data['employee_id'];
+                        $updateData['school_id']   = null;
+                        $updateData['office_id']   = null;
                     } else {
                         if (isset($data['is_office']) && $data['is_office']) {
                             $updateData['office_id'] = $data['school_db_id'];
@@ -1542,6 +1612,10 @@ class InventorySetupController extends Controller
             ]);
 
             DB::commit();
+
+            if (!empty($docsToDownload)) {
+                session()->flash('download_docs', array_values($docsToDownload));
+            }
 
             // Dispatch aggregated or individual notifications
             foreach ($groupedNotification as $key => $group) {

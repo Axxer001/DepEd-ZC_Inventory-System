@@ -296,6 +296,8 @@ class AssetController extends Controller
                 'acquisition_sources.name as source_name',
                 DB::raw('COALESCE(asrc.contact_person, acquisition_sources.contact_person) as source_personnel'),
                 'suppliers.name as supplier_name',
+                'asrc.supplier_id',
+                'asrc.procurement_mode_id',
                 DB::raw('COALESCE(asrc.supplier_service_center, suppliers.service_center) as supplier_service_center'),
                 'acquisition_sources.id as acquisition_source_id',
                 'items.name as item_name',
@@ -476,6 +478,9 @@ class AssetController extends Controller
             $asset->is_in_source = false;
         }
 
+        $procurementModes = DB::table('procurement_modes')->orderBy('name')->get();
+        $suppliers = DB::table('suppliers')->orderBy('name')->get();
+
         return view('assets.profile', [
             'asset' => $asset,
             'timeline' => $timeline,
@@ -487,6 +492,8 @@ class AssetController extends Controller
             'employees' => $employees,
             'schools'   => $schools,
             'offices'   => $offices,
+            'procurementModes' => $procurementModes,
+            'suppliers' => $suppliers,
             'supplierHasServiceCenter' => !empty($asset->supplier_service_center),
         ]);
     }
@@ -502,9 +509,14 @@ class AssetController extends Controller
             'description' => 'nullable|string|max:1000',
             'condition' => 'required|string|in:Good Condition,Needs Repair,Unserviceable',
             'property_number' => 'nullable|string|max:255',
+            'serial_number' => 'nullable|string|max:255',
             'asset_cost' => 'nullable|numeric|min:0',
             'quantity' => 'nullable|integer|min:1',
             'acquisition_date' => 'nullable|date',
+            'category_id' => 'required|exists:categories,id',
+            'acquisition_source_id' => 'nullable|exists:acquisition_sources,id',
+            'procurement_mode_id' => 'nullable|exists:procurement_modes,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
         ]);
 
         $asset = DB::table('asset_assignments as ad')
@@ -518,18 +530,39 @@ class AssetController extends Controller
             return back()->with('error', 'Asset not found');
         }
 
-        DB::transaction(function () use ($id, $asset, $validated, $request) {
+        if (!empty($validated['property_number']) && $validated['property_number'] !== $asset->property_number) {
+            $exists = DB::table('asset_assignments')
+                ->where('property_number', $validated['property_number'])
+                ->where('id', '!=', $id)
+                ->exists();
+            if ($exists) {
+                return back()->withErrors(['property_number' => 'The property number has already been taken.']);
+            }
+        }
+
+        if (!empty($validated['serial_number']) && $validated['serial_number'] !== $asset->serial_number) {
+            $exists = DB::table('asset_assignments')
+                ->where('serial_number', $validated['serial_number'])
+                ->where('id', '!=', $id)
+                ->exists();
+            if ($exists) {
+                return back()->withErrors(['serial_number' => 'This serial number is already assigned to another asset.']);
+            }
+        }
+
+        DB::transaction(function () use ($id, $asset, $validated) {
             // Resolve Item
             $itemName = strtoupper(trim($validated['item_name']));
             if (!$itemName) $itemName = 'UNKNOWN ITEM';
+            $categoryId = $validated['category_id'];
 
             $item = DB::table('items')
                 ->where('name', $itemName)
-                ->where('category_id', $asset->category_id)
+                ->where('category_id', $categoryId)
                 ->first();
                 
             $finalItemId = $item ? $item->id : DB::table('items')->insertGetId([
-                'category_id' => $asset->category_id,
+                'category_id' => $categoryId,
                 'name' => $itemName,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -541,32 +574,44 @@ class AssetController extends Controller
                 'description' => $validated['description'],
                 'condition' => $validated['condition'],
                 'asset_cost' => $validated['asset_cost'] ?? 0.00,
+                'quantity' => $validated['quantity'] ?? 1,
+                'acquisition_source_id' => $validated['acquisition_source_id'] ?? null,
+                'procurement_mode_id' => $validated['procurement_mode_id'] ?? null,
+                'supplier_id' => $validated['supplier_id'] ?? null,
                 'updated_at' => now(),
             ];
-            
-            if (empty($asset->quantity) && isset($validated['quantity'])) {
-                $sourceUpdates['quantity'] = $validated['quantity'];
-                $finalQty = (int)$validated['quantity'];
-            } else {
-                $finalQty = (int)($asset->quantity ?? 1);
-            }
-
             DB::table('asset_sources')->where('id', $asset->asset_source_id)->update($sourceUpdates);
 
-            // Update Asset Assignment
-            $assignmentUpdates = [
-                'acquisition_cost' => (float)($validated['asset_cost'] ?? 0.00) * $finalQty,
-            ];
-            if (empty($asset->property_number) && isset($validated['property_number'])) {
-                $assignmentUpdates['property_number'] = $validated['property_number'];
-            }
-            if (empty($asset->acquisition_date) && isset($validated['acquisition_date'])) {
-                $assignmentUpdates['acquisition_date'] = $validated['acquisition_date'];
+            // ₱50k Threshold Check — detect class boundary crossing (Semi-Expendable ↔ PPE)
+            $oldTotalCost = (float)($asset->asset_cost ?? 0) * (int)($asset->quantity ?? 1);
+            $newTotalCost = (float)($validated['asset_cost'] ?? 0) * (int)($validated['quantity'] ?? 1);
+            $threshold = 50000.00;
+            $crossedThreshold = ($oldTotalCost < $threshold && $newTotalCost >= $threshold)
+                             || ($oldTotalCost >= $threshold && $newTotalCost < $threshold);
+            if ($crossedThreshold) {
+                $newClass = $newTotalCost >= $threshold ? 'PPE (PAR/PTR)' : 'Semi-Expendable (ICS/ITR)';
+                DB::table('system_logs')->insert([
+                    'user' => Auth::user()?->name ?? 'System',
+                    'action_type' => 'NOTICE',
+                    'module' => 'Assets',
+                    'activity' => "Asset ID {$id} crossed the ₱50,000 threshold. New classification: {$newClass}. Documents will now be generated under the new template.",
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
             }
 
-            $assignmentUpdates['updated_at'] = now();
+            // Update Asset Assignment
+            $finalQty = (int)($validated['quantity'] ?? 1);
+            $assignmentUpdates = [
+                'acquisition_cost' => (float)($validated['asset_cost'] ?? 0.00) * $finalQty,
+                'property_number' => $validated['property_number'] ?? null,
+                'serial_number' => $validated['serial_number'] ?? null,
+                'acquisition_date' => $validated['acquisition_date'] ?? null,
+                'updated_at' => now(),
+            ];
+
             DB::table('asset_assignments')->where('id', $id)->update($assignmentUpdates);
-            
+
             /** @var \App\Models\User|null $user */
             $user = Auth::user();
             
@@ -580,15 +625,20 @@ class AssetController extends Controller
                 'updated_at' => now(),
             ]);
 
-            $propNoStr = $asset->property_number ? '[' . $asset->property_number . '] ' : '';
+            $propNoStr = $validated['property_number'] ? '[' . $validated['property_number'] . '] ' : '';
+            
+            // Resolve recipient name for detailed message
             $empName = 'Unassigned';
             if ($asset->employee_id) {
                 $empName = DB::table('employees')->where('id', $asset->employee_id)->value(DB::raw("CONCAT(first_name, ' ', last_name)")) ?: 'Unassigned';
+            } elseif ($asset->school_id) {
+                $empName = DB::table('schools')->where('id', $asset->school_id)->value('name') ?: 'School';
+            } elseif ($asset->office_id) {
+                $empName = DB::table('offices')->where('id', $asset->office_id)->value('name') ?: 'Office';
             }
-            $qty = $asset->quantity ?? 1;
-            $uom = $asset->unit_of_measurement ?? 'Unit';
 
-            $detailedMessage = "Edited {$qty} {$uom} {$propNoStr}{$itemName} assigned to {$empName}.";
+            $uom = $asset->unit_of_measurement ?? 'Unit';
+            $detailedMessage = "Edited {$finalQty} {$uom} {$propNoStr}{$itemName} assigned to {$empName}.";
 
             $schoolId = $asset->school_id;
             if (!$schoolId && $asset->employee_id) {

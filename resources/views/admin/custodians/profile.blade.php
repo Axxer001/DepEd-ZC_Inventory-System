@@ -230,6 +230,11 @@
                         class="px-6 py-3 text-[10px] font-black uppercase tracking-[0.14em] border border-b-0 rounded-t-xl transition-all relative top-[1px] whitespace-nowrap">
                         Lifecycle & History
                     </button>
+                    <button @click="activeTab = 'download'"
+                        :class="{'bg-white border-slate-200 border-b-white text-deped shadow-sm': activeTab === 'download', 'border-transparent text-slate-400 hover:text-slate-600 hover:bg-slate-100': activeTab !== 'download'}"
+                        class="px-6 py-3 text-[10px] font-black uppercase tracking-[0.14em] border border-b-0 rounded-t-xl transition-all relative top-[1px] whitespace-nowrap ml-1">
+                        Download Documents
+                    </button>
                 </div>
 
                 <div class="p-5 lg:p-8 flex-grow overflow-y-auto custom-scroll">
@@ -723,6 +728,117 @@
                                 @endif
                             </div>
 
+                        </div>
+                    </div>
+
+                    {{-- TAB: Download Documents --}}
+                    <div x-show="activeTab === 'download'"
+                         x-data="bulkDocDownload()"
+                         data-action="{{ route('admin.employees.download_bulk_docs', $custodian->id) }}"
+                         data-csrf="{{ csrf_token() }}"
+                         data-assets="{!! e(json_encode($downloadAssets)) !!}"
+                         class="tab-fade flex flex-col h-full" x-cloak>
+
+                        <template x-if="initError">
+                            <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 font-bold uppercase tracking-wider" x-text="initError"></div>
+                        </template>
+
+                        {{-- Header Row with Switch & Download button --}}
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 pb-4 border-b border-slate-100">
+                            {{-- Switch Container --}}
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Document Type:</span>
+                                <div class="bg-slate-100 p-1 rounded-xl flex gap-1 border border-slate-200">
+                                    <button type="button" @click="docType = 'ICS'; selectedAssets = []"
+                                        :class="docType === 'ICS' ? 'bg-white text-deped shadow-sm font-black' : 'text-slate-500 hover:text-slate-800'"
+                                        class="px-4 py-1.5 rounded-lg text-[10px] uppercase tracking-wider font-bold transition-all">
+                                        ICS (SEE)
+                                    </button>
+                                    <button type="button" @click="docType = 'PAR'; selectedAssets = []"
+                                        :class="docType === 'PAR' ? 'bg-white text-deped shadow-sm font-black' : 'text-slate-500 hover:text-slate-800'"
+                                        class="px-4 py-1.5 rounded-lg text-[10px] uppercase tracking-wider font-bold transition-all">
+                                        PAR (PPE)
+                                    </button>
+                                </div>
+                            </div>
+
+                            {{-- Download Button --}}
+                            <div>
+                                <button type="button" 
+                                    :disabled="selectedAssets.length === 0"
+                                    @click="downloadDocuments()"
+                                    :class="selectedAssets.length === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-deped text-white hover:bg-red-700 active:scale-95 shadow-lg shadow-red-500/10'"
+                                    class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                    </svg>
+                                    Download Selected (<span x-text="selectedAssets.length">0</span>)
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Table of Assets --}}
+                        <div class="border border-slate-100 rounded-2xl overflow-hidden shadow-sm flex-1 min-h-[300px] bg-slate-50/30 overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[700px]">
+                                <thead>
+                                    <tr class="bg-slate-50 border-b border-slate-100">
+                                        <th class="px-6 py-4 w-12 text-center">
+                                            <input type="checkbox" @change="toggleSelectAll()" :checked="isAllSelected()"
+                                                class="w-4 h-4 rounded border-slate-300 text-deped focus:ring-deped cursor-pointer">
+                                        </th>
+                                        <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Item Name</th>
+                                        <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Property Number</th>
+                                        <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Serial Number</th>
+                                        <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-right">Acquisition Cost</th>
+                                        <th class="px-6 py-4 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">Acquisition Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 bg-white">
+                                    <template x-for="asset in filteredAssets" :key="asset.id">
+                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <td class="px-6 py-4 text-center">
+                                                <input type="checkbox" :value="asset.id" x-model="selectedAssets"
+                                                    class="w-4 h-4 rounded border-slate-300 text-deped focus:ring-deped cursor-pointer">
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <div class="flex flex-col">
+                                                    <span class="text-xs font-extrabold text-slate-800 uppercase" x-text="asset.item_name"></span>
+                                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5" x-text="asset.category_name"></span>
+                                                </div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="text-xs font-mono font-bold text-slate-600 uppercase" x-text="asset.property_number || 'N/A'"></span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span class="text-xs font-mono text-slate-500 uppercase" x-text="asset.serial_number || 'N/A'"></span>
+                                            </td>
+                                            <td class="px-6 py-4 text-right">
+                                                <span class="text-xs font-bold text-slate-700 font-mono" x-text="'₱ ' + parseFloat(asset.asset_cost).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })"></span>
+                                            </td>
+                                            <td class="px-6 py-4 text-center">
+                                                <span class="text-xs font-semibold text-slate-500" x-text="asset.acquisition_date ? new Date(asset.acquisition_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'"></span>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                    
+                                    {{-- Empty State --}}
+                                    <template x-if="filteredAssets.length === 0">
+                                        <tr>
+                                            <td colspan="6" class="px-6 py-12 text-center">
+                                                <div class="flex flex-col items-center justify-center gap-2">
+                                                    <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 0 0-2 2v7m16 0a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2m16 0V9a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v4" />
+                                                        </svg>
+                                                    </div>
+                                                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mt-2">No items found</p>
+                                                    <p class="text-[10px] text-slate-400 font-semibold uppercase">No assets are currently assigned under custody for this document type.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>

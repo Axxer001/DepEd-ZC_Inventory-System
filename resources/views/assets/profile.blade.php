@@ -69,7 +69,30 @@
 
     @include('partials.sidebar')
 
-    <div class="flex-grow flex flex-col min-w-0 h-screen lg:overflow-hidden overflow-y-auto custom-scroll p-4 lg:p-8" x-data="{ activeTab: 'specs', showEditModal: false, showTransferModal: false, showReturnAmuModal: false, showReturnSourceModal: false, isSaving: false, historyLimit: 5, photoPreview: null, showPhotoConfirmModal: false, isHoveringImage: false }">
+    <div class="flex-grow flex flex-col min-w-0 h-screen lg:overflow-hidden overflow-y-auto custom-scroll p-4 lg:p-8" x-data="{
+        activeTab: 'specs',
+        showEditModal: {{ $errors->any() ? 'true' : 'false' }},
+        showTransferModal: false,
+        showReturnAmuModal: false,
+        showReturnSourceModal: false,
+        isSaving: false,
+        historyLimit: 5,
+        photoPreview: null,
+        showPhotoConfirmModal: false,
+        isHoveringImage: false,
+        categories: @js($categories),
+        classifications: @js($classifications),
+        selectedCategoryId: '{{ $asset->category_id }}',
+        
+        get selectedClassificationName() {
+            const cat = this.categories.find(c => c.id == this.selectedCategoryId);
+            if (cat) {
+                const cls = this.classifications.find(cl => cl.id == cat.classification_id);
+                return cls ? cls.name : 'N/A';
+            }
+            return 'N/A';
+        }
+    }">
         
         {{-- Global Header (Fixed/Sticky) --}}
         <header class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6 flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 sticky top-0 z-50">
@@ -1136,8 +1159,8 @@
 
         {{-- Edit Asset Modal --}}
         <div x-show="showEditModal" x-cloak class="fixed inset-0 z-[120] flex items-center justify-center">
-            <div x-show="showEditModal" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showEditModal = false"></div>
-            <form id="update-asset-form" action="{{ route('assets.update', $asset->id) }}" method="POST" x-show="showEditModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8 scale-95" class="bg-white rounded-3xl shadow-2xl w-full max-w-xl mx-4 relative z-10 flex flex-col overflow-hidden border border-slate-100">
+            <div x-show="showEditModal" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showEditModal = false; isSaving = false"></div>
+            <form id="update-asset-form" action="{{ route('assets.update', $asset->id) }}" method="POST" @submit="isSaving = true" x-show="showEditModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-8 scale-95" class="bg-white rounded-3xl shadow-2xl w-full max-w-xl mx-4 relative z-10 flex flex-col overflow-hidden border border-slate-100">
                 @csrf
                 {{-- Modal Header --}}
                 <div class="bg-slate-50 border-b border-slate-100 px-6 py-5 flex items-center justify-between">
@@ -1150,18 +1173,40 @@
                             <p class="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Update specifications</p>
                         </div>
                     </div>
-                    <button type="button" @click="showEditModal = false" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-2.5 rounded-full transition-colors active:scale-95">
+                    <button type="button" @click="showEditModal = false; isSaving = false" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-2.5 rounded-full transition-colors active:scale-95">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
                 
                 {{-- Modal Body --}}
-                {{-- Modal Body --}}
                 <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto custom-scroll bg-slate-50/50">
-                    
-                    {{-- Always Editable --}}
+
+                    {{-- Validation Errors --}}
+                    @if($errors->any())
+                    <div class="bg-red-50 border border-red-200 rounded-xl p-4">
+                        <p class="text-[10px] font-black text-red-700 uppercase tracking-widest mb-2">Please fix the following errors:</p>
+                        <ul class="space-y-1">
+                            @foreach($errors->all() as $error)
+                            <li class="text-[10px] font-bold text-red-600 flex items-center gap-1.5">
+                                <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                {{ $error }}
+                            </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
+
+                    {{-- Property Number Change Warning --}}
+                    @if($asset->property_number)
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                        <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"></path></svg>
+                        <p class="text-[10px] font-bold text-amber-700">Changing the <strong>Property Number</strong> will make previously printed QR stickers / tags obsolete. A new sticker must be printed after saving.</p>
+                    </div>
+                    @endif
+
+                    {{-- Primary Specifications --}}
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                        <h4 class="text-[10px] font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Always Editable</h4>
+                        <h4 class="text-[10px] font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Primary Specifications</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="md:col-span-2">
                                 <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Article / Item <span class="text-deped">*</span></label>
@@ -1182,67 +1227,90 @@
                                     <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-deped transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
                                 </div>
                             </div>
-                            <div class="md:col-span-2">
+                            <div>
                                 <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Unit Cost</label>
                                 <input type="number" step="0.01" name="asset_cost" value="{{ $asset->asset_cost }}" placeholder="0.00" class="w-full bg-white border-2 border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300">
                             </div>
-                        </div>
-                    </div>
-
-                    {{-- Conditionally Editable --}}
-                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                        <h4 class="text-[10px] font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Editable if Empty</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Property Number</label>
-                                <input type="text" name="property_number" value="{{ $asset->property_number }}" placeholder="N/A" {{ $asset->property_number ? "readonly class='w-full bg-slate-50 border-2 border-slate-100 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner'" : "class='w-full bg-white border-2 border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300'" }}>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Issuance Date</label>
-                                <input type="date" name="acquisition_date" value="{{ $asset->acquisition_date }}" {{ $asset->acquisition_date ? "readonly class='w-full bg-slate-50 border-2 border-slate-100 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner'" : "class='w-full bg-white border-2 border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer'" }}>
-                            </div>
                             <div>
                                 <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Quantity</label>
-                                <input type="number" name="quantity" value="{{ $asset->quantity }}" placeholder="0" {{ $asset->quantity ? "readonly class='w-full bg-slate-50 border-2 border-slate-100 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner'" : "class='w-full bg-white border-2 border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300'" }}>
+                                <input type="number" name="quantity" value="{{ $asset->quantity }}" placeholder="1" class="w-full bg-white border-2 border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Property Number</label>
+                                <input type="text" name="property_number" value="{{ $asset->property_number }}" placeholder="N/A" class="w-full bg-white border-2 border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Serial Number</label>
+                                <input type="text" name="serial_number" value="{{ $asset->serial_number }}" placeholder="N/A" class="w-full bg-white border-2 border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300">
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Issuance Date</label>
+                                <input type="date" name="acquisition_date" value="{{ $asset->acquisition_date }}" class="w-full bg-white border-2 border-slate-200 text-slate-700 rounded-xl px-4 py-3 text-xs font-black uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
                             </div>
                         </div>
                     </div>
 
-                    {{-- System Managed (Read-Only) --}}
-                    <div class="bg-slate-100 p-5 rounded-2xl border border-slate-200 shadow-inner space-y-4">
-                        <h4 class="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> System Managed (Untypable)</h4>
+                    {{-- Category & Classification --}}
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="text-[10px] font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Category &amp; Classification</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Classification</label>
-                                <input type="text" value="{{ $asset->classification_name ?? 'N/A' }}" readonly class="w-full bg-slate-50 border-2 border-slate-200/50 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none">
+                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Category <span class="text-deped">*</span></label>
+                                <div class="relative group">
+                                    <select name="category_id" required x-model="selectedCategoryId" class="w-full appearance-none bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-deped transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
                             </div>
                             <div>
-                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Category</label>
-                                <input type="text" value="{{ $asset->category_name ?? 'N/A' }}" readonly class="w-full bg-slate-50 border-2 border-slate-200/50 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none">
+                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Classification (Determined by Category)</label>
+                                <input type="text" :value="selectedClassificationName" readonly class="w-full bg-slate-50 border-2 border-slate-200 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner">
                             </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Funding / Source</label>
-                                <input type="text" value="{{ $asset->source_name ?? 'N/A' }}" readonly class="w-full bg-slate-50 border-2 border-slate-200/50 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Mode of Acquisition</label>
-                                <input type="text" value="{{ $asset->mode_of_acquisition ?? 'N/A' }}" readonly class="w-full bg-slate-50 border-2 border-slate-200/50 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Supplier</label>
-                                <input type="text" value="{{ $asset->supplier_name ?? 'N/A' }}" readonly class="w-full bg-slate-50 border-2 border-slate-200/50 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Custodian</label>
-                                <input type="text" value="{{ trim(($asset->custodian_first ?? '') . ' ' . ($asset->custodian_middle ? $asset->custodian_middle . ' ' : '') . ($asset->custodian_last ?? '')) ?: 'N/A' }}" readonly class="w-full bg-slate-50 border-2 border-slate-200/50 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Position</label>
-                                <input type="text" value="{{ $asset->custodian_position ?? 'N/A' }}" readonly class="w-full bg-slate-50 border-2 border-slate-200/50 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none">
-                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Procurement & Funding --}}
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="text-[10px] font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Procurement &amp; Funding</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="md:col-span-2">
-                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Office / School Name</label>
-                                <input type="text" value="{{ $asset->school_name ?? $asset->office_name ?? $asset->office_school_name ?? 'N/A' }}" readonly class="w-full bg-slate-50 border-2 border-slate-200/50 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none">
+                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Funding / Source</label>
+                                <div class="relative group">
+                                    <select name="acquisition_source_id" class="w-full appearance-none bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
+                                        <option value="">None / Unassigned</option>
+                                        @foreach($acquisitionSources as $source)
+                                            <option value="{{ $source->id }}" {{ $asset->acquisition_source_id == $source->id ? 'selected' : '' }}>{{ $source->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-deped transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Mode of Acquisition</label>
+                                <div class="relative group">
+                                    <select name="procurement_mode_id" class="w-full appearance-none bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
+                                        <option value="">None</option>
+                                        @foreach($procurementModes as $mode)
+                                            <option value="{{ $mode->id }}" {{ $asset->procurement_mode_id == $mode->id ? 'selected' : '' }}>{{ $mode->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-deped transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Supplier</label>
+                                <div class="relative group">
+                                    <select name="supplier_id" class="w-full appearance-none bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
+                                        <option value="">None</option>
+                                        @foreach($suppliers as $sup)
+                                            <option value="{{ $sup->id }}" {{ $asset->supplier_id == $sup->id ? 'selected' : '' }}>{{ $sup->name }}</option>
+                                        @endforeach
+                                    </select>
+                                    <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-deped transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                </div>
                             </div>
                         </div>
                     </div>

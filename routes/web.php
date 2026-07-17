@@ -430,6 +430,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/api/assets/suggestions', [\App\Http\Controllers\ReportDownloadController::class, 'getAssetSuggestions'])->name('api.assets.suggestions');
     Route::post('/reports/download-rpc', [\App\Http\Controllers\ReportDownloadController::class, 'download'])->name('assets.reports.download_rpc');
     Route::get('/download-documentation-template/{type}', [\App\Http\Controllers\ReportDownloadController::class, 'downloadDocTemplate'])->name('admin.download_doc_template');
+    Route::post('/admin/employees/{id}/download-docs', [\App\Http\Controllers\ReportDownloadController::class, 'downloadBulkCustodianDocs'])->name('admin.employees.download_bulk_docs');
 
     // --- Inventory Management (Edit) ---
     Route::get('/api/inventory/dropdown-data', [InventorySetupController::class, 'getDropdownData'])->name('api.inventory.dropdown_data');

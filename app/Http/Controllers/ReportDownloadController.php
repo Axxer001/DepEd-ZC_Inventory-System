@@ -1239,6 +1239,143 @@ class ReportDownloadController extends Controller
 
         return response()->download($filePath, $downloadName);
     }
+
+    public function downloadBulkCustodianDocs(Request $request, $employeeId)
+    {
+        $validated = $request->validate([
+            'doc_type'       => 'required|string|in:ICS,PAR',
+            'selected_ids'   => 'required|array|min:1',
+            'selected_ids.*' => 'required|integer|exists:asset_assignments,id',
+        ]);
+
+        $docType = $validated['doc_type'];
+        $selectedIds = $validated['selected_ids'];
+
+        $custodian = DB::table('employees')->where('id', $employeeId)->first();
+        if (!$custodian) {
+            abort(404, 'Employee not found.');
+        }
+
+        $user = auth()->user();
+        if ($user && $user->isSchoolSystem() && $custodian->school_id !== $user->school_id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $assignments = DB::table('asset_assignments as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->join('items as i', 'asrc.item_id', '=', 'i.id')
+            ->leftJoin('categories as cat', 'i.category_id', '=', 'cat.id')
+            ->select(
+                'ad.id',
+                'ad.property_number',
+                'ad.serial_number',
+                'ad.acquisition_date',
+                'ad.acquisition_cost',
+                'asrc.quantity',
+                'asrc.unit_of_measurement',
+                'asrc.asset_cost',
+                'asrc.description',
+                'asrc.estimated_useful_life',
+                'asrc.condition',
+                'i.name as item_name',
+                'cat.name as category_name'
+            )
+            ->where('ad.employee_id', $employeeId)
+            ->whereIn('ad.id', $selectedIds)
+            ->get();
+
+        if ($assignments->isEmpty()) {
+            abort(404, 'No matching assets found.');
+        }
+
+        $filePath = base_path('../' . $docType . '.xlsx');
+        if (!file_exists($filePath)) {
+            abort(404, 'Template file not found.');
+        }
+
+        $spreadsheet = IOFactory::load($filePath);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $parts = [];
+        if (!empty($custodian->first_name)) {
+            $parts[] = trim($custodian->first_name);
+        }
+        if (!empty($custodian->middle_name)) {
+            $parts[] = trim($custodian->middle_name);
+        }
+        if (!empty($custodian->last_name)) {
+            $parts[] = trim($custodian->last_name);
+        }
+        $custodianName = implode(' ', $parts);
+
+        $writtenRows = 0;
+
+        if ($docType === 'ICS') {
+            $sheet->setCellValue('D6', 'DepEd, Division of Zamboanga City');
+
+            $rowNum = 12;
+            foreach ($assignments as $assignment) {
+                if ($assignment->asset_cost > 49999) {
+                    continue;
+                }
+
+                $sheet->setCellValue('B' . $rowNum, $assignment->quantity ?? '');
+                $sheet->setCellValue('C' . $rowNum, $assignment->unit_of_measurement ?? '');
+                $sheet->setCellValue('D' . $rowNum, $assignment->asset_cost ?? '');
+                $totalCost = ($assignment->asset_cost && $assignment->quantity)
+                    ? ($assignment->asset_cost * $assignment->quantity) : '';
+                $sheet->setCellValue('E' . $rowNum, $totalCost);
+                $sheet->setCellValue('F' . $rowNum, $assignment->description ?: $assignment->item_name);
+                $sheet->setCellValue('H' . $rowNum, $assignment->property_number ?? '');
+                $sheet->setCellValue('I' . $rowNum, $assignment->estimated_useful_life ?? '');
+
+                $rowNum++;
+                $writtenRows++;
+            }
+
+            if ($writtenRows === 0) {
+                abort(422, 'None of the selected assets qualify for an ICS document (all exceed ₱49,999). Use PAR instead.');
+            }
+        } elseif ($docType === 'PAR') {
+            $sheet->setCellValue('D11', 'DEPED, ZAMBOANGA CITY DIVISION');
+
+            $rowNum = 16;
+            foreach ($assignments as $assignment) {
+                if ($assignment->asset_cost <= 49999) {
+                    continue;
+                }
+
+                $sheet->setCellValue('B' . $rowNum, $assignment->quantity ?? '');
+                $sheet->setCellValue('C' . $rowNum, $assignment->unit_of_measurement ?? '');
+                $sheet->setCellValue('D' . $rowNum, $assignment->description ?: $assignment->item_name);
+                $sheet->setCellValue('E' . $rowNum, $assignment->property_number ?? '');
+                $sheet->setCellValue('F' . $rowNum, $assignment->acquisition_date ?? '');
+                $sheet->setCellValue('G' . $rowNum, $assignment->acquisition_cost ?? '');
+
+                $rowNum++;
+                $writtenRows++;
+            }
+
+            if ($writtenRows === 0) {
+                abort(422, 'None of the selected assets qualify for a PAR document (all are ₱49,999 or below). Use ICS instead.');
+            }
+        }
+
+        $safeRecipient = preg_replace('/[\\\\\/:\*\?"<>\|]/', '', $custodianName);
+        if (empty($safeRecipient)) {
+            $safeRecipient = 'Custodian';
+        }
+        $downloadName = $docType . '_' . $safeRecipient . '_' . date('Ymd_His') . '.xlsx';
+
+        return response()->stream(function() use ($spreadsheet) {
+            $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+            $writer->save('php://output');
+        }, 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="' . $downloadName . '"',
+            'Cache-Control' => 'max-age=0',
+        ]);
+    }
 }
 
 

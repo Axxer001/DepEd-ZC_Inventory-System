@@ -299,4 +299,82 @@ class ComprehensiveFeatureTest extends TestCase
         $this->assertEquals(2, $sResponseMain->viewData('stats')->total_assets);
         $this->assertEquals(30000, $sResponseMain->viewData('stats')->total_value);
     }
+
+    public function test_admin_can_update_asset_specifications()
+    {
+        $admin = User::factory()->create(['role' => 'admin', 'approved' => true]);
+
+        $class = \App\Models\Classification::firstOrCreate(['name' => 'IT Equipment']);
+        $cat = \App\Models\Category::firstOrCreate(['name' => 'Laptop'], ['classification_id' => $class->id]);
+        $item = \App\Models\Item::firstOrCreate(['name' => 'Acer TravelMate'], ['category_id' => $cat->id]);
+
+        $acq = \App\Models\AcquisitionSource::create([
+            'name' => 'DepEd Central Office',
+            'source_type' => 'Internal',
+            'contact_person' => 'Juan Dela Cruz',
+            'contact_position' => 'Chief Officer'
+        ]);
+
+        $supplier = DB::table('suppliers')->insertGetId([
+            'name' => 'Phonepatch Marketing',
+            'service_center' => 'ZC Service Center',
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        $source = \App\Models\AssetSource::create([
+            'item_id' => $item->id,
+            'acquisition_source_id' => $acq->id,
+            'supplier_id' => $supplier,
+            'asset_cost' => 50000,
+            'quantity' => 1,
+            'condition' => 'Good Condition',
+            'acceptance_date' => now()->toDateString()
+        ]);
+
+        $assignmentId = DB::table('asset_assignments')->insertGetId([
+            'asset_source_id' => $source->id,
+            'acquisition_cost' => 50000,
+            'acquisition_date' => now()->toDateString(),
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
+
+        $newCategory = \App\Models\Category::firstOrCreate(['name' => 'Desktop'], ['classification_id' => $class->id]);
+
+        $response = $this->actingAs($admin)->post("/assets/{$assignmentId}/update", [
+            'item_name' => 'Acer TravelMate V2',
+            'description' => 'Updated TravelMate Laptop',
+            'condition' => 'Needs Repair',
+            'property_number' => 'PROP-NEW-123',
+            'serial_number' => 'SN-NEW-123',
+            'asset_cost' => 60000,
+            'quantity' => 2,
+            'acquisition_date' => now()->subDay()->toDateString(),
+            'category_id' => $newCategory->id,
+            'acquisition_source_id' => $acq->id,
+            'procurement_mode_id' => null,
+            'supplier_id' => $supplier,
+        ]);
+
+        $response->assertSessionHas('success');
+        $response->assertRedirect();
+
+        // Verify database updates
+        $updatedAssignment = DB::table('asset_assignments')->where('id', $assignmentId)->first();
+        $this->assertEquals('PROP-NEW-123', $updatedAssignment->property_number);
+        $this->assertEquals('SN-NEW-123', $updatedAssignment->serial_number);
+        $this->assertEquals(120000, $updatedAssignment->acquisition_cost);
+
+        $updatedSource = DB::table('asset_sources')->where('id', $source->id)->first();
+        $this->assertEquals('Updated TravelMate Laptop', $updatedSource->description);
+        $this->assertEquals('Needs Repair', $updatedSource->condition);
+        $this->assertEquals(60000, $updatedSource->asset_cost);
+        $this->assertEquals(2, $updatedSource->quantity);
+
+        // Verify new item created/selected
+        $updatedItem = DB::table('items')->where('id', $updatedSource->item_id)->first();
+        $this->assertEquals('ACER TRAVELMATE V2', $updatedItem->name);
+        $this->assertEquals($newCategory->id, $updatedItem->category_id);
+    }
 }
