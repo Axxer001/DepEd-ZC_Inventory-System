@@ -71,7 +71,7 @@
 
     <div class="flex-grow flex flex-col min-w-0 h-screen lg:overflow-hidden overflow-y-auto custom-scroll p-4 lg:p-8" x-data="{
         activeTab: 'specs',
-        showEditModal: {{ $errors->any() ? 'true' : 'false' }},
+        showEditModal: {{ $errors->hasAny(['item_name', 'description', 'property_number', 'serial_number', 'asset_cost', 'quantity', 'acquisition_date', 'category_id', 'acquisition_source_id', 'procurement_mode_id', 'supplier_id']) ? 'true' : 'false' }},
         showTransferModal: false,
         showReturnAmuModal: false,
         showReturnSourceModal: false,
@@ -80,18 +80,6 @@
         photoPreview: null,
         showPhotoConfirmModal: false,
         isHoveringImage: false,
-        categories: @js($categories),
-        classifications: @js($classifications),
-        selectedCategoryId: '{{ $asset->category_id }}',
-        
-        get selectedClassificationName() {
-            const cat = this.categories.find(c => c.id == this.selectedCategoryId);
-            if (cat) {
-                const cls = this.classifications.find(cl => cl.id == cat.classification_id);
-                return cls ? cls.name : 'N/A';
-            }
-            return 'N/A';
-        }
     }">
         
         {{-- Global Header (Fixed/Sticky) --}}
@@ -104,10 +92,24 @@
                     <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-none uppercase italic">{{ $asset->item_name }}</h1>
                     <div class="flex items-center gap-3 mt-2">
                         <span class="text-xs font-bold text-slate-500 uppercase tracking-widest bg-slate-100 px-2.5 py-0.5 rounded-md border border-slate-200">{{ $asset->property_number }}</span>
-                        {{-- Status Badge (Success placeholder) --}}
+                        {{-- Status Badge --}}
+                        @if(strtolower($asset->condition ?? '') === 'archived')
+                        <span class="text-[10px] font-black text-slate-700 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm border border-slate-200">
+                            <span class="w-1.5 h-1.5 bg-slate-500 rounded-full animate-pulse"></span> Archived
+                        </span>
+                        @elseif(strtolower($asset->condition ?? '') === 'needs repair')
+                        <span class="text-[10px] font-black text-amber-700 uppercase tracking-widest bg-amber-100 px-2 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                            <span class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span> Needs Repair
+                        </span>
+                        @elseif(strtolower($asset->condition ?? '') === 'unserviceable')
+                        <span class="text-[10px] font-black text-rose-700 uppercase tracking-widest bg-rose-100 px-2 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                            <span class="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse"></span> Unserviceable
+                        </span>
+                        @else
                         <span class="text-[10px] font-black text-emerald-700 uppercase tracking-widest bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1.5 shadow-sm">
                             <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span> Serviceable
                         </span>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -128,54 +130,95 @@
                             $canDelete = $createdToday && $isSelfRegistered && !$hasTransfersOrServices;
                         }
                     }
-                @endphp
-                @if(auth()->check() && auth()->user()->isAdmin())
-                @if($canDelete)
-                <form action="{{ route('assets.destroy', $asset->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to archive/delete this asset? This action cannot be undone.');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="px-5 py-2.5 bg-red-50 border border-red-200 rounded-xl text-xs font-black text-red-600 uppercase tracking-widest hover:bg-red-600 hover:text-white hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group">
-                        <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        Archive Asset
-                    </button>
-                </form>
-                @endif
-                <button @click="showEditModal = true" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 uppercase tracking-widest hover:border-deped hover:text-deped hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group">
-                    <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                    Edit Asset
-                </button>
-                <div class="relative">
-                    <button @click="open = !open" @click.away="open = false" class="px-5 py-2.5 bg-deped text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-800 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-md shadow-red-200 hover:shadow-lg hover:shadow-red-300 flex items-center gap-2">
-                        Quick Actions
-                        <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" :class="{'rotate-180': open}"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
-                    </button>
-                    <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 translate-y-2 scale-95" class="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden transform origin-top-right">
-                        <button @click="showTransferModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 hover:pl-5 transition-all flex items-center gap-2 border-b border-slate-100">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg> Initiate Transfer
-                        </button>
-                        @if($asset->employee_id || ($asset->is_in_source ?? false))
-                        <button @click="showReturnAmuModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-emerald-600 hover:pl-5 transition-all flex items-center gap-2 border-b border-slate-100">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg> Return to AMU
-                        </button>
-                        @else
-                        <button disabled class="w-full text-left px-4 py-3 text-xs font-bold text-slate-400 cursor-not-allowed flex items-center gap-2 border-b border-slate-100" title="Asset is currently unassigned or already in AMU">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg> Return to AMU
-                        </button>
-                        @endif
+                @endphp                @if(auth()->check() && auth()->user()->isAdmin())
+                    @if(($asset->condition ?? '') === 'Archived')
+                        {{-- Unarchive Asset Form --}}
+                        <form action="{{ route('assets.unarchive', $asset->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to unarchive this asset?');">
+                            @csrf
+                            <button type="submit" class="px-5 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-black text-emerald-600 uppercase tracking-widest hover:bg-emerald-600 hover:text-white hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group">
+                                <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H18"></path></svg>
+                                Unarchive Asset
+                            </button>
+                        </form>
 
-                        @if(auth()->user()->isMainSystem())
-                        @if(!($asset->is_in_source ?? false))
-                        <button @click="showReturnSourceModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-orange-600 hover:pl-5 transition-all flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-6a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"></path></svg> Return to Supplier
+                        {{-- Disabled Edit Asset Button --}}
+                        <button disabled class="px-5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-slate-400 uppercase tracking-widest cursor-not-allowed flex items-center gap-2 group shadow-none" title="Archived assets cannot be edited.">
+                            <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            Edit Asset
                         </button>
-                        @else
-                        <button disabled class="w-full text-left px-4 py-3 text-xs font-bold text-slate-400 cursor-not-allowed flex items-center gap-2" title="Asset is already at the acquisition source/supplier">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-6a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"></path></svg> Return to Supplier
+
+                        {{-- Disabled Quick Actions Button --}}
+                        <button disabled class="px-5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-black text-slate-400 uppercase tracking-widest cursor-not-allowed flex items-center gap-2 shadow-none" title="Archived assets cannot be transferred.">
+                            Quick Actions
+                            <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
                         </button>
-                        @endif
-                        @endif
-                    </div>
-                </div>
+                    @else
+                        {{-- Archive Asset Form --}}
+                        <form action="{{ route('assets.archive', $asset->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to archive this asset? This will return it to AMU and prevent updates and transfers.');">
+                            @csrf
+                            <button type="submit" class="px-5 py-2.5 bg-red-50 border border-red-200 rounded-xl text-xs font-black text-red-600 uppercase tracking-widest hover:bg-red-600 hover:text-white hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group">
+                                <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                Archive Asset
+                            </button>
+                        </form>
+
+                        {{-- Normal Edit Asset Button --}}
+                        <button @click="showEditModal = true" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 uppercase tracking-widest hover:border-deped hover:text-deped hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group">
+                            <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            Edit Asset
+                        </button>
+
+                        {{-- Normal Quick Actions Button --}}
+                        <div class="relative">
+                            <button @click="open = !open" @click.away="open = false" class="px-5 py-2.5 bg-deped text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-800 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-md shadow-red-200 hover:shadow-lg hover:shadow-red-300 flex items-center gap-2">
+                                Quick Actions
+                                <svg class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" :class="{'rotate-180': open}"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
+                            </button>
+                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0 scale-100" x-transition:leave-end="opacity-0 translate-y-2 scale-95" class="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden transform origin-top-right">
+                                <button @click="showTransferModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 hover:pl-5 transition-all flex items-center gap-2 border-b border-slate-100">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4-4m-4-4l4-4"></path></svg> Initiate Transfer
+                                </button>
+                                @if($asset->employee_id || ($asset->is_in_source ?? false))
+                                <button @click="showReturnAmuModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-emerald-600 hover:pl-5 transition-all flex items-center gap-2 border-b border-slate-100">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg> Return to AMU
+                                </button>
+                                @else
+                                <button disabled class="w-full text-left px-4 py-3 text-xs font-bold text-slate-400 cursor-not-allowed flex items-center gap-2 border-b border-slate-100" title="Asset is currently unassigned or already in AMU">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path></svg> Return to AMU
+                                </button>
+                                @endif
+
+                                @if(auth()->user()->isMainSystem())
+                                @if(!($asset->is_in_source ?? false))
+                                @if($canReturnToSupplier)
+                                <button @click="showReturnSourceModal = true; open = false" class="w-full text-left px-4 py-3 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-orange-600 hover:pl-5 transition-all flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-6a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"></path></svg> Return to Supplier
+                                </button>
+                                @else
+                                <button disabled class="w-full text-left px-4 py-3 text-xs font-bold text-slate-400 cursor-not-allowed flex items-center gap-2"
+                                    title="{{ empty($asset->supplier_id) ? 'No supplier assigned to this asset' : 'Supplier has no service center configured' }}">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-6a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"></path></svg> Return to Supplier
+                                </button>
+                                @endif
+                                @else
+                                <button disabled class="w-full text-left px-4 py-3 text-xs font-bold text-slate-400 cursor-not-allowed flex items-center gap-2" title="Asset is already at the acquisition source/supplier">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 15v-6a4 4 0 00-4-4H4m0 0l4-4m-4 4l4 4"></path></svg> Return to Supplier
+                                </button>
+                                @endif
+                                @endif
+                                @if(auth()->user()->isMainSystem())
+                                <form action="{{ route('assets.hard_delete', $asset->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete this asset? This action will delete all transfer history, services, documents, photos, and cannot be undone!');" class="w-full border-t border-slate-100">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="w-full text-left px-4 py-3 text-xs font-bold text-red-600 hover:bg-red-50 hover:pl-5 transition-all flex items-center gap-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                        Hard Delete Asset
+                                    </button>
+                                </form>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
                 <div class="w-px h-8 bg-slate-200 mx-1"></div>
                 @endif
                 <a href="/view-assets" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 uppercase tracking-widest hover:border-deped hover:text-deped hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group">
@@ -558,6 +601,8 @@
                                         'Return' => ['border' => 'border-amber-500', 'bg' => 'bg-amber-500'],
                                         'Return to Supplier' => ['border' => 'border-orange-500', 'bg' => 'bg-orange-500'],
                                         'Temporary Borrow' => ['border' => 'border-blue-500', 'bg' => 'bg-blue-500'],
+                                        'Archive' => ['border' => 'border-slate-500', 'bg' => 'bg-slate-500'],
+                                        'Unarchive' => ['border' => 'border-emerald-500', 'bg' => 'bg-emerald-500'],
                                         default => ['border' => 'border-emerald-500', 'bg' => 'bg-emerald-500'],
                                     };
                                 @endphp
@@ -1137,6 +1182,25 @@
                         </div>
                     </div>
 
+                    {{-- Warning message for Good Condition or Unserviceable --}}
+                    <div x-show="returnCondition === 'Good Condition' || returnCondition === 'Unserviceable'"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 -translate-y-2"
+                         x-transition:enter-end="opacity-100 translate-y-0"
+                         x-cloak>
+                        <div class="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+                            <svg class="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <div>
+                                <p class="text-[10px] font-black text-red-700 uppercase tracking-wider">Invalid Return Condition</p>
+                                <p class="text-[10px] font-bold text-red-600 mt-1">
+                                    Assets in <span class="font-extrabold" x-text="returnCondition"></span> cannot be returned to the supplier. Only items requiring repair ("Needs Repair") under active warranty are eligible.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div>
                         <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Reason for Return</label>
                         <textarea name="remarks" rows="3" class="w-full bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-bold text-slate-700 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 outline-none transition-all shadow-sm resize-none hover:border-slate-300" placeholder="State reason why the asset is being returned to supplier..."></textarea>
@@ -1147,7 +1211,10 @@
                 {{-- Modal Footer --}}
                 <div class="bg-slate-50 border-t border-slate-100 p-6 flex items-center justify-end gap-3">
                     <button type="button" @click="showReturnSourceModal = false" class="px-6 py-3 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest transition-colors shadow-sm active:scale-95">Cancel</button>
-                    <button type="submit" class="px-8 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-orange-600/30 transition-all active:scale-95 flex items-center gap-2">
+                    <button type="submit"
+                            :disabled="returnCondition === 'Good Condition' || returnCondition === 'Unserviceable'"
+                            :class="(returnCondition === 'Good Condition' || returnCondition === 'Unserviceable') ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' : 'bg-orange-600 hover:bg-orange-700 text-white shadow-lg shadow-orange-600/30 active:scale-95'"
+                            class="px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                         Confirm Return
                     </button>
@@ -1252,25 +1319,24 @@
 
                     {{-- Category & Classification --}}
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-                        <h4 class="text-[10px] font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Category &amp; Classification</h4>
+                        <h4 class="text-[10px] font-black text-slate-800 uppercase tracking-widest flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Category & Classification</h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-[10px] font-black text-slate-600 uppercase tracking-widest mb-2 ml-1">Category <span class="text-deped">*</span></label>
-                                <div class="relative group">
-                                    <select name="category_id" required x-model="selectedCategoryId" class="w-full appearance-none bg-white border-2 border-slate-200 rounded-xl px-4 py-3 text-xs font-black text-slate-700 uppercase focus:border-deped focus:ring-4 focus:ring-deped/10 outline-none transition-all shadow-sm hover:border-slate-300 cursor-pointer">
-                                        @foreach($categories as $category)
-                                            <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                        @endforeach
-                                    </select>
-                                    <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-hover:text-deped transition-colors pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Category <span class="text-[9px] font-bold text-slate-400 normal-case tracking-normal">(not editable)</span></label>
+                                <input type="hidden" name="category_id" value="{{ $asset->category_id }}">
+                                <div class="w-full bg-slate-50 border-2 border-slate-200 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner">
+                                    {{ $asset->category_name }}
                                 </div>
                             </div>
                             <div>
-                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Classification (Determined by Category)</label>
-                                <input type="text" :value="selectedClassificationName" readonly class="w-full bg-slate-50 border-2 border-slate-200 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner">
+                                <label class="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 ml-1">Classification <span class="text-[9px] font-bold text-slate-400 normal-case tracking-normal">(not editable)</span></label>
+                                <div class="w-full bg-slate-50 border-2 border-slate-200 text-slate-400 rounded-xl px-4 py-3 text-xs font-black uppercase cursor-not-allowed outline-none shadow-inner">
+                                    {{ $asset->classification_name }}
+                                </div>
                             </div>
                         </div>
                     </div>
+
 
                     {{-- Procurement & Funding --}}
                     <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
@@ -1320,7 +1386,7 @@
                 {{-- Modal Footer --}}
                 <div class="bg-slate-50 border-t border-slate-100 p-6 flex items-center justify-end gap-3">
                     <button type="button" @click="showEditModal = false" class="px-6 py-3 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest transition-colors shadow-sm active:scale-95">Cancel</button>
-                    <button type="submit" @click="isSaving = true" :disabled="isSaving" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-600/30 transition-all active:scale-95 flex items-center justify-center gap-2">
+                    <button type="submit" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-600/30 transition-all active:scale-95 flex items-center justify-center gap-2">
                         <template x-if="!isSaving">
                             <span>Save Changes</span>
                         </template>

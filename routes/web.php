@@ -79,7 +79,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/admin/employees/{id}', [EmployeeController::class, 'destroy'])->name('admin.employees.destroy')->middleware('role:super_admin,admin');
 
     // --- Soft Delete / Archive Actions ---
-    Route::delete('/assets/{id}', [AssetController::class, 'destroy'])->name('assets.destroy')->middleware('role:super_admin,admin');
+    Route::post('/assets/{id}/archive', [AssetController::class, 'archive'])->name('assets.archive')->middleware('role:super_admin,admin');
+    Route::post('/assets/{id}/unarchive', [AssetController::class, 'unarchive'])->name('assets.unarchive')->middleware('role:super_admin,admin');
+    Route::delete('/assets/{id}/delete', [AssetController::class, 'hardDelete'])->name('assets.hard_delete')->middleware('role:super_admin,admin');
+    Route::post('/api/assets/bulk-delete', [AssetController::class, 'bulkHardDelete'])->name('assets.bulk_hard_delete')->middleware('role:super_admin,admin');
     Route::delete('/buildings/{id}', [BuildingController::class, 'destroy'])->name('buildings.destroy')->middleware('role:super_admin,admin');
 
     // --- Class & Category Feature ---

@@ -1154,7 +1154,8 @@ class InventorySetupController extends Controller
             ->join('items', 'asset_sources.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->join('classifications', 'categories.classification_id', '=', 'classifications.id')
-            ->whereNull('asset_assignments.employee_id');
+            ->whereNull('asset_assignments.employee_id')
+            ->where('asset_sources.condition', '!=', 'Archived');
 
         if ($user && $user->isSchoolSystem()) {
             $schoolId = $user->school_id;

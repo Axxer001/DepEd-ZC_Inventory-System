@@ -751,7 +751,7 @@ class EmployeeController extends Controller
         }
 
         // Check if employee is assigned to assets
-        $hasAssets = DB::table('asset_assignments')->where('employee_id', $employee->id)->whereNull('deleted_at')->exists();
+        $hasAssets = DB::table('asset_assignments')->where('employee_id', $employee->id)->exists();
         if ($hasAssets) {
             return back()->with('error', 'Cannot delete employee: employee has active asset assignments.');
         }

@@ -4,8 +4,9 @@ namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Contracts\Queue\ShouldQueue;
 
-class AssetUpdatedNotification extends Notification
+class AssetUpdatedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
     public $data;

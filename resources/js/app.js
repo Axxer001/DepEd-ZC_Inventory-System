@@ -2,6 +2,13 @@ import './bootstrap';
 
 import Alpine from 'alpinejs';
 import collapse from '@alpinejs/collapse';
+
+// Ignore benign AlpineJS transition cancellation rejections
+window.addEventListener('unhandledrejection', function (event) {
+    if (event.reason && event.reason.isFromCancelledTransition) {
+        event.preventDefault();
+    }
+});
 import TomSelect from 'tom-select';
 import Swal from 'sweetalert2';
 

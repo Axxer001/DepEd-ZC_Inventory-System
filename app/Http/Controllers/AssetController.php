@@ -422,6 +422,12 @@ class AssetController extends Controller
                 } elseif ($t->transfer_type === 'Return to Supplier') {
                     $desc = 'Returned from ' . $fromName . ' to Supplier: ' . ($asset->source_name ?? 'Supplier') . '.';
                     if ($t->remarks) $desc .= ' Reason: ' . $t->remarks;
+                } elseif ($t->transfer_type === 'Archive') {
+                    $desc = 'Asset archived and returned to AMU / Warehouse.';
+                    if ($t->remarks) $desc .= ' Info: ' . $t->remarks;
+                } elseif ($t->transfer_type === 'Unarchive') {
+                    $desc = 'Asset unarchived and marked ready for use.';
+                    if ($t->remarks) $desc .= ' Info: ' . $t->remarks;
                 } elseif ($t->transfer_type === 'Initial Distribution') {
                     $empName = trim(($t->first_name ?? '') . ' ' . ($t->last_name ?? ''));
                     if ($empName) {
@@ -443,7 +449,7 @@ class AssetController extends Controller
  
                 $timeline[] = [
                     'date' => $t->transfer_date ? \Carbon\Carbon::parse($t->transfer_date)->format('Y-m-d') : 'N/A',
-                    'type' => in_array($t->transfer_type, ['Temporary Borrow', 'Return', 'Return to Supplier', 'Initial Distribution']) ? $t->transfer_type : 'Transfer',
+                    'type' => in_array($t->transfer_type, ['Temporary Borrow', 'Return', 'Return to Supplier', 'Initial Distribution', 'Archive', 'Unarchive']) ? $t->transfer_type : 'Transfer',
                     'user' => $t->user_name ?? 'Property Officer',
                     'description' => $desc
                 ];
@@ -495,6 +501,7 @@ class AssetController extends Controller
             'procurementModes' => $procurementModes,
             'suppliers' => $suppliers,
             'supplierHasServiceCenter' => !empty($asset->supplier_service_center),
+            'canReturnToSupplier' => !empty($asset->supplier_id) && !empty($asset->supplier_service_center),
         ]);
     }
 
@@ -528,6 +535,10 @@ class AssetController extends Controller
 
         if (!$asset) {
             return back()->with('error', 'Asset not found');
+        }
+
+        if ($asset->condition === 'Archived') {
+            return back()->with('error', 'Cannot update asset: This asset is currently archived.');
         }
 
         if (!empty($validated['property_number']) && $validated['property_number'] !== $asset->property_number) {
@@ -580,7 +591,10 @@ class AssetController extends Controller
                 'supplier_id' => $validated['supplier_id'] ?? null,
                 'updated_at' => now(),
             ];
-            DB::table('asset_sources')->where('id', $asset->asset_source_id)->update($sourceUpdates);
+            $source = \App\Models\AssetSource::find($asset->asset_source_id);
+            if ($source) {
+                $source->update($sourceUpdates);
+            }
 
             // ₱50k Threshold Check — detect class boundary crossing (Semi-Expendable ↔ PPE)
             $oldTotalCost = (float)($asset->asset_cost ?? 0) * (int)($asset->quantity ?? 1);
@@ -675,9 +689,17 @@ class AssetController extends Controller
             'remarks' => 'nullable|string|max:1000',
         ]);
 
-        $asset = DB::table('asset_assignments')->where('id', $id)->first();
+        $asset = DB::table('asset_assignments as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->where('ad.id', $id)
+            ->select('ad.*', 'asrc.condition')
+            ->first();
         if (!$asset) {
             return back()->with('error', 'Asset not found');
+        }
+
+        if ($asset->condition === 'Archived') {
+            return back()->with('error', 'Cannot transfer asset: This asset is currently archived.');
         }
 
         $user = auth()->user();
@@ -849,9 +871,17 @@ class AssetController extends Controller
             'remarks' => 'nullable|string|max:1000',
         ]);
 
-        $asset = DB::table('asset_assignments')->where('id', $id)->first();
+        $asset = DB::table('asset_assignments as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->where('ad.id', $id)
+            ->select('ad.*', 'asrc.condition')
+            ->first();
         if (!$asset) {
             return back()->with('error', 'Asset not found');
+        }
+
+        if ($asset->condition === 'Archived') {
+            return back()->with('error', 'Cannot return asset to AMU: This asset is currently archived.');
         }
 
         $transferId = DB::transaction(function () use ($id, $asset, $validated) {
@@ -971,6 +1001,42 @@ class AssetController extends Controller
             'expected_return_date' => 'nullable|date|after_or_equal:return_date',
         ]);
 
+        if (in_array($validated['condition'], ['Good Condition', 'Unserviceable'])) {
+            return back()->with('error', 'Unable to initiate Return to Supplier: Only items in "Needs Repair" condition can be returned to the supplier.');
+        }
+
+        $prelimAsset = DB::table('asset_assignments as ad')
+            ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
+            ->where('ad.id', $id)
+            ->select('asrc.condition')
+            ->first();
+
+        if (!$prelimAsset) {
+            return back()->with('error', 'Asset not found');
+        }
+
+        if ($prelimAsset->condition === 'Archived') {
+            return back()->with('error', 'Cannot return asset to supplier: This asset is currently archived.');
+        }
+
+        // Ensure asset has a supplier with a service center before proceeding
+        $prelimSupplier = DB::table('asset_sources as asrc')
+            ->leftJoin('suppliers', 'asrc.supplier_id', '=', 'suppliers.id')
+            ->where('asrc.id', DB::table('asset_assignments')->where('id', $id)->value('asset_source_id'))
+            ->select(
+                'asrc.supplier_id',
+                DB::raw('COALESCE(asrc.supplier_service_center, suppliers.service_center) as resolved_sc')
+            )
+            ->first();
+
+        if (empty($prelimSupplier?->supplier_id)) {
+            return back()->with('error', 'Unable to initiate Return to Supplier: This asset has no supplier assigned.');
+        }
+
+        if (empty($prelimSupplier?->resolved_sc)) {
+            return back()->with('error', 'Unable to initiate Return to Supplier: The assigned supplier has no service center configured.');
+        }
+
         $asset = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('acquisition_sources', 'asrc.acquisition_source_id', '=', 'acquisition_sources.id')
@@ -979,9 +1045,11 @@ class AssetController extends Controller
             ->select(
                 'ad.*',
                 'asrc.warranty', 'asrc.acceptance_date', 'asrc.supplier_id',
+                'asrc.supplier_service_center',
                 'acquisition_sources.name as source_name',
                 'suppliers.name as supplier_name',
                 'suppliers.service_center',
+                DB::raw('COALESCE(asrc.supplier_service_center, suppliers.service_center) as resolved_service_center'),
                 'asrc.id as asset_source_id'
             )
             ->first();
@@ -1007,7 +1075,7 @@ class AssetController extends Controller
         // Qualify for repair tracking?
         $qualifiesForService = (
             $validated['condition'] === 'Needs Repair' &&
-            !empty($asset->service_center) &&
+            !empty($asset->resolved_service_center) &&
             !$hasNoWarranty &&
             !$isExpired
         );
@@ -1224,8 +1292,12 @@ class AssetController extends Controller
         return back()->with('error', 'Document not found.');
     }
 
-    public function destroy($id)
+    public function archive($id)
     {
+        if (!Auth::check() || !Auth::user()->approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
         $assignment = \App\Models\AssetAssignment::findOrFail($id);
         $user = auth()->user();
 
@@ -1237,42 +1309,276 @@ class AssetController extends Controller
                     abort(403, 'Unauthorized action.');
                 }
             }
-
-            // Must be self-registered
-            if ($assignment->origin_system_type !== 'school' || $assignment->registered_by_school_id !== $user->school_id) {
-                abort(403, 'Unauthorized action.');
-            }
-
-            // Limited deletion window: same-day only (created today)
-            if (!$assignment->created_at->isToday()) {
-                return back()->with('error', 'Same-day deletion window has expired for this asset.');
-            }
-
-            // Check if transferred
-            $hasTransfers = DB::table('asset_transfers')->where('asset_assignment_id', $assignment->id)->exists();
-            if ($hasTransfers) {
-                return back()->with('error', 'Cannot delete asset: asset has transfer history.');
-            }
-
-            // Check if serviced
-            $hasServices = DB::table('asset_services')->where('asset_assignment_id', $assignment->id)->exists();
-            if ($hasServices) {
-                return back()->with('error', 'Cannot delete asset: asset has repair/service history.');
-            }
         }
 
-        $assignment->delete();
+        $source = DB::table('asset_sources')->where('id', $assignment->asset_source_id)->first();
+        if (!$source) {
+            return back()->with('error', 'Asset source not found');
+        }
 
-        // Log the action to system_logs
-        DB::table('system_logs')->insert([
-            'user' => $user ? $user->name : 'System',
-            'action_type' => 'Delete',
-            'module' => 'Assets',
-            'activity' => "Asset assignment ID {$assignment->id} (Property: {$assignment->property_number}) was soft-deleted.",
-            'created_at' => now(),
-            'updated_at' => now(),
+        if ($source->condition === 'Archived') {
+            return back()->with('error', 'Asset is already archived.');
+        }
+
+        DB::transaction(function () use ($id, $assignment, $source, $user) {
+            $currentOfficeId = $assignment->office_id;
+            $currentSchoolId = $assignment->school_id;
+            if ($assignment->employee_id) {
+                $currentEmployee = DB::table('employees')->where('id', $assignment->employee_id)->first();
+                if ($currentEmployee) {
+                    $currentOfficeId = $currentOfficeId ?? $currentEmployee->office_id;
+                    $currentSchoolId = $currentSchoolId ?? $currentEmployee->school_id;
+                }
+            }
+
+            // Log the archive transfer
+            DB::table('asset_transfers')->insert([
+                'asset_assignment_id' => $id,
+                'from_office_id' => $currentOfficeId,
+                'to_office_id' => null,
+                'from_school_id' => $currentSchoolId,
+                'to_school_id' => null,
+                'from_custodian_id' => $assignment->employee_id,
+                'to_custodian_id' => null,
+                'transfer_date' => now()->toDateString(),
+                'transfer_type' => 'Archive',
+                'remarks' => "Asset archived and returned to AMU. Previous condition: {$source->condition}.",
+                'authorized_by' => Auth::id() ?? 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Return to AMU
+            DB::table('asset_assignments')->where('id', $id)->update([
+                'employee_id' => null,
+                'school_id' => null,
+                'office_id' => null,
+                'acquisition_date' => $source->acceptance_date ?? now()->toDateString(),
+                'updated_at' => now(),
+            ]);
+
+            // Set condition to Archived
+            DB::table('asset_sources')->where('id', $assignment->asset_source_id)->update([
+                'condition' => 'Archived',
+                'updated_at' => now(),
+            ]);
+
+            // Log the action to system_logs
+            DB::table('system_logs')->insert([
+                'user' => $user ? $user->name : 'System',
+                'action_type' => 'Delete',
+                'module' => 'Assets',
+                'activity' => "Asset assignment ID {$assignment->id} (Property: {$assignment->property_number}) was archived.",
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
+
+        return redirect()->route('assets.profile', $id)->with('success', 'Asset successfully archived.');
+    }
+
+    public function unarchive($id)
+    {
+        if (!Auth::check() || !Auth::user()->approved) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $assignment = \App\Models\AssetAssignment::findOrFail($id);
+        $user = auth()->user();
+
+        $source = DB::table('asset_sources')->where('id', $assignment->asset_source_id)->first();
+        if (!$source) {
+            return back()->with('error', 'Asset source not found');
+        }
+
+        if ($source->condition !== 'Archived') {
+            return back()->with('error', 'Asset is not archived.');
+        }
+
+        DB::transaction(function () use ($id, $assignment, $user) {
+            // Log the unarchive transfer
+            DB::table('asset_transfers')->insert([
+                'asset_assignment_id' => $id,
+                'from_office_id' => null,
+                'to_office_id' => null,
+                'from_school_id' => null,
+                'to_school_id' => null,
+                'from_custodian_id' => null,
+                'to_custodian_id' => null,
+                'transfer_date' => now()->toDateString(),
+                'transfer_type' => 'Unarchive',
+                'remarks' => 'Asset unarchived.',
+                'authorized_by' => Auth::id() ?? 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Find most recent condition before archive from the transfer history
+            $latestArchiveTransfer = DB::table('asset_transfers')
+                ->where('asset_assignment_id', $id)
+                ->where('transfer_type', 'Archive')
+                ->orderBy('id', 'desc')
+                ->first();
+
+            $previousCondition = 'Good Condition'; // Default fallback
+            if ($latestArchiveTransfer) {
+                foreach (['Good Condition', 'Needs Repair', 'Unserviceable'] as $cond) {
+                    if (stripos($latestArchiveTransfer->remarks, $cond) !== false) {
+                        $previousCondition = $cond;
+                        break;
+                    }
+                }
+            }
+
+            // Set condition back to its most recent condition
+            DB::table('asset_sources')->where('id', $assignment->asset_source_id)->update([
+                'condition' => $previousCondition,
+                'updated_at' => now(),
+            ]);
+
+            // Log the action to system_logs
+            DB::table('system_logs')->insert([
+                'user' => $user ? $user->name : 'System',
+                'action_type' => 'Update',
+                'module' => 'Assets',
+                'activity' => "Asset assignment ID {$assignment->id} (Property: {$assignment->property_number}) was unarchived.",
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
+
+        return redirect()->route('assets.profile', $id)->with('success', 'Asset successfully unarchived.');
+    }
+
+    public function hardDelete($id)
+    {
+        if (!Auth::check() || !Auth::user()->approved || !Auth::user()->isAdmin() || !Auth::user()->isMainSystem()) {
+            if (request()->wantsJson()) {
+                return response()->json(['error' => 'Unauthorized action. Only main system admins can hard-delete assets.'], 403);
+            }
+            abort(403, 'Unauthorized action. Only main system admins can hard-delete assets.');
+        }
+
+        $assignment = \App\Models\AssetAssignment::findOrFail($id);
+        $user = auth()->user();
+
+        DB::transaction(function () use ($id, $assignment, $user) {
+            // 1. Physically delete photo file from disk if present
+            if ($assignment->photo_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($assignment->photo_path);
+            }
+
+            // 2. Fetch and physically delete all asset document files from disk
+            $documents = DB::table('asset_documents')->where('asset_distribution_id', $id)->get();
+            foreach ($documents as $doc) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($doc->file_path);
+            }
+
+            // 3. Drop all references in database tables
+            DB::table('asset_documents')->where('asset_distribution_id', $id)->delete();
+            DB::table('asset_transfers')->where('asset_assignment_id', $id)->delete();
+            DB::table('asset_services')->where('asset_assignment_id', $id)->delete();
+            
+            // Delete the main assignment row
+            DB::table('asset_assignments')->where('id', $id)->delete();
+
+            // 4. Update the quantity on asset_sources
+            $sourceId = $assignment->asset_source_id;
+            $source = DB::table('asset_sources')->where('id', $sourceId)->first();
+            if ($source) {
+                $newQty = $source->quantity - 1;
+                if ($newQty <= 0) {
+                    DB::table('asset_sources')->where('id', $sourceId)->delete();
+                } else {
+                    DB::table('asset_sources')->where('id', $sourceId)->update([
+                        'quantity' => $newQty,
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
+
+            // Log the action to system_logs
+            DB::table('system_logs')->insert([
+                'user' => $user ? $user->name : 'System',
+                'action_type' => 'Delete',
+                'module' => 'Assets',
+                'activity' => "Asset assignment ID {$id} (Property: {$assignment->property_number}) was permanently hard-deleted.",
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
+
+        if (request()->wantsJson()) {
+            return response()->json(['success' => 'Asset permanently deleted.']);
+        }
+        return redirect()->route('assets.view')->with('success', 'Asset permanently deleted.');
+    }
+
+    public function bulkHardDelete(Request $request)
+    {
+        if (!Auth::check() || !Auth::user()->approved || !Auth::user()->isAdmin() || !Auth::user()->isMainSystem()) {
+            return response()->json(['error' => 'Unauthorized action. Only main system admins can hard-delete assets.'], 403);
+        }
+
+        $validated = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|integer|exists:asset_assignments,id',
         ]);
 
-        return redirect()->route('assets.view')->with('success', 'Asset successfully archived.');
+        $ids = $validated['ids'];
+        $user = auth()->user();
+
+        DB::transaction(function () use ($ids, $user) {
+            foreach ($ids as $id) {
+                $assignment = DB::table('asset_assignments')->where('id', $id)->first();
+                if (!$assignment) {
+                    continue;
+                }
+
+                // 1. Delete photo from disk
+                if ($assignment->photo_path) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($assignment->photo_path);
+                }
+
+                // 2. Delete documents from disk
+                $documents = DB::table('asset_documents')->where('asset_distribution_id', $id)->get();
+                foreach ($documents as $doc) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($doc->file_path);
+                }
+
+                // 3. Delete database relations
+                DB::table('asset_documents')->where('asset_distribution_id', $id)->delete();
+                DB::table('asset_transfers')->where('asset_assignment_id', $id)->delete();
+                DB::table('asset_services')->where('asset_assignment_id', $id)->delete();
+                DB::table('asset_assignments')->where('id', $id)->delete();
+
+                // 4. Update the quantity on asset_sources
+                $sourceId = $assignment->asset_source_id;
+                $source = DB::table('asset_sources')->where('id', $sourceId)->first();
+                if ($source) {
+                    $newQty = $source->quantity - 1;
+                    if ($newQty <= 0) {
+                        DB::table('asset_sources')->where('id', $sourceId)->delete();
+                    } else {
+                        DB::table('asset_sources')->where('id', $sourceId)->update([
+                            'quantity' => $newQty,
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+
+                // Log the action to system_logs
+                DB::table('system_logs')->insert([
+                    'user' => $user ? $user->name : 'System',
+                    'action_type' => 'Delete',
+                    'module' => 'Assets',
+                    'activity' => "Asset assignment ID {$id} (Property: {$assignment->property_number}) was permanently hard-deleted via bulk action.",
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        });
+
+        return response()->json(['success' => 'Selected assets successfully deleted.']);
     }
 }

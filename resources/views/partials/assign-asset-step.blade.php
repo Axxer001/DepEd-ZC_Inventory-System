@@ -73,6 +73,12 @@
                         <input type="checkbox" x-model="hideAutofill" class="w-3.5 h-3.5 accent-[#c00000] rounded">
                         Hide Auto-Fill
                     </label>
+                    @if(auth()->check() && auth()->user()->isAdmin() && auth()->user()->isMainSystem())
+                    <button type="button" @click="openBulkHardDeleteModal()" class="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border border-slate-200 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-wider hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all active:scale-95 cursor-pointer shadow-sm">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"></path></svg>
+                        Bulk Hard-delete
+                    </button>
+                    @endif
                     <button type="button" @click="openBulkAssignModal"
                         class="px-6 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-sm active:scale-95">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -112,7 +118,13 @@
                             <th class="xls-th col-identity" x-show="!hideAutofill" style="min-width:158px">Office/School Name</th>
                             <th class="xls-th col-identity" x-show="!hideAutofill" style="min-width:158px">Location</th>
                             <th class="xls-th col-temporal" style="min-width:158px">Issuance Date</th>
-                            <th class="xls-th text-center" style="min-width:80px">Select</th>
+                            @if(auth()->check() && auth()->user()->isAdmin() && auth()->user()->isMainSystem())
+                            <th class="xls-th text-center" style="min-width:100px">Actions</th>
+                            @endif
+                            <th class="xls-th text-center" style="min-width:80px">
+                                <span class="block mb-1">Select</span>
+                                <input type="checkbox" @change="toggleSelectAll($event.target.checked)" class="w-3.5 h-3.5 text-[#c00000] focus:ring-[#c00000] border-slate-300 rounded cursor-pointer">
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -180,6 +192,13 @@
                                 <td class="xls-td col-temporal">
                                     <input type="date" x-model="asset.acquisition_date" class="xls-input uppercase font-bold text-slate-600">
                                 </td>
+                                @if(auth()->check() && auth()->user()->isAdmin() && auth()->user()->isMainSystem())
+                                <td class="xls-td text-center">
+                                    <button type="button" @click="confirmHardDeleteAssetInAssign(asset.assignment_id, asset.property_number || ('ID: ' + asset.assignment_id))" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition-colors" title="Hard Delete Asset">
+                                        <svg class="w-4 h-4 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </td>
+                                @endif
                                 <td class="xls-td text-center">
                                     <input type="checkbox" x-model="asset.selected" class="w-4 h-4 text-[#c00000] focus:ring-[#c00000] border-slate-300 rounded cursor-pointer">
                                 </td>
@@ -330,6 +349,39 @@
         </div>
     </div>
 
+    <!-- Bulk Hard-delete Modal -->
+    <div x-show="bulkHardDeleteOpen" class="fixed inset-0 z-[60] flex items-center justify-center hidden" :class="{ 'hidden': !bulkHardDeleteOpen }" style="display: none;">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="closeBulkHardDeleteModal()"></div>
+        <div class="bg-white border border-slate-200 rounded-[2rem] shadow-2xl w-full max-w-md relative z-10 transform transition-transform duration-300">
+            <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-black text-slate-800 uppercase tracking-tight italic">Bulk Hard-delete</h3>
+                    <p class="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-1">Warning: Permanent Action</p>
+                </div>
+                <div class="flex p-1 bg-slate-100 rounded-xl">
+                    <button type="button" @click="setDeleteMode('rows')" :class="bulkDeleteMode === 'rows' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'" class="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all">Rows</button>
+                    <button type="button" @click="setDeleteMode('pages')" :class="bulkDeleteMode === 'pages' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'" class="px-4 py-1.5 text-[9px] font-black uppercase tracking-widest rounded-lg transition-all">Pages</button>
+                </div>
+            </div>
+            <div class="p-8 space-y-6 bg-white">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label x-text="bulkDeleteMode === 'rows' ? 'From Row' : 'From Page'" class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1"></label>
+                        <input type="number" x-model="bulkDeleteFrom" min="1" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-black text-slate-800 outline-none focus:ring-2 focus:ring-red-100 transition-all text-center">
+                    </div>
+                    <div class="space-y-2">
+                        <label x-text="bulkDeleteMode === 'rows' ? 'To Row' : 'To Page'" class="text-[10px] font-black text-slate-900 uppercase tracking-widest ml-1"></label>
+                        <input type="number" x-model="bulkDeleteTo" min="1" class="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-xl font-black text-slate-800 outline-none focus:ring-2 focus:ring-red-100 transition-all text-center">
+                    </div>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" @click="closeBulkHardDeleteModal()" class="flex-1 py-4 rounded-2xl font-black text-sm border-2 border-slate-200 text-slate-900 hover:border-slate-300 hover:bg-slate-50 transition-all">Cancel</button>
+                    <button type="button" @click="confirmBulkHardDeleteInAssign()" class="flex-1 py-4 rounded-2xl font-black text-sm bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-100 transition-all">Delete Range</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- App Logic -->
     <script>
         function assignApp() {
@@ -342,6 +394,10 @@
                 filterCategory: '',
                 filterCondition: '',
                 bulkAssignOpen: false,
+                bulkHardDeleteOpen: false,
+                bulkDeleteMode: 'rows',
+                bulkDeleteFrom: 1,
+                bulkDeleteTo: 10,
                 currentPage: 1,
                 perPage: 50,
                 hideAutofill: false,
@@ -424,6 +480,136 @@
                     } catch (err) {
                         console.error(err);
                         Swal.fire('Error', 'Could not load unassigned assets.', 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                get selectedCount() {
+                    return this.assets.filter(a => a.selected).length;
+                },
+
+                toggleSelectAll(checked) {
+                    this.filteredAssets.forEach(a => {
+                        a.selected = checked;
+                    });
+                },
+
+                confirmHardDeleteAssetInAssign(id, propertyNumber) {
+                    const msg = `Are you sure you want to permanently delete asset "${propertyNumber}"? This will delete all transfer history, documents, services, photos, and cannot be undone!`;
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Confirm Hard Delete',
+                            text: msg,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#3085d6',
+                            confirmButtonText: 'Yes, permanently delete it!'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                this.executeSingleDeleteInAssign(id);
+                            }
+                        });
+                    } else {
+                        if (confirm(msg)) {
+                            this.executeSingleDeleteInAssign(id);
+                        }
+                    }
+                },
+
+                async executeSingleDeleteInAssign(id) {
+                    this.loading = true;
+                    try {
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                        const response = await fetch(`/assets/${id}/delete`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ _method: 'DELETE' })
+                        });
+                        
+                        if (response.ok) {
+                            // Remove from assets local list
+                            this.assets = this.assets.filter(a => a.assignment_id !== id);
+                            
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire('Deleted!', 'Asset has been permanently deleted.', 'success');
+                            } else {
+                                alert('Asset has been permanently deleted.');
+                            }
+                        } else {
+                            const errData = await response.json();
+                            throw new Error(errData.error || 'Failed to delete asset.');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        Swal.fire('Error', err.message || 'An error occurred while deleting the asset.', 'error');
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+
+                openBulkDeleteModalInAssign() {
+                    const selected = this.assets.filter(a => a.selected);
+                    const ids = selected.map(a => a.assignment_id);
+                    if (ids.length === 0) return;
+
+                    const msg = `Are you sure you want to permanently delete the ${ids.length} selected asset(s)? This will delete all their transfer history, documents, services, photos, and cannot be undone!`;
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            title: 'Confirm Bulk Hard Delete',
+                            text: msg,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#3085d6',
+                            confirmButtonText: 'Yes, permanently delete them!'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                this.executeBulkDeleteInAssign(ids);
+                            }
+                        });
+                    } else {
+                        if (confirm(msg)) {
+                            this.executeBulkDeleteInAssign(ids);
+                        }
+                    }
+                },
+
+                async executeBulkDeleteInAssign(ids) {
+                    this.loading = true;
+                    try {
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                        const response = await fetch('/api/assets/bulk-delete', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ ids: ids })
+                        });
+                        
+                        const data = await response.json();
+                        if (response.ok && data.success) {
+                            // Remove from assets local list
+                            this.assets = this.assets.filter(a => !ids.includes(a.assignment_id));
+                            
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire('Deleted!', data.success, 'success');
+                            } else {
+                                alert(data.success);
+                            }
+                        } else {
+                            throw new Error(data.error || 'Failed to bulk-delete assets.');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        Swal.fire('Error', err.message || 'An error occurred during bulk deletion.', 'error');
                     } finally {
                         this.loading = false;
                     }
@@ -623,6 +809,84 @@
 
                 closeBulkAssignModal() {
                     this.bulkAssignOpen = false;
+                },
+
+                openBulkHardDeleteModal() {
+                    this.bulkDeleteMode = 'rows';
+                    this.bulkDeleteFrom = 1;
+                    this.bulkDeleteTo = Math.min(10, this.filteredAssets.length);
+                    this.bulkHardDeleteOpen = true;
+                },
+
+                closeBulkHardDeleteModal() {
+                    this.bulkHardDeleteOpen = false;
+                },
+
+                setDeleteMode(mode) {
+                    this.bulkDeleteMode = mode;
+                    this.bulkDeleteFrom = 1;
+                    if (mode === 'rows') {
+                        this.bulkDeleteTo = Math.min(10, this.filteredAssets.length);
+                    } else {
+                        this.bulkDeleteTo = Math.min(2, this.totalPages);
+                    }
+                },
+
+                confirmBulkHardDeleteInAssign() {
+                    let targets = [];
+                    if (this.bulkDeleteMode === 'rows') {
+                        const startIdx = parseInt(this.bulkDeleteFrom) - 1;
+                        const endIdx = parseInt(this.bulkDeleteTo) - 1;
+                        if (isNaN(startIdx) || isNaN(endIdx) || startIdx < 0 || endIdx < startIdx) {
+                            Swal.fire('Invalid Range', 'Please enter a valid row range.', 'error');
+                            return;
+                        }
+                        if (endIdx >= this.filteredAssets.length) {
+                            Swal.fire('Invalid Range', `The ending row exceeds the total unassigned assets count (${this.filteredAssets.length}).`, 'error');
+                            return;
+                        }
+                        targets = this.filteredAssets.slice(startIdx, endIdx + 1);
+                    } else {
+                        const startPg = parseInt(this.bulkDeleteFrom);
+                        const endPg = parseInt(this.bulkDeleteTo);
+                        if (isNaN(startPg) || isNaN(endPg) || startPg < 1 || endPg < startPg) {
+                            Swal.fire('Invalid Range', 'Please enter a valid page range.', 'error');
+                            return;
+                        }
+                        if (startPg > this.totalPages) {
+                            Swal.fire('Invalid Range', `The starting page exceeds the total page count (${this.totalPages}).`, 'error');
+                            return;
+                        }
+                        const startIdx = (startPg - 1) * this.perPage;
+                        const endIdx = Math.min((endPg * this.perPage) - 1, this.filteredAssets.length - 1);
+                        targets = this.filteredAssets.slice(startIdx, endIdx + 1);
+                    }
+
+                    const ids = targets.map(a => a.assignment_id);
+                    if (ids.length === 0) {
+                        Swal.fire('No Assets', 'No assets found in the specified range.', 'info');
+                        return;
+                    }
+
+                    const rangeText = this.bulkDeleteMode === 'rows' 
+                        ? `Rows ${this.bulkDeleteFrom} to ${this.bulkDeleteTo}` 
+                        : `Pages ${this.bulkDeleteFrom} to ${this.bulkDeleteTo}`;
+                    const msg = `Are you sure you want to permanently delete ${ids.length} asset(s) in the range (${rangeText})? This will delete all their transfer history, documents, services, photos, and cannot be undone!`;
+
+                    Swal.fire({
+                        title: 'Confirm Bulk Hard Delete',
+                        text: msg,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, permanently delete them!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.closeBulkHardDeleteModal();
+                            this.executeBulkDeleteInAssign(ids);
+                        }
+                    });
                 },
 
                 searchBulkEmployee() {
