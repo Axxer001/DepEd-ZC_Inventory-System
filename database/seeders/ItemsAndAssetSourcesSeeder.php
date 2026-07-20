@@ -4487,7 +4487,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2019-01-01',
   'created_at' => '2026-07-16 12:01:24',
   'updated_at' => '2026-07-16 12:01:24',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 2,
@@ -4504,7 +4503,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2019-01-01',
   'created_at' => '2026-07-16 12:01:24',
   'updated_at' => '2026-07-16 12:01:24',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 3,
@@ -4521,7 +4519,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2019-01-01',
   'created_at' => '2026-07-16 12:01:24',
   'updated_at' => '2026-07-16 12:01:24',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 4,
@@ -4538,7 +4535,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2019-01-01',
   'created_at' => '2026-07-16 12:01:24',
   'updated_at' => '2026-07-16 12:01:24',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 5,
@@ -4555,7 +4551,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2024-01-01',
   'created_at' => '2026-07-16 12:01:24',
   'updated_at' => '2026-07-16 12:01:24',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 6,
@@ -4572,7 +4567,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2023-01-01',
   'created_at' => '2026-07-16 12:01:24',
   'updated_at' => '2026-07-16 12:01:24',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 7,
@@ -4589,7 +4583,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2019-01-01',
   'created_at' => '2026-07-16 12:01:24',
   'updated_at' => '2026-07-16 12:01:24',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 8,
@@ -4606,7 +4599,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2019-01-01',
   'created_at' => '2026-07-16 12:01:24',
   'updated_at' => '2026-07-16 12:01:24',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 9,
@@ -4623,7 +4615,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2024-01-01',
   'created_at' => '2026-07-16 12:01:24',
   'updated_at' => '2026-07-16 12:01:24',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 10,
@@ -4640,7 +4631,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2024-01-01',
   'created_at' => '2026-07-16 12:01:24',
   'updated_at' => '2026-07-16 12:01:24',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 11,
@@ -4657,7 +4647,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2025-01-01',
   'created_at' => '2026-07-16 12:01:24',
   'updated_at' => '2026-07-16 12:01:24',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 12,
@@ -4674,7 +4663,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2019-01-01',
   'created_at' => '2026-07-16 12:01:25',
   'updated_at' => '2026-07-16 12:01:25',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 13,
@@ -4691,7 +4679,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2019-01-01',
   'created_at' => '2026-07-16 12:01:25',
   'updated_at' => '2026-07-16 12:01:25',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 14,
@@ -4708,7 +4695,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2023-01-01',
   'created_at' => '2026-07-16 13:57:23',
   'updated_at' => '2026-07-16 13:57:23',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 15,
@@ -4725,7 +4711,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2020-01-01',
   'created_at' => '2026-07-16 13:57:23',
   'updated_at' => '2026-07-16 13:57:23',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 16,
@@ -4742,7 +4727,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2020-01-01',
   'created_at' => '2026-07-16 13:57:23',
   'updated_at' => '2026-07-16 13:57:23',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 17,
@@ -4759,7 +4743,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2020-01-01',
   'created_at' => '2026-07-16 13:57:23',
   'updated_at' => '2026-07-16 13:57:23',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 18,
@@ -4776,7 +4759,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2020-01-01',
   'created_at' => '2026-07-16 13:57:23',
   'updated_at' => '2026-07-16 13:57:23',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 19,
@@ -4793,7 +4775,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2021-01-01',
   'created_at' => '2026-07-16 13:57:23',
   'updated_at' => '2026-07-16 13:57:23',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 20,
@@ -4810,7 +4791,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2019-01-01',
   'created_at' => '2026-07-16 13:57:23',
   'updated_at' => '2026-07-16 13:57:23',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 21,
@@ -4827,7 +4807,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2020-01-01',
   'created_at' => '2026-07-16 13:57:23',
   'updated_at' => '2026-07-16 13:57:23',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 22,
@@ -4844,7 +4823,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2019-01-01',
   'created_at' => '2026-07-16 13:57:23',
   'updated_at' => '2026-07-16 13:57:23',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 23,
@@ -4861,7 +4839,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2022-01-01',
   'created_at' => '2026-07-16 13:57:23',
   'updated_at' => '2026-07-16 13:57:23',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 24,
@@ -4878,7 +4855,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2020-01-01',
   'created_at' => '2026-07-16 13:57:23',
   'updated_at' => '2026-07-16 13:57:23',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 25,
@@ -4895,7 +4871,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2020-01-01',
   'created_at' => '2026-07-16 13:57:23',
   'updated_at' => '2026-07-16 13:57:23',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 26,
@@ -4912,7 +4887,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2020-01-01',
   'created_at' => '2026-07-16 13:57:23',
   'updated_at' => '2026-07-16 13:57:23',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 27,
@@ -4929,7 +4903,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2020-01-01',
   'created_at' => '2026-07-16 13:57:23',
   'updated_at' => '2026-07-16 13:57:23',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 28,
@@ -4946,7 +4919,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2020-01-01',
   'created_at' => '2026-07-16 14:00:16',
   'updated_at' => '2026-07-16 14:00:16',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 29,
@@ -4963,7 +4935,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:12:14',
   'updated_at' => '2026-07-16 14:12:14',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 30,
@@ -4980,7 +4951,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:12:14',
   'updated_at' => '2026-07-16 14:12:14',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 31,
@@ -4997,7 +4967,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 32,
@@ -5014,7 +4983,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 33,
@@ -5031,7 +4999,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 34,
@@ -5048,7 +5015,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 35,
@@ -5065,7 +5031,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 36,
@@ -5082,7 +5047,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 37,
@@ -5099,7 +5063,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 38,
@@ -5116,7 +5079,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 39,
@@ -5133,7 +5095,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 40,
@@ -5150,7 +5111,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 41,
@@ -5167,7 +5127,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 42,
@@ -5184,7 +5143,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 43,
@@ -5201,7 +5159,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 44,
@@ -5218,7 +5175,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 45,
@@ -5235,7 +5191,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 46,
@@ -5252,7 +5207,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 47,
@@ -5269,7 +5223,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 48,
@@ -5286,7 +5239,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 49,
@@ -5303,7 +5255,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 50,
@@ -5320,7 +5271,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 51,
@@ -5337,7 +5287,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 52,
@@ -5354,7 +5303,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 53,
@@ -5371,7 +5319,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 54,
@@ -5388,7 +5335,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 55,
@@ -5405,7 +5351,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 56,
@@ -5422,7 +5367,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 57,
@@ -5439,7 +5383,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 58,
@@ -5456,7 +5399,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 59,
@@ -5473,7 +5415,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 60,
@@ -5490,7 +5431,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:35:51',
   'updated_at' => '2026-07-16 14:35:51',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 61,
@@ -5507,7 +5447,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 62,
@@ -5524,7 +5463,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 63,
@@ -5541,7 +5479,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 64,
@@ -5558,7 +5495,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 65,
@@ -5575,7 +5511,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 66,
@@ -5592,7 +5527,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 67,
@@ -5609,7 +5543,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 68,
@@ -5626,7 +5559,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 69,
@@ -5643,7 +5575,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 70,
@@ -5660,7 +5591,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 71,
@@ -5677,7 +5607,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 72,
@@ -5694,7 +5623,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 73,
@@ -5711,7 +5639,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 74,
@@ -5728,7 +5655,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 75,
@@ -5745,7 +5671,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 76,
@@ -5762,7 +5687,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 77,
@@ -5779,7 +5703,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 14:56:47',
   'updated_at' => '2026-07-16 14:56:47',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 78,
@@ -5796,7 +5719,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:07',
   'updated_at' => '2026-07-16 15:30:07',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 79,
@@ -5813,7 +5735,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 80,
@@ -5830,7 +5751,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 81,
@@ -5847,7 +5767,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 82,
@@ -5864,7 +5783,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 83,
@@ -5881,7 +5799,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 84,
@@ -5898,7 +5815,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 85,
@@ -5915,7 +5831,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 86,
@@ -5932,7 +5847,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 87,
@@ -5949,7 +5863,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 88,
@@ -5966,7 +5879,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 89,
@@ -5983,7 +5895,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 90,
@@ -6000,7 +5911,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 91,
@@ -6017,7 +5927,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 92,
@@ -6034,7 +5943,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 93,
@@ -6051,7 +5959,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 94,
@@ -6068,7 +5975,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 95,
@@ -6085,7 +5991,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:30:08',
   'updated_at' => '2026-07-16 15:30:08',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 96,
@@ -6102,7 +6007,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 97,
@@ -6119,7 +6023,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 98,
@@ -6136,7 +6039,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 99,
@@ -6153,7 +6055,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 100,
@@ -6170,7 +6071,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 101,
@@ -6187,7 +6087,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 102,
@@ -6204,7 +6103,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 103,
@@ -6221,7 +6119,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 104,
@@ -6238,7 +6135,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 105,
@@ -6255,7 +6151,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 106,
@@ -6272,7 +6167,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 107,
@@ -6289,7 +6183,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 108,
@@ -6306,7 +6199,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 109,
@@ -6323,7 +6215,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 110,
@@ -6340,7 +6231,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 111,
@@ -6357,7 +6247,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 112,
@@ -6374,7 +6263,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 113,
@@ -6391,7 +6279,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 114,
@@ -6408,7 +6295,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 115,
@@ -6425,7 +6311,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 116,
@@ -6442,7 +6327,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 117,
@@ -6459,7 +6343,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 118,
@@ -6476,7 +6359,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 119,
@@ -6493,7 +6375,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 120,
@@ -6510,7 +6391,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 121,
@@ -6527,7 +6407,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 122,
@@ -6544,7 +6423,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 123,
@@ -6561,7 +6439,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 124,
@@ -6578,7 +6455,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 125,
@@ -6595,7 +6471,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 126,
@@ -6612,7 +6487,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 127,
@@ -6629,7 +6503,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 128,
@@ -6646,7 +6519,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 129,
@@ -6663,7 +6535,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 130,
@@ -6680,7 +6551,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 15:43:37',
   'updated_at' => '2026-07-16 15:43:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 131,
@@ -6697,7 +6567,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 132,
@@ -6714,7 +6583,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 133,
@@ -6731,7 +6599,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 134,
@@ -6748,7 +6615,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 135,
@@ -6765,7 +6631,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 136,
@@ -6782,7 +6647,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 137,
@@ -6799,7 +6663,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 138,
@@ -6816,7 +6679,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 139,
@@ -6833,7 +6695,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 140,
@@ -6850,7 +6711,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 141,
@@ -6867,7 +6727,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 142,
@@ -6884,7 +6743,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 143,
@@ -6901,7 +6759,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 144,
@@ -6918,7 +6775,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 145,
@@ -6935,7 +6791,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 146,
@@ -6952,7 +6807,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 147,
@@ -6969,7 +6823,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 148,
@@ -6986,7 +6839,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 149,
@@ -7003,7 +6855,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 150,
@@ -7020,7 +6871,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 151,
@@ -7037,7 +6887,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 152,
@@ -7054,7 +6903,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 153,
@@ -7071,7 +6919,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 154,
@@ -7088,7 +6935,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:01:36',
   'updated_at' => '2026-07-16 16:01:36',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 155,
@@ -7105,7 +6951,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:25:37',
   'updated_at' => '2026-07-16 16:25:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 156,
@@ -7122,7 +6967,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:25:37',
   'updated_at' => '2026-07-16 16:25:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 157,
@@ -7139,7 +6983,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:25:37',
   'updated_at' => '2026-07-16 16:25:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 158,
@@ -7156,7 +6999,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:25:37',
   'updated_at' => '2026-07-16 16:25:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 159,
@@ -7173,7 +7015,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:25:37',
   'updated_at' => '2026-07-16 16:25:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 160,
@@ -7190,7 +7031,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:25:37',
   'updated_at' => '2026-07-16 16:25:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 161,
@@ -7207,7 +7047,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:25:37',
   'updated_at' => '2026-07-16 16:25:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 162,
@@ -7224,7 +7063,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:25:37',
   'updated_at' => '2026-07-16 16:25:37',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 163,
@@ -7241,7 +7079,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:30:25',
   'updated_at' => '2026-07-16 16:30:25',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 164,
@@ -7258,7 +7095,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:30:25',
   'updated_at' => '2026-07-16 16:30:25',
-  'deleted_at' => NULL,
 ),
             array (
   'id' => 165,
@@ -7275,7 +7111,6 @@ class ItemsAndAssetSourcesSeeder extends Seeder
   'acquisition_date' => '2026-07-16',
   'created_at' => '2026-07-16 16:30:25',
   'updated_at' => '2026-07-16 16:30:25',
-  'deleted_at' => NULL,
 ),
         ];
         DB::table('asset_assignments')->insert($assignments);
