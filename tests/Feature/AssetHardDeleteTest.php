@@ -106,9 +106,12 @@ class AssetHardDeleteTest extends TestCase
 
         // Delete asset
         $response = $this->actingAs($admin)
-            ->delete("/assets/{$assignment->id}/delete");
+            ->delete("/assets/{$assignment->id}/delete", [
+                'confirm_delete' => 'DELETE'
+            ]);
 
         $response->assertRedirect(route('assets.view'));
+        $response->assertSessionHasNoErrors();
 
         // Assert database records are gone
         $this->assertDatabaseMissing('asset_assignments', ['id' => $assignment->id]);
@@ -136,7 +139,8 @@ class AssetHardDeleteTest extends TestCase
 
         $response = $this->actingAs($admin)
             ->postJson("/api/assets/bulk-delete", [
-                'ids' => [$asset1->id, $asset2->id]
+                'ids' => [$asset1->id, $asset2->id],
+                'confirm_delete' => 'DELETE'
             ]);
 
         $response->assertStatus(200);
@@ -171,5 +175,65 @@ class AssetHardDeleteTest extends TestCase
             ]);
 
         $responseBulk->assertStatus(403);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function superadmin_deletion_fails_without_correct_confirm_delete(): void
+    {
+        [$admin, $assignment, $source] = $this->setupAsset(1);
+
+        $response = $this->actingAs($admin)
+            ->delete("/assets/{$assignment->id}/delete", [
+                'confirm_delete' => 'INVALID'
+            ]);
+
+        $response->assertSessionHas('error', 'Confirmation failed. You must type DELETE to confirm deletion.');
+        $this->assertDatabaseHas('asset_assignments', ['id' => $assignment->id]);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function admin_mains_cannot_delete_assigned_asset(): void
+    {
+        [$admin, $assignment, $source] = $this->setupAsset(1);
+
+        $mainsAdmin = User::factory()->create([
+            'role' => 'admin',
+            'system_type' => 'main',
+            'approved' => true,
+        ]);
+
+        // Create an active assignment to block deletion
+        $employee = \App\Models\Employee::create([
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'employee_id' => 'EMP-TEST-99',
+            'approved' => true,
+            'status' => 'Active',
+        ]);
+        $assignment->update(['employee_id' => $employee->id]);
+
+        $response = $this->actingAs($mainsAdmin)
+            ->delete("/assets/{$assignment->id}/delete");
+
+        $response->assertSessionHas('error', 'Deletion rejected. This asset has been assigned to a custodian and cannot be deleted by an Admin.');
+        $this->assertDatabaseHas('asset_assignments', ['id' => $assignment->id]);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function admin_mains_can_delete_unassigned_asset(): void
+    {
+        [$admin, $assignment, $source] = $this->setupAsset(2);
+
+        $mainsAdmin = User::factory()->create([
+            'role' => 'admin',
+            'system_type' => 'main',
+            'approved' => true,
+        ]);
+
+        $response = $this->actingAs($mainsAdmin)
+            ->delete("/assets/{$assignment->id}/delete");
+
+        $response->assertRedirect(route('assets.view'));
+        $this->assertDatabaseMissing('asset_assignments', ['id' => $assignment->id]);
     }
 }
