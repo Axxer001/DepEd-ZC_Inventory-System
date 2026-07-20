@@ -423,10 +423,7 @@ Route::middleware('auth')->group(function () {
 
 
     // --- Download Reports ---
-    Route::match(['get', 'post'], '/reports/template', [\App\Http\Controllers\ImportController::class, 'downloadTemplate'])->name('assets.reports.template');
-    Route::get('/reports', [\App\Http\Controllers\ImportController::class, 'show'])->name('assets.reports')->middleware('role:super_admin,admin');
-    Route::post('/reports', [\App\Http\Controllers\ImportController::class, 'process'])->name('assets.reports.process')->middleware('role:super_admin,admin');
-    Route::post('/reports/confirm', [\App\Http\Controllers\ImportController::class, 'confirm'])->name('assets.reports.confirm')->middleware('role:super_admin,admin');
+    Route::get('/reports', [\App\Http\Controllers\ReportDownloadController::class, 'show'])->name('assets.reports')->middleware('role:super_admin,admin');
     
     Route::post('/api/reports/preview', [\App\Http\Controllers\ReportDownloadController::class, 'getPreview'])->name('api.reports.preview');
     Route::get('/api/reports/filters', [\App\Http\Controllers\ReportDownloadController::class, 'getFilterOptions'])->name('api.reports.filters');

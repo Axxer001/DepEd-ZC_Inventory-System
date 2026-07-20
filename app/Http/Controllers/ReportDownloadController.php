@@ -1376,6 +1376,30 @@ class ReportDownloadController extends Controller
             'Cache-Control' => 'max-age=0',
         ]);
     }
+
+    /**
+     * Show the Report Vault page.
+     */
+    public function show()
+    {
+        $categories = DB::table('categories')->orderBy('name')->pluck('name');
+
+        $itemsMap = DB::table('items')
+            ->join('categories', 'items.category_id', '=', 'categories.id')
+            ->select('items.name as item_name', 'categories.name as cat_name')
+            ->get()
+            ->groupBy('cat_name')
+            ->map(function($rows) { return $rows->pluck('item_name')->unique()->values(); });
+
+        $sources = DB::table('acquisition_sources')
+            ->orderBy('name')
+            ->select('name', 'source_type')
+            ->get();
+
+        $subItemsMap = collect();
+
+        return view('partials.download-reports', compact('categories', 'itemsMap', 'subItemsMap', 'sources'));
+    }
 }
 
 
