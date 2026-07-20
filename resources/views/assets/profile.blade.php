@@ -207,14 +207,50 @@
                                 @endif
                                 @endif
                                 @if(auth()->user()->isMainSystem())
-                                <form action="{{ route('assets.hard_delete', $asset->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete this asset? This action will delete all transfer history, services, documents, photos, and cannot be undone!');" class="w-full border-t border-slate-100">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="w-full text-left px-4 py-3 text-xs font-bold text-red-600 hover:bg-red-50 hover:pl-5 transition-all flex items-center gap-2">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                        Hard Delete Asset
-                                    </button>
-                                </form>
+                                    @php
+                                        $hasBeenAssigned = !empty($asset->employee_id) || DB::table('asset_transfers')
+                                            ->where('asset_assignment_id', $asset->id)
+                                            ->where(function($q) {
+                                                $q->whereNotNull('to_custodian_id')
+                                                  ->orWhereNotNull('from_custodian_id');
+                                            })
+                                            ->exists();
+                                        $isAdminNotSuper = auth()->user()->isAdmin() && !auth()->user()->isSuperAdmin();
+                                        $isBlockedForAdmin = $isAdminNotSuper && $hasBeenAssigned;
+                                    @endphp
+
+                                    @if($isBlockedForAdmin)
+                                        <button disabled title="Admin cannot delete assets that have been assigned to a custodian." class="w-full text-left px-4 py-3 text-xs font-bold text-slate-400 cursor-not-allowed flex items-center gap-2 border-t border-slate-100">
+                                            <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            Hard Delete Asset
+                                        </button>
+                                    @else
+                                        <form action="{{ route('assets.hard_delete', $asset->id) }}" method="POST" 
+                                              onsubmit="
+                                                if ({{ auth()->user()->isSuperAdmin() ? 'true' : 'false' }}) {
+                                                    let confirmation = prompt('PERMANENT DELETE\n\nThis action cannot be undone. All transfer history, services, and media will be removed.\n\nType DELETE to confirm:');
+                                                    if (confirmation !== 'DELETE') {
+                                                        alert('Deletion cancelled. Confirmation text did not match.');
+                                                        return false;
+                                                    }
+                                                    let input = document.createElement('input');
+                                                    input.type = 'hidden';
+                                                    input.name = 'confirm_delete';
+                                                    input.value = 'DELETE';
+                                                    this.appendChild(input);
+                                                } else {
+                                                    return confirm('Are you sure you want to permanently delete this asset? This action will delete all transfer history, services, documents, photos, and cannot be undone!');
+                                                }
+                                              "
+                                              class="w-full border-t border-slate-100">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="w-full text-left px-4 py-3 text-xs font-bold text-red-600 hover:bg-red-50 hover:pl-5 transition-all flex items-center gap-2">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                Hard Delete Asset
+                                            </button>
+                                        </form>
+                                    @endif
                                 @endif
                             </div>
                         </div>

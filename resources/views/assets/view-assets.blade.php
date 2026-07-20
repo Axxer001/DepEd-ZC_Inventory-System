@@ -541,7 +541,7 @@
                         Cost Sorting
                     </label>
                     <select id="assetFilterSort" class="filter-select">
-                        <option value="">Default (ID)</option>
+                        <option value="">Default (Newest)</option>
                         <option value="high_to_low">Value: High to Low</option>
                         <option value="low_to_high">Value: Low to High</option>
                     </select>

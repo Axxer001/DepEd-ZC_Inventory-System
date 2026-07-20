@@ -249,6 +249,7 @@
                         Sorting
                     </label>
                     <select id="filterSort" class="filter-select">
+                        <option value="newest">Default (Newest)</option>
                         <option value="az">A &rarr; Z</option>
                         <option value="za">Z &rarr; A</option>
                     </select>
@@ -372,7 +373,7 @@
                 position:        val('filterPosition'),
                 portfolio_value: val('filterPortfolioValue'),
                 costing:         val('filterCosting'),
-                sort:            val('filterSort') || 'az',
+                sort:            val('filterSort') || 'newest',
                 search:          document.getElementById('custodianFilterSearch').value || null,
             };
             try {
@@ -398,7 +399,7 @@
                 if (el) el.value = '';
             });
             const sortEl = document.getElementById('filterSort');
-            if (sortEl) sortEl.value = 'az';
+            if (sortEl) sortEl.value = 'newest';
             document.getElementById('custodianFilterSearch').value = '';
             custodianCurrentPage = 1;
             custodianFetchData();
@@ -523,6 +524,12 @@
                             }
                         }
                     });
+
+                    @if(auth()->user()->isSchoolSystem())
+                        createSchoolTomSelect.setValue("{{ auth()->user()->school_id }}");
+                        createSchoolTomSelect.disable();
+                        createOfficeTomSelect.disable();
+                    @endif
 
                     createEmployeeModalLoaded = true;
                 } catch (e) {

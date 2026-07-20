@@ -1223,56 +1223,64 @@
 
         if (!editEmployeeModalLoaded) {
             try {
-                // Fetch Schools
-                const schoolRes = await fetch("{{ route('api.locations.search') }}?type=school");
-                const schools = await schoolRes.json();
                 const schoolSelect = document.getElementById('modalSchoolSelect');
-                schools.forEach(s => {
-                    const opt = document.createElement('option');
-                    opt.value = s.id;
-                    opt.textContent = `${s.name} (${s.entity_id})`;
-                    if (s.id == "{{ $custodian->school_id }}") opt.selected = true;
-                    schoolSelect.appendChild(opt);
-                });
-
-                // Fetch Offices
-                const officeRes = await fetch("{{ route('api.locations.search') }}?type=office");
-                const offices = await officeRes.json();
                 const officeSelect = document.getElementById('modalOfficeSelect');
-                offices.forEach(o => {
-                    const opt = document.createElement('option');
-                    opt.value = o.id;
-                    opt.textContent = `${o.name} (${o.entity_id})`;
-                    if (o.id == "{{ $custodian->office_id }}") opt.selected = true;
-                    officeSelect.appendChild(opt);
-                });
 
-                schoolTomSelect = new TomSelect('#modalSchoolSelect', { 
-                    create: false, 
-                    sortField: { field: "text", direction: "asc" },
-                    onChange: function(value) {
-                        if (value && value !== '') {
-                            officeTomSelect.disable();
-                        } else {
-                            officeTomSelect.enable();
-                        }
-                    }
-                });
-                officeTomSelect = new TomSelect('#modalOfficeSelect', { 
-                    create: false, 
-                    sortField: { field: "text", direction: "asc" },
-                    onChange: function(value) {
-                        if (value && value !== '') {
-                            schoolTomSelect.disable();
-                        } else {
-                            schoolTomSelect.enable();
-                        }
-                    }
-                });
+                if (schoolSelect && officeSelect) {
+                    // Fetch Schools
+                    const schoolRes = await fetch("{{ route('api.locations.search') }}?type=school");
+                    const schools = await schoolRes.json();
+                    schools.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id;
+                        opt.textContent = `${s.name} (${s.entity_id})`;
+                        if (s.id == "{{ $custodian->school_id }}") opt.selected = true;
+                        schoolSelect.appendChild(opt);
+                    });
 
-                // Trigger initial state
-                if (schoolTomSelect.getValue()) officeTomSelect.disable();
-                if (officeTomSelect.getValue()) schoolTomSelect.disable();
+                    // Fetch Offices
+                    const officeRes = await fetch("{{ route('api.locations.search') }}?type=office");
+                    const offices = await officeRes.json();
+                    offices.forEach(o => {
+                        const opt = document.createElement('option');
+                        opt.value = o.id;
+                        opt.textContent = `${o.name} (${o.entity_id})`;
+                        if (o.id == "{{ $custodian->office_id }}") opt.selected = true;
+                        officeSelect.appendChild(opt);
+                    });
+
+                    schoolTomSelect = new TomSelect('#modalSchoolSelect', { 
+                        create: false, 
+                        sortField: { field: "text", direction: "asc" },
+                        onChange: function(value) {
+                            if (value && value !== '') {
+                                officeTomSelect.disable();
+                            } else {
+                                officeTomSelect.enable();
+                            }
+                        }
+                    });
+                    officeTomSelect = new TomSelect('#modalOfficeSelect', { 
+                        create: false, 
+                        sortField: { field: "text", direction: "asc" },
+                        onChange: function(value) {
+                            if (value && value !== '') {
+                                schoolTomSelect.disable();
+                            } else {
+                                schoolTomSelect.enable();
+                            }
+                        }
+                    });
+
+                    // Trigger initial state
+                    if (schoolTomSelect.getValue()) officeTomSelect.disable();
+                    if (officeTomSelect.getValue()) schoolTomSelect.disable();
+
+                    @if(auth()->user()->isSchoolSystem())
+                        schoolTomSelect.disable();
+                        officeTomSelect.disable();
+                    @endif
+                }
 
                 editEmployeeModalLoaded = true;
             } catch (e) {

@@ -90,7 +90,7 @@
                     Filters
                 </button>
 
-                @if(auth()->check() && auth()->user()->isSuperAdmin() && auth()->user()->isMainSystem())
+                @if(auth()->check() && auth()->user()->isAdmin() && auth()->user()->isMainSystem())
                 <button onclick="openCreateModal()" class="px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white bg-red-700 hover:bg-red-800 hover:-translate-y-0.5 hover:shadow-lg active:translate-y-0 transition-all duration-300 flex items-center gap-2 group italic shadow-md shadow-red-500/20">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4 group-hover:scale-110 transition-transform duration-300"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                     Add Supplier
@@ -127,6 +127,7 @@
                         Sort Suppliers
                     </label>
                     <select id="sortSelect" class="filter-select">
+                        <option value="newest">Default (Newest)</option>
                         <option value="az">A–Z (Ascending)</option>
                         <option value="za">Z–A (Descending)</option>
                     </select>
@@ -220,7 +221,7 @@
         let suppliers = [];
         let currentPage = 1;
         const rowsPerPage = 50;
-        let currentSort = 'az';
+        let currentSort = 'newest';
 
         function fetchSuppliers() {
             const q = document.getElementById('searchInput').value;
@@ -254,7 +255,7 @@
         }
 
         function clearFilters() {
-            document.getElementById('sortSelect').value = 'az';
+            document.getElementById('sortSelect').value = 'newest';
             document.getElementById('assetCountSelect').value = '';
             applyFilters();
         }
@@ -273,7 +274,8 @@
 
         function applySortAndRender() {
             suppliers = [...allSuppliers];
-            if (currentSort === 'az') suppliers.sort((a, b) => a.name.localeCompare(b.name));
+            if (currentSort === 'newest') suppliers.sort((a, b) => b.id - a.id);
+            else if (currentSort === 'az') suppliers.sort((a, b) => a.name.localeCompare(b.name));
             else if (currentSort === 'za') suppliers.sort((a, b) => b.name.localeCompare(a.name));
             else if (currentSort === 'high') suppliers.sort((a, b) => (b.asset_count || 0) - (a.asset_count || 0));
             else if (currentSort === 'low') suppliers.sort((a, b) => (a.asset_count || 0) - (b.asset_count || 0));

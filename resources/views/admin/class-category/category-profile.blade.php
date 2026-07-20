@@ -191,6 +191,38 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                     Edit Category
                 </button>
+
+                @php
+                    $catDeleteReasons = app(\App\Services\DeletionEligibilityService::class)->checkCategory($category->id);
+                    $catDeleteEligible = empty($catDeleteReasons);
+                @endphp
+
+                @if($catDeleteEligible)
+                    <form action="{{ route('admin.categories.hard_delete', $category->id) }}" method="POST" class="inline"
+                          onsubmit="return confirm('PERMANENT DELETE\n\nThis action cannot be undone. The category will be removed completely from the database.\n\nProceed?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="px-5 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-xs font-black text-zinc-100 uppercase tracking-widest hover:bg-red-950 hover:border-red-900 hover:text-red-300 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm flex items-center gap-2 group">
+                            <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            Delete Permanently
+                        </button>
+                    </form>
+                @else
+                    <div class="relative group/del">
+                        <button disabled class="px-5 py-2.5 bg-zinc-100 border border-zinc-200 rounded-xl text-xs font-black text-zinc-400 uppercase tracking-widest cursor-not-allowed flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            Delete Permanently
+                        </button>
+                        <div class="absolute bottom-full right-0 mb-2 w-72 bg-zinc-900 text-zinc-100 text-[10px] font-medium rounded-xl px-3 py-2.5 shadow-xl hidden group-hover/del:block z-50 leading-relaxed">
+                            <p class="font-black text-red-400 uppercase tracking-wider mb-1">Cannot delete — dependencies exist:</p>
+                            <ul class="list-disc list-inside space-y-0.5">
+                                @foreach($catDeleteReasons as $reason)
+                                    <li>{{ $reason }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                @endif
             </div>
             @endif
         </header>

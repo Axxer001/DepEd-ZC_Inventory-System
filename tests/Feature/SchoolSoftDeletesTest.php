@@ -63,11 +63,11 @@ class SchoolSoftDeletesTest extends TestCase
             ->delete("/admin/employees/{$employee->id}");
 
         $response->assertStatus(404);
-        $this->assertDatabaseHas('employees', ['id' => $employee->id, 'deleted_at' => null]);
+        $this->assertDatabaseHas('employees', ['id' => $employee->id, 'status' => 'Active']);
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
-    public function school_user_can_soft_delete_own_employee_within_same_day(): void
+    public function school_user_can_archive_own_employee_within_same_day_and_unarchive_it(): void
     {
         [$school1, $school2] = $this->createSchools();
 
@@ -87,21 +87,35 @@ class SchoolSoftDeletesTest extends TestCase
             'status' => 'Active'
         ]);
 
+        // Archive
         $response = $this->actingAs($schoolUser)
             ->delete("/admin/employees/{$employee->id}");
 
         $response->assertRedirect();
-        $this->assertSoftDeleted('employees', ['id' => $employee->id]);
+        $this->assertDatabaseHas('employees', ['id' => $employee->id, 'status' => 'Inactive']);
         
         $this->assertDatabaseHas('system_logs', [
             'user' => 'School Admin User',
             'action_type' => 'Delete',
             'module' => 'Employees'
         ]);
+
+        // Unarchive
+        $response = $this->actingAs($schoolUser)
+            ->post("/admin/employees/{$employee->id}/unarchive");
+
+        $response->assertRedirect();
+        $this->assertDatabaseHas('employees', ['id' => $employee->id, 'status' => 'Active']);
+        
+        $this->assertDatabaseHas('system_logs', [
+            'user' => 'School Admin User',
+            'action_type' => 'Update',
+            'module' => 'Employees'
+        ]);
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
-    public function school_user_cannot_delete_own_employee_after_limited_window(): void
+    public function school_user_cannot_archive_own_employee_after_limited_window(): void
     {
         [$school1, $school2] = $this->createSchools();
 
@@ -128,6 +142,6 @@ class SchoolSoftDeletesTest extends TestCase
             ->delete("/admin/employees/{$employee->id}");
 
         $response->assertSessionHas('error', 'Same-day deletion window has expired for this employee.');
-        $this->assertDatabaseHas('employees', ['id' => $employee->id, 'deleted_at' => null]);
+        $this->assertDatabaseHas('employees', ['id' => $employee->id, 'status' => 'Active']);
     }
 }

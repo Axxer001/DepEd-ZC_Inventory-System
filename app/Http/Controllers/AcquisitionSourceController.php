@@ -170,8 +170,48 @@ class AcquisitionSourceController extends Controller
             $query->where('name', 'like', '%' . $request->q . '%');
         }
 
-        $sources = $query->select('id', 'name', 'source_type', 'contact_person', 'contact_position')->limit(50)->get();
+        $sources = $query->select('id', 'name', 'source_type', 'contact_person', 'contact_position', 'created_at')
+            ->orderByDesc('created_at')
+            ->limit(50)
+            ->get();
 
         return response()->json($sources);
+    }
+
+    public function hardDelete($id)
+    {
+        $user = auth()->user();
+
+        if (!$user || !$user->isSuperAdmin() || !$user->isMainSystem()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $source = AcquisitionSource::findOrFail($id);
+
+        /** @var \App\Services\DeletionEligibilityService $svc */
+        $svc = app(\App\Services\DeletionEligibilityService::class);
+        $reasons = $svc->checkAcquisitionSource($source->id);
+
+        if (!empty($reasons)) {
+            return back()->with('error', 'Cannot permanently delete: ' . implode(' ', $reasons));
+        }
+
+        DB::transaction(function () use ($source, $user) {
+            AcquisitionSource::query()->lockForUpdate()->find($source->id);
+
+            $name = $source->name;
+            $source->delete();
+
+            DB::table('system_logs')->insert([
+                'user'        => $user->name,
+                'action_type' => 'Delete',
+                'module'      => 'Acquisition Sources',
+                'activity'    => "Acquisition Source \"{$name}\" was permanently deleted from the system.",
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+        });
+
+        return redirect()->route('admin.sources')->with('success', 'Acquisition Source permanently deleted.');
     }
 }

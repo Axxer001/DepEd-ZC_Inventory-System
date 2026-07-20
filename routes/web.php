@@ -55,13 +55,6 @@ Route::middleware(['auth', 'role:super_admin'])->group(function () {
     Route::patch('/admin/users/{id}/unblock', [UserManagementController::class, 'unblock'])->name('admin.users.unblock');
     Route::delete('/admin/users/{id}', [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/admin/users/{id}/correct-scope', [UserManagementController::class, 'correctScope'])->name('admin.users.correct-scope');
-    // Source Management Actions (Super Admin Only)
-    Route::post('/admin/sources', [AcquisitionSourceController::class, 'store'])->name('admin.sources.store')->middleware('main_system');
-    Route::post('/admin/sources/{id}/update', [AcquisitionSourceController::class, 'update'])->name('admin.sources.update')->middleware('main_system');
-
-    // Supplier Management Actions (Super Admin Only)
-    Route::post('/admin/suppliers', [SupplierController::class, 'store'])->name('admin.suppliers.store')->middleware('main_system');
-    Route::post('/admin/suppliers/{id}/update', [SupplierController::class, 'update'])->name('admin.suppliers.update')->middleware('main_system');
 });
 
 // --- Protected Admin Routes ---
@@ -77,6 +70,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/employee-management/store', [EmployeeController::class, 'store'])->name('admin.employee-management.store')->middleware('role:super_admin,admin');
     Route::post('/admin/employee-management/{id}/update', [EmployeeController::class, 'update'])->name('admin.employee-management.update')->middleware('role:super_admin,admin');
     Route::delete('/admin/employees/{id}', [EmployeeController::class, 'destroy'])->name('admin.employees.destroy')->middleware('role:super_admin,admin');
+    Route::post('/admin/employees/{id}/unarchive', [EmployeeController::class, 'unarchive'])->name('admin.employees.unarchive')->middleware('role:super_admin,admin');
+    Route::delete('/admin/employees/{id}/hard-delete', [EmployeeController::class, 'hardDelete'])->name('admin.employees.hard_delete')->middleware(['role:super_admin', 'main_system']);
 
     // --- Soft Delete / Archive Actions ---
     Route::post('/assets/{id}/archive', [AssetController::class, 'archive'])->name('assets.archive')->middleware('role:super_admin,admin');
@@ -93,6 +88,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/categories', [\App\Http\Controllers\ClassCategoryController::class, 'storeCategory'])->name('admin.categories.store')->middleware(['role:super_admin,admin', 'main_system']);
     Route::post('/admin/classifications/{id}/update', [\App\Http\Controllers\ClassCategoryController::class, 'updateClassification'])->name('admin.classifications.update')->middleware(['role:super_admin,admin', 'main_system']);
     Route::post('/admin/categories/{id}/update', [\App\Http\Controllers\ClassCategoryController::class, 'updateCategory'])->name('admin.categories.update')->middleware(['role:super_admin,admin', 'main_system']);
+    Route::delete('/admin/classifications/{id}/hard-delete', [\App\Http\Controllers\ClassCategoryController::class, 'hardDeleteClassification'])->name('admin.classifications.hard_delete')->middleware(['role:super_admin', 'main_system']);
+    Route::delete('/admin/categories/{id}/hard-delete', [\App\Http\Controllers\ClassCategoryController::class, 'hardDeleteCategory'])->name('admin.categories.hard_delete')->middleware(['role:super_admin', 'main_system']);
 
     // --- Dark Mode Preference ---
     Route::post('/user/dark-mode', function (Request $request) {
@@ -271,11 +268,17 @@ Route::middleware('auth')->group(function () {
     // --- Sources Registry ---
     Route::get('/admin/sources', [AcquisitionSourceController::class, 'managementIndex'])->name('admin.sources');
     Route::get('/admin/sources/{id}', [AcquisitionSourceController::class, 'managementProfile'])->name('admin.sources.profile');
+    Route::post('/admin/sources', [AcquisitionSourceController::class, 'store'])->name('admin.sources.store')->middleware(['role:super_admin,admin', 'main_system']);
+    Route::post('/admin/sources/{id}/update', [AcquisitionSourceController::class, 'update'])->name('admin.sources.update')->middleware(['role:super_admin,admin', 'main_system']);
+    Route::delete('/admin/sources/{id}/hard-delete', [AcquisitionSourceController::class, 'hardDelete'])->name('admin.sources.hard_delete')->middleware(['role:super_admin', 'main_system']);
 
     // --- Suppliers Registry ---
     Route::get('/admin/suppliers', [SupplierController::class, 'index'])->name('admin.suppliers');
     Route::get('/admin/suppliers/{id}', [SupplierController::class, 'profile'])->name('admin.suppliers.profile');
     Route::get('/api/suppliers/search', [SupplierController::class, 'apiSearch'])->name('api.suppliers.search');
+    Route::post('/admin/suppliers', [SupplierController::class, 'store'])->name('admin.suppliers.store')->middleware(['role:super_admin,admin', 'main_system']);
+    Route::post('/admin/suppliers/{id}/update', [SupplierController::class, 'update'])->name('admin.suppliers.update')->middleware(['role:super_admin,admin', 'main_system']);
+    Route::delete('/admin/suppliers/{id}/hard-delete', [SupplierController::class, 'hardDelete'])->name('admin.suppliers.hard_delete')->middleware(['role:super_admin', 'main_system']);
 
     // --- Employee (formerly Custodian) Registry ---
     Route::get('/admin/employees', [EmployeeController::class, 'index'])->name('admin.employees');
@@ -312,15 +315,23 @@ Route::middleware('auth')->group(function () {
         $action = $request->query('action', 'All Actions');
         $date = $request->query('date');
         $query = DB::table('system_logs');
+        
+        $user = auth()->user();
+        if ($user && $user->isSchoolSystem()) {
+            $query->join('users', 'system_logs.user', '=', 'users.name')
+                  ->where('users.school_id', $user->school_id)
+                  ->select('system_logs.*');
+        }
+
         if ($action !== 'All Actions') {
             $actionTypes = ['Create', 'Update', 'Delete', 'Others'];
             if (in_array($action, $actionTypes)) { $query->where('action_type', $action); }
             else { $query->where('module', $action); }
         }
         if ($date) {
-            $query->whereDate('created_at', $date);
+            $query->whereDate('system_logs.created_at', $date);
         }
-        $logs = $query->orderBy('created_at', 'desc')->paginate(20);
+        $logs = $query->orderBy('system_logs.created_at', 'desc')->paginate(20);
         $logs->getCollection()->transform(function ($log) {
             $log->ph_time = Carbon::parse($log->created_at)->timezone('Asia/Manila');
             return $log;
@@ -352,15 +363,24 @@ Route::middleware('auth')->group(function () {
 
     // --- Print QR Stickers ---
     Route::get('/assets/print-stickers', function () {
-        $assets = DB::table('asset_assignments as ad')
+        $user = auth()->user();
+        $query = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
             ->leftJoin('categories as cat', 'items.category_id', '=', 'cat.id')
             ->leftJoin('classifications as class', 'cat.classification_id', '=', 'class.id')
             ->leftJoin('employees as emp', 'ad.employee_id', '=', 'emp.id')
             ->leftJoin('offices as off', 'emp.office_id', '=', 'off.id')
-            ->leftJoin('schools as sch', 'emp.school_id', '=', 'sch.id')
-            ->select(
+            ->leftJoin('schools as sch', 'emp.school_id', '=', 'sch.id');
+
+        if ($user && $user->isSchoolSystem()) {
+            $query->where(function($q) use ($user) {
+                $q->where('ad.school_id', $user->school_id)
+                  ->orWhere('emp.school_id', $user->school_id);
+            });
+        }
+
+        $assets = $query->select(
                 'ad.id',
                 'ad.property_number',
                 'asrc.condition',
@@ -376,15 +396,24 @@ Route::middleware('auth')->group(function () {
     })->name('assets.print_stickers');
 
     Route::get('/api/assets/print-list', function () {
-        $assets = DB::table('asset_assignments as ad')
+        $user = auth()->user();
+        $query = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
             ->leftJoin('categories as cat', 'items.category_id', '=', 'cat.id')
             ->leftJoin('classifications as class', 'cat.classification_id', '=', 'class.id')
             ->leftJoin('employees as emp', 'ad.employee_id', '=', 'emp.id')
             ->leftJoin('offices as off', 'emp.office_id', '=', 'off.id')
-            ->leftJoin('schools as sch', 'emp.school_id', '=', 'sch.id')
-            ->select(
+            ->leftJoin('schools as sch', 'emp.school_id', '=', 'sch.id');
+
+        if ($user && $user->isSchoolSystem()) {
+            $query->where(function($q) use ($user) {
+                $q->where('ad.school_id', $user->school_id)
+                  ->orWhere('emp.school_id', $user->school_id);
+            });
+        }
+
+        $assets = $query->select(
                 'ad.id',
                 'ad.property_number',
                 'asrc.condition',

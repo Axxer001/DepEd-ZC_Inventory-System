@@ -22,23 +22,37 @@ class AssetController extends Controller
     private function buildInventoryData()
     {
         $inventory = [];
+        $user = auth()->user();
+        $schoolId = ($user && $user->isSchoolSystem()) ? $user->school_id : null;
 
         $defaultIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25a2.25 2.25 0 01-13.5 18v-2.25z" /></svg>';
 
-        // 1. Fetch categories with total sourced quantity
-        $allCategories = DB::table('categories')
+        // 1. Fetch categories with total quantity
+        $categoriesQuery = DB::table('categories')
             ->leftJoin('items', 'categories.id', '=', 'items.category_id')
-            ->leftJoin('asset_sources', function ($join) {
-                $join->on('items.id', '=', 'asset_sources.item_id')
+            ->leftJoin('asset_sources', 'items.id', '=', 'asset_sources.item_id');
+
+        if ($schoolId) {
+            $categoriesQuery->join('asset_assignments', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+                ->leftJoin('employees as e', 'asset_assignments.employee_id', '=', 'e.id')
+                ->where(function ($q) use ($schoolId) {
+                    $q->where('asset_assignments.school_id', $schoolId)
+                      ->orWhere('e.school_id', $schoolId);
+                })
+                ->select('categories.id', 'categories.name', DB::raw('COUNT(asset_assignments.id) as total_assets'));
+        } else {
+            $categoriesQuery->leftJoin('asset_sources as as_exists', function ($join) {
+                $join->on('items.id', '=', 'as_exists.item_id')
                     ->whereExists(function ($query) {
                         $query->select(DB::raw(1))
                             ->from('asset_assignments')
-                            ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id');
+                            ->whereColumn('asset_assignments.asset_source_id', 'as_exists.id');
                     });
             })
-            ->select('categories.id', 'categories.name', DB::raw('COALESCE(SUM(asset_sources.quantity), 0) as total_assets'))
-            ->groupBy('categories.id', 'categories.name')
-            ->get();
+            ->select('categories.id', 'categories.name', DB::raw('COALESCE(SUM(as_exists.quantity), 0) as total_assets'));
+        }
+
+        $allCategories = $categoriesQuery->groupBy('categories.id', 'categories.name')->get();
 
         foreach ($allCategories as $cat) {
             $inventory[$cat->name] = [
@@ -48,19 +62,33 @@ class AssetController extends Controller
             ];
         }
 
-        // 2. Fetch items with sourced and distributed quantities
-        $allItems = DB::table('items')
-            ->join('categories', 'items.category_id', '=', 'categories.id')
-            ->leftJoin(DB::raw('(SELECT item_id, SUM(quantity) as sourced_qty FROM asset_sources WHERE EXISTS (SELECT 1 FROM asset_assignments WHERE asset_assignments.asset_source_id = asset_sources.id) GROUP BY item_id) as src'), 'items.id', '=', 'src.item_id')
-            ->leftJoin(DB::raw('(SELECT asrc.item_id, COUNT(ad.id) as distributed_qty FROM asset_assignments ad JOIN asset_sources asrc ON ad.asset_source_id = asrc.id WHERE (ad.employee_id IS NOT NULL OR ad.school_id IS NOT NULL OR ad.office_id IS NOT NULL) GROUP BY asrc.item_id) as dist'), 'items.id', '=', 'dist.item_id')
-            ->select(
-                'items.id',
-                'items.name as item_name',
-                'categories.name as category_name',
-                DB::raw('COALESCE(src.sourced_qty, 0) as sourced_quantity'),
-                DB::raw('COALESCE(dist.distributed_qty, 0) as distributed_quantity')
-            )
-            ->get();
+        // 2. Fetch items with quantities
+        if ($schoolId) {
+            $allItems = DB::table('items')
+                ->join('categories', 'items.category_id', '=', 'categories.id')
+                ->leftJoin(DB::raw('(SELECT asrc.item_id, COUNT(ad.id) as qty FROM asset_assignments ad JOIN asset_sources asrc ON ad.asset_source_id = asrc.id LEFT JOIN employees e ON ad.employee_id = e.id WHERE ad.school_id = ' . $schoolId . ' OR e.school_id = ' . $schoolId . ' GROUP BY asrc.item_id) as dist'), 'items.id', '=', 'dist.item_id')
+                ->select(
+                    'items.id',
+                    'items.name as item_name',
+                    'categories.name as category_name',
+                    DB::raw('COALESCE(dist.qty, 0) as sourced_quantity'),
+                    DB::raw('COALESCE(dist.qty, 0) as distributed_quantity')
+                )
+                ->get();
+        } else {
+            $allItems = DB::table('items')
+                ->join('categories', 'items.category_id', '=', 'categories.id')
+                ->leftJoin(DB::raw('(SELECT item_id, SUM(quantity) as sourced_qty FROM asset_sources WHERE EXISTS (SELECT 1 FROM asset_assignments WHERE asset_assignments.asset_source_id = asset_sources.id) GROUP BY item_id) as src'), 'items.id', '=', 'src.item_id')
+                ->leftJoin(DB::raw('(SELECT asrc.item_id, COUNT(ad.id) as distributed_qty FROM asset_assignments ad JOIN asset_sources asrc ON ad.asset_source_id = asrc.id WHERE (ad.employee_id IS NOT NULL OR ad.school_id IS NOT NULL OR ad.office_id IS NOT NULL) GROUP BY asrc.item_id) as dist'), 'items.id', '=', 'dist.item_id')
+                ->select(
+                    'items.id',
+                    'items.name as item_name',
+                    'categories.name as category_name',
+                    DB::raw('COALESCE(src.sourced_qty, 0) as sourced_quantity'),
+                    DB::raw('COALESCE(dist.distributed_qty, 0) as distributed_quantity')
+                )
+                ->get();
+        }
 
         foreach ($allItems as $item) {
             $catName = $item->category_name;
@@ -76,17 +104,29 @@ class AssetController extends Controller
             }
         }
 
-        // 3. Fetch asset_sources as "sub-items" (descriptions grouped by item)
-        $allAssetSources = DB::table('asset_sources')
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('asset_assignments')
-                    ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id');
-            })
+        // 3. Fetch asset_sources as "sub-items"
+        $sourcesQuery = DB::table('asset_sources')
             ->join('items', 'asset_sources.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
             ->select('asset_sources.description', 'items.name as item_name', 'categories.name as category_name')
-            ->get();
+            ->distinct();
+
+        if ($schoolId) {
+            $sourcesQuery->join('asset_assignments', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+                ->leftJoin('employees as e', 'asset_assignments.employee_id', '=', 'e.id')
+                ->where(function ($q) use ($schoolId) {
+                    $q->where('asset_assignments.school_id', $schoolId)
+                      ->orWhere('e.school_id', $schoolId);
+                });
+        } else {
+            $sourcesQuery->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('asset_assignments')
+                    ->whereColumn('asset_assignments.asset_source_id', 'asset_sources.id');
+            });
+        }
+
+        $allAssetSources = $sourcesQuery->get();
 
         foreach ($allAssetSources as $src) {
             $catName = $src->category_name;
@@ -98,7 +138,7 @@ class AssetController extends Controller
             }
         }
 
-        $records = DB::table('asset_assignments as ad')
+        $recordsQuery = DB::table('asset_assignments as ad')
             ->join('asset_sources as asrc', 'ad.asset_source_id', '=', 'asrc.id')
             ->join('items', 'asrc.item_id', '=', 'items.id')
             ->join('categories', 'items.category_id', '=', 'categories.id')
@@ -111,16 +151,23 @@ class AssetController extends Controller
                 $q->whereNotNull('ad.employee_id')
                   ->orWhereNotNull('ad.school_id')
                   ->orWhereNotNull('ad.office_id');
-            })
-            ->select(
-                DB::raw('COALESCE(s_dir.name, o_dir.name, s_cus.name, o_cus.name, "Warehouse") as school_name'),
-                'categories.name as category_name',
-                'items.name as item_name',
-                DB::raw('COALESCE(asrc.description, items.name) as sub_item_name'),
-                DB::raw('1 as quantity'),
-                'asrc.condition as status'
-            )
-            ->get();
+            });
+
+        if ($schoolId) {
+            $recordsQuery->where(function ($q) use ($schoolId) {
+                $q->where('ad.school_id', $schoolId)
+                  ->orWhere('e.school_id', $schoolId);
+            });
+        }
+
+        $records = $recordsQuery->select(
+            DB::raw('COALESCE(s_dir.name, o_dir.name, s_cus.name, o_cus.name, "Warehouse") as school_name'),
+            'categories.name as category_name',
+            'items.name as item_name',
+            DB::raw('COALESCE(asrc.description, items.name) as sub_item_name'),
+            DB::raw('1 as quantity'),
+            'asrc.condition as status'
+        )->get();
 
         foreach ($records as $row) {
             $cat = $row->category_name;
@@ -1450,10 +1497,10 @@ class AssetController extends Controller
         return redirect()->route('assets.profile', $id)->with('success', 'Asset successfully unarchived.');
     }
 
-    public function hardDelete($id)
+    public function hardDelete(Request $request, $id)
     {
         if (!Auth::check() || !Auth::user()->approved || !Auth::user()->isAdmin() || !Auth::user()->isMainSystem()) {
-            if (request()->wantsJson()) {
+            if ($request->wantsJson()) {
                 return response()->json(['error' => 'Unauthorized action. Only main system admins can hard-delete assets.'], 403);
             }
             abort(403, 'Unauthorized action. Only main system admins can hard-delete assets.');
@@ -1461,6 +1508,35 @@ class AssetController extends Controller
 
         $assignment = \App\Models\AssetAssignment::findOrFail($id);
         $user = auth()->user();
+
+        // 1. Admin (mains) - reject if asset has ever been assigned to an employee
+        if ($user->isAdmin() && !$user->isSuperAdmin()) {
+            $isCurrentlyAssigned = !empty($assignment->employee_id);
+            $hasBeenAssignedInPast = DB::table('asset_transfers')
+                ->where('asset_assignment_id', $id)
+                ->where(function($q) {
+                    $q->whereNotNull('to_custodian_id')
+                      ->orWhereNotNull('from_custodian_id');
+                })
+                ->exists();
+
+            if ($isCurrentlyAssigned || $hasBeenAssignedInPast) {
+                if ($request->wantsJson()) {
+                    return response()->json(['error' => 'Deletion rejected. This asset has been assigned to a custodian and cannot be deleted by an Admin.'], 403);
+                }
+                return back()->with('error', 'Deletion rejected. This asset has been assigned to a custodian and cannot be deleted by an Admin.');
+            }
+        }
+
+        // 2. Superadmin - require 'DELETE' typed confirmation
+        if ($user->isSuperAdmin()) {
+            if ($request->input('confirm_delete') !== 'DELETE') {
+                if ($request->wantsJson()) {
+                    return response()->json(['error' => 'Confirmation failed. You must type DELETE to confirm deletion.'], 422);
+                }
+                return back()->with('error', 'Confirmation failed. You must type DELETE to confirm deletion.');
+            }
+        }
 
         DB::transaction(function () use ($id, $assignment, $user) {
             // 1. Physically delete photo file from disk if present
@@ -1527,6 +1603,34 @@ class AssetController extends Controller
 
         $ids = $validated['ids'];
         $user = auth()->user();
+
+        // 1. Superadmin - require 'DELETE' typed confirmation
+        if ($user->isSuperAdmin()) {
+            if ($request->input('confirm_delete') !== 'DELETE') {
+                return response()->json(['error' => 'Confirmation failed. You must type DELETE to confirm deletion.'], 422);
+            }
+        }
+
+        // 2. Admin (mains) - check if any asset has ever been assigned to an employee
+        if ($user->isAdmin() && !$user->isSuperAdmin()) {
+            foreach ($ids as $id) {
+                $assignment = DB::table('asset_assignments')->where('id', $id)->first();
+                if (!$assignment) continue;
+
+                $isCurrentlyAssigned = !empty($assignment->employee_id);
+                $hasBeenAssignedInPast = DB::table('asset_transfers')
+                    ->where('asset_assignment_id', $id)
+                    ->where(function($q) {
+                        $q->whereNotNull('to_custodian_id')
+                          ->orWhereNotNull('from_custodian_id');
+                    })
+                    ->exists();
+
+                if ($isCurrentlyAssigned || $hasBeenAssignedInPast) {
+                    return response()->json(['error' => 'Deletion rejected. One or more selected assets have been assigned to a custodian and cannot be deleted by an Admin.'], 403);
+                }
+            }
+        }
 
         DB::transaction(function () use ($ids, $user) {
             foreach ($ids as $id) {

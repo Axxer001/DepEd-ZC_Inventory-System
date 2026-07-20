@@ -236,7 +236,7 @@ class ReportDownloadController extends Controller
             $col = ($tab === 'source') ? 'asset_sources.asset_cost' : 'asset_assignments.acquisition_cost';
             $query->orderBy($col, 'desc');
         } else {
-            $query->orderBy($tab === 'source' ? 'asset_sources.id' : 'asset_assignments.id', 'asc');
+            $query->orderBy($tab === 'source' ? 'asset_sources.id' : 'asset_assignments.id', 'desc');
         }
 
         // Data Integrity: Empty Column check
@@ -995,7 +995,7 @@ class ReportDownloadController extends Controller
 
         // Costing sort (portfolio value) takes priority; name sort is secondary
         $costing = $filters['costing'] ?? null;
-        $sort    = $filters['sort']    ?? 'az';
+        $sort    = $filters['sort']    ?? 'newest';
 
         if ($costing === 'high_low') {
             $query->orderByDesc('total_value');
@@ -1004,8 +1004,10 @@ class ReportDownloadController extends Controller
         }
 
         match ($sort) {
+            'az'    => $query->orderBy('employees.last_name'),
             'za'    => $query->orderBy('employees.last_name', 'desc'),
-            default => $query->orderBy('employees.last_name'),
+            'newest'=> $query->orderByDesc('employees.id'),
+            default => $query->orderByDesc('employees.id'),
         };
 
         $rows = $query->get();
@@ -1031,6 +1033,7 @@ class ReportDownloadController extends Controller
                 ['value' => 'high',     'label' => 'Above ₱200,000'],
             ],
             'sort'    => [
+                ['value' => 'newest', 'label' => 'Default (Newest)'],
                 ['value' => 'az', 'label' => 'A → Z'],
                 ['value' => 'za', 'label' => 'Z → A'],
             ],

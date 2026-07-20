@@ -27,41 +27,41 @@
         let globalSuppliers = [];
 
         async function initGlobalDatalists() {
-            try {
-                if (typeof rawProcurementModes !== 'undefined') {
-                    globalProcurementModes = rawProcurementModes;
-                }
+            if (typeof rawProcurementModes !== 'undefined') {
+                globalProcurementModes = rawProcurementModes;
+            }
 
-                const locRes = await fetch('/api/locations/search?q=&type=all');
-                globalLocations = await locRes.json();
-                const dlLoc = document.getElementById('dl-locations');
-                if(dlLoc) {
-                    dlLoc.innerHTML = globalLocations.map(loc => `<option value="${loc.name}"></option>`).join('');
-                }
-
-                const empRes = await fetch('/api/employees/search?q=');
-                globalEmployees = await empRes.json();
-                const dlEmp = document.getElementById('dl-employees');
-                if(dlEmp) {
-                    dlEmp.innerHTML = globalEmployees.map(emp => `<option value="${emp.full_name}"></option>`).join('');
-                }
-
-                const classRes = await fetch('/api/classifications/search?q=');
-                globalClassifications = await classRes.json();
-
-                const catRes = await fetch('/api/categories/search?q=');
-                globalCategories = await catRes.json();
-
+            async function safeFetch(url, fallback = []) {
                 try {
-                    const acqSrcRes = await fetch('/api/acquisition-sources/search?q=');
-                    globalAcqSources = await acqSrcRes.json();
-                } catch (err) { console.error('Failed to fetch acquisition sources', err); }
+                    const res = await fetch(url);
+                    if (!res.ok) {
+                        console.warn(`Fetch to ${url} failed with status: ${res.status}`);
+                        return fallback;
+                    }
+                    const data = await res.json();
+                    return Array.isArray(data) ? data : fallback;
+                } catch (err) {
+                    console.error(`Failed to fetch/parse datalist from ${url}:`, err);
+                    return fallback;
+                }
+            }
 
-                try {
-                    const suppRes = await fetch('/api/suppliers/search?q=');
-                    globalSuppliers = await suppRes.json();
-                } catch (err) { console.error('Failed to fetch suppliers', err); }
-            } catch (e) { console.error('Failed to init datalists', e); }
+            globalLocations = await safeFetch('/api/locations/search?q=&type=all');
+            const dlLoc = document.getElementById('dl-locations');
+            if (dlLoc && Array.isArray(globalLocations)) {
+                dlLoc.innerHTML = globalLocations.map(loc => `<option value="${loc.name || ''}"></option>`).join('');
+            }
+
+            globalEmployees = await safeFetch('/api/employees/search?q=');
+            const dlEmp = document.getElementById('dl-employees');
+            if (dlEmp && Array.isArray(globalEmployees)) {
+                dlEmp.innerHTML = globalEmployees.map(emp => `<option value="${emp.full_name || ''}"></option>`).join('');
+            }
+
+            globalClassifications = await safeFetch('/api/classifications/search?q=');
+            globalCategories = await safeFetch('/api/categories/search?q=');
+            globalAcqSources = await safeFetch('/api/acquisition-sources/search?q=');
+            globalSuppliers = await safeFetch('/api/suppliers/search?q=');
         }
         document.addEventListener('DOMContentLoaded', () => {
             initGlobalDatalists();
@@ -3179,7 +3179,6 @@
                 return;
             }
             let isValid = true;
-            let errorMessage = 'Please fill in all required fields across all pages.';
             
             let invalidRows = [];
             allRowsData.forEach((row, idx) => {
@@ -3222,7 +3221,24 @@
             }
 
             if (!isValid) {
-                Swal.fire({ icon: 'error', title: 'Incomplete Fields', text: errorMessage, confirmButtonColor: '#c00000', customClass: { popup: 'rounded-[2rem]' } });
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Incomplete Fields',
+                    html: `<div class="text-left text-xs space-y-2">
+                        <div>Please fill in all required fields across all pages.</div>
+                        <div class="font-bold text-red-600 mt-2">Required fields per row:</div>
+                        <ul class="list-disc pl-5 space-y-1">
+                            <li>Classification</li>
+                            <li>Category</li>
+                            <li>Item (Article)</li>
+                            <li>Acceptance Date</li>
+                            <li>Mode of Procurement</li>
+                        </ul>
+                        <div class="text-slate-400 mt-2 italic">Other fields (e.g. Serial Number, Brand, etc.) are optional and do not need to be filled.</div>
+                    </div>`,
+                    confirmButtonColor: '#c00000',
+                    customClass: { popup: 'rounded-[2rem]' }
+                });
                 return;
             }
             Swal.fire({

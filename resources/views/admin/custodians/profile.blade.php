@@ -116,33 +116,89 @@
             </div>
             <div class="flex items-center gap-3 shrink-0">
                 @php
-                    $canDelete = false;
+                    $isInactive = strtolower($custodian->status ?? '') === 'inactive';
+                    $canArchive = false;
                     $user = auth()->user();
                     if ($user && $user->isAdmin()) {
                         if ($user->isMainSystem()) {
-                            $canDelete = true;
+                            $canArchive = true;
                         } else {
                             $createdToday = $custodian->created_at ? \Carbon\Carbon::parse($custodian->created_at)->isToday() : false;
                             $isSameSchool = ($custodian->school_id === $user->school_id);
-                            $canDelete = $createdToday && $isSameSchool;
+                            $canArchive = $createdToday && $isSameSchool;
                         }
                     }
+                    // Permanent delete eligibility (super_admin + main_system only)
+                    $canHardDelete = $user && $user->isSuperAdmin() && $user->isMainSystem();
+                    $deleteBlockingReasons = [];
+                    if ($canHardDelete) {
+                        $eligibilitySvc = app(\App\Services\DeletionEligibilityService::class);
+                        $deleteBlockingReasons = $eligibilitySvc->checkEmployee($custodian->id);
+                    }
+                    $isDeleteEligible = $canHardDelete && empty($deleteBlockingReasons);
                 @endphp
-                @if($canDelete)
-                <form action="{{ route('admin.employees.destroy', $custodian->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to archive/delete this employee? This action cannot be undone.');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="px-5 py-2.5 bg-red-50 border border-red-200 rounded-xl text-xs font-black text-red-600 uppercase tracking-widest hover:bg-red-600 hover:text-white hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group">
-                        <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                        Archive Employee
-                    </button>
-                </form>
-                @endif
                 @if(auth()->check() && auth()->user()->isAdmin())
-                <button onclick="openEditEmployeeModal()" class="px-5 py-2.5 bg-red-700 text-white border border-red-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-800 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-md shadow-red-500/20 flex items-center gap-2 group">
-                    <svg class="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.89 1.12l-2.828.941.941-2.828a4.5 4.5 0 011.12-1.89L16.862 4.487zM19.5 7.125L16.862 4.487"/></svg>
-                    Edit Employee
-                </button>
+                    @if($isInactive)
+                        <form action="{{ route('admin.employees.unarchive', $custodian->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to unarchive this employee?');">
+                            @csrf
+                            <button type="submit" class="px-5 py-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-black text-emerald-600 uppercase tracking-widest hover:bg-emerald-600 hover:text-white hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group">
+                                <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Unarchive Employee
+                            </button>
+                        </form>
+                    @elseif($canArchive)
+                        <form action="{{ route('admin.employees.destroy', $custodian->id) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure you want to archive this employee?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="px-5 py-2.5 bg-red-50 border border-red-200 rounded-xl text-xs font-black text-red-600 uppercase tracking-widest hover:bg-red-600 hover:text-white hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group">
+                                <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                Archive Employee
+                            </button>
+                        </form>
+                    @endif
+
+                    {{-- Permanent Delete (super_admin + main_system only) --}}
+                    @if($canHardDelete)
+                        @if($isDeleteEligible)
+                            <form action="{{ route('admin.employees.hard_delete', $custodian->id) }}" method="POST" class="inline"
+                                  onsubmit="return confirm('PERMANENT DELETE\n\nThis action cannot be undone. The employee record will be removed completely from the database.\n\nProceed?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="px-5 py-2.5 bg-zinc-900 border border-zinc-700 rounded-xl text-xs font-black text-zinc-100 uppercase tracking-widest hover:bg-red-950 hover:border-red-900 hover:text-red-300 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm flex items-center gap-2 group">
+                                    <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    Delete Permanently
+                                </button>
+                            </form>
+                        @else
+                            <div class="relative group/del">
+                                <button disabled class="px-5 py-2.5 bg-zinc-100 border border-zinc-200 rounded-xl text-xs font-black text-zinc-400 uppercase tracking-widest cursor-not-allowed flex items-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                    Delete Permanently
+                                </button>
+                                <div class="absolute bottom-full right-0 mb-2 w-72 bg-zinc-900 text-zinc-100 text-[10px] font-medium rounded-xl px-3 py-2.5 shadow-xl hidden group-hover/del:block z-50 leading-relaxed">
+                                    <p class="font-black text-red-400 uppercase tracking-wider mb-1">Cannot delete — dependencies exist:</p>
+                                    <ul class="list-disc list-inside space-y-0.5">
+                                        @foreach($deleteBlockingReasons as $reason)
+                                            <li>{{ $reason }}</li>
+                                        @endforeach
+                                    </ul>
+                                    <p class="mt-1.5 text-zinc-400">Archive the employee instead.</p>
+                                </div>
+                            </div>
+                        @endif
+                    @endif
+
+                    @if($isInactive)
+                        <button disabled class="px-5 py-2.5 bg-slate-100 text-slate-400 border border-slate-200 rounded-xl text-xs font-black uppercase tracking-widest cursor-not-allowed flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.89 1.12l-2.828.941.941-2.828a4.5 4.5 0 011.12-1.89L16.862 4.487zM19.5 7.125L16.862 4.487"/></svg>
+                            Edit Employee
+                        </button>
+                    @else
+                        <button onclick="openEditEmployeeModal()" class="px-5 py-2.5 bg-red-700 text-white border border-red-700 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-800 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-md shadow-red-500/20 flex items-center gap-2 group">
+                            <svg class="w-4 h-4 group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.89 1.12l-2.828.941.941-2.828a4.5 4.5 0 011.12-1.89L16.862 4.487zM19.5 7.125L16.862 4.487"/></svg>
+                            Edit Employee
+                        </button>
+                    @endif
                 @endif
                 <a href="{{ route('admin.employees') }}" class="px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-black text-slate-600 uppercase tracking-widest hover:border-deped hover:text-deped hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 group shrink-0">
                     <svg class="w-4 h-4 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
@@ -1241,61 +1297,64 @@
 
         if (!editEmployeeModalLoaded) {
             try {
-                // Fetch Schools
-                const schoolRes = await fetch("{{ route('api.locations.search') }}?type=school");
-                const schools = await schoolRes.json();
                 const schoolSelect = document.getElementById('modalSchoolSelect');
-                schools.forEach(s => {
-                    const opt = document.createElement('option');
-                    opt.value = s.id;
-                    opt.textContent = `${s.name} (${s.entity_id})`;
-                    if (s.id == "{{ $custodian->school_id }}") opt.selected = true;
-                    schoolSelect.appendChild(opt);
-                });
-
-                // Fetch Offices
-                const officeRes = await fetch("{{ route('api.locations.search') }}?type=office");
-                const offices = await officeRes.json();
                 const officeSelect = document.getElementById('modalOfficeSelect');
-                offices.forEach(o => {
-                    const opt = document.createElement('option');
-                    opt.value = o.id;
-                    opt.textContent = `${o.name} (${o.entity_id})`;
-                    if (o.id == "{{ $custodian->office_id }}") opt.selected = true;
-                    officeSelect.appendChild(opt);
-                });
 
-                schoolTomSelect = new TomSelect('#modalSchoolSelect', { 
-                    create: false, 
-                    sortField: { field: "text", direction: "asc" },
-                    onChange: function(value) {
-                        if (value && value !== '') {
-                            officeTomSelect.disable();
-                        } else {
-                            officeTomSelect.enable();
+                if (schoolSelect && officeSelect) {
+                    // Fetch Schools
+                    const schoolRes = await fetch("{{ route('api.locations.search') }}?type=school");
+                    const schools = await schoolRes.json();
+                    schools.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id;
+                        opt.textContent = `${s.name} (${s.entity_id})`;
+                        if (s.id == "{{ $custodian->school_id }}") opt.selected = true;
+                        schoolSelect.appendChild(opt);
+                    });
+
+                    // Fetch Offices
+                    const officeRes = await fetch("{{ route('api.locations.search') }}?type=office");
+                    const offices = await officeRes.json();
+                    offices.forEach(o => {
+                        const opt = document.createElement('option');
+                        opt.value = o.id;
+                        opt.textContent = `${o.name} (${o.entity_id})`;
+                        if (o.id == "{{ $custodian->office_id }}") opt.selected = true;
+                        officeSelect.appendChild(opt);
+                    });
+
+                    schoolTomSelect = new TomSelect('#modalSchoolSelect', { 
+                        create: false, 
+                        sortField: { field: "text", direction: "asc" },
+                        onChange: function(value) {
+                            if (value && value !== '') {
+                                officeTomSelect.disable();
+                            } else {
+                                officeTomSelect.enable();
+                            }
                         }
-                    }
-                });
-                officeTomSelect = new TomSelect('#modalOfficeSelect', { 
-                    create: false, 
-                    sortField: { field: "text", direction: "asc" },
-                    onChange: function(value) {
-                        if (value && value !== '') {
-                            schoolTomSelect.disable();
-                        } else {
-                            schoolTomSelect.enable();
+                    });
+                    officeTomSelect = new TomSelect('#modalOfficeSelect', { 
+                        create: false, 
+                        sortField: { field: "text", direction: "asc" },
+                        onChange: function(value) {
+                            if (value && value !== '') {
+                                schoolTomSelect.disable();
+                            } else {
+                                schoolTomSelect.enable();
+                            }
                         }
-                    }
-                });
+                    });
 
-                // Trigger initial state
-                if (schoolTomSelect.getValue()) officeTomSelect.disable();
-                if (officeTomSelect.getValue()) schoolTomSelect.disable();
+                    // Trigger initial state
+                    if (schoolTomSelect.getValue()) officeTomSelect.disable();
+                    if (officeTomSelect.getValue()) schoolTomSelect.disable();
 
-                @if(auth()->user()->isSchoolSystem())
-                    schoolTomSelect.disable();
-                    officeTomSelect.disable();
-                @endif
+                    @if(auth()->user()->isSchoolSystem())
+                        schoolTomSelect.disable();
+                        officeTomSelect.disable();
+                    @endif
+                }
 
                 editEmployeeModalLoaded = true;
             } catch (e) {

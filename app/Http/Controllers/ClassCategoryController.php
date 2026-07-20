@@ -13,7 +13,7 @@ class ClassCategoryController extends Controller
     public function index()
     {
         $classifications = Classification::withCount('categories')
-            ->orderBy('name')
+            ->orderByDesc('created_at')
             ->get();
 
         $user = Auth::user();
@@ -33,7 +33,7 @@ class ClassCategoryController extends Controller
                                    ->whereColumn('employees.id', 'ad.employee_id')
                                    ->where('employees.school_id', $schoolId);
                            });
-                     });
+                      });
             });
         } else {
             $categoriesQuery->leftJoin('asset_assignments as ad', 'asrc.id', '=', 'ad.asset_source_id');
@@ -42,7 +42,7 @@ class ClassCategoryController extends Controller
         $categories = $categoriesQuery->select('categories.*')
             ->selectRaw('COUNT(ad.id) as assets_count')
             ->groupBy('categories.id', 'categories.name', 'categories.classification_id', 'categories.see_category_code', 'categories.ppe_category_code', 'categories.created_at', 'categories.updated_at')
-            ->orderBy('categories.name')
+            ->orderByDesc('categories.created_at')
             ->get();
 
         return view('admin.class-category.index', compact('classifications', 'categories'));
@@ -69,7 +69,7 @@ class ClassCategoryController extends Controller
                                    ->whereColumn('employees.id', 'ad.employee_id')
                                    ->where('employees.school_id', $schoolId);
                            });
-                     });
+                      });
             });
         } else {
             $categoriesQuery->leftJoin('asset_assignments as ad', 'asrc.id', '=', 'ad.asset_source_id');
@@ -78,7 +78,7 @@ class ClassCategoryController extends Controller
         $categories = $categoriesQuery->select('categories.*')
             ->selectRaw('COUNT(ad.id) as assets_count')
             ->groupBy('categories.id', 'categories.name', 'categories.classification_id', 'categories.see_category_code', 'categories.ppe_category_code', 'categories.created_at', 'categories.updated_at')
-            ->orderBy('categories.name')
+            ->orderByDesc('categories.created_at')
             ->get();
 
         return view('admin.class-category.class-profile', compact('classification', 'categories'));
@@ -213,5 +213,76 @@ class ClassCategoryController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Category updated successfully.');
+    }
+
+    public function hardDeleteClassification($id)
+    {
+        if (!Auth::user()->isSuperAdmin() || !Auth::user()->isMainSystem()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $classification = Classification::findOrFail($id);
+
+        /** @var \App\Services\DeletionEligibilityService $svc */
+        $svc = app(\App\Services\DeletionEligibilityService::class);
+        $reasons = $svc->checkClassification($classification->id);
+
+        if (!empty($reasons)) {
+            return back()->with('error', 'Cannot permanently delete: ' . implode(' ', $reasons));
+        }
+
+        DB::transaction(function () use ($classification) {
+            Classification::query()->lockForUpdate()->find($classification->id);
+
+            $name = $classification->name;
+            $classification->delete();
+
+            DB::table('system_logs')->insert([
+                'user'        => Auth::user()->name,
+                'action_type' => 'Delete',
+                'module'      => 'Class & Category',
+                'activity'    => "Classification \"{$name}\" was permanently deleted from the system.",
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+        });
+
+        return redirect()->route('admin.class-category.index')->with('success', 'Classification permanently deleted.');
+    }
+
+    public function hardDeleteCategory($id)
+    {
+        if (!Auth::user()->isSuperAdmin() || !Auth::user()->isMainSystem()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $category = Category::findOrFail($id);
+
+        /** @var \App\Services\DeletionEligibilityService $svc */
+        $svc = app(\App\Services\DeletionEligibilityService::class);
+        $reasons = $svc->checkCategory($category->id);
+
+        if (!empty($reasons)) {
+            return back()->with('error', 'Cannot permanently delete: ' . implode(' ', $reasons));
+        }
+
+        DB::transaction(function () use ($category) {
+            Category::query()->lockForUpdate()->find($category->id);
+
+            $classId = $category->classification_id;
+            $name    = $category->name;
+            $category->delete();
+
+            DB::table('system_logs')->insert([
+                'user'        => Auth::user()->name,
+                'action_type' => 'Delete',
+                'module'      => 'Class & Category',
+                'activity'    => "Category \"{$name}\" was permanently deleted from the system.",
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+        });
+
+        return redirect()->route('admin.class-category.index')->with('success', 'Category permanently deleted.');
     }
 }

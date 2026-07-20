@@ -188,7 +188,7 @@ class SupplierController extends Controller
                                         ->from('employees')
                                         ->whereColumn('employees.id', 'asset_assignments.employee_id')
                                         ->where('employees.school_id', $schoolId);
-                               });
+                                });
                         });
                 })
                 ->when($q !== '', fn($query) => $query->where(function($qq) use ($q) {
@@ -204,7 +204,7 @@ class SupplierController extends Controller
                     'sup.contact_email'
                 )
                 ->selectSub($scopedCountSub->selectRaw('COUNT(id)'), 'asset_count')
-                ->orderBy('sup.name')
+                ->orderByDesc('sup.id')
                 ->limit(500)
                 ->get();
         } else {
@@ -221,11 +221,48 @@ class SupplierController extends Controller
                     'sup.contact_email',
                     DB::raw('COALESCE(src.cnt, 0) as asset_count')
                 )
-                ->orderBy('sup.name')
+                ->orderByDesc('sup.id')
                 ->limit(500)
                 ->get();
         }
 
         return response()->json($suppliers);
+    }
+
+    public function hardDelete($id)
+    {
+        $user = auth()->user();
+
+        if (!$user || !$user->isSuperAdmin() || !$user->isMainSystem()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $supplier = \App\Models\Supplier::findOrFail($id);
+
+        /** @var \App\Services\DeletionEligibilityService $svc */
+        $svc = app(\App\Services\DeletionEligibilityService::class);
+        $reasons = $svc->checkSupplier($supplier->id);
+
+        if (!empty($reasons)) {
+            return back()->with('error', 'Cannot permanently delete: ' . implode(' ', $reasons));
+        }
+
+        DB::transaction(function () use ($supplier, $user) {
+            \App\Models\Supplier::query()->lockForUpdate()->find($supplier->id);
+
+            $name = $supplier->name;
+            $supplier->delete();
+
+            DB::table('system_logs')->insert([
+                'user'        => $user->name,
+                'action_type' => 'Delete',
+                'module'      => 'Suppliers',
+                'activity'    => "Supplier \"{$name}\" was permanently deleted from the system.",
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+        });
+
+        return redirect()->route('admin.suppliers')->with('success', 'Supplier permanently deleted.');
     }
 }

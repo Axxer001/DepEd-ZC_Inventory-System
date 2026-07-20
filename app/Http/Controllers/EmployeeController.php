@@ -68,7 +68,7 @@ class EmployeeController extends Controller
 
     public function managementProfile($id)
     {
-        $custodian = Employee::withTrashed()->findOrFail($id);
+        $custodian = Employee::findOrFail($id);
 
         $stats = DB::table('asset_assignments as ad')
             ->where('ad.employee_id', $id)
@@ -251,6 +251,11 @@ class EmployeeController extends Controller
     public function update(Request $request, $id)
     {
         $employee = Employee::findOrFail($id);
+        $user = auth()->user();
+
+        if ($user && $user->isSchoolSystem() && $employee->school_id !== $user->school_id) {
+            abort(403, 'Unauthorized action.');
+        }
 
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
@@ -321,7 +326,7 @@ class EmployeeController extends Controller
 
     public function profile($id)
     {
-        $custodian = Employee::withTrashed()->findOrFail($id);
+        $custodian = Employee::findOrFail($id);
 
         $user = auth()->user();
         if ($user && $user->isSchoolSystem() && $custodian->school_id !== $user->school_id) {
@@ -758,7 +763,6 @@ class EmployeeController extends Controller
 
         $employee->status = 'Inactive';
         $employee->save();
-        $employee->delete();
 
         // Log the action to system_logs and employee histories
         DB::table('system_logs')->insert([
@@ -777,5 +781,83 @@ class EmployeeController extends Controller
         ]);
 
         return back()->with('success', 'Employee successfully archived.');
+    }
+
+    public function unarchive($id)
+    {
+        $employee = Employee::findOrFail($id);
+        $user = auth()->user();
+
+        // Access check
+        if ($user->isSchoolSystem()) {
+            // Must belong to their own school
+            if ($employee->school_id !== $user->school_id) {
+                abort(403, 'Unauthorized action.');
+            }
+        }
+
+        $employee->status = 'Active';
+        $employee->save();
+
+        // Log the action to system_logs and employee histories
+        DB::table('system_logs')->insert([
+            'user' => $user ? $user->name : 'System',
+            'action_type' => 'Update',
+            'module' => 'Employees',
+            'activity' => "Employee {$employee->fullName} (ID: {$employee->employee_id}) was unarchived (status set to Active).",
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        \App\Models\EmployeeHistory::create([
+            'employee_id' => $employee->id,
+            'action' => 'Updated',
+            'description' => 'Employee status was changed to Active (unarchived).',
+        ]);
+
+        return back()->with('success', 'Employee successfully unarchived.');
+    }
+
+    public function hardDelete($id)
+    {
+        $user = auth()->user();
+
+        if (!$user || !$user->isSuperAdmin() || !$user->isMainSystem()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $employee = Employee::findOrFail($id);
+
+        /** @var \App\Services\DeletionEligibilityService $svc */
+        $svc = app(\App\Services\DeletionEligibilityService::class);
+        $reasons = $svc->checkEmployee($employee->id);
+
+        if (!empty($reasons)) {
+            return back()->with('error', 'Cannot permanently delete: ' . implode(' ', $reasons));
+        }
+
+        DB::transaction(function () use ($employee, $user) {
+            // Row-level lock to prevent race conditions
+            Employee::query()->lockForUpdate()->find($employee->id);
+
+            $name = $employee->fullName;
+            $empId = $employee->employee_id;
+
+            // Remove initial history entry created on registration
+            DB::table('employee_histories')->where('employee_id', $employee->id)->delete();
+
+            $employee->delete();
+
+            DB::table('system_logs')->insert([
+                'user'        => $user->name,
+                'action_type' => 'Delete',
+                'module'      => 'Employees',
+                'activity'    => "Employee {$name} (ID: {$empId}) was permanently deleted from the system.",
+                'created_at'  => now(),
+                'updated_at'  => now(),
+            ]);
+        });
+
+        return redirect()->route('admin.employees')->with('success', 'Employee permanently deleted.');
     }
 }
