@@ -302,7 +302,7 @@
                         </div>
                         <div class="relative z-10">
                             <div class="flex items-baseline gap-3">
-                                <span class="text-5xl font-black tracking-tighter text-slate-900" x-text="numberFormat(filteredStats.total - filteredStats.distributed)">{{ number_format(($totalAssets ?? 24850) - ($distributedCount ?? 18420)) }}</span>
+                                <span class="text-5xl font-black tracking-tighter text-slate-900" x-text="numberFormat(filteredStats.notDistributed)">{{ number_format($notDistributedCount ?? 0) }}</span>
                                 <span class="text-xs font-bold text-slate-900 italic uppercase tracking-widest">Stock Units</span>
                             </div>
                             <p class="text-[10px] font-black text-slate-900 uppercase tracking-widest mt-3 italic opacity-60">Total units pending for school deployment</p>
@@ -908,6 +908,7 @@
                         this.origStats = {
                             total: data.totalAssets ?? 0,
                             distributed: data.distributedCount ?? 0,
+                            notDistributed: data.notDistributedCount ?? 0,
                             value: data.totalAmount ?? 0,
                             serviceable: data.serviceableCount ?? 0,
                             forRepair: data.forRepairCount ?? 0,
@@ -1089,6 +1090,7 @@
                 origStats: {
                     total: {{ $totalAssets ?? 0 }},
                     distributed: {{ $distributedCount ?? 0 }},
+                    notDistributed: {{ $notDistributedCount ?? 0 }},
                     value: {{ $totalAmount ?? 0 }},
                     serviceable: {{ $serviceableCount ?? 0 }},
                     forRepair: {{ $forRepairCount ?? 0 }},
@@ -1115,6 +1117,7 @@
                         const factor = (this.selectedYears.length + this.selectedMonths.length) / 15;
                         stats.total = Math.round(stats.total * factor);
                         stats.distributed = Math.round(stats.distributed * factor);
+                        stats.notDistributed = Math.round(stats.notDistributed * factor);
                         stats.value = stats.value * factor;
                         stats.serviceable = Math.round(stats.serviceable * factor);
                         stats.forRepair = Math.round(stats.forRepair * factor);

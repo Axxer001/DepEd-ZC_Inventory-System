@@ -43,6 +43,11 @@ class DashboardController extends Controller
                     })
                     ->sum('asset_sources.quantity');
 
+                $notDistributedCount = DB::table('asset_assignments')
+                    ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+                    ->where('asset_assignments.office_id', \App\Models\Office::psuId())
+                    ->sum('asset_sources.quantity');
+
                 // 3. Total Asset Value
                 $itemsValue  = DB::table('asset_sources')->sum(DB::raw('quantity * asset_cost'));
                 $totalAmount = $itemsValue;
@@ -226,6 +231,7 @@ class DashboardController extends Controller
 
                 // 2. Distributed Assets
                 $distributedCount = $totalAssets;
+                $notDistributedCount = 0;
 
                 // 3. Total Asset Value
                 $totalAmount = DB::table('asset_assignments as ad')
@@ -402,7 +408,7 @@ class DashboardController extends Controller
             $items      = DB::table('items')->orderBy('name')->get();
 
             return compact(
-                'schools', 'totalAssets', 'distributedCount', 'totalAmount',
+                'schools', 'totalAssets', 'distributedCount', 'notDistributedCount', 'totalAmount',
                 'serviceableCount', 'unserviceableCount', 'forRepairCount',
                 'assetSources', 'quadrantStats', 'recentLogs',
                 'categoryData', 'categoryPercents', 'filterValues',

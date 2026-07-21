@@ -14944,6 +14944,13 @@ class CurrentDataSeeder extends Seeder
 )
         ]);
 
+        // Update all unassigned assets to default to Property and Supply Unit (Office ID 5)
+        DB::table('asset_assignments')
+            ->whereNull('employee_id')
+            ->whereNull('school_id')
+            ->whereNull('office_id')
+            ->update(['office_id' => 5]);
+
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 }
