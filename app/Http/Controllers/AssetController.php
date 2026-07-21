@@ -627,18 +627,19 @@ class AssetController extends Controller
             ]);
 
             // Update Asset Source
+            // Fetch first so we can fall back to existing FK values when the form omits them
+            $source = \App\Models\AssetSource::find($asset->asset_source_id);
             $sourceUpdates = [
                 'item_id' => $finalItemId,
                 'description' => $validated['description'],
                 'condition' => $validated['condition'],
                 'asset_cost' => $validated['asset_cost'] ?? 0.00,
                 'quantity' => $validated['quantity'] ?? 1,
-                'acquisition_source_id' => $validated['acquisition_source_id'] ?? null,
-                'procurement_mode_id' => $validated['procurement_mode_id'] ?? null,
-                'supplier_id' => $validated['supplier_id'] ?? null,
+                'acquisition_source_id' => $validated['acquisition_source_id'] ?? $source?->acquisition_source_id,
+                'procurement_mode_id' => $validated['procurement_mode_id'] ?? $source?->procurement_mode_id,
+                'supplier_id' => $validated['supplier_id'] ?? $source?->supplier_id,
                 'updated_at' => now(),
             ];
-            $source = \App\Models\AssetSource::find($asset->asset_source_id);
             if ($source) {
                 $source->update($sourceUpdates);
             }
