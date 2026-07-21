@@ -290,7 +290,7 @@
                     </div>
 
                     {{-- Not Yet Distributed Assets --}}
-                    <div onclick="window.location.href='{{ url('/view-assets?tab=source&condition=not_distributed') }}'" class="p-8 rounded-[2.5rem] bg-white border-l-[12px] border-[#c00000] shadow-2xl flex flex-col justify-between h-56 group hover:-translate-y-2 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out cursor-pointer relative overflow-hidden border-r border-y border-slate-50">
+                    <div onclick="window.location.href='{{ route('assets.amu') }}'" class="p-8 rounded-[2.5rem] bg-white border-l-[12px] border-[#c00000] shadow-2xl flex flex-col justify-between h-56 group hover:-translate-y-2 hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] transition-all duration-500 ease-out cursor-pointer relative overflow-hidden border-r border-y border-slate-50">
                         <div class="flex justify-between items-start relative z-10">
                             <div class="flex flex-col">
                                 <span class="text-xs font-black uppercase tracking-[0.2em] text-slate-900 group-hover:text-[#c00000] transition-colors">Assets Not Yet Distributed</span>
@@ -888,6 +888,44 @@
                 init() {
                     this.loadNotificationsFromServer(1);
                     this.loadMuteSettings();
+
+                    // Listen for real-time updates via WebSockets (Laravel Reverb)
+                    if (window.Echo) {
+                        window.Echo.channel('dashboard')
+                            .listen('.DashboardUpdated', (e) => {
+                                console.log('Real-time dashboard update triggered:', e);
+                                this.refreshStats();
+                            });
+                    }
+                },
+
+                async refreshStats() {
+                    try {
+                        const res = await fetch('/api/dashboard/stats', { headers: { 'Accept': 'application/json' } });
+                        if (!res.ok) return;
+                        const data = await res.json();
+                        
+                        this.origStats = {
+                            total: data.totalAssets ?? 0,
+                            distributed: data.distributedCount ?? 0,
+                            value: data.totalAmount ?? 0,
+                            serviceable: data.serviceableCount ?? 0,
+                            forRepair: data.forRepairCount ?? 0,
+                            unserviceable: data.unserviceableCount ?? 0
+                        };
+
+                        this.filterValues = data.filterValues || {
+                            Overall: data.totalAmount ?? 0,
+                            PPE: 0,
+                            SemiExpendable: 0
+                        };
+
+                        if (data.recentLogs) {
+                            this.mockLogs = data.recentLogs;
+                        }
+                    } catch (e) {
+                        console.error('Failed to refresh real-time dashboard stats:', e);
+                    }
                 },
 
                 async loadNotificationsFromServer(page = 1) {

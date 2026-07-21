@@ -246,9 +246,12 @@ class AssetServiceController extends Controller
         $supName = DB::table('suppliers')->where('id', $serviceRecord->supplier_id)->value('name') ?? 'Supplier';
 
         DB::transaction(function () use ($serviceRecord, $assignmentId, $daysDiff, $expected, $actual, $supName) {
-            // Ensure unassigned
+            // Place back in Property and Supply Unit (PSU/AMU)
+            $psuId = \App\Models\Office::psuId();
             DB::table('asset_assignments')->where('id', $assignmentId)->update([
                 'employee_id' => null,
+                'school_id'   => null,
+                'office_id'   => $psuId,
                 'updated_at'  => now(),
             ]);
 
@@ -262,7 +265,7 @@ class AssetServiceController extends Controller
             DB::table('asset_transfers')->insert([
                 'asset_assignment_id'  => $assignmentId,
                 'from_office_id'       => null,
-                'to_office_id'         => null,
+                'to_office_id'         => $psuId,
                 'from_custodian_id'    => null,
                 'to_custodian_id'      => null,
                 'transfer_date'        => $actual->toDateString(),
@@ -298,6 +301,8 @@ class AssetServiceController extends Controller
                 $admin->notify(new \App\Notifications\AssetReturnedNotification($dummyAsset));
             }
         });
+
+        \App\Http\Controllers\DashboardController::notifyUpdate();
 
         return redirect()->route('asset.service.index')->with('success', 'Asset has been returned to AMU and marked as Good Condition!');
     }

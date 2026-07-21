@@ -19,11 +19,12 @@ class AssetController extends Controller
      * classifications -> categories -> items -> asset_sources (descriptions)
      * with assignment data from asset_assignments
      */
-    private function buildInventoryData()
+    private function buildInventoryData(?int $amuOfficeId = null)
     {
         $inventory = [];
         $user = auth()->user();
-        $schoolId = ($user && $user->isSchoolSystem()) ? $user->school_id : null;
+        // If scoped to AMU, ignore school system context
+        $schoolId = ($amuOfficeId === null && $user && $user->isSchoolSystem()) ? $user->school_id : null;
 
         $defaultIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25a2.25 2.25 0 01-13.5 18v-2.25z" /></svg>';
 
@@ -32,7 +33,13 @@ class AssetController extends Controller
             ->leftJoin('items', 'categories.id', '=', 'items.category_id')
             ->leftJoin('asset_sources', 'items.id', '=', 'asset_sources.item_id');
 
-        if ($schoolId) {
+        if ($amuOfficeId !== null) {
+            // AMU mode: count only assets sitting in PSU office
+            $categoriesQuery
+                ->join('asset_assignments', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+                ->where('asset_assignments.office_id', $amuOfficeId)
+                ->select('categories.id', 'categories.name', DB::raw('COUNT(asset_assignments.id) as total_assets'));
+        } elseif ($schoolId) {
             $categoriesQuery->join('asset_assignments', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
                 ->leftJoin('employees as e', 'asset_assignments.employee_id', '=', 'e.id')
                 ->where(function ($q) use ($schoolId) {
@@ -62,8 +69,20 @@ class AssetController extends Controller
             ];
         }
 
-        // 2. Fetch items with quantities
-        if ($schoolId) {
+        if ($amuOfficeId !== null) {
+            // AMU mode: items with quantities in PSU
+            $allItems = DB::table('items')
+                ->join('categories', 'items.category_id', '=', 'categories.id')
+                ->leftJoin(DB::raw('(SELECT asrc.item_id, COUNT(ad.id) as qty FROM asset_assignments ad JOIN asset_sources asrc ON ad.asset_source_id = asrc.id WHERE ad.office_id = ' . $amuOfficeId . ' GROUP BY asrc.item_id) as amu'), 'items.id', '=', 'amu.item_id')
+                ->select(
+                    'items.id',
+                    'items.name as item_name',
+                    'categories.name as category_name',
+                    DB::raw('COALESCE(amu.qty, 0) as sourced_quantity'),
+                    DB::raw('COALESCE(amu.qty, 0) as distributed_quantity')
+                )
+                ->get();
+        } elseif ($schoolId) {
             $allItems = DB::table('items')
                 ->join('categories', 'items.category_id', '=', 'categories.id')
                 ->leftJoin(DB::raw('(SELECT asrc.item_id, COUNT(ad.id) as qty FROM asset_assignments ad JOIN asset_sources asrc ON ad.asset_source_id = asrc.id LEFT JOIN employees e ON ad.employee_id = e.id WHERE ad.school_id = ' . $schoolId . ' OR e.school_id = ' . $schoolId . ' GROUP BY asrc.item_id) as dist'), 'items.id', '=', 'dist.item_id')
@@ -79,7 +98,7 @@ class AssetController extends Controller
             $allItems = DB::table('items')
                 ->join('categories', 'items.category_id', '=', 'categories.id')
                 ->leftJoin(DB::raw('(SELECT item_id, SUM(quantity) as sourced_qty FROM asset_sources WHERE EXISTS (SELECT 1 FROM asset_assignments WHERE asset_assignments.asset_source_id = asset_sources.id) GROUP BY item_id) as src'), 'items.id', '=', 'src.item_id')
-                ->leftJoin(DB::raw('(SELECT asrc.item_id, COUNT(ad.id) as distributed_qty FROM asset_assignments ad JOIN asset_sources asrc ON ad.asset_source_id = asrc.id WHERE (ad.employee_id IS NOT NULL OR ad.school_id IS NOT NULL OR ad.office_id IS NOT NULL) GROUP BY asrc.item_id) as dist'), 'items.id', '=', 'dist.item_id')
+                ->leftJoin(DB::raw('(SELECT asrc.item_id, COUNT(ad.id) as distributed_qty FROM asset_assignments ad JOIN asset_sources asrc ON ad.asset_source_id = asrc.id WHERE (ad.employee_id IS NOT NULL OR ad.school_id IS NOT NULL) OR (ad.office_id IS NOT NULL AND ad.office_id != ' . (\App\Models\Office::psuId() ?? 0) . ') GROUP BY asrc.item_id) as dist'), 'items.id', '=', 'dist.item_id')
                 ->select(
                     'items.id',
                     'items.name as item_name',
@@ -111,7 +130,12 @@ class AssetController extends Controller
             ->select('asset_sources.description', 'items.name as item_name', 'categories.name as category_name')
             ->distinct();
 
-        if ($schoolId) {
+        if ($amuOfficeId !== null) {
+            // AMU mode: asset_sources that have assignments in PSU
+            $sourcesQuery
+                ->join('asset_assignments', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
+                ->where('asset_assignments.office_id', $amuOfficeId);
+        } elseif ($schoolId) {
             $sourcesQuery->join('asset_assignments', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
                 ->leftJoin('employees as e', 'asset_assignments.employee_id', '=', 'e.id')
                 ->where(function ($q) use ($schoolId) {
@@ -148,12 +172,19 @@ class AssetController extends Controller
             ->leftJoin('offices as o_dir', 'ad.office_id', '=', 'o_dir.id')
             ->leftJoin('schools as s_dir', 'ad.school_id', '=', 's_dir.id')
             ->where(function($q) {
+                $psuId = \App\Models\Office::psuId();
                 $q->whereNotNull('ad.employee_id')
                   ->orWhereNotNull('ad.school_id')
-                  ->orWhereNotNull('ad.office_id');
+                  ->orWhere(function ($q2) use ($psuId) {
+                      $q2->whereNotNull('ad.office_id')
+                         ->where('ad.office_id', '!=', $psuId);
+                  });
             });
 
-        if ($schoolId) {
+        if ($amuOfficeId !== null) {
+            // AMU mode: show only PSU-assigned records
+            $recordsQuery->where('ad.office_id', $amuOfficeId);
+        } elseif ($schoolId) {
             $recordsQuery->where(function ($q) use ($schoolId) {
                 $q->where('ad.school_id', $schoolId)
                   ->orWhere('e.school_id', $schoolId);
@@ -222,6 +253,17 @@ class AssetController extends Controller
     {
         $inventory = $this->buildInventoryData();
         return view('assets.asset-explorer', compact('inventory'));
+    }
+
+    /**
+     * AMU: View of assets currently sitting in Property and Supply Unit.
+     * Accessible to main-system accounts only.
+     */
+    public function amu()
+    {
+        $psuId = \App\Models\Office::psuId();
+        $inventory = $this->buildInventoryData(amuOfficeId: $psuId);
+        return view('assets.amu', compact('inventory'));
     }
 
     public function history()
@@ -904,6 +946,8 @@ class AssetController extends Controller
             ]);
         }
 
+        \App\Http\Controllers\DashboardController::notifyUpdate();
+
         return back()->with('success', 'Asset successfully transferred!');
     }
 
@@ -944,15 +988,16 @@ class AssetController extends Controller
                 }
             }
 
-            // Log the return
+            // Log the return — destination is the PSU/AMU office
+            $psuId = \App\Models\Office::psuId();
             $tid = DB::table('asset_transfers')->insertGetId([
                 'asset_assignment_id' => $id,
                 'from_office_id' => $currentOfficeId,
-                'to_office_id' => null,
+                'to_office_id'   => $psuId,
                 'from_school_id' => $currentSchoolId,
-                'to_school_id' => null,
+                'to_school_id'   => null,
                 'from_custodian_id' => $asset->employee_id,
-                'to_custodian_id' => null,
+                'to_custodian_id'   => null,
                 'transfer_date' => $validated['return_date'],
                 'transfer_type' => 'Return',
                 'remarks' => $validated['remarks'],
@@ -963,11 +1008,11 @@ class AssetController extends Controller
 
             $source = DB::table('asset_sources')->where('id', $asset->asset_source_id)->first();
 
-            // Nullify employee_id, school_id, and office_id to place back in Warehouse
+            // Place back in Property and Supply Unit (PSU/AMU)
             DB::table('asset_assignments')->where('id', $id)->update([
                 'employee_id' => null,
-                'school_id' => null,
-                'office_id' => null,
+                'school_id'   => null,
+                'office_id'   => \App\Models\Office::psuId(),
                 'acquisition_date' => $source->acceptance_date ?? now()->toDateString(),
                 'updated_at' => now(),
             ]);
@@ -1027,6 +1072,8 @@ class AssetController extends Controller
                 'transfer_id'    => $transferId,
             ]
         ]);
+
+        \App\Http\Controllers\DashboardController::notifyUpdate();
 
         return redirect()->route('assets.profile', $id)->with('success', 'Asset successfully returned to AMU / Warehouse!');
     }
@@ -1585,6 +1632,8 @@ class AssetController extends Controller
             ]);
         });
 
+        \App\Http\Controllers\DashboardController::notifyUpdate($assignment->school_id);
+
         if (request()->wantsJson()) {
             return response()->json(['success' => 'Asset permanently deleted.']);
         }
@@ -1683,6 +1732,8 @@ class AssetController extends Controller
                 ]);
             }
         });
+
+        \App\Http\Controllers\DashboardController::notifyUpdate();
 
         return response()->json(['success' => 'Selected assets successfully deleted.']);
     }

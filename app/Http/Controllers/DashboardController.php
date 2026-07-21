@@ -33,9 +33,13 @@ class DashboardController extends Controller
                 $distributedCount = DB::table('asset_assignments')
                     ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
                     ->where(function ($q) {
+                        $psuId = \App\Models\Office::psuId();
                         $q->whereNotNull('asset_assignments.employee_id')
                           ->orWhereNotNull('asset_assignments.school_id')
-                          ->orWhereNotNull('asset_assignments.office_id');
+                          ->orWhere(function ($q2) use ($psuId) {
+                              $q2->whereNotNull('asset_assignments.office_id')
+                                 ->where('asset_assignments.office_id', '!=', $psuId);
+                          });
                     })
                     ->sum('asset_sources.quantity');
 
@@ -504,5 +508,30 @@ class DashboardController extends Controller
     public function storeQuickAsset(Request $request)
     {
         return back()->with('error', 'Quick Asset Entry is being redesigned. Please use the Bulk Import feature instead.');
+    }
+
+    public function getStats()
+    {
+        $user = auth()->user();
+        $isSchool = $user->isSchoolSystem();
+        $school_id = $user->school_id;
+
+        $cacheKey = $isSchool ? "dashboard:school:{$school_id}:stats" : 'dashboard:main:stats';
+        Cache::forget($cacheKey);
+
+        $view = $this->index();
+        if ($view instanceof \Illuminate\View\View) {
+            return response()->json($view->getData());
+        }
+        return response()->json([]);
+    }
+
+    public static function notifyUpdate($schoolId = null)
+    {
+        Cache::forget('dashboard:main:stats');
+        if ($schoolId) {
+            Cache::forget("dashboard:school:{$schoolId}:stats");
+        }
+        event(new \App\Events\DashboardUpdated($schoolId));
     }
 }

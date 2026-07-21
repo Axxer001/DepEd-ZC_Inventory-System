@@ -62,7 +62,11 @@ Route::middleware('auth')->group(function () {
     
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/api/dashboard/growth-data', [DashboardController::class, 'getGrowthData'])->name('api.dashboard.growth_data');
+    Route::get('/api/dashboard/stats', [DashboardController::class, 'getStats'])->name('api.dashboard.stats');
     Route::post('/dashboard/quick-asset', [DashboardController::class, 'storeQuickAsset'])->name('inventory.dashboard.store')->middleware('role:super_admin,admin');
+
+    // --- AMU (Property and Supply Unit) Stock View --- Main system only
+    Route::get('/amu', [AssetController::class, 'amu'])->name('assets.amu')->middleware('main_system');
 
     // --- Employee Management Actions ---
     Route::post('/admin/employees', [EmployeeController::class, 'store'])->name('admin.employees.store')->middleware('role:super_admin,admin');

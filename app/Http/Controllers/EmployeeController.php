@@ -574,7 +574,7 @@ class EmployeeController extends Controller
                     ]);
             }
             if (in_array($type, ['office', 'all'])) {
-                $offices = Office::orderBy('name')->get()
+                $offices = Office::where('is_system', false)->orderBy('name')->get()
                     ->map(fn($o) => [
                         'id'          => $o->id,
                         'entity_type' => 'office',
@@ -602,8 +602,11 @@ class EmployeeController extends Controller
         }
 
         if (in_array($type, ['office', 'all'])) {
-            $offices = Office::where('name', 'LIKE', "%{$q}%")
-                ->orWhere('office_id', 'LIKE', "%{$q}%")
+            $offices = Office::where('is_system', false)
+                ->where('name', 'LIKE', "%{$q}%")
+                ->orWhere(function($q2) use ($q) {
+                    $q2->where('is_system', false)->where('office_id', 'LIKE', "%{$q}%");
+                })
                 ->limit(200)->get()
                 ->map(fn($o) => [
                     'id'          => $o->id,

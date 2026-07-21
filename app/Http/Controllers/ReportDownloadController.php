@@ -869,6 +869,7 @@ class ReportDownloadController extends Controller
         if (is_string($filters)) { $filters = json_decode($filters, true) ?: []; }
 
         $query = DB::table('offices')
+            ->where('offices.is_system', false)
             ->select(
                 'offices.id',
                 'offices.name',
@@ -925,7 +926,7 @@ class ReportDownloadController extends Controller
 
     public function getOfficesFilterOptions(Request $request)
     {
-        $types = DB::table('offices')->distinct()->whereNotNull('type')->where('type', '!=', '')->pluck('type')->sort()->values();
+        $types = DB::table('offices')->distinct()->where('is_system', false)->whereNotNull('type')->where('type', '!=', '')->pluck('type')->sort()->values();
         return response()->json([
             'types' => $types
         ]);

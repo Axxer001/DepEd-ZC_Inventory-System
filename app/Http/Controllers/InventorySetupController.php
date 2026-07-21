@@ -119,10 +119,12 @@ class InventorySetupController extends Controller
                 'condition'              => $validated['condition'],
             ]);
 
-            // 4. Create Asset Assignment (In Warehouse/AMU)
+            // 4. Create Asset Assignment (In Property and Supply Unit / AMU)
             AssetAssignment::create([
                 'asset_source_id'         => $assetSource->id,
                 'employee_id'             => null,
+                'school_id'               => null,
+                'office_id'               => \App\Models\Office::psuId(),
                 'property_number'         => null,
                 'acquisition_cost'        => $validated['asset_cost'] * $validated['quantity'],
                 'acquisition_date'        => $validated['acceptance_date'] ?? now(),
@@ -146,6 +148,8 @@ class InventorySetupController extends Controller
             }
 
             DB::commit();
+
+            \App\Http\Controllers\DashboardController::notifyUpdate($registeredBySchoolId);
 
             return response()->json([
                 'success' => true, 
@@ -487,10 +491,12 @@ class InventorySetupController extends Controller
                     'updated_at'             => now(),
                 ]);
 
-                // ── Insert asset_assignments (Unassigned / AMU) ───────────────
+                // ── Insert asset_assignments (Property and Supply Unit / AMU) ──────
                 DB::table('asset_assignments')->insert([
                     'asset_source_id'         => $assetSourceId,
                     'employee_id'             => null,
+                    'school_id'               => null,
+                    'office_id'               => \App\Models\Office::psuId(),
                     'property_number'         => null,
                     'acquisition_cost'        => $cost * $qty,
                     'acquisition_date'        => $acceptanceDate,
@@ -500,7 +506,7 @@ class InventorySetupController extends Controller
                     'updated_at'              => now(),
                 ]);
 
-                $addedDetails[] = "Added " . $qty . " " . $uom . " {$itemName} to Warehouse/AMU";
+                $addedDetails[] = "Added " . $qty . " " . $uom . " {$itemName} to Property and Supply Unit (AMU)";
 
                 $inserted++;
             }
@@ -543,8 +549,9 @@ class InventorySetupController extends Controller
                     $admin->notify(new \App\Notifications\AssetAddedNotification($dummyAsset));
                 }
             }
-
             DB::commit();
+
+            \App\Http\Controllers\DashboardController::notifyUpdate($registeredBySchoolId);
 
             return response()->json([
                 'success' => true,
@@ -1157,6 +1164,8 @@ class InventorySetupController extends Controller
             ->whereNull('asset_assignments.employee_id')
             ->where('asset_sources.condition', '!=', 'Archived');
 
+        $psuId = \App\Models\Office::psuId();
+
         if ($user && $user->isSchoolSystem()) {
             $schoolId = $user->school_id;
             $query->where(function ($q) use ($schoolId) {
@@ -1167,8 +1176,9 @@ class InventorySetupController extends Controller
                 })->orWhere('asset_assignments.school_id', $schoolId); // Assigned to this school by main system
             })->whereNull('asset_assignments.office_id');
         } else {
+            // Main system: assets sitting in PSU
             $query->whereNull('asset_assignments.school_id')
-                  ->whereNull('asset_assignments.office_id');
+                  ->where('asset_assignments.office_id', $psuId);
         }
 
         $query->select(
@@ -1376,6 +1386,8 @@ class InventorySetupController extends Controller
             foreach ($usersToNotify as $user) {
                 $user->notify(new \App\Notifications\AssetAssignedNotification($notificationData));
             }
+
+            \App\Http\Controllers\DashboardController::notifyUpdate($schoolId);
 
             return response()->json(['success' => true, 'message' => 'Asset assigned successfully.']);
         } catch (\Exception $e) {
@@ -1672,6 +1684,8 @@ class InventorySetupController extends Controller
             }
 
 
+
+            \App\Http\Controllers\DashboardController::notifyUpdate();
 
             return response()->json(['success' => true, 'message' => "Successfully assigned {$count} asset(s)."]);
         } catch (\Exception $e) {
