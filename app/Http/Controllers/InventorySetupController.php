@@ -1355,15 +1355,6 @@ class InventorySetupController extends Controller
 
             DB::commit();
 
-            session()->flash('download_docs', [
-                [
-                    'recipient_name' => $recipientName,
-                    'doc_type'       => $docType,
-                    'assignment_id'  => $validated['assignment_id'],
-                    'transfer_id'    => $transferId,
-                ]
-            ]);
-
             // Dispatch notification
             $item = DB::table('asset_assignments')
                 ->join('asset_sources', 'asset_assignments.asset_source_id', '=', 'asset_sources.id')
@@ -1625,10 +1616,6 @@ class InventorySetupController extends Controller
             ]);
 
             DB::commit();
-
-            if (!empty($docsToDownload)) {
-                session()->flash('download_docs', array_values($docsToDownload));
-            }
 
             // Dispatch aggregated or individual notifications
             foreach ($groupedNotification as $key => $group) {

@@ -192,6 +192,12 @@
                 <span class="font-extrabold italic text-sm text-slate-800 uppercase tracking-tight">DepEd ZC Inventory Management</span>
             </div>
             <div class="flex items-center gap-3">
+                <button @click="openIcsSettingsModal()" class="px-3 py-2 bg-white border border-slate-200 text-slate-900 rounded-xl hover:text-[#c00000] hover:border-[#c00000]/30 transition-all shadow-sm active:scale-90 flex items-center gap-1 text-[9px] font-black uppercase tracking-wider cursor-pointer">
+                    <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    ICS
+                </button>
                 <button @click="openNotifications()" :class="hasUnread ? 'bell-has-unread border-red-200' : 'border-slate-200'" class="relative p-2 bg-white border text-slate-900 rounded-xl hover:text-[#c00000] hover:border-[#c00000]/30 transition-all shadow-sm active:scale-90 animate-fade">
                     <svg :class="hasUnread ? 'text-[#c00000]' : ''" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                     <span x-show="hasUnread" x-cloak class="absolute -top-1 -right-1 min-w-[16px] h-[16px] bg-red-600 border-2 border-white rounded-full badge-pulse flex items-center justify-center text-white text-[7px] font-black" x-text="unreadCount > 9 ? '9+' : unreadCount"></span>
@@ -257,6 +263,14 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- ICS Settings Button --}}
+                    <button @click="openIcsSettingsModal()" class="relative px-4 py-3 bg-white border border-slate-200 text-slate-900 rounded-2xl hover:text-[#c00000] hover:border-[#c00000]/30 hover:shadow-lg hover:shadow-red-50 transition-all shadow-sm group active:scale-90 flex items-center gap-2 text-xs font-black uppercase tracking-widest cursor-pointer">
+                        <svg class="w-4 h-4 text-slate-500 group-hover:text-[#c00000]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        ICS
+                    </button>
 
                     <button @click="openNotifications()" :class="hasUnread ? 'bell-has-unread border-red-200' : 'border-slate-200'" class="relative p-3 bg-white border text-slate-900 rounded-2xl hover:text-[#c00000] hover:border-[#c00000]/30 hover:shadow-lg hover:shadow-red-50 transition-all shadow-sm group active:scale-90">
                         <svg :class="hasUnread ? 'text-[#c00000]' : ''" class="w-5 h-5 group-hover:rotate-12 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
@@ -866,6 +880,10 @@
                 hasUnread: false,
                 unreadCount: 0,
                 notifications: [],
+                showIcsModal: false,
+                globalIcsNo: '',
+                globalDocType: 'ICS',
+                icsInputError: '',
                 notifPage: 1,
                 notifPagination: { current_page: 1, last_page: 1, total: 0 },
                 notifLoading: false,
@@ -948,6 +966,73 @@
                     this.showNotifications = true;
                     this.showMuteSettings = false;
                     await this.loadNotificationsFromServer(this.notifPage);
+                },
+
+                async openIcsSettingsModal() {
+                    this.globalDocType = 'ICS';
+                    await this.fetchDocNumberSetting();
+                    this.showIcsModal = true;
+                },
+
+                async fetchDocNumberSetting() {
+                    try {
+                        const res = await fetch('/api/settings/doc-number/' + this.globalDocType, { headers: { 'Accept': 'application/json' } });
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.globalIcsNo = data.global_number;
+                            this.icsInputError = '';
+                        }
+                    } catch (e) {
+                        console.error('Failed to load global document number:', e);
+                    }
+                },
+
+                async saveIcsSettings() {
+                    const regex = new RegExp('^' + this.globalDocType + '[- ]\\d{4}-\\d{2}-\\d{4}$', 'i');
+                    if (!regex.test(this.globalIcsNo)) {
+                        this.icsInputError = 'Format must be: ' + this.globalDocType + ' XXXX-XX-XXXX (e.g. ' + this.globalDocType + '-2026-03-0085)';
+                        return;
+                    }
+                    this.icsInputError = '';
+
+                    try {
+                        const res = await fetch('/api/settings/doc-number/' + this.globalDocType, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify({ global_number: this.globalIcsNo })
+                        });
+
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.globalIcsNo = data.global_number;
+                            this.showIcsModal = false;
+                            
+                            if (window.Swal) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Success',
+                                    text: 'Global ' + this.globalDocType + ' number updated to ' + this.globalIcsNo,
+                                    confirmButtonColor: '#c00000',
+                                    customClass: {
+                                        popup: 'rounded-[2rem]',
+                                        confirmButton: 'rounded-xl text-xs font-black uppercase tracking-widest px-6 py-3 bg-slate-900 border-0 hover:bg-[#c00000] text-white'
+                                    }
+                                });
+                            } else {
+                                alert('Global document number updated successfully!');
+                            }
+                        } else {
+                            const err = await res.json();
+                            this.icsInputError = err.message || 'Validation failed. Check format.';
+                        }
+                    } catch (e) {
+                        console.error('Failed to save global document number:', e);
+                        this.icsInputError = 'Network error. Please try again.';
+                    }
                 },
 
                 async loadMuteSettings() {
@@ -1445,5 +1530,61 @@
             });
         });
     </script>
+    {{-- Global Document Settings Modal --}}
+    <div x-show="showIcsModal" x-cloak class="fixed inset-0 z-[500] flex items-center justify-center">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showIcsModal = false"></div>
+        <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md mx-4 relative z-10 flex flex-col overflow-hidden border border-slate-100 animate-fade-in">
+            {{-- Modal Header --}}
+            <div class="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-red-50 text-[#c00000] rounded-2xl flex items-center justify-center shrink-0 shadow-inner">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider italic" x-text="'Global ' + globalDocType + ' Number'">Global Document Number</h3>
+                        <p class="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Define starting sequence prefix</p>
+                    </div>
+                </div>
+                <button @click="showIcsModal = false" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-2 rounded-full transition-colors active:scale-95">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            {{-- Modal Content --}}
+            <div class="p-8 space-y-6">
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Document Type</label>
+                    <select x-model="globalDocType" @change="fetchDocNumberSetting()"
+                            class="w-full px-5 py-4 border-2 border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:border-[#c00000] focus:ring-4 focus:ring-red-50 outline-none uppercase transition-all shadow-sm bg-white">
+                        <option value="ICS">ICS (Inventory Custodian Slip)</option>
+                        <option value="PAR">PAR (Property Acknowledgment Receipt)</option>
+                        <option value="PTR">PTR (Property Transfer Report)</option>
+                        <option value="ITR">ITR (Inventory Transfer Report)</option>
+                        <option value="RRSP">RRSP / RRPPE (Returned Property)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3" x-text="globalDocType + ' Number Sequence'"></label>
+                    <input type="text" x-model="globalIcsNo" 
+                           :placeholder="globalDocType + '-2026-03-0085'"
+                           class="w-full px-5 py-4 border-2 border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:border-[#c00000] focus:ring-4 focus:ring-red-50 outline-none uppercase transition-all shadow-sm">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase mt-2 italic tracking-wide" x-text="'Must strictly match formula: ' + globalDocType + ' XXXX-XX-XXXX'"></p>
+                </div>
+
+                <div x-show="icsInputError" x-cloak class="p-4 bg-red-50 border border-red-100 rounded-2xl">
+                    <p class="text-[10px] font-bold text-red-600 uppercase tracking-wider" x-text="icsInputError"></p>
+                </div>
+            </div>
+
+            {{-- Modal Footer --}}
+            <div class="bg-slate-50/50 border-t border-slate-100 p-8 flex items-center justify-end gap-3">
+                <button @click="showIcsModal = false" class="flex-1 py-4 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-2xl text-xs font-black uppercase tracking-widest transition-colors shadow-sm active:scale-95">Cancel</button>
+                <button @click="saveIcsSettings()" class="flex-1 py-4 bg-[#c00000] hover:bg-red-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-red-500/10 transition-all active:scale-95">Save Changes</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

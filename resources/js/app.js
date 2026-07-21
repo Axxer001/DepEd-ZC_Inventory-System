@@ -27,6 +27,9 @@ Alpine.data('bulkDocDownload', (assets) => ({
     selectedAssets: [],
     initError: null,
     assetsData: [],
+    showConfirmModal: false,
+    customIcsNumber: '',
+    confirmError: '',
 
     init() {
         try {
@@ -67,6 +70,30 @@ Alpine.data('bulkDocDownload', (assets) => ({
     },
 
     downloadDocuments() {
+        if (!this.showConfirmModal) {
+            this.confirmError = '';
+            this.customIcsNumber = '';
+            this.showConfirmModal = true;
+            return;
+        }
+        this.confirmDownload();
+    },
+
+    confirmDownload() {
+        if (this.customIcsNumber.trim() !== '') {
+            const regex = new RegExp('^' + this.docType + '[- ]\\d{4}-\\d{2}-\\d{4}$', 'i');
+            if (!regex.test(this.customIcsNumber)) {
+                this.confirmError = 'Format must be: ' + this.docType + ' XXXX-XX-XXXX (e.g. ' + this.docType + '-2026-03-0085)';
+                return;
+            }
+        }
+        this.confirmError = '';
+        this.showConfirmModal = false;
+        this.submitDownloadForm(this.customIcsNumber);
+        this.customIcsNumber = '';
+    },
+
+    submitDownloadForm(customIcs = '') {
         const rootEl = this.$root || this.$el.closest('[data-action]') || this.$el;
         const action = rootEl.dataset.action;
         const csrf   = rootEl.dataset.csrf;
@@ -91,6 +118,20 @@ Alpine.data('bulkDocDownload', (assets) => ({
         typeInput.name = 'doc_type';
         typeInput.value = this.docType;
         form.appendChild(typeInput);
+
+        if (customIcs && customIcs.trim() !== '') {
+            const icsInput = document.createElement('input');
+            icsInput.type = 'hidden';
+            icsInput.name = 'custom_ics_number';
+            icsInput.value = customIcs;
+            form.appendChild(icsInput);
+
+            const docInput = document.createElement('input');
+            docInput.type = 'hidden';
+            docInput.name = 'custom_doc_number';
+            docInput.value = customIcs;
+            form.appendChild(docInput);
+        }
 
         this.selectedAssets.forEach(id => {
             const idInput = document.createElement('input');

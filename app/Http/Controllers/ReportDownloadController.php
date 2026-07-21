@@ -1054,6 +1054,30 @@ class ReportDownloadController extends Controller
             abort(404, 'Invalid template type');
         }
 
+        $docNo = null;
+        $customDoc = $request->input('custom_doc_number') ?: $request->input('custom_ics_number');
+        
+        $keyType = ($type === 'RRPPE') ? 'RRSP' : $type;
+        $key = strtolower($keyType) . '_global_number';
+
+        if (!empty($customDoc)) {
+            $request->validate([
+                'custom_doc_number' => 'nullable|string|regex:/^' . $keyType . '[- ]\d{4}-\d{2}-\d{4}$/i',
+                'custom_ics_number' => 'nullable|string|regex:/^' . $keyType . '[- ]\d{4}-\d{2}-\d{4}$/i',
+            ]);
+            $docNo = strtoupper(trim($customDoc));
+        } else {
+            $docNo = DB::table('system_settings')->where('key', $key)->value('value');
+            if (!$docNo) {
+                $docNo = $keyType . '-2026-03-0085';
+            }
+            $nextDoc = $this->incrementDocNumber($docNo);
+            DB::table('system_settings')->updateOrInsert(
+                ['key' => $key],
+                ['value' => $nextDoc, 'updated_at' => now()]
+            );
+        }
+
         $filePath = base_path('../' . $type . '.xlsx');
         if (!file_exists($filePath)) {
             abort(404, 'Template file not found.');
@@ -1158,6 +1182,9 @@ class ReportDownloadController extends Controller
             if ($type === 'ICS') {
                 // D6:G6 merged — entity name (anchor D6)
                 $sheet->setCellValue('D6', 'DepEd, Division of Zamboanga City');
+                if ($docNo) {
+                    $sheet->setCellValue('I7', $docNo);
+                }
                 // Data row 12 — first fully writable row beneath merged header rows 9-11
                 $sheet->setCellValue('B12', $assignment->quantity ?? '');
                 $sheet->setCellValue('C12', $assignment->unit_of_measurement ?? '');
@@ -1172,6 +1199,9 @@ class ReportDownloadController extends Controller
             } elseif ($type === 'ITR') {
                 // E8:H8 merged — anchor E8 (From accountable officer)
                 $sheet->setCellValue('E8', 'DEPED, SDO ZAMBOANGA CITY');
+                if ($docNo) {
+                    $sheet->setCellValue('J8', $docNo);
+                }
                 // E9:H9 merged — anchor E9 (To accountable officer / custodian name)
                 $sheet->setCellValue('E9', $custodianName);
                 // J9 — date (not merged)
@@ -1187,6 +1217,9 @@ class ReportDownloadController extends Controller
             } elseif ($type === 'PAR') {
                 // D11 — entity name (not merged at row 11)
                 $sheet->setCellValue('D11', 'DEPED, ZAMBOANGA CITY DIVISION');
+                if ($docNo) {
+                    $sheet->setCellValue('G12', $docNo);
+                }
                 // Data row 16 — first fully writable row beneath merged header rows 14-15
                 $sheet->setCellValue('B16', $assignment->quantity ?? '');
                 $sheet->setCellValue('C16', $assignment->unit_of_measurement ?? '');
@@ -1198,6 +1231,9 @@ class ReportDownloadController extends Controller
             } elseif ($type === 'PTR') {
                 // H9 — date (not merged)
                 $sheet->setCellValue('H9', date('F d, Y'));
+                if ($docNo) {
+                    $sheet->setCellValue('H8', 'PTR No. :  ' . $docNo);
+                }
                 // Data row 18 — first fully writable row beneath merged header rows 16-17
                 $sheet->setCellValue('A18', $assignment->acquisition_date ?? '');
                 $sheet->setCellValue('B18', $assignment->property_number ?? '');
@@ -1209,6 +1245,10 @@ class ReportDownloadController extends Controller
             } elseif ($type === 'RRPPE' || $type === 'RRSP') {
                 $sheet->setCellValue('H4', date('F d, Y'));
                 $sheet->setCellValue('H35', date('F d, Y'));
+                if ($docNo) {
+                    $sheet->setCellValue('H5', $docNo);
+                    $sheet->setCellValue('H36', $docNo);
+                }
                 
                 // Copy 1 (Row 8)
                 $sheet->setCellValue('B8', 1);
@@ -1247,10 +1287,39 @@ class ReportDownloadController extends Controller
     public function downloadBulkCustodianDocs(Request $request, $employeeId)
     {
         $validated = $request->validate([
-            'doc_type'       => 'required|string|in:ICS,PAR',
-            'selected_ids'   => 'required|array|min:1',
-            'selected_ids.*' => 'required|integer|exists:asset_assignments,id',
+            'doc_type'          => 'required|string|in:ICS,PAR',
+            'selected_ids'      => 'required|array|min:1',
+            'selected_ids.*'    => 'required|integer|exists:asset_assignments,id',
+            'custom_doc_number' => 'nullable|string',
+            'custom_ics_number' => 'nullable|string',
         ]);
+
+        $docType = $validated['doc_type'];
+        $selectedIds = $validated['selected_ids'];
+
+        $customDoc = ($validated['custom_doc_number'] ?? null) ?: ($validated['custom_ics_number'] ?? null);
+        $docNo = null;
+
+        $keyType = ($docType === 'RRPPE') ? 'RRSP' : $docType;
+        $key = strtolower($keyType) . '_global_number';
+
+        if (!empty($customDoc)) {
+            $request->validate([
+                'custom_doc_number' => 'nullable|string|regex:/^' . $keyType . '[- ]\d{4}-\d{2}-\d{4}$/i',
+                'custom_ics_number' => 'nullable|string|regex:/^' . $keyType . '[- ]\d{4}-\d{2}-\d{4}$/i',
+            ]);
+            $docNo = strtoupper(trim($customDoc));
+        } else {
+            $docNo = DB::table('system_settings')->where('key', $key)->value('value');
+            if (!$docNo) {
+                $docNo = $keyType . '-2026-03-0085';
+            }
+            $nextDoc = $this->incrementDocNumber($docNo);
+            DB::table('system_settings')->updateOrInsert(
+                ['key' => $key],
+                ['value' => $nextDoc, 'updated_at' => now()]
+            );
+        }
 
         $docType = $validated['doc_type'];
         $selectedIds = $validated['selected_ids'];
@@ -1316,6 +1385,9 @@ class ReportDownloadController extends Controller
 
         if ($docType === 'ICS') {
             $sheet->setCellValue('D6', 'DepEd, Division of Zamboanga City');
+            if ($docNo) {
+                $sheet->setCellValue('I7', $docNo);
+            }
 
             $rowNum = 12;
             foreach ($assignments as $assignment) {
@@ -1342,6 +1414,9 @@ class ReportDownloadController extends Controller
             }
         } elseif ($docType === 'PAR') {
             $sheet->setCellValue('D11', 'DEPED, ZAMBOANGA CITY DIVISION');
+            if ($docNo) {
+                $sheet->setCellValue('G12', $docNo);
+            }
 
             $rowNum = 16;
             foreach ($assignments as $assignment) {
@@ -1403,6 +1478,64 @@ class ReportDownloadController extends Controller
         $subItemsMap = collect();
 
         return view('partials.download-reports', compact('categories', 'itemsMap', 'subItemsMap', 'sources'));
+    }
+
+    public function getDocNumberSetting($type)
+    {
+        $allowed = ['ICS', 'PAR', 'PTR', 'ITR', 'RRSP', 'RRPPE'];
+        $type = strtoupper($type);
+        if (!in_array($type, $allowed)) {
+            abort(404, 'Invalid document type');
+        }
+
+        $keyType = ($type === 'RRPPE') ? 'RRSP' : $type;
+        $key = strtolower($keyType) . '_global_number';
+
+        $value = DB::table('system_settings')->where('key', $key)->value('value');
+        if (!$value) {
+            $value = $keyType . '-2026-03-0085';
+            DB::table('system_settings')->updateOrInsert(
+                ['key' => $key],
+                ['value' => $value, 'created_at' => now(), 'updated_at' => now()]
+            );
+        }
+        return response()->json(['doc_type' => $type, 'global_number' => $value]);
+    }
+
+    public function updateDocNumberSetting(Request $request, $type)
+    {
+        $allowed = ['ICS', 'PAR', 'PTR', 'ITR', 'RRSP', 'RRPPE'];
+        $type = strtoupper($type);
+        if (!in_array($type, $allowed)) {
+            abort(404, 'Invalid document type');
+        }
+
+        $keyType = ($type === 'RRPPE') ? 'RRSP' : $type;
+        $key = strtolower($keyType) . '_global_number';
+
+        $validated = $request->validate([
+            'global_number' => 'required|string|regex:/^' . $keyType . '[- ]\d{4}-\d{2}-\d{4}$/i'
+        ]);
+
+        $value = strtoupper(trim($validated['global_number']));
+        
+        DB::table('system_settings')->updateOrInsert(
+            ['key' => $key],
+            ['value' => $value, 'updated_at' => now()]
+        );
+
+        return response()->json(['success' => true, 'doc_type' => $type, 'global_number' => $value]);
+    }
+
+    private function incrementDocNumber($current)
+    {
+        if (preg_match('/^([A-Z]{3,5}[- ]\d{4}-\d{2}-)(\d{4})$/i', $current, $matches)) {
+            $prefix = $matches[1];
+            $suffix = (int)$matches[2];
+            $nextSuffix = str_pad($suffix + 1, 4, '0', STR_PAD_LEFT);
+            return $prefix . $nextSuffix;
+        }
+        return $current;
     }
 }
 

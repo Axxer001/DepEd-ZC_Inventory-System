@@ -819,6 +819,55 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        {{-- Confirmation Modal --}}
+                        <div x-show="showConfirmModal" x-cloak class="fixed inset-0 z-[500] flex items-center justify-center">
+                            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showConfirmModal = false"></div>
+                            <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md mx-4 relative z-10 flex flex-col overflow-hidden border border-slate-100 animate-fade-in text-slate-800">
+                                {{-- Modal Header --}}
+                                <div class="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-red-50 text-[#c00000] rounded-2xl flex items-center justify-center shrink-0 shadow-inner">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-sm font-black text-slate-900 uppercase tracking-wider italic">Confirm Download</h3>
+                                            <p class="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Validate document parameters</p>
+                                        </div>
+                                    </div>
+                                    <button type="button" @click="showConfirmModal = false" class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 p-2 rounded-full transition-colors active:scale-95">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </div>
+
+                                {{-- Modal Content --}}
+                                <div class="p-8 space-y-6">
+                                    <p class="text-xs text-slate-500 font-bold uppercase tracking-wide leading-relaxed">
+                                        Are you sure you want to download the <span x-text="docType" class="text-[#c00000] font-black"></span> documentation for the selected <span x-text="selectedAssets.length" class="text-[#c00000] font-black"></span> asset(s)?
+                                    </p>
+
+                                    <div>
+                                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3" x-text="'Custom ' + docType + ' Number (Optional)'"></label>
+                                        <input type="text" x-model="customIcsNumber" 
+                                               :placeholder="docType + '-2026-03-0085'"
+                                               class="w-full px-5 py-4 border-2 border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:border-[#c00000] focus:ring-4 focus:ring-red-50 outline-none uppercase transition-all shadow-sm">
+                                        <p class="text-[9px] font-bold text-slate-400 uppercase mt-2 italic tracking-wide" x-text="'Leave blank to use global sequence. If custom, must match: ' + docType + ' XXXX-XX-XXXX'"></p>
+                                    </div>
+
+                                    <div x-show="confirmError" x-cloak class="p-4 bg-red-50 border border-red-100 rounded-2xl">
+                                        <p class="text-[10px] font-bold text-red-600 uppercase tracking-wider" x-text="confirmError"></p>
+                                    </div>
+                                </div>
+
+                                {{-- Modal Footer --}}
+                                <div class="bg-slate-50/50 border-t border-slate-100 p-8 flex items-center justify-end gap-3">
+                                    <button type="button" @click="showConfirmModal = false" class="flex-1 py-4 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-2xl text-xs font-black uppercase tracking-widest transition-colors shadow-sm active:scale-95">Cancel</button>
+                                    <button type="button" @click="confirmDownload()" class="flex-1 py-4 bg-[#c00000] hover:bg-red-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-red-500/10 transition-all active:scale-95">Confirm</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

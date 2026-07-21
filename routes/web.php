@@ -591,4 +591,8 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/api/recipients/add', [\App\Http\Controllers\RecipientRegistryController::class, 'add'])->name('recipients.add');
 
+    // --- Global Document Number Settings ---
+    Route::get('/api/settings/doc-number/{type}', [\App\Http\Controllers\ReportDownloadController::class, 'getDocNumberSetting'])->name('api.settings.get_doc_number');
+    Route::post('/api/settings/doc-number/{type}', [\App\Http\Controllers\ReportDownloadController::class, 'updateDocNumberSetting'])->name('api.settings.update_doc_number');
+
 });
